@@ -1,0 +1,44 @@
+name: Update index.html to latest version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gurbani_fashion_app_v*.html'
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Find latest version and update index.html
+        run: |
+          # Find all version files, sort by version number (natural sort), pick the highest
+          latest=$(ls gurbani_fashion_app_v*.html | sort -V | tail -n 1)
+          echo "Latest version detected: $latest"
+
+          cat > index.html << EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0; url=$latest">
+            <title>Gurbani Fashion App</title>
+          </head>
+          <body>
+            <p>Redirecting to the latest version&hellip; <a href="$latest">Click here if not redirected automatically</a>.</p>
+          </body>
+          </html>
+          EOF
+
+      - name: Commit updated index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "Auto-update index.html to latest version"
+          git push
