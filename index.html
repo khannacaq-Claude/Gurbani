@@ -1081,15 +1081,11 @@
             <div id="loginError" class="error-message"></div>
 
             
-            <!-- Google Sign-In Section -->
+            <!-- ===== GOOGLE SIGN-IN ===== -->
             <div style="margin-bottom: 20px;">
-                <div id="g_id_onload"
-                     data-client_id="302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com"
-                     data-callback="handleGoogleSignIn">
-                </div>
+                <div id="g_id_onload" data-client_id="302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com" data-callback="handleGoogleSignIn"></div>
                 <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"></div>
             </div>
-            
             <div style="display: flex; align-items: center; margin: 20px 0; color: var(--light); font-size: 12px;">
                 <span style="flex: 1; height: 1px; background: var(--border);"></span>
                 <span style="margin: 0 10px;">OR</span>
@@ -1294,64 +1290,60 @@
         });
 
         // ===== AUTH FUNCTIONS =====
-        async         async function handleGoogleSignIn(response) {
-                try {
-                    googleToken = response.credential;
-                    showLoading('Signing you in with Google...');
-        
-                    const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: googleToken })
-                    });
-        
-                    const data = await res.json();
-                    hideLoading();
-        
-                    if (!data.success) {
-                        showMessage('Error', data.message, 'error');
-                        return;
-                    }
-        
-                    // Check if admin needs OTP
-                    if (data.requiresOTP) {
-                        // Admin detected - show OTP screen
-                        currentUser = {
-                            userId: data.userId,
-                            email: data.email,
-                            name: data.name,
-                            profilePicture: data.profilePicture
-                        };
-                        showOtpScreen();
-                        // Auto request OTP for pre-registered admin
-                        handleRequestOtp();
-                    } else {
-                        // Customer - direct login
-                        localStorage.setItem('token', data.token);
-                        localStorage.setItem('userRole', data.user.role);
-                        localStorage.setItem('userEmail', data.user.email);
-                        localStorage.setItem('userName', data.user.name);
-                        localStorage.setItem('userId', data.user._id);
-                        if (data.user.profilePicture) {
-                            localStorage.setItem('profilePicture', data.user.profilePicture);
-                        }
-                        showMessage('Success', `Welcome ${data.user.name}!`, 'success');
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html'; // Or your dashboard URL
-                        }, 1500);
-                    }
-                } catch (error) {
-                    hideLoading();
-                    showMessage('Error', 'Google sign-in failed: ' + error.message, 'error');
-                    console.error('Google Sign-In Error:', error);
-                }
-            }
-        
-            // ========================================
-            // EMAIL/PASSWORD LOGIN
-            // ========================================
+        async function handleGoogleSignIn(response) {
+        try {
+            googleToken = response.credential;
+            showLoading('Signing you in with Google...');
 
-        function login() {
+            const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: googleToken })
+            });
+
+            const data = await res.json();
+            hideLoading();
+
+            if (!data.success) {
+                showMessage('Error', data.message, 'error');
+                return;
+            }
+
+            // Check if admin needs OTP
+            if (data.requiresOTP) {
+                // Admin detected - show OTP screen
+                currentUser = {
+                    userId: data.userId,
+                    email: data.email,
+                    name: data.name,
+                    profilePicture: data.profilePicture
+                };
+                showOtpScreen();
+                // Auto request OTP for pre-registered admin
+                handleRequestOtp();
+            } else {
+                // Customer - direct login
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', data.user.role);
+                localStorage.setItem('userEmail', data.user.email);
+                localStorage.setItem('userName', data.user.name);
+                localStorage.setItem('userId', data.user._id);
+                if (data.user.profilePicture) {
+                    localStorage.setItem('profilePicture', data.user.profilePicture);
+                }
+                showMessage('Success', `Welcome ${data.user.name}!`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html'; // Or your dashboard URL
+                }, 1500);
+            }
+        } catch (error) {
+            hideLoading();
+            showMessage('Error', 'Google sign-in failed: ' + error.message, 'error');
+            console.error('Google Sign-In Error:', error);
+        }
+    }
+
+        async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
