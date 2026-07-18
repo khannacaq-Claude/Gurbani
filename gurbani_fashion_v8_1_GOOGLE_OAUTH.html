@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gurbani Fashion v8.1 - Google Sign-In</title>
+    <!-- Google Sign-In SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #C06090;
+            --secondary: #8B4B7A;
+            --accent: #E8B4D0;
+            --dark: #333;
+            --light: #666;
+            --bg-light: #F9F7FB;
+            --bg-white: #FFFFFF;
+            --border: #E0E0E0;
+            --success: #4CAF50;
+            --danger: #F44336;
+            --warning: #FF9800;
+            --info: #2196F3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* ===== LOGIN PAGE ===== */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 30px;
+        }
+
+        .login-header h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            color: var(--light);
+            font-size: 14px;
+        }
+
+        /* ===== GOOGLE SIGN-IN ===== */
+        #g_id_onload {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .g_id_signin {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+
+        .google-signin-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            transition: all 0.3s;
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .google-signin-btn:hover {
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(192, 96, 144, 0.2);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ===== DIVIDER ===== */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: var(--light);
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider-text {
+            margin: 0 10px;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(192, 96, 144, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(192, 96, 144, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--accent);
+            color: var(--dark);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* ===== OTP SCREEN ===== */
+        .otp-screen {
+            display: none;
+        }
+
+        .otp-screen.active {
+            display: block;
+        }
+
+        .otp-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .otp-header h2 {
+            color: var(--primary);
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .otp-header p {
+            color: var(--light);
+            font-size: 14px;
+        }
+
+        .otp-input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            transition: border 0.3s;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .otp-timer {
+            text-align: center;
+            color: var(--light);
+            font-size: 14px;
+            margin: 15px 0;
+        }
+
+        .timer-active {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .resend-btn {
+            display: inline-block;
+            margin-top: 10px;
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .resend-btn.disabled {
+            color: var(--light);
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        /* ===== MODAL/ALERT ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-content.success {
+            border-left: 5px solid var(--success);
+        }
+
+        .modal-content.error {
+            border-left: 5px solid var(--danger);
+        }
+
+        .modal-content.info {
+            border-left: 5px solid var(--info);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .modal-content p {
+            color: var(--light);
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .login-box {
+                padding: 25px;
+            }
+
+            .login-header h1 {
+                font-size: 20px;
+            }
+
+            .otp-input {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN CONTAINER -->
+<div class="login-container">
+    <div class="login-box">
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-header">
+                <div class="login-logo">👗</div>
+                <h1>Gurbani Fashion</h1>
+                <p>Passion For Fashion</p>
+            </div>
+
+            <!-- GOOGLE SIGN-IN -->
+            <div id="g_id_onload"
+                 data-client_id="302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com"
+                 data-callback="handleGoogleSignIn">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"></div>
+
+            <div class="divider">
+                <span class="divider-text">OR</span>
+            </div>
+
+            <!-- EMAIL/PASSWORD LOGIN -->
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Your password">
+            </div>
+
+            <button class="btn btn-primary" onclick="handleEmailLogin()">Sign In</button>
+            <button class="btn btn-secondary" onclick="toggleSignUp()">Create Account</button>
+        </div>
+
+        <!-- SIGNUP SCREEN -->
+        <div id="signupScreen" style="display: none;">
+            <div class="login-header">
+                <h1>Create Account</h1>
+                <p>Join Gurbani Fashion</p>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="signupName" placeholder="Your name">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signupEmail" placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="signupPhone" placeholder="+91 XXXXXXXXXX">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a strong password">
+            </div>
+
+            <button class="btn btn-primary" onclick="handleSignUp()">Create Account</button>
+            <button class="btn btn-secondary" onclick="toggleSignUp()">Back to Login</button>
+        </div>
+
+        <!-- OTP SCREEN -->
+        <div id="otpScreen" class="otp-screen">
+            <div class="otp-header">
+                <h2>Verify Admin Access</h2>
+                <p id="otpPhoneDisplay">OTP sent to your phone</p>
+            </div>
+
+            <label style="text-align: center; margin-bottom: 20px;">Enter 6-digit OTP</label>
+
+            <div class="otp-input-group">
+                <input class="otp-input" type="text" maxlength="1" id="otp1" onkeyup="moveOtpFocus(this, 'otp2')">
+                <input class="otp-input" type="text" maxlength="1" id="otp2" onkeyup="moveOtpFocus(this, 'otp3')">
+                <input class="otp-input" type="text" maxlength="1" id="otp3" onkeyup="moveOtpFocus(this, 'otp4')">
+                <input class="otp-input" type="text" maxlength="1" id="otp4" onkeyup="moveOtpFocus(this, 'otp5')">
+                <input class="otp-input" type="text" maxlength="1" id="otp5" onkeyup="moveOtpFocus(this, 'otp6')">
+                <input class="otp-input" type="text" maxlength="1" id="otp6" onkeyup="focusOtpInput(this)">
+            </div>
+
+            <button class="btn btn-primary" onclick="handleOtpVerify()">Verify OTP</button>
+
+            <div class="otp-timer">
+                <div id="otpTimerDisplay" class="timer-active">⏱️ 10:00</div>
+                <div style="margin-top: 10px;">
+                    <span class="resend-btn" id="resendBtn" onclick="handleResendOtp()">Resend OTP</span>
+                    <span class="resend-btn disabled" id="resendTimer" style="display: none;"></span>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="handleBackToLogin()">Back to Login</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOADING MODAL -->
+<div id="loadingModal" class="modal">
+    <div class="modal-content info">
+        <div class="loading-spinner"></div>
+        <h3>Please Wait...</h3>
+        <p id="loadingText">Processing your request</p>
+    </div>
+</div>
+
+<!-- MESSAGE MODAL -->
+<div id="messageModal" class="modal">
+    <div class="modal-content">
+        <h3 id="messageTitle">Message</h3>
+        <p id="messageText">Your message here</p>
+        <button class="btn btn-primary" onclick="closeModal()">OK</button>
+    </div>
+</div>
+
+<script>
+    // ========================================
+    // CONFIGURATION
+    // ========================================
+    const API_BASE_URL = 'http://localhost:5000'; // Change to Railway URL in production
+    const GOOGLE_CLIENT_ID = '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com';
+
+    let currentUser = null;
+    let googleToken = null;
+    let otpPhone = null;
+    let otpTimer = null;
+    let otpResendTimer = null;
+
+    // ========================================
+    // GOOGLE SIGN-IN HANDLER
+    // ========================================
+    async function handleGoogleSignIn(response) {
+        try {
+            googleToken = response.credential;
+            showLoading('Signing you in with Google...');
+
+            const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: googleToken })
+            });
+
+            const data = await res.json();
+            hideLoading();
+
+            if (!data.success) {
+                showMessage('Error', data.message, 'error');
+                return;
+            }
+
+            // Check if admin needs OTP
+            if (data.requiresOTP) {
+                // Admin detected - show OTP screen
+                currentUser = {
+                    userId: data.userId,
+                    email: data.email,
+                    name: data.name,
+                    profilePicture: data.profilePicture
+                };
+                showOtpScreen();
+                // Auto request OTP for pre-registered admin
+                handleRequestOtp();
+            } else {
+                // Customer - direct login
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', data.user.role);
+                localStorage.setItem('userEmail', data.user.email);
+                localStorage.setItem('userName', data.user.name);
+                localStorage.setItem('userId', data.user._id);
+                if (data.user.profilePicture) {
+                    localStorage.setItem('profilePicture', data.user.profilePicture);
+                }
+                showMessage('Success', `Welcome ${data.user.name}!`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html'; // Or your dashboard URL
+                }, 1500);
+            }
+        } catch (error) {
+            hideLoading();
+            showMessage('Error', 'Google sign-in failed: ' + error.message, 'error');
+            console.error('Google Sign-In Error:', error);
+        }
+    }
+
+    // ========================================
+    // EMAIL/PASSWORD LOGIN
+    // ========================================
+    async function handleEmailLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        if (!email || !password) {
+            showMessage('Error', 'Please enter email and password', 'error');
+            return;
+        }
+
+        showLoading('Signing you in...');
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+            hideLoading();
+
+            if (!data.success) {
+                showMessage('Error', data.message, 'error');
+                return;
+            }
+
+            // Check if admin needs OTP
+            if (data.requiresOTP) {
+                currentUser = {
+                    userId: data.userId,
+                    email: data.email,
+                    name: data.name
+                };
+                showOtpScreen();
+                handleRequestOtp();
+            } else {
+                // Customer - direct login
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', data.user.role);
+                localStorage.setItem('userEmail', data.user.email);
+                localStorage.setItem('userName', data.user.name);
+                localStorage.setItem('userId', data.user._id);
+                showMessage('Success', `Welcome ${data.user.name}!`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            }
+        } catch (error) {
+            hideLoading();
+            showMessage('Error', 'Login failed: ' + error.message, 'error');
+        }
+    }
+
+    // ========================================
+    // SIGNUP
+    // ========================================
+    async function handleSignUp() {
+        const name = document.getElementById('signupName').value;
+        const email = document.getElementById('signupEmail').value;
+        const phone = document.getElementById('signupPhone').value;
+        const password = document.getElementById('signupPassword').value;
+
+        if (!name || !email || !phone || !password) {
+            showMessage('Error', 'Please fill all fields', 'error');
+            return;
+        }
+
+        showLoading('Creating your account...');
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone, password })
+            });
+
+            const data = await res.json();
+            hideLoading();
+
+            if (!data.success) {
+                showMessage('Error', data.message, 'error');
+                return;
+            }
+
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userRole', 'customer');
+            localStorage.setItem('userEmail', data.user.email);
+            localStorage.setItem('userName', data.user.name);
+            localStorage.setItem('userId', data.user._id);
+            showMessage('Success', `Welcome ${data.user.name}!`, 'success');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+        } catch (error) {
+            hideLoading();
+            showMessage('Error', 'Signup failed: ' + error.message, 'error');
+        }
+    }
+
+    // ========================================
+    // OTP VERIFICATION
+    // ========================================
+    async function handleRequestOtp() {
+        if (!currentUser) return;
+
+        showLoading('Sending OTP to your phone...');
+
+        try {
+            const phone = '+91 98998 10977'; // Sonia's phone for testing
+            otpPhone = phone;
+
+            const res = await fetch(`${API_BASE_URL}/api/auth/request-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    phone,
+                    userId: currentUser.userId 
+                })
+            });
+
+            const data = await res.json();
+            hideLoading();
+
+            if (data.success) {
+                document.getElementById('otpPhoneDisplay').textContent = `OTP sent to ${phone}`;
+                startOtpTimer();
+                startResendTimer();
+                showMessage('Success', 'OTP sent! Check your SMS', 'success');
+            } else {
+                showMessage('Error', data.message, 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showMessage('Error', 'Failed to send OTP: ' + error.message, 'error');
+        }
+    }
+
+    async function handleOtpVerify() {
+        const otp = 
+            document.getElementById('otp1').value +
+            document.getElementById('otp2').value +
+            document.getElementById('otp3').value +
+            document.getElementById('otp4').value +
+            document.getElementById('otp5').value +
+            document.getElementById('otp6').value;
+
+        if (otp.length !== 6) {
+            showMessage('Error', 'Please enter all 6 digits', 'error');
+            return;
+        }
+
+        showLoading('Verifying OTP...');
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: otpPhone,
+                    otp,
+                    userId: currentUser.userId
+                })
+            });
+
+            const data = await res.json();
+            hideLoading();
+
+            if (data.success) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userRole', 'admin');
+                localStorage.setItem('userEmail', data.user.email);
+                localStorage.setItem('userName', data.user.name);
+                localStorage.setItem('userId', data.user._id);
+                if (data.user.profilePicture) {
+                    localStorage.setItem('profilePicture', data.user.profilePicture);
+                }
+                showMessage('Success', 'Admin verified! Welcome!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'admin-dashboard.html'; // Admin dashboard
+                }, 1500);
+            } else {
+                showMessage('Error', data.message, 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showMessage('Error', 'OTP verification failed: ' + error.message, 'error');
+        }
+    }
+
+    async function handleResendOtp() {
+        const resendBtn = document.getElementById('resendBtn');
+        if (resendBtn.classList.contains('disabled')) return;
+
+        resendBtn.classList.add('disabled');
+        await handleRequestOtp();
+    }
+
+    // ========================================
+    // UI HELPERS
+    // ========================================
+    function showOtpScreen() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('signupScreen').style.display = 'none';
+        document.getElementById('otpScreen').classList.add('active');
+    }
+
+    function handleBackToLogin() {
+        document.getElementById('otpScreen').classList.remove('active');
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('signupScreen').style.display = 'none';
+        clearOtpTimer();
+    }
+
+    function toggleSignUp() {
+        const loginScreen = document.getElementById('loginScreen');
+        const signupScreen = document.getElementById('signupScreen');
+
+        if (loginScreen.style.display === 'none') {
+            loginScreen.style.display = 'block';
+            signupScreen.style.display = 'none';
+        } else {
+            loginScreen.style.display = 'none';
+            signupScreen.style.display = 'block';
+        }
+    }
+
+    function moveOtpFocus(current, nextId) {
+        if (current.value.length > 0) {
+            document.getElementById(nextId).focus();
+        }
+    }
+
+    function focusOtpInput(input) {
+        // Allow backspace to move focus back
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !input.value) {
+                const allInputs = document.querySelectorAll('.otp-input');
+                const currentIndex = Array.from(allInputs).indexOf(input);
+                if (currentIndex > 0) {
+                    allInputs[currentIndex - 1].focus();
+                }
+            }
+        });
+    }
+
+    function startOtpTimer() {
+        let seconds = 600; // 10 minutes
+        otpTimer = setInterval(() => {
+            seconds--;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('otpTimerDisplay').textContent = 
+                `⏱️ ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+            if (seconds <= 0) {
+                clearOtpTimer();
+            }
+        }, 1000);
+    }
+
+    function startResendTimer() {
+        let seconds = 60;
+        document.getElementById('resendBtn').classList.add('disabled');
+        document.getElementById('resendTimer').style.display = 'inline-block';
+
+        otpResendTimer = setInterval(() => {
+            seconds--;
+            document.getElementById('resendTimer').textContent = `Resend in ${seconds}s`;
+
+            if (seconds <= 0) {
+                clearInterval(otpResendTimer);
+                document.getElementById('resendBtn').classList.remove('disabled');
+                document.getElementById('resendTimer').style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    function clearOtpTimer() {
+        if (otpTimer) clearInterval(otpTimer);
+    }
+
+    function showLoading(text = 'Processing...') {
+        document.getElementById('loadingText').textContent = text;
+        document.getElementById('loadingModal').classList.add('active');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingModal').classList.remove('active');
+    }
+
+    function showMessage(title, text, type = 'info') {
+        const modal = document.getElementById('messageModal');
+        const content = modal.querySelector('.modal-content');
+
+        // Remove previous type classes
+        content.classList.remove('success', 'error', 'info');
+        content.classList.add(type);
+
+        document.getElementById('messageTitle').textContent = title;
+        document.getElementById('messageText').textContent = text;
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('messageModal').classList.remove('active');
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const messageModal = document.getElementById('messageModal');
+        if (event.target === messageModal) {
+            messageModal.classList.remove('active');
+        }
+    }
+</script>
+
+</body>
+</html>
