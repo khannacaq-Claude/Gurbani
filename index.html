@@ -2332,7 +2332,39 @@
             document.getElementById('loginForm').style.display = document.getElementById('loginForm').style.display === 'none' ? 'block' : 'none';
             document.getElementById('signupForm').style.display = document.getElementById('signupForm').style.display === 'none' ? 'block' : 'none';
         }
+// ===== LOADING INDICATOR FUNCTIONS =====
+        function showLoading(message = 'Loading...') {
+            const existingLoader = document.getElementById('loadingIndicator');
+            if (existingLoader) existingLoader.remove();
+            
+            const loader = document.createElement('div');
+            loader.id = 'loadingIndicator';
+            loader.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px 50px;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 9999;
+                text-align: center;
+                font-size: 14px;
+                color: #333;
+            `;
+            loader.innerHTML = `<div style="margin-bottom: 10px;">⏳</div>${message}`;
+            document.body.appendChild(loader);
+        }
 
+        function hideLoading() {
+            const loader = document.getElementById('loadingIndicator');
+            if (loader) loader.remove();
+        }
+
+        function showMessage(title, message, type = 'info') {
+            alert(`[${type.toUpperCase()}] ${title}\n${message}`);
+        }
         function showError(message, elementId = null) {
             if (elementId && document.getElementById(elementId)) {
                 const el = document.getElementById(elementId);
