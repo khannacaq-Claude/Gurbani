@@ -863,6 +863,96 @@
             font-weight: 600;
             font-size: 14px;
         }
+        /* ===== AI DESIGN STUDIO ===== */
+        .design-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 700px) {
+            .design-form-grid { grid-template-columns: 1fr; }
+        }
+        .design-image-preview {
+            display: block;
+            max-width: 180px;
+            max-height: 180px;
+            margin-top: 10px;
+            border-radius: 10px;
+            border: 2px solid var(--accent);
+            object-fit: cover;
+        }
+        .concept-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .concept-card h4 {
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+        .concept-card .concept-price {
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 8px;
+        }
+        .design-request-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .design-request-card .drc-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .design-thumb {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            object-fit: cover;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        .status-pending    { background: var(--warning); }
+        .status-generated  { background: var(--info); }
+        .status-in_review  { background: var(--secondary); }
+        .status-quoted     { background: var(--success); }
+        .status-ordered    { background: var(--primary); }
+        .status-rejected   { background: var(--danger); }
+        .status-draft, .status-customized { background: var(--light); }
+        .quote-form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+        .quote-form-row input, .quote-form-row textarea {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -898,9 +988,11 @@
         <button class="nav-tab" onclick="switchPage('profile')" id="profileTab">👤 My Profile</button>
         <button class="nav-tab" onclick="switchPage('orders')" id="ordersTab">📦 My Orders</button>
         <button class="nav-tab" onclick="switchPage('favorites')" id="favoritesTab">❤️ My Favorites</button>
+        <button class="nav-tab" onclick="switchPage('designStudio')" id="designStudioTab">🎨 AI Design Studio</button>
         <button class="nav-tab" onclick="switchPage('dashboard')" id="dashboardTab" style="display: none;">📊 Dashboard</button>
         <button class="nav-tab" onclick="switchPage('ordersManage')" id="ordersManageTab" style="display: none;">📋 Orders</button>
         <button class="nav-tab" onclick="switchPage('fabrics')" id="fabricsTab" style="display: none;">🧵 Fabrics</button>
+        <button class="nav-tab" onclick="switchPage('designRequests')" id="designRequestsTab" style="display: none;">🎨 Design Requests</button>
     </div>
 
     <!-- ===== MAIN CONTENT ===== -->
@@ -1027,6 +1119,102 @@
         <!-- CUSTOMER: FAVORITES PAGE -->
         <div id="favoritesPage" class="page">
             <div id="favoritesContainer" class="favorites-grid"></div>
+        </div>
+
+        <!-- AI DESIGN STUDIO (Customer) -->
+        <div id="designStudioPage" class="page">
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <div class="section-title">🎨 AI Design Studio</div>
+                </div>
+                <p style="color: var(--light); margin-bottom: 20px;">Describe your dream outfit or upload an inspiration photo — our AI creates 3 unique design concepts with price estimates, and Sonia personally reviews every request.</p>
+
+                <div class="design-form-grid">
+                    <div class="form-group">
+                        <label>📷 Inspiration Photo (optional)</label>
+                        <input type="file" id="designImageInput" accept="image/*">
+                        <img id="designImagePreview" class="design-image-preview" style="display:none;" alt="Inspiration preview">
+                    </div>
+                    <div class="form-group">
+                        <label>✍️ Describe your idea *</label>
+                        <textarea id="designDescription" rows="4" placeholder="e.g., A flowy anarkali for my sister's wedding, pastel colors, light embroidery on the sleeves..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>🎉 Occasion *</label>
+                        <select id="designOccasion">
+                            <option value="wedding">Wedding</option>
+                            <option value="festival">Festival</option>
+                            <option value="party">Party</option>
+                            <option value="casual">Casual</option>
+                            <option value="office">Office</option>
+                            <option value="other" selected>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>👗 Style</label>
+                        <select id="designStyle">
+                            <option value="">No preference</option>
+                            <option value="traditional">Traditional</option>
+                            <option value="fusion">Fusion</option>
+                            <option value="modern">Modern</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>🎨 Color preference</label>
+                        <input type="text" id="designColor" placeholder="e.g., Red & gold, pastels, emerald green">
+                    </div>
+                    <div class="form-group">
+                        <label>✨ Embroidery level</label>
+                        <select id="designEmbroidery">
+                            <option value="">No preference</option>
+                            <option value="minimal">Minimal</option>
+                            <option value="medium">Medium</option>
+                            <option value="heavy">Heavy</option>
+                            <option value="bridal">Bridal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>💰 Budget range (₹)</label>
+                        <select id="designBudget">
+                            <option value="">Flexible</option>
+                            <option value="1500-3000">₹1,500 – ₹3,000</option>
+                            <option value="3000-5000">₹3,000 – ₹5,000</option>
+                            <option value="5000-10000">₹5,000 – ₹10,000</option>
+                            <option value="10000+">₹10,000+</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>⏱️ Timeline</label>
+                        <select id="designTimeline">
+                            <option value="normal" selected>Normal (3-4 weeks)</option>
+                            <option value="rush">Rush (extra charges may apply)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>📝 Special requests</label>
+                        <textarea id="designSpecialRequests" rows="2" placeholder="Anything else Sonia should know? (sizing notes, matching dupatta, etc.)"></textarea>
+                    </div>
+                </div>
+                <button class="btn-large btn-primary-large" id="designSubmitBtn" onclick="submitDesignRequest()">✨ Generate My Designs</button>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <div class="section-title">My Design Requests</div>
+                </div>
+                <div id="myDesignsContainer"><p style="color: var(--light);">Loading...</p></div>
+            </div>
+        </div>
+
+        <!-- DESIGN REQUESTS (Admin) -->
+        <div id="designRequestsPage" class="page">
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <div class="section-title">🎨 Customer Design Requests</div>
+                    <button class="btn-small btn-primary-small" onclick="loadDesignRequests()">🔄 Refresh</button>
+                </div>
+                <div id="designRequestsContainer"><p style="color: var(--light);">Loading...</p></div>
+            </div>
         </div>
 
         <!-- ADMIN: DASHBOARD PAGE -->
@@ -1479,6 +1667,8 @@
             const dashboardTab = document.getElementById('dashboardTab');
             const ordersManageTab = document.getElementById('ordersManageTab');
             const fabricsTab = document.getElementById('fabricsTab');
+            const designStudioTab = document.getElementById('designStudioTab');
+            const designRequestsTab = document.getElementById('designRequestsTab');
 
             if (authToken) {
                 authBtn.textContent = 'Logout';
@@ -1493,17 +1683,21 @@
                     profileTab.style.display = 'none';
                     ordersTab.style.display = 'none';
                     favoritesTab.style.display = 'none';
+                    designStudioTab.style.display = 'none';
                     dashboardTab.style.display = 'block';
                     ordersManageTab.style.display = 'block';
                     fabricsTab.style.display = 'block';
+                    designRequestsTab.style.display = 'block';
                 } else {
                     adminBadge.style.display = 'none';
                     profileTab.style.display = 'block';
                     ordersTab.style.display = 'block';
                     favoritesTab.style.display = 'block';
+                    designStudioTab.style.display = 'block';
                     dashboardTab.style.display = 'none';
                     ordersManageTab.style.display = 'none';
                     fabricsTab.style.display = 'none';
+                    designRequestsTab.style.display = 'none';
                 }
             } else {
                 authBtn.textContent = 'Login';
@@ -2312,6 +2506,9 @@
 
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             event.target?.classList.add('active');
+
+            if (page === 'designStudio') loadMyDesigns();
+            if (page === 'designRequests') loadDesignRequests();
         }
 
         function getStatusClass(status) {
@@ -2398,6 +2595,275 @@
                 }
             });
         });
+// ============================================
+// AI DESIGN STUDIO
+// ============================================
+
+let designImageData = null;
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// Compress uploaded photo client-side (max 900px, JPEG) → base64 data URL
+function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) return reject(new Error('Please select an image file'));
+        if (file.size > 10 * 1024 * 1024) return reject(new Error('Image too large (max 10MB)'));
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                const maxDim = 900;
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                    const scale = maxDim / Math.max(width, height);
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.72));
+            };
+            img.onerror = () => reject(new Error('Could not read image'));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsDataURL(file);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('designImageInput');
+    if (input) {
+        input.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            const preview = document.getElementById('designImagePreview');
+            if (!file) { designImageData = null; preview.style.display = 'none'; return; }
+            try {
+                designImageData = await compressImage(file);
+                preview.src = designImageData;
+                preview.style.display = 'block';
+            } catch (err) {
+                designImageData = null;
+                preview.style.display = 'none';
+                showMessage('Error', err.message, 'error');
+                input.value = '';
+            }
+        });
+    }
+});
+
+async function submitDesignRequest() {
+    const description = document.getElementById('designDescription').value.trim();
+    if (!description && !designImageData) {
+        showMessage('Error', 'Please describe your idea or upload an inspiration photo', 'error');
+        return;
+    }
+
+    const payload = {
+        customerDescription: description,
+        inspirationImage: designImageData,
+        occasion: document.getElementById('designOccasion').value,
+        style: document.getElementById('designStyle').value,
+        color: document.getElementById('designColor').value.trim(),
+        embroidery: document.getElementById('designEmbroidery').value,
+        budgetRange: document.getElementById('designBudget').value,
+        deliveryTimeline: document.getElementById('designTimeline').value,
+        specialRequests: document.getElementById('designSpecialRequests').value.trim()
+    };
+
+    const btn = document.getElementById('designSubmitBtn');
+    btn.disabled = true;
+    showLoading('✨ Our AI is designing for you... (15-30 seconds)');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/designs`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        hideLoading();
+        btn.disabled = false;
+
+        if (!res.ok || !data.success) {
+            showMessage('Error', data.message || 'Failed to submit design request', 'error');
+            return;
+        }
+
+        showMessage('Success', data.message, 'success');
+
+        // Clear form
+        document.getElementById('designDescription').value = '';
+        document.getElementById('designSpecialRequests').value = '';
+        document.getElementById('designColor').value = '';
+        document.getElementById('designImageInput').value = '';
+        document.getElementById('designImagePreview').style.display = 'none';
+        designImageData = null;
+
+        loadMyDesigns();
+    } catch (error) {
+        hideLoading();
+        btn.disabled = false;
+        showMessage('Error', 'Connection error: ' + error.message, 'error');
+    }
+}
+
+function renderConcepts(concepts) {
+    if (!concepts || concepts.length === 0) return '';
+    return concepts.map((c, i) => `
+        <div class="concept-card">
+            <h4>Design ${i + 1}: ${escapeHtml(c.title)}</h4>
+            <p>${escapeHtml(c.description)}</p>
+            <div class="concept-price">Est. ₹${(c.priceMin || 0).toLocaleString('en-IN')} – ₹${(c.priceMax || 0).toLocaleString('en-IN')} · ${c.deliveryDays || '?'} days</div>
+        </div>`).join('');
+}
+
+function designStatusBadge(status) {
+    const labels = { pending: 'Pending Review', generated: 'AI Concepts Ready', in_review: 'In Review', quoted: 'Quote Received', ordered: 'Ordered', rejected: 'Not Feasible', draft: 'Draft', customized: 'Customized' };
+    return `<span class="status-badge status-${status}">${labels[status] || status}</span>`;
+}
+
+async function loadMyDesigns() {
+    const container = document.getElementById('myDesignsContainer');
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/designs/my`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || data.error || 'Failed to load');
+
+        if (data.designs.length === 0) {
+            container.innerHTML = '<p style="color: var(--light);">No design requests yet — create your first one above! ✨</p>';
+            return;
+        }
+
+        container.innerHTML = data.designs.map(d => `
+            <div class="design-request-card">
+                <div class="drc-head">
+                    <strong>${new Date(d.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · ${escapeHtml(d.input?.occasion || '')}</strong>
+                    ${designStatusBadge(d.status)}
+                </div>
+                ${d.input?.inspirationImage ? `<img src="${d.input.inspirationImage}" class="design-thumb" alt="Inspiration">` : ''}
+                ${d.input?.customerDescription ? `<p style="margin: 8px 0; color: var(--dark);">"${escapeHtml(d.input.customerDescription)}"</p>` : ''}
+                ${renderConcepts(d.aiConcepts)}
+                ${d.adminQuote?.price ? `
+                    <div style="background: #E8F5E9; border-radius: 8px; padding: 12px; margin-top: 10px;">
+                        <strong>💚 Sonia's Quote: ₹${d.adminQuote.price.toLocaleString('en-IN')}</strong>
+                        ${d.adminQuote.notes ? `<p style="margin-top: 4px;">${escapeHtml(d.adminQuote.notes)}</p>` : ''}
+                    </div>` : ''}
+            </div>`).join('');
+    } catch (error) {
+        container.innerHTML = `<p style="color: var(--danger);">Could not load your designs: ${escapeHtml(error.message)}</p>`;
+    }
+}
+
+// ===== ADMIN: DESIGN REQUESTS =====
+
+async function loadDesignRequests() {
+    const container = document.getElementById('designRequestsContainer');
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/designs/all`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || data.error || 'Failed to load');
+
+        if (data.designs.length === 0) {
+            container.innerHTML = '<p style="color: var(--light);">No design requests yet.</p>';
+            return;
+        }
+
+        container.innerHTML = data.designs.map(d => {
+            const c = d.customerId || {};
+            const p = d.input?.preferences || {};
+            return `
+            <div class="design-request-card" id="design-${d._id}">
+                <div class="drc-head">
+                    <div>
+                        <strong>${escapeHtml(c.name || 'Customer')}</strong>
+                        <span style="color: var(--light);"> · ${escapeHtml(c.email || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</span><br>
+                        <small style="color: var(--light);">${new Date(d.createdAt).toLocaleString('en-IN')}</small>
+                    </div>
+                    ${designStatusBadge(d.status)}
+                </div>
+                <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start;">
+                    ${d.input?.inspirationImage ? `<img src="${d.input.inspirationImage}" class="design-thumb" alt="Inspiration">` : ''}
+                    <div style="flex: 1; min-width: 240px;">
+                        ${d.input?.customerDescription ? `<p>"${escapeHtml(d.input.customerDescription)}"</p>` : ''}
+                        <p style="color: var(--light); font-size: 14px; margin-top: 6px;">
+                            🎉 ${escapeHtml(d.input?.occasion || '-')} · 👗 ${escapeHtml(p.style || '-')} · 🎨 ${escapeHtml(p.color || '-')} · ✨ ${escapeHtml(p.embroidery || '-')} · 💰 ${escapeHtml(d.input?.budgetRange || 'flexible')} · ⏱️ ${escapeHtml(d.input?.deliveryTimeline || 'normal')}
+                        </p>
+                        ${d.input?.specialRequests ? `<p style="font-size: 14px; margin-top: 4px;">📝 ${escapeHtml(d.input.specialRequests)}</p>` : ''}
+                    </div>
+                </div>
+                ${renderConcepts(d.aiConcepts)}
+                ${d.aiConcepts?.length === 0 || !d.aiConcepts ? `<button class="btn-small btn-primary-small" onclick="regenerateDesign('${d._id}')">🤖 Generate AI Concepts</button>` : ''}
+                <div class="quote-form-row">
+                    <input type="number" id="quotePrice-${d._id}" placeholder="Quote ₹" value="${d.adminQuote?.price || ''}" style="width: 120px;">
+                    <textarea id="quoteNotes-${d._id}" placeholder="Notes for customer..." rows="1" style="flex: 1; min-width: 200px;">${escapeHtml(d.adminQuote?.notes || '')}</textarea>
+                    <button class="btn-small btn-primary-small" onclick="submitDesignQuote('${d._id}')">💌 Send Quote</button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (error) {
+        container.innerHTML = `<p style="color: var(--danger);">Could not load requests: ${escapeHtml(error.message)}</p>`;
+    }
+}
+
+async function submitDesignQuote(id) {
+    const price = document.getElementById(`quotePrice-${id}`).value;
+    const notes = document.getElementById(`quoteNotes-${id}`).value;
+    if (!price) { showMessage('Error', 'Enter a quote price', 'error'); return; }
+
+    try {
+        showLoading('Sending quote...');
+        const res = await fetch(`${API_BASE_URL}/api/designs/${id}/quote`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ price, notes })
+        });
+        const data = await res.json();
+        hideLoading();
+        if (!res.ok || !data.success) throw new Error(data.message || data.error || 'Failed');
+        showMessage('Success', 'Quote sent to customer! 💌', 'success');
+        loadDesignRequests();
+    } catch (error) {
+        hideLoading();
+        showMessage('Error', error.message, 'error');
+    }
+}
+
+async function regenerateDesign(id) {
+    try {
+        showLoading('🤖 Generating AI concepts... (15-30 seconds)');
+        const res = await fetch(`${API_BASE_URL}/api/designs/${id}/regenerate`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        hideLoading();
+        if (!res.ok || !data.success) throw new Error(data.message || data.error || 'Failed');
+        showMessage('Success', 'AI concepts generated!', 'success');
+        loadDesignRequests();
+    } catch (error) {
+        hideLoading();
+        showMessage('Error', error.message, 'error');
+    }
+}
+
 // ============================================
 // AUTO-LOGOUT & SESSION MANAGEMENT
 // ============================================
