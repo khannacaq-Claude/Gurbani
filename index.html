@@ -2388,6 +2388,64 @@
                 }
             });
         });
+// ============================================
+// AUTO-LOGOUT & SESSION MANAGEMENT
+// ============================================
+
+/**
+ * Logout function - call when user clicks logout button
+ * Clears all session data and redirects to login
+ */
+function logout() {
+  // Clear all user data
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('role');
+  sessionStorage.clear();
+  
+  // Reset UI state
+  if (typeof hideLoading === 'function') hideLoading();
+  
+  // Redirect to login
+  window.location.href = '/Gurbani/';
+  
+  console.log('[Logout] User logged out');
+}
+
+/**
+ * Check if JWT token is valid on page load
+ * If expired, logout automatically
+ */
+function checkTokenValidity() {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return; // No token, user not logged in
+  }
+  
+  try {
+    // Decode JWT (without verifying signature - just checking structure)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Invalid token format');
+    }
+    
+    const payload = JSON.parse(atob(parts[1]));
+    const expiresAt = payload.exp * 1000; // Convert to milliseconds
+    const now = Date.now();
+    
+    if (now > expiresAt) {
+      console.log('[Token Expired] Auto-logout');
+      logout();
+    }
+  } catch (error) {
+    console.error('[Token Check Error]', error);
+    logout();
+  }
+}
+
+// Check token on page load
+document.addEventListener('DOMContentLoaded', checkTokenValidity);
     </script>
 </body>
 </html>
