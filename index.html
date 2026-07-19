@@ -1322,19 +1322,29 @@
                 // Auto request OTP for pre-registered admin
                 handleRequestOtp();
             } else {
-                // Customer - direct login
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userRole', data.user.role);
-                localStorage.setItem('userEmail', data.user.email);
-                localStorage.setItem('userName', data.user.name);
+                // Customer - direct login (stay on this page, same as email login)
+                authToken = data.token;
+                userEmail = data.user.email;
+                userName = data.user.name;
+                userRole = data.user.role || 'customer';
+
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('userEmail', userEmail);
+                localStorage.setItem('userName', userName);
+                localStorage.setItem('userRole', userRole);
                 localStorage.setItem('userId', data.user._id);
                 if (data.user.profilePicture) {
                     localStorage.setItem('profilePicture', data.user.profilePicture);
                 }
+
                 showMessage('Success', `Welcome ${data.user.name}!`, 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html'; // Or your dashboard URL
-                }, 1500);
+                updateAuthUI();
+                closeModal('loginModal');
+
+                if (userRole === 'admin') {
+                    loadDashboard();
+                    loadAllOrders();
+                }
             }
         } catch (error) {
             hideLoading();
@@ -2398,9 +2408,7 @@
  */
 function logout() {
   // Clear all user data
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  localStorage.removeItem('role');
+  ['token', 'authToken', 'user', 'role', 'userRole', 'userEmail', 'userName', 'userId', 'profilePicture'].forEach(k => localStorage.removeItem(k));
   sessionStorage.clear();
   
   // Reset UI state
@@ -2417,7 +2425,7 @@ function logout() {
  * If expired, logout automatically
  */
 function checkTokenValidity() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   
   if (!token) {
     return; // No token, user not logged in
