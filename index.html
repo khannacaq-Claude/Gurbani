@@ -2603,25 +2603,111 @@
                 transform: translate(-50%, -50%);
                 background: white;
                 padding: 30px 50px;
-                border-radius: 10px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                border-radius: 15px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.15);
                 z-index: 9999;
                 text-align: center;
-                font-size: 14px;
-                color: #333;
+                font-size: 15px;
+                color: var(--dark);
+                font-weight: 500;
+                animation: slideIn 0.3s ease-out;
             `;
-            loader.innerHTML = `<div style="margin-bottom: 10px;">⏳</div>${message}`;
+            loader.innerHTML = `<div style="margin-bottom: 12px; font-size: 24px; animation: spin 1s linear infinite;">⏳</div>${message}`;
             document.body.appendChild(loader);
         }
 
         function hideLoading() {
             const loader = document.getElementById('loadingIndicator');
-            if (loader) loader.remove();
+            if (loader) {
+                loader.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => loader.remove(), 300);
+            }
+        }
+
+        // Toast notification system
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer') || (() => {
+                const c = document.createElement('div');
+                c.id = 'toastContainer';
+                c.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9998;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(c);
+                return c;
+            })();
+
+            const toast = document.createElement('div');
+            const bgColor = {
+                success: '#E8F5E9',
+                error: '#FFEBEE',
+                info: '#E3F2FD',
+                warning: '#FFF3E0'
+            }[type] || '#E3F2FD';
+            
+            const borderColor = {
+                success: '#4CAF50',
+                error: '#F44336',
+                info: '#2196F3',
+                warning: '#FF9800'
+            }[type] || '#2196F3';
+
+            const icon = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            }[type] || 'ℹ️';
+
+            toast.style.cssText = `
+                background: ${bgColor};
+                border-left: 4px solid ${borderColor};
+                border-radius: 10px;
+                padding: 14px 18px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                max-width: 380px;
+                min-width: 280px;
+                animation: slideInRight 0.3s ease-out;
+                pointer-events: auto;
+                font-size: 14px;
+            `;
+
+            const titleEl = document.createElement('div');
+            titleEl.style.cssText = `
+                font-weight: 600;
+                color: var(--dark);
+                margin-bottom: 4px;
+            `;
+            titleEl.textContent = `${icon} ${title}`;
+
+            const msgEl = document.createElement('div');
+            msgEl.style.cssText = `
+                color: var(--light);
+                font-size: 13px;
+                line-height: 1.4;
+            `;
+            msgEl.textContent = message;
+
+            toast.appendChild(titleEl);
+            if (message) toast.appendChild(msgEl);
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
         function showMessage(title, message, type = 'info') {
-            alert(`[${type.toUpperCase()}] ${title}\n${message}`);
+            showToast(title, message, type);
         }
+
         function showError(message, elementId = null) {
             if (elementId && document.getElementById(elementId)) {
                 const el = document.getElementById(elementId);
@@ -2629,12 +2715,41 @@
                 el.style.display = 'block';
                 setTimeout(() => el.style.display = 'none', 3000);
             } else {
-                alert('❌ ' + message);
+                showToast('Error', message, 'error');
             }
         }
 
         function showSuccess(message) {
-            alert('✅ ' + message);
+            showToast('Success', message, 'success');
+        }
+
+        // Add toast animations to CSS dynamically if not present
+        if (!document.getElementById('toastStyles')) {
+            const style = document.createElement('style');
+            style.id = 'toastStyles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(400px); opacity: 0; }
+                }
+                @keyframes slideIn {
+                    from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+                    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                    to { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         // Close modals on background click
