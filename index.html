@@ -953,6 +953,18 @@
             border-radius: 8px;
             font-size: 14px;
         }
+        /* Trial Banner */
+        .trial-banner {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .trial-banner a {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        .trial-banner a:hover {
+            color: var(--secondary);
+        }
     </style>
 </head>
 <body>
@@ -1124,6 +1136,11 @@
         <!-- AI DESIGN STUDIO (Customer) -->
         <div id="designStudioPage" class="page">
             <div class="dashboard-section">
+                <!-- TRIAL STATUS BANNER -->
+                <div id="trialBanner" class="trial-banner" style="display: none; margin-bottom: 20px; padding: 14px 16px; border-radius: 10px; background: #E8F5E9; border-left: 4px solid var(--success);">
+                    <strong id="trialBannerText">⏳ Free trial active!</strong>
+                </div>
+
                 <div class="section-header">
                     <div class="section-title">🎨 AI Design Studio</div>
                 </div>
@@ -1403,6 +1420,40 @@
             </div>
 
             <button class="btn-large btn-primary-large" id="fabricSubmitBtn" onclick="saveFabric()">Add Fabric</button>
+        </div>
+    </div>
+
+    <!-- ===== TRIAL PHONE VERIFICATION MODAL ===== -->
+    <div id="trialPhoneModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📱 Verify Your Phone</h2>
+                <button class="close-btn" onclick="closeModal('trialPhoneModal')">×</button>
+            </div>
+
+            <div id="trialPhoneError" class="error-message"></div>
+            <div id="trialPhoneSuccess" class="success-message"></div>
+
+            <p style="color: var(--light); margin-bottom: 16px;">
+                Verify your phone number to unlock <strong>unlimited AI design generations</strong> for the next 3 days! 
+                (Otherwise, you're limited to 12 designs.)
+            </p>
+
+            <div class="form-group">
+                <label>Phone Number (with country code)</label>
+                <input type="tel" id="trialPhoneInput" placeholder="+91 98998 10977" value="">
+            </div>
+
+            <button class="btn-large btn-primary-large" id="trialPhoneRequestBtn" onclick="requestTrialOTP()" style="margin-bottom: 12px;">📨 Send OTP</button>
+
+            <div id="trialOTPContainer" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                <div class="form-group">
+                    <label>Enter OTP (6 digits)</label>
+                    <input type="text" id="trialOTPInput" placeholder="123456" maxlength="6">
+                </div>
+                <button class="btn-large btn-primary-large" onclick="verifyTrialOTP()">✅ Verify OTP</button>
+                <p style="font-size: 12px; color: var(--light); margin-top: 8px;">OTP expires in 10 minutes</p>
+            </div>
         </div>
     </div>
 
@@ -2600,6 +2651,110 @@
 // ============================================
 
 let designImageData = null;
+let designTrialStatus = { active: false, daysLeft: 0, designsUsed: 0, designsRemaining: 12, phoneVerified: false };
+
+// ===== TRIAL STATUS DISPLAY =====
+function updateTrialBanner(trial) {
+    designTrialStatus = trial;
+    const banner = document.getElementById('trialBanner');
+    const text = document.getElementById('trialBannerText');
+    
+    if (!trial.active) {
+        banner.style.display = 'none';
+        return;
+    }
+    
+    banner.style.display = 'block';
+    if (trial.phoneVerified) {
+        text.innerHTML = `✅ Phone verified! <strong>Unlimited designs</strong> for ${trial.daysLeft} more days!`;
+        banner.style.background = '#E8F5E9';
+    } else {
+        const msg = typeof trial.designsRemaining === 'number' 
+            ? `⏳ Free trial: ${trial.designsRemaining}/12 designs left · ${trial.daysLeft} days remaining`
+            : `⏳ Free trial: ${trial.designsRemaining}`;
+        text.innerHTML = msg + ` · <a href="#" onclick="event.preventDefault(); openModal('trialPhoneModal'); return false;" style="color: var(--primary); text-decoration: underline;">📱 Verify phone for unlimited →</a>`;
+        banner.style.background = '#FFF3E0';
+    }
+}
+
+// ===== TRIAL OTP FUNCTIONS =====
+async function requestTrialOTP() {
+    const phone = document.getElementById('trialPhoneInput').value.trim();
+    if (!phone) {
+        showMessage('Error', 'Please enter a phone number', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('trialPhoneRequestBtn');
+    btn.disabled = true;
+    showLoading('Sending OTP...');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/request-otp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        hideLoading();
+        btn.disabled = false;
+
+        if (!res.ok || !data.success) {
+            showMessage('Error', data.message || 'Failed to send OTP', 'error');
+            return;
+        }
+
+        document.getElementById('trialPhoneError').innerHTML = '';
+        document.getElementById('trialOTPContainer').style.display = 'block';
+        showMessage('Success', 'OTP sent! Check your phone (valid for 10 minutes)', 'success');
+    } catch (error) {
+        hideLoading();
+        btn.disabled = false;
+        showMessage('Error', 'Connection error: ' + error.message, 'error');
+    }
+}
+
+async function verifyTrialOTP() {
+    const phone = document.getElementById('trialPhoneInput').value.trim();
+    const otp = document.getElementById('trialOTPInput').value.trim();
+    
+    if (!otp || otp.length !== 6) {
+        showMessage('Error', 'Enter a valid 6-digit OTP', 'error');
+        return;
+    }
+
+    showLoading('Verifying OTP...');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/designs/verify-trial-phone`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ phone, otp })
+        });
+        const data = await res.json();
+        hideLoading();
+
+        if (!res.ok || !data.success) {
+            showMessage('Error', data.message || 'Failed to verify', 'error');
+            return;
+        }
+
+        showMessage('Success', data.message, 'success');
+        closeModal('trialPhoneModal');
+        designTrialStatus.phoneVerified = true;
+        updateTrialBanner(designTrialStatus);
+        loadMyDesigns();
+    } catch (error) {
+        hideLoading();
+        showMessage('Error', 'Connection error: ' + error.message, 'error');
+    }
+}
 
 function escapeHtml(str) {
     if (!str) return '';
@@ -2701,6 +2856,18 @@ async function submitDesignRequest() {
         }
 
         showMessage('Success', data.message, 'success');
+
+        // Update trial status from response
+        if (data.trial) {
+            updateTrialBanner(data.trial);
+        }
+
+        // Show phone verification prompt if needed
+        if (data.requiresPhoneVerification && !designTrialStatus.phoneVerified) {
+            setTimeout(() => {
+                showMessage('Tip', '📱 Verify your phone for unlimited designs during free trial!', 'info');
+            }, 2000);
+        }
 
         // Clear form
         document.getElementById('designDescription').value = '';
