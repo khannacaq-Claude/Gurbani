@@ -1435,8 +1435,7 @@
             <div id="trialPhoneSuccess" class="success-message"></div>
 
             <p style="color: var(--light); margin-bottom: 16px;">
-                Verify your phone number to unlock <strong>unlimited AI design generations</strong> for the next 3 days! 
-                (Otherwise, you're limited to 12 designs.)
+                Verify your phone to upgrade your AI design budget from <strong>₹200 to ₹500</strong> (2.5x more designs)!
             </p>
 
             <div class="form-group">
@@ -2651,28 +2650,28 @@
 // ============================================
 
 let designImageData = null;
-let designTrialStatus = { active: false, daysLeft: 0, designsUsed: 0, designsRemaining: 12, phoneVerified: false };
+let designTrialStatus = { active: false, spentAmount: 0, cacLimit: 200, remainingBudget: 200, phoneVerified: false, estimatedDesignsRemaining: 4 };
 
-// ===== TRIAL STATUS DISPLAY =====
+// ===== TRIAL STATUS DISPLAY (Cost-based CAC) =====
 function updateTrialBanner(trial) {
     designTrialStatus = trial;
     const banner = document.getElementById('trialBanner');
     const text = document.getElementById('trialBannerText');
     
-    if (!trial.active) {
+    if (!trial.active || trial.remainingBudget <= 0) {
         banner.style.display = 'none';
         return;
     }
     
     banner.style.display = 'block';
+    const cacLabel = trial.phoneVerified ? '₹500' : '₹200';
+    const designsEst = trial.estimatedDesignsRemaining || 0;
+    
     if (trial.phoneVerified) {
-        text.innerHTML = `✅ Phone verified! <strong>Unlimited designs</strong> for ${trial.daysLeft} more days!`;
+        text.innerHTML = `✅ <strong>Phone verified!</strong> Budget: ₹${trial.remainingBudget}/${trial.cacLimit} remaining (~${designsEst} design${designsEst !== 1 ? 's' : ''})`;
         banner.style.background = '#E8F5E9';
     } else {
-        const msg = typeof trial.designsRemaining === 'number' 
-            ? `⏳ Free trial: ${trial.designsRemaining}/12 designs left · ${trial.daysLeft} days remaining`
-            : `⏳ Free trial: ${trial.designsRemaining}`;
-        text.innerHTML = msg + ` · <a href="#" onclick="event.preventDefault(); openModal('trialPhoneModal'); return false;" style="color: var(--primary); text-decoration: underline;">📱 Verify phone for unlimited →</a>`;
+        text.innerHTML = `💰 Free trial: ₹${trial.remainingBudget}/${trial.cacLimit} remaining (~${designsEst} design${designsEst !== 1 ? 's' : ''}) · <a href="#" onclick="event.preventDefault(); openModal('trialPhoneModal'); return false;" style="color: var(--primary); text-decoration: underline; font-weight: 600;">📱 Verify phone for ₹500 budget →</a>`;
         banner.style.background = '#FFF3E0';
     }
 }
@@ -2745,7 +2744,7 @@ async function verifyTrialOTP() {
             return;
         }
 
-        showMessage('Success', data.message, 'success');
+        showMessage('Success', '💰 Budget upgraded to ₹500! More designs available now.', 'success');
         closeModal('trialPhoneModal');
         designTrialStatus.phoneVerified = true;
         updateTrialBanner(designTrialStatus);
