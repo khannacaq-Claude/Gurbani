@@ -301,36 +301,47 @@
     }
     
     .photo-gallery-title {
-      font-weight: bold;
+      font-weight: 600;
       margin-bottom: 10px;
       color: #C06090;
+      font-size: 13px;
+      padding: 6px 10px;
+      background: rgba(192,96,144,0.08);
+      border-radius: 6px;
+      border-left: 3px solid #C06090;
     }
     
     .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 15px;
+      padding: 4px 0;
     }
     
     .photo-item {
       position: relative;
-      border-radius: 6px;
+      border-radius: 10px;
       overflow: hidden;
-      border: 2px solid #e0e0e0;
-      cursor: pointer;
-      transition: all 0.3s ease;
+      border: 2.5px solid #e0c0d0;
+      width: 90px;
+      height: 90px;
+      flex-shrink: 0;
+      background: #f9f0f5;
+      box-shadow: 0 2px 6px rgba(192,96,144,0.15);
+      transition: border-color 0.2s;
     }
     
     .photo-item:hover {
       border-color: #C06090;
-      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(192,96,144,0.3);
     }
     
     .photo-item img {
       width: 100%;
-      height: 120px;
+      height: 100%;
       object-fit: cover;
+      display: block;
     }
     
     .photo-item-label {
@@ -338,29 +349,53 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(0,0,0,0.7);
+      background: linear-gradient(transparent, rgba(0,0,0,0.72));
       color: white;
-      padding: 4px;
-      font-size: 11px;
+      padding: 12px 3px 3px 3px;
+      font-size: 10px;
       text-align: center;
+      font-weight: 600;
+      text-transform: capitalize;
+      letter-spacing: 0.2px;
     }
     
     .photo-item-remove {
       position: absolute;
-      top: 5px;
-      right: 5px;
-      background: #C06090;
+      top: 4px;
+      right: 4px;
+      background: rgba(180,40,80,0.85);
       color: white;
       border: none;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
+      line-height: 1;
+    }
+
+    .photo-item-remove:hover { background: #a02050; }
+
+    .photo-type-badge {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      background: #C06090;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      z-index: 1;
     }
     
     .photo-upload-tabs {
@@ -420,6 +455,15 @@
       color: #C06090;
       margin-bottom: 12px;
       font-size: 16px;
+    }
+
+    .analysis-heading {
+      color: #8B4B7A;
+      font-size: 15px;
+      font-weight: 700;
+      margin: 14px 0 6px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(192, 96, 144, 0.2);
     }
     
     .analysis-section {
@@ -590,11 +634,11 @@
               <p class="help-text">Upload multiple photos from different angles + fabric/lace/accessory samples for better personalization</p>
               
               <div class="photo-upload-tabs">
-                <button type="button" class="photo-type-btn active" onclick="selectPhotoType('selfie')">👤 Selfies</button>
-                <button type="button" class="photo-type-btn" onclick="selectPhotoType('fabric')">🧵 Fabrics</button>
-                <button type="button" class="photo-type-btn" onclick="selectPhotoType('lace')">🎀 Laces</button>
-                <button type="button" class="photo-type-btn" onclick="selectPhotoType('accessories')">✨ Accessories</button>
-                <button type="button" class="photo-type-btn" onclick="selectPhotoType('inspiration')">🌟 Inspiration</button>
+                <button type="button" class="photo-type-btn active" onclick="selectPhotoType('selfie')" style="position:relative;">👤 Selfies<span id="badge_selfie" class="photo-type-badge" style="display:none;">0</span></button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('fabric')" style="position:relative;">🧵 Fabrics<span id="badge_fabric" class="photo-type-badge" style="display:none;">0</span></button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('lace')" style="position:relative;">🎀 Laces<span id="badge_lace" class="photo-type-badge" style="display:none;">0</span></button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('accessories')" style="position:relative;">✨ Accessories<span id="badge_accessories" class="photo-type-badge" style="display:none;">0</span></button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('inspiration')" style="position:relative;">🌟 Inspiration<span id="badge_inspiration" class="photo-type-badge" style="display:none;">0</span></button>
               </div>
 
               <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
@@ -742,25 +786,20 @@
       const gallery = document.getElementById('photoGallery');
       const grid = document.getElementById('photoGrid');
       
+      const icons = { selfie: '👤', fabric: '🧵', lace: '🎀', accessories: '✨', inspiration: '🌟' };
+      const labels = { selfie: 'Selfie', fabric: 'Fabric', lace: 'Lace', accessories: 'Accessory', inspiration: 'Inspiration' };
+
       let totalPhotos = 0;
       let html = '';
 
       for (const [type, photos] of Object.entries(uploadedPhotos)) {
-        if (photos.length > 0) {
-          const icons = {
-            selfie: '👤',
-            fabric: '🧵',
-            lace: '🎀',
-            accessories: '✨',
-            inspiration: '🌟'
-          };
-          
+        if (photos && photos.length > 0) {
           photos.forEach((photo, idx) => {
             html += `
-              <div class="photo-item" id="photo-${type}-${idx}">
-                <img src="${photo}" alt="${type}">
-                <div class="photo-item-label">${icons[type]} ${type}</div>
-                <button type="button" class="photo-item-remove" onclick="removePhoto('${type}', ${idx})">×</button>
+              <div class="photo-item">
+                <img src="${photo}" alt="${labels[type] || type}" loading="lazy">
+                <div class="photo-item-label">${icons[type] || '📷'} ${labels[type] || type}</div>
+                <button type="button" class="photo-item-remove" onclick="removePhoto('${type}', ${idx})" title="Remove">×</button>
               </div>
             `;
             totalPhotos++;
@@ -768,12 +807,26 @@
         }
       }
 
+      // Update tab badges
+      ['selfie','fabric','lace','accessories','inspiration'].forEach(type => {
+        const badge = document.getElementById('badge_' + type);
+        const count = (uploadedPhotos[type] || []).length;
+        if (badge) {
+          badge.textContent = count;
+          badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+      });
+
       if (totalPhotos > 0) {
         gallery.style.display = 'block';
-        document.getElementById('galleryTitle').textContent = `📸 Uploaded Photos: ${totalPhotos} total`;
+        document.getElementById('galleryTitle').innerHTML = 
+          `📸 <strong>${totalPhotos} photo${totalPhotos > 1 ? 's' : ''}</strong> uploaded — scroll to see all`;
         grid.innerHTML = html;
+        // Scroll gallery into view
+        gallery.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       } else {
         gallery.style.display = 'none';
+        grid.innerHTML = '';
       }
     }
 
@@ -880,16 +933,7 @@
 
         const data = await response.json();
 
-        console.log('📊 Backend Response:', {
-          success: data.success,
-          message: data.message,
-          design: data.design,
-          concepts_count: data.design?.aiConcepts?.length,
-          trial: data.trial
-        });
-
         if (response.ok && data.success) {
-          console.log('✅ Response OK, displaying designs with', data.design.aiConcepts.length, 'concepts');
           setStatus('designStatus', '✅ Designs generated! Check how they look on you below.', 'success');
           displayDesigns(data.design.aiConcepts, data.design.photoAnalysis);
           updateBudget(data.trial);
@@ -898,7 +942,6 @@
           displayPhotoGallery();
           document.getElementById('photoInput').value = '';
         } else {
-          console.error('❌ Response not OK or not success:', { response_ok: response.ok, data_success: data.success });
           setStatus('designStatus', '❌ ' + (data.message || data.error || 'Error generating designs'), 'error');
         }
       } catch (error) {
@@ -910,32 +953,32 @@
     }
 
     function displayDesigns(concepts, photoAnalysis) {
-      console.log('🎨 displayDesigns called');
-      console.log('  concepts:', concepts);
-      console.log('  concepts type:', typeof concepts);
-      console.log('  concepts is array?', Array.isArray(concepts));
-      console.log('  concepts length:', concepts?.length);
-      console.log('  photoAnalysis:', photoAnalysis ? 'YES' : 'NO');
-      
       const container = document.getElementById('designsContainer');
-      console.log('  container element:', container);
-      
       if (!concepts || concepts.length === 0) {
-        console.warn('❌ No concepts to display');
-        container.innerHTML = '<p>❌ No designs generated or data missing</p>';
+        container.innerHTML = '<p>No designs generated</p>';
         return;
       }
-      
-      console.log('✅ Rendering', concepts.length, 'designs');
 
       let html = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
       
-      // Show comprehensive analysis if photos were uploaded
+      // Show comprehensive analysis if photos were uploaded — COLLAPSIBLE
       if (photoAnalysis) {
+        const analysisId = 'photoAnalysis_' + Date.now();
         html += `
-          <div class="personal-analysis">
-            <h4>🌟 Personalized Analysis Based on Your Photos</h4>
-            ${formatAnalysis(photoAnalysis)}
+          <div style="margin: 20px 0;">
+            <button onclick="toggleAnalysis('${analysisId}')" 
+              style="background: linear-gradient(135deg, #C06090, #8B4B7A);
+                     color: white; border: none; padding: 12px 24px;
+                     border-radius: 8px; cursor: pointer; font-size: 15px;
+                     font-weight: 600; display: flex; align-items: center; gap: 8px; width: 100%;">
+              🌟 View Your Personalized Style Analysis &nbsp;<span id="arrow_${analysisId}">▼</span>
+            </button>
+            <div id="${analysisId}" style="display: none; margin-top: 12px;">
+              <div class="personal-analysis">
+                <h4>🌟 Personalized Analysis Based on Your Photos</h4>
+                ${formatAnalysis(photoAnalysis)}
+              </div>
+            </div>
           </div>
         `;
       }
@@ -966,45 +1009,43 @@
       });
       
       html += '</div>';
-      console.log('📝 HTML generated, length:', html.length);
-      console.log('🔄 Setting innerHTML...');
       container.innerHTML = html;
-      console.log('✅ Designs rendered successfully!');
     }
 
     function formatAnalysis(text) {
-      const sections = text.split('\n\n');
-      let html = '';
+      // Proper markdown → HTML conversion
+      let html = text
+        // Convert ## headings
+        .replace(/^##\s+(.+)$/gm, '<h5 class="analysis-heading">$1</h5>')
+        // Convert # headings
+        .replace(/^#\s+(.+)$/gm, '<h4 class="analysis-heading">$1</h4>')
+        // Convert **bold**
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        // Convert *italic*
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        // Convert -- or --- to divider
+        .replace(/^--+$/gm, '<hr style="border:none;border-top:1px solid #e0c0d0;margin:8px 0;">')
+        // Convert bullet lines starting with - or •
+        .replace(/^[-•]\s+(.+)$/gm, '<div class="analysis-item">$1</div>')
+        // Convert numbered lines
+        .replace(/^\d+\.\s+(.+)$/gm, '<div class="analysis-item">$1</div>')
+        // Convert blank lines to spacing
+        .replace(/\n\n/g, '<div style="margin:8px 0;"></div>')
+        // Convert remaining single newlines
+        .replace(/\n/g, '<br>');
+      return html;
+    }
 
-      sections.forEach(section => {
-        const lines = section.split('\n').filter(l => l.trim());
-        if (lines.length === 0) return;
-
-        const firstLine = lines[0];
-        
-        if (firstLine.includes('Confidence') || firstLine.includes('confidence')) {
-          html += `<div class="confidence-score">${firstLine} ⭐</div>`;
-        } else if (firstLine.match(/^(Your appearance|Based on|Color|Fit|Embroidery|Special)/)) {
-          html += `<div class="analysis-section">`;
-          html += `<h5>${firstLine.replace(/^(Your appearance|Based on): /, '')}</h5>`;
-          lines.slice(1).forEach(line => {
-            if (line.trim()) {
-              html += `<div class="analysis-item">${line.replace(/^[✓-]\s*/, '')}</div>`;
-            }
-          });
-          html += `</div>`;
-        } else {
-          lines.forEach(line => {
-            if (line.trim().startsWith('✓') || line.trim().startsWith('-')) {
-              html += `<div class="analysis-item">${line.replace(/^[✓-]\s*/, '')}</div>`;
-            } else if (line.trim()) {
-              html += `<div class="analysis-item">${line}</div>`;
-            }
-          });
-        }
-      });
-
-      return html || text;
+    function toggleAnalysis(id) {
+      const panel = document.getElementById(id);
+      const arrow = document.getElementById('arrow_' + id);
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        arrow.textContent = '▲';
+      } else {
+        panel.style.display = 'none';
+        arrow.textContent = '▼';
+      }
     }
 
     function updateBudget(trial) {
