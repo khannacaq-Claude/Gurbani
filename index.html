@@ -1005,7 +1005,7 @@
         userWelcome.classList.remove('show');
         signOutBtn.style.display = 'none';
         
-        if (!googleInitialized && typeof google !== 'undefined') {
+        if (googleInitialized && typeof google !== 'undefined') {
           signinArea.innerHTML = '';
           google.accounts.id.renderButton(signinArea, { theme: 'filled_blue', size: 'large' });
         }
