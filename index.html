@@ -3,514 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gurbani Fashion - AI Design Studio & Custom Stitching</title>
+  <title>Gurbani Fashion - AI Design Studio</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --primary-color: #C06090;
-      --secondary-color: #8B4B7A;
-      --success-color: #4CAF50;
-      --error-color: #F44336;
-      --text-color: #333;
-      --light-bg: #f9f9f9;
-      --border-color: #ddd;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f5f5f5 0%, #efefef 100%);
-      color: var(--text-color);
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-
-    /* Header */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
+    
     header {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      background: linear-gradient(135deg, #C06090 0%, #8B4B7A 100%);
       color: white;
-      padding: 15px 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      padding: 20px;
+      text-align: center;
     }
-
-    .header-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
+    
+    header h1 { font-size: 32px; margin-bottom: 5px; }
+    header p { font-style: italic; opacity: 0.9; }
+    
+    .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+    
+    .header-buttons {
+      position: absolute;
+      top: 20px;
+      right: 20px;
     }
-
-    .header-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .header-title h1 {
-      font-size: 28px;
-      font-weight: bold;
-      margin: 0;
-    }
-
-    .header-title .tagline {
-      font-size: 12px;
-      font-style: italic;
-      opacity: 0.9;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    .user-info {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-    }
-
-    .user-info.visible {
-      display: flex;
-    }
-
+    
+    #googleSignInButton { margin-bottom: 10px; }
+    
     button {
-      background: var(--primary-color);
+      background: #C06090;
       color: white;
       border: none;
       padding: 10px 20px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s ease;
     }
-
-    button:hover {
-      background: var(--secondary-color);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    /* Main container */
-    main {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 0 20px;
-    }
-
-    /* Landing Page (Visible before login) */
+    
+    button:hover { background: #8B4B7A; }
+    
     .landing-page {
-      display: block;
-    }
-
-    .landing-page.hidden {
-      display: none;
-    }
-
-    .hero {
-      text-align: center;
-      padding: 40px 20px;
       background: white;
+      padding: 40px;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
     }
-
-    .hero h2 {
-      font-size: 32px;
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-
-    .hero p {
-      font-size: 16px;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    .features-grid {
+    
+    .landing-page h2 { color: #C06090; font-size: 28px; margin-bottom: 15px; }
+    .landing-page p { font-size: 16px; color: #666; margin-bottom: 30px; line-height: 1.6; }
+    
+    .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
       margin-top: 30px;
     }
-
+    
     .feature-card {
-      background: white;
+      background: #f9f9f9;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      text-align: center;
+      border-radius: 6px;
+      border-left: 4px solid #C06090;
     }
-
-    .feature-card h3 {
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-
-    .feature-card p {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 15px;
-    }
-
-    .feature-card button {
-      width: 100%;
-      padding: 10px;
-    }
-
-    /* Main content (Visible after login) */
-    #mainContent {
-      display: none;
-    }
-
-    #mainContent.visible {
-      display: block;
-    }
-
-    /* Tabs */
-    .tabs-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-
-    .tabs-nav {
-      display: flex;
-      flex-wrap: wrap;
-      border-bottom: 2px solid var(--border-color);
-      overflow-x: auto;
-    }
-
-    .tab-btn {
-      flex: 1;
-      min-width: 150px;
-      background: transparent;
-      color: var(--text-color);
-      padding: 15px 20px;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.3s ease;
-    }
-
-    .tab-btn:hover {
-      background: var(--light-bg);
-    }
-
-    .tab-btn.active {
-      color: var(--primary-color);
-      border-bottom-color: var(--primary-color);
-    }
-
-    .tab-content {
-      display: none;
-      padding: 20px;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Toast */
+    
+    .feature-card h3 { color: #C06090; margin-bottom: 10px; }
+    .feature-card p { font-size: 13px; color: #999; }
+    
+    .main-content { display: none; }
+    .main-content.visible { display: block; }
+    .landing-page.hidden { display: none; }
+    
     #toastContainer {
       position: fixed;
-      top: 100px;
+      top: 20px;
       right: 20px;
       z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
     }
-
+    
     .toast {
       background: white;
       padding: 15px 20px;
       border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 300px;
-      animation: slideInRight 0.4s ease;
-      border-left: 4px solid;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      margin-bottom: 10px;
+      border-left: 4px solid #4CAF50;
     }
-
-    .toast.success {
-      border-left-color: var(--success-color);
-    }
-
-    .toast.error {
-      border-left-color: var(--error-color);
-    }
-
-    @keyframes slideInRight {
-      from {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    /* Form styles */
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: var(--text-color);
-    }
-
-    input, textarea, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: inherit;
-    }
-
-    input:focus, textarea:focus, select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(192, 96, 144, 0.1);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .header-container {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .header-actions {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .tab-btn {
-        min-width: 100px;
-        padding: 12px 10px;
-        font-size: 12px;
-      }
-    }
+    
+    .toast.error { border-left-color: #F44336; }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <header>
-    <div class="header-container">
-      <div class="header-title">
-        <div>
-          <h1>👗 GURBANI</h1>
-          <div class="tagline">Passion For Fashion</div>
-        </div>
-      </div>
-      <div class="header-actions">
-        <div class="user-info" id="userInfo">
-          <span id="userName">Welcome</span>
-        </div>
-        <div id="googleSignInButton"></div>
-        <button id="signOutBtn" style="display: none; background: #E57373;">🚪 Sign Out</button>
-      </div>
+    <div class="header-buttons">
+      <div id="googleSignInButton"></div>
+      <button id="signOutBtn" style="display: none;">Sign Out</button>
     </div>
+    <h1>👗 GURBANI</h1>
+    <p>Passion For Fashion</p>
   </header>
 
-  <!-- Landing Page (Public) -->
-  <main>
+  <div class="container">
+    <!-- Landing Page -->
     <div class="landing-page" id="landingPage">
-      <div class="hero">
-        <h2>Welcome to Gurbani Fashion</h2>
-        <p>Custom stitched outfits powered by AI design ideas</p>
-        <p>Sign in to get started with your personalized design concepts, book appointments, and track orders</p>
-      </div>
-
-      <div class="features-grid">
+      <h2>Welcome to Gurbani Fashion</h2>
+      <p>Custom stitched outfits powered by AI design ideas</p>
+      <p>Sign in with Google to start creating beautiful designs, book appointments, and track your orders.</p>
+      
+      <div class="features">
         <div class="feature-card">
-          <h3>🎨 AI Design Studio</h3>
-          <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing and delivery timelines.</p>
-          <p style="font-size: 12px; color: #999;">Sign in to start designing</p>
+          <h3>🎨 AI Design</h3>
+          <p>Describe your outfit, get 3 AI-generated concepts with pricing</p>
         </div>
         <div class="feature-card">
-          <h3>🧵 Browse Fabrics</h3>
-          <p>Explore our latest fabric arrivals and reserve your favorite fabrics for stitching.</p>
-          <p style="font-size: 12px; color: #999;">Sign in to browse</p>
-        </div>
-        <div class="feature-card">
-          <h3>📅 Book Appointments</h3>
-          <p>Schedule styling consultations, video calls, or in-store visits with personalized guidance.</p>
-          <p style="font-size: 12px; color: #999;">Sign in to book</p>
+          <h3>📅 Appointments</h3>
+          <p>Book styling consultations with Sonia</p>
         </div>
         <div class="feature-card">
           <h3>🎁 Birthday Rewards</h3>
-          <p>Get exclusive ₹500 credits on your birthday month to use on your next order.</p>
-          <p style="font-size: 12px; color: #999;">Sign in to unlock</p>
+          <p>Get ₹500 credits on your birthday month</p>
+        </div>
+        <div class="feature-card">
+          <h3>📦 Track Orders</h3>
+          <p>Monitor your custom stitched outfit progress</p>
         </div>
       </div>
     </div>
 
-    <!-- Main Content (Logged In) -->
-    <div id="mainContent">
-      <div class="tabs-container">
-        <div class="tabs-nav">
-          <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-          <button class="tab-btn" onclick="switchTab('design-studio')">🎨 AI Design Studio</button>
-          <button class="tab-btn" onclick="switchTab('appointments')">📅 Appointments</button>
-          <button class="tab-btn" onclick="switchTab('orders')">📦 My Orders</button>
-        </div>
-
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-          <h2>Welcome to Gurbani Fashion</h2>
-          <p>Discover our AI-powered custom stitching service. Design your dream outfit and let us bring it to life!</p>
-        </div>
-
-        <!-- Design Studio Tab -->
-        <div id="design-studio" class="tab-content">
-          <h2>🎨 AI Design Studio</h2>
-          <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing!</p>
-          <form onsubmit="handleDesignSubmit(event)" style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
-            <div class="form-group">
-              <label>📝 Describe Your Design Idea</label>
-              <textarea id="designDescription" placeholder="E.g., Pink embroidered anarkali with gold work for wedding..." required></textarea>
-            </div>
-            <button type="submit">✨ Generate My Designs</button>
-          </form>
-          <div id="designsContainer" style="margin-top: 30px;"></div>
-        </div>
-
-        <!-- Appointments Tab -->
-        <div id="appointments" class="tab-content">
-          <h2>📅 Book an Appointment</h2>
-          <p>Schedule a consultation, video call, or in-store visit with Sonia</p>
-          <form onsubmit="handleAppointmentSubmit(event)" style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
-            <div class="form-group">
-              <label>📅 Appointment Type</label>
-              <select id="appointmentType" required>
-                <option value="">-- Select Type --</option>
-                <option value="in-store-free">In-Store Visit (FREE)</option>
-                <option value="styling-consultation">Styling Consultation (₹999)</option>
-                <option value="video-call">Video Call (₹499)</option>
-                <option value="urgent-appointment">Urgent Appointment (₹499)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>📅 Date</label>
-              <input type="date" id="appointmentDate" required>
-            </div>
-            <div class="form-group">
-              <label>🕐 Time</label>
-              <select id="appointmentTime" required>
-                <option value="">-- Select Time --</option>
-                <option value="09:00">09:00 AM</option>
-                <option value="10:00">10:00 AM</option>
-                <option value="11:00">11:00 AM</option>
-                <option value="14:00">2:00 PM</option>
-                <option value="15:00">3:00 PM</option>
-                <option value="16:00">4:00 PM</option>
-              </select>
-            </div>
-            <button type="submit">✓ Book Appointment</button>
-          </form>
-          <div id="appointmentsList" style="margin-top: 20px;"></div>
-        </div>
-
-        <!-- Orders Tab -->
-        <div id="orders" class="tab-content">
-          <h2>📦 My Orders</h2>
-          <div id="ordersList">
-            <p>No orders yet. Start designing!</p>
-          </div>
-        </div>
-      </div>
+    <!-- Main Content (after login) -->
+    <div class="main-content" id="mainContent">
+      <h2>Welcome, <span id="userName">User</span>!</h2>
+      <p>Dashboard coming soon...</p>
+      <button onclick="loadOrders()">Load My Orders</button>
     </div>
-  </main>
+  </div>
 
-  <!-- Toast Container -->
   <div id="toastContainer"></div>
 
-  <!-- JavaScript -->
   <script>
     const API_BASE = 'https://gurbani-fashion-backend-production.up.railway.app';
     let authToken = localStorage.getItem('authToken');
     let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-    // Initialize Google Sign-In
-    window.onload = function() {
-      initializeGoogleSignIn();
+    // Initialize Google Sign-In when page loads
+    window.addEventListener('load', function() {
+      console.log('Page loaded, initializing Google Sign-In...');
+      
+      if (typeof google === 'undefined') {
+        console.error('Google SDK not loaded');
+        showToast('Google SDK failed to load', 'error');
+        return;
+      }
+
+      try {
+        google.accounts.id.initialize({
+          client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
+          callback: handleGoogleSignInResponse,
+        });
+
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInButton'),
+          { theme: 'filled_blue', size: 'large' }
+        );
+        
+        console.log('Google Sign-In initialized successfully');
+      } catch (error) {
+        console.error('Error initializing Google Sign-In:', error);
+        showToast('Error initializing Google Sign-In: ' + error.message, 'error');
+      }
+
       updateUI();
-    };
+    });
 
-    function initializeGoogleSignIn() {
-      google.accounts.id.initialize({
-        client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
-        callback: handleGoogleSignInResponse,
-      });
-
-      google.accounts.id.renderButton(
-        document.getElementById('googleSignInButton'),
-        {
-          theme: 'filled_blue',
-          size: 'large',
-          text: 'signin_with',
-        }
-      );
-    }
-
-    async function handleGoogleSignInResponse(response) {
+    function handleGoogleSignInResponse(response) {
+      console.log('Google Sign-In response received');
+      
       const token = response.credential;
-
-      // Decode JWT to get user info
+      
+      // Decode JWT
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
+        atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
       );
       const payload = JSON.parse(jsonPayload);
 
-      try {
-        // Send to backend
-        const response = await fetch(`${API_BASE}/api/auth/google-signin`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            googleId: payload.sub,
-            email: payload.email,
-            name: payload.name,
-            avatar: payload.picture,
-          }),
-        });
+      console.log('User info:', payload);
 
-        const data = await response.json();
-        if (response.ok) {
+      // Send to backend
+      fetch(`${API_BASE}/api/auth/google-signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          googleId: payload.sub,
+          email: payload.email,
+          name: payload.name,
+          avatar: payload.picture,
+        }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
           authToken = data.token;
           currentUser = data.user;
           localStorage.setItem('authToken', authToken);
@@ -518,137 +210,53 @@
           updateUI();
           showToast('✅ Signed in successfully!', 'success');
         } else {
-          showToast(data.error || 'Sign in failed', 'error');
+          showToast('❌ ' + (data.error || 'Sign in failed'), 'error');
         }
-      } catch (error) {
-        showToast('Sign in error: ' + error.message, 'error');
-        console.error(error);
-      }
+      })
+      .catch(error => {
+        console.error('Sign-in error:', error);
+        showToast('❌ Error: ' + error.message, 'error');
+      });
     }
 
     function handleSignOut() {
-      if (confirm('Are you sure you want to sign out?')) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        authToken = null;
-        currentUser = {};
-        updateUI();
-        showToast('Signed out', 'success');
-      }
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      authToken = null;
+      currentUser = {};
+      updateUI();
+      showToast('Signed out', 'success');
     }
 
     function updateUI() {
       const landingPage = document.getElementById('landingPage');
       const mainContent = document.getElementById('mainContent');
-      const userInfo = document.getElementById('userInfo');
       const signOutBtn = document.getElementById('signOutBtn');
 
       if (authToken && currentUser._id) {
-        // Show main content, hide landing
         landingPage.classList.add('hidden');
         mainContent.classList.add('visible');
-        userInfo.classList.add('visible');
         signOutBtn.style.display = 'block';
-        document.getElementById('userName').textContent = `Welcome, ${currentUser.name}!`;
+        document.getElementById('userName').textContent = currentUser.name;
       } else {
-        // Show landing, hide main content
         landingPage.classList.remove('hidden');
         mainContent.classList.remove('visible');
-        userInfo.classList.remove('visible');
         signOutBtn.style.display = 'none';
       }
     }
 
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-content').forEach((tab) => {
-        tab.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-btn').forEach((btn) => {
-        btn.classList.remove('active');
-      });
-
-      document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
-    }
-
-    async function handleDesignSubmit(event) {
-      event.preventDefault();
-      const description = document.getElementById('designDescription').value;
-
-      if (!authToken) {
-        showToast('Please sign in first', 'error');
-        return;
-      }
-
-      try {
-        const response = await fetch(`${API_BASE}/api/designs`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({ description }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          showToast('✅ Designs generated!', 'success');
-          // Display concepts here
-        } else {
-          showToast(data.error || 'Error generating designs', 'error');
-        }
-      } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-      }
-    }
-
-    async function handleAppointmentSubmit(event) {
-      event.preventDefault();
-      if (!authToken) {
-        showToast('Please sign in first', 'error');
-        return;
-      }
-
-      const appointmentType = document.getElementById('appointmentType').value;
-      const appointmentDate = document.getElementById('appointmentDate').value;
-      const appointmentTime = document.getElementById('appointmentTime').value;
-
-      try {
-        const response = await fetch(`${API_BASE}/api/appointments`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            appointmentType,
-            appointmentDate,
-            appointmentTime,
-          }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          showToast('✅ Appointment booked!', 'success');
-          event.target.reset();
-        } else {
-          showToast(data.error || 'Error booking appointment', 'error');
-        }
-      } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-      }
+    function loadOrders() {
+      showToast('Loading orders...', 'success');
     }
 
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${message}</span>`;
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
       container.appendChild(toast);
 
-      setTimeout(() => {
-        toast.remove();
-      }, 4000);
+      setTimeout(() => toast.remove(), 3000);
     }
   </script>
 </body>
