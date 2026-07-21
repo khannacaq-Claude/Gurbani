@@ -741,50 +741,80 @@
     }
 
     function handlePhotoUpload(event) {
+      console.log('📸 handlePhotoUpload called, type:', currentPhotoType);
       const files = event.target.files;
-      if (!files.length) return;
+      if (!files.length) {
+        console.log('❌ No files selected');
+        return;
+      }
+      console.log('📸 Files selected:', files.length);
 
       if (!uploadedPhotos[currentPhotoType]) {
         uploadedPhotos[currentPhotoType] = [];
       }
 
-      setStatus('designStatus', `⏳ Processing ${files.length} photo(s)...`, 'info');
+      const totalFiles = files.length;
+      setStatus('designStatus', '⏳ Processing ' + totalFiles + ' photo(s)...', 'info');
       let processedCount = 0;
 
-      Array.from(files).forEach((file, idx) => {
+      function checkDone() {
+        processedCount++;
+        console.log('✅ Processed', processedCount, 'of', totalFiles);
+        if (processedCount === totalFiles) {
+          console.log('🎨 All done, calling displayPhotoGallery');
+          displayPhotoGallery();
+          const total = Object.values(uploadedPhotos).reduce(function(s, a) { return s + a.length; }, 0);
+          setStatus('designStatus', '✅ ' + total + ' photo(s) ready! Neeche thumbnail dekhein.', 'success');
+        }
+      }
+
+      Array.from(files).forEach(function(file) {
+        console.log('📄 Reading file:', file.name, file.type, file.size);
         const reader = new FileReader();
+
+        reader.onerror = function() {
+          console.error('❌ FileReader error for', file.name);
+          checkDone();
+        };
+
         reader.onload = function(e) {
+          console.log('📄 File read done:', file.name);
           const img = new Image();
-          img.onload = function() {
-            // Compress to 900px max width
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > 900) {
-              height = Math.round(height * (900 / width));
-              width = 900;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Convert to JPEG base64
-            const base64 = canvas.toDataURL('image/jpeg', 0.8);
-            uploadedPhotos[currentPhotoType].push(base64);
-            
-            processedCount++;
-            if (processedCount === files.length) {
-              displayPhotoGallery();
-              const total = Object.values(uploadedPhotos).reduce((s, a) => s + a.length, 0);
-              setStatus('designStatus', `✅ ${processedCount} photo(s) added! Total: ${total} photo(s) ready.`, 'success');
-            }
+
+          img.onerror = function() {
+            console.error('❌ Image load error for', file.name, '- storing raw base64 anyway');
+            // Store the raw data URL even if Image() fails
+            uploadedPhotos[currentPhotoType].push(e.target.result);
+            checkDone();
           };
+
+          img.onload = function() {
+            console.log('🖼️ Image loaded:', img.width, 'x', img.height);
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              if (width > 900) {
+                height = Math.round(height * (900 / width));
+                width = 900;
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              const base64 = canvas.toDataURL('image/jpeg', 0.8);
+              uploadedPhotos[currentPhotoType].push(base64);
+              console.log('✅ Compressed and stored');
+            } catch (err) {
+              console.error('❌ Compression failed, storing raw:', err);
+              uploadedPhotos[currentPhotoType].push(e.target.result);
+            }
+            checkDone();
+          };
+
           img.src = e.target.result;
         };
+
         reader.readAsDataURL(file);
       });
 
@@ -792,8 +822,11 @@
     }
 
     function displayPhotoGallery() {
+      console.log('🎨 displayPhotoGallery called. uploadedPhotos:', Object.keys(uploadedPhotos));
       const gallery = document.getElementById('photoGallery');
       const grid = document.getElementById('photoGrid');
+      console.log('  gallery element:', gallery ? 'found' : 'MISSING');
+      console.log('  grid element:', grid ? 'found' : 'MISSING');
       
       const icons = { selfie: '👤', fabric: '🧵', lace: '🎀', accessories: '✨', inspiration: '🌟' };
       const labels = { selfie: 'Selfie', fabric: 'Fabric', lace: 'Lace', accessories: 'Accessory', inspiration: 'Inspiration' };
