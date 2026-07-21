@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gurbani Fashion</title>
+  <title>Gurbani Fashion - AI Design Studio</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,7 +52,7 @@
     button:hover { opacity: 0.9; }
     
     main {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 40px auto;
       padding: 0 20px;
     }
@@ -67,9 +67,11 @@
       padding: 40px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
     }
     
     h2 { color: #C06090; font-size: 28px; margin-bottom: 20px; }
+    h3 { color: #C06090; margin-bottom: 15px; font-size: 20px; }
     p { color: #666; margin-bottom: 15px; line-height: 1.6; }
     
     .grid {
@@ -94,25 +96,15 @@
       box-shadow: 0 4px 12px rgba(192, 96, 144, 0.2);
     }
     
-    .feature-box h3 { color: #C06090; margin-bottom: 10px; font-size: 16px; }
+    .feature-box h3 { margin-bottom: 10px; font-size: 16px; }
     .feature-box p { font-size: 13px; margin: 0; }
-    
-    .status {
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 6px;
-      display: none;
-    }
-    
-    .status.show { display: block; }
-    .status.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #4caf50; }
-    .status.error { background: #ffebee; color: #c62828; border: 1px solid #f44336; }
     
     .tabs {
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
       border-bottom: 2px solid #ddd;
+      flex-wrap: wrap;
     }
     
     .tab-btn {
@@ -143,15 +135,16 @@
       color: #333;
     }
     
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
+      font-family: inherit;
     }
     
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: #C06090;
       box-shadow: 0 0 0 3px rgba(192, 96, 144, 0.1);
@@ -166,9 +159,197 @@
       cursor: pointer;
       font-weight: bold;
       font-size: 14px;
+      width: auto;
     }
     
     .btn-submit:hover { background: #8B4B7A; }
+    .btn-submit:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    #signinArea {
+      min-height: 40px;
+    }
+    
+    /* Design Studio Specific */
+    .budget-info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+      border-left: 4px solid #2196F3;
+    }
+    
+    .design-concepts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    
+    .design-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .design-card:hover {
+      border-color: #C06090;
+      box-shadow: 0 4px 12px rgba(192, 96, 144, 0.2);
+    }
+    
+    .design-image {
+      width: 100%;
+      height: 300px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #999;
+      overflow: hidden;
+    }
+    
+    .design-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .design-info {
+      padding: 15px;
+    }
+    
+    .design-title {
+      font-weight: bold;
+      color: #C06090;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    
+    .design-desc {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    
+    .design-pricing {
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    
+    .design-pricing strong { color: #C06090; }
+    
+    .design-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .design-actions button {
+      flex: 1;
+      padding: 8px;
+      font-size: 12px;
+    }
+    
+    .btn-quote {
+      background: #C06090;
+      color: white;
+    }
+    
+    .btn-customize {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #C06090;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .status {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 6px;
+      display: none;
+    }
+    
+    .status.show { display: block; }
+    .status.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #4caf50; }
+    .status.error { background: #ffebee; color: #c62828; border: 1px solid #f44336; }
+    .status.info { background: #e3f2fd; color: #1976d2; border: 1px solid #2196f3; }
+    
+    .customize-panel {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 6px;
+      margin-top: 20px;
+    }
+    
+    .previous-designs {
+      margin-top: 30px;
+    }
+    
+    .design-history {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .history-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .history-item:hover {
+      border-color: #C06090;
+      box-shadow: 0 2px 8px rgba(192, 96, 144, 0.15);
+    }
+    
+    .history-date {
+      font-size: 12px;
+      color: #999;
+      margin-top: 8px;
+    }
+    
+    .history-status {
+      display: inline-block;
+      background: #C06090;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -183,69 +364,67 @@
   </header>
 
   <main>
-    <!-- LANDING PAGE (Before Login) -->
+    <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
       <div class="card">
         <h2>Welcome to Gurbani Fashion</h2>
         <p>Custom stitched outfits powered by AI design ideas</p>
         <p>Sign in with Google above to start creating beautiful designs, book appointments, and track your orders.</p>
         
-        <div id="status" class="status"></div>
-        
         <div class="grid">
-          <div class="feature-box" onclick="alert('Sign in first to access AI Design Studio')">
+          <div class="feature-box" onclick="promptSignIn('AI Design Studio')">
             <h3>🎨 AI Design Studio</h3>
             <p>Describe your outfit, get 3 AI-generated concepts with pricing</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Click to learn more</p>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to start</p>
           </div>
-          <div class="feature-box" onclick="alert('Sign in first to book appointments')">
+          <div class="feature-box" onclick="promptSignIn('Appointments')">
             <h3>📅 Appointments</h3>
             <p>Book styling consultations with Sonia</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Click to learn more</p>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to book</p>
           </div>
-          <div class="feature-box" onclick="alert('Sign in first to see birthday rewards')">
+          <div class="feature-box" onclick="promptSignIn('Birthday Rewards')">
             <h3>🎁 Birthday Rewards</h3>
             <p>Get ₹500 credits on your birthday month</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Click to learn more</p>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to unlock</p>
           </div>
-          <div class="feature-box" onclick="alert('Sign in first to track orders')">
+          <div class="feature-box" onclick="promptSignIn('Track Orders')">
             <h3>📦 Track Orders</h3>
             <p>Monitor your custom stitched outfit progress</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Click to learn more</p>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to track</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- DASHBOARD (After Login) -->
+    <!-- DASHBOARD -->
     <div class="dashboard" id="dashboard">
       <div class="card">
         <h2>Welcome, <span id="dashboardName">User</span>! 🎉</h2>
         <p>Choose what you'd like to do today:</p>
 
         <div class="tabs">
-          <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
-          <button class="tab-btn" onclick="switchTab('design')">🎨 AI Design</button>
-          <button class="tab-btn" onclick="switchTab('appointments')">📅 Appointments</button>
-          <button class="tab-btn" onclick="switchTab('orders')">📦 Orders</button>
+          <button class="tab-btn active" onclick="switchTab(event, 'overview')">📊 Overview</button>
+          <button class="tab-btn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
+          <button class="tab-btn" onclick="switchTab(event, 'appointments')">📅 Appointments</button>
+          <button class="tab-btn" onclick="switchTab(event, 'orders')">📦 Orders</button>
         </div>
 
-        <!-- Overview Tab -->
+        <!-- OVERVIEW TAB -->
         <div id="overview" class="tab-content active">
           <h3>Your Dashboard</h3>
           <p>Welcome to Gurbani Fashion! Here's what you can do:</p>
           <div class="grid" style="margin-top: 30px;">
-            <div class="feature-box" onclick="switchTab('design')">
+            <div class="feature-box" onclick="switchTab(null, 'design')">
               <h3>🎨 Create Design</h3>
               <p>Get 3 AI-generated design concepts</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Start designing</p>
             </div>
-            <div class="feature-box" onclick="switchTab('appointments')">
+            <div class="feature-box" onclick="switchTab(null, 'appointments')">
               <h3>📅 Book Appointment</h3>
               <p>Schedule a consultation with Sonia</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Book now</p>
             </div>
-            <div class="feature-box" onclick="switchTab('orders')">
+            <div class="feature-box" onclick="switchTab(null, 'orders')">
               <h3>📦 View Orders</h3>
               <p>Track your custom outfits</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 See orders</p>
@@ -253,20 +432,49 @@
           </div>
         </div>
 
-        <!-- Design Tab -->
+        <!-- AI DESIGN TAB -->
         <div id="design" class="tab-content">
           <h3>✨ AI Design Studio</h3>
-          <form onsubmit="submitDesign(event)">
+          <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing!</p>
+          
+          <div id="designStatus" class="status"></div>
+          
+          <div class="budget-info" id="budgetInfo" style="display: none;">
+            <strong>💰 Trial Budget:</strong> <span id="spentAmount">₹0</span> / <span id="budgetLimit">₹200</span> used
+            <div style="margin-top: 8px; background: rgba(33,150,243,0.2); height: 8px; border-radius: 4px;">
+              <div id="budgetBar" style="background: #2196F3; height: 100%; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
+            </div>
+          </div>
+
+          <form onsubmit="submitDesign(event)" id="designForm">
             <div class="form-group">
               <label>📝 Describe Your Dream Outfit</label>
-              <textarea placeholder="E.g., Pink embroidered anarkali with gold work for wedding..." required></textarea>
+              <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required></textarea>
             </div>
-            <button type="submit" class="btn-submit">✨ Generate Designs</button>
+            <div class="form-group">
+              <label>🎯 Occasion</label>
+              <select id="occasion">
+                <option value="">Choose occasion</option>
+                <option value="wedding">Wedding / Bridal</option>
+                <option value="festival">Festival / Celebration</option>
+                <option value="casual">Casual / Daily Wear</option>
+                <option value="party">Party / Formal Event</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-submit" id="generateBtn">✨ Generate My Designs</button>
           </form>
-          <div id="designResults" style="margin-top: 20px;"></div>
+
+          <!-- DESIGNS DISPLAY -->
+          <div id="designsContainer"></div>
+          
+          <!-- PREVIOUS DESIGNS -->
+          <div class="previous-designs" id="previousDesigns" style="display: none;">
+            <h4>📚 Your Previous Designs</h4>
+            <div class="design-history" id="designHistory"></div>
+          </div>
         </div>
 
-        <!-- Appointments Tab -->
+        <!-- APPOINTMENTS TAB -->
         <div id="appointments" class="tab-content">
           <h3>📅 Book an Appointment</h3>
           <form onsubmit="submitAppointment(event)">
@@ -288,7 +496,7 @@
           </form>
         </div>
 
-        <!-- Orders Tab -->
+        <!-- ORDERS TAB -->
         <div id="orders" class="tab-content">
           <h3>📦 My Orders</h3>
           <p>You don't have any orders yet. Start by creating a design!</p>
@@ -300,31 +508,166 @@
   <script>
     const API = 'https://gurbani-fashion-backend-production.up.railway.app';
     let currentUser = null;
-    let authToken = localStorage.getItem('authToken');
+    let authToken = null;
+    let googleInitialized = false;
 
-    function setStatus(msg, type) {
-      const statusEl = document.getElementById('status');
-      statusEl.textContent = msg;
-      statusEl.className = 'status show ' + type;
+    function promptSignIn(feature) {
+      alert(`Sign in first to access ${feature}`);
     }
 
-    function switchTab(tabName) {
+    function setStatus(elementId, msg, type) {
+      const el = document.getElementById(elementId);
+      el.textContent = msg;
+      el.className = 'status show ' + type;
+    }
+
+    function switchTab(event, tabName) {
+      if (event) event.preventDefault();
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
+      document.querySelector(`button[onclick*="${tabName}"]`)?.classList.add('active');
+    }
+
+    async function submitDesign(e) {
+      e.preventDefault();
+      if (!authToken) {
+        alert('Please sign in first');
+        return;
+      }
+
+      const description = document.getElementById('designDesc').value;
+      const occasion = document.getElementById('occasion').value || 'casual';
+
+      setStatus('designStatus', '⏳ Generating your designs... This may take 30-60 seconds', 'info');
+      document.getElementById('generateBtn').disabled = true;
+
+      try {
+        const response = await fetch(`${API}/api/designs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ description, occasion }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setStatus('designStatus', '✅ Designs generated successfully! Check them out below.', 'success');
+          displayDesigns(data.design.aiConcepts);
+          updateBudget(data.trial);
+          document.getElementById('designDesc').value = '';
+          loadPreviousDesigns();
+        } else {
+          setStatus('designStatus', '❌ ' + (data.message || data.error || 'Error generating designs'), 'error');
+        }
+      } catch (error) {
+        setStatus('designStatus', '❌ ' + error.message, 'error');
+        console.error('Error:', error);
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+      }
+    }
+
+    function displayDesigns(concepts) {
+      const container = document.getElementById('designsContainer');
+      if (!concepts || concepts.length === 0) {
+        container.innerHTML = '<p>No designs generated</p>';
+        return;
+      }
+
+      container.innerHTML = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
+      const grid = document.createElement('div');
+      grid.className = 'design-concepts';
+
+      concepts.forEach((concept, idx) => {
+        const card = document.createElement('div');
+        card.className = 'design-card';
+        
+        const imageHtml = concept.imageUrl 
+          ? `<img src="${concept.imageUrl}" alt="Design ${idx + 1}">`
+          : '<div style="color: #999; font-size: 12px;">Image generation in progress...</div>';
+
+        card.innerHTML = `
+          <div class="design-image">${imageHtml}</div>
+          <div class="design-info">
+            <div class="design-title">Design ${idx + 1}: ${concept.title}</div>
+            <div class="design-desc">${concept.description}</div>
+            <div class="design-pricing">
+              <strong>₹${concept.priceMin || concept.price || 2500} - ₹${concept.priceMax || concept.price || 4000}</strong>
+              <br>Delivery: ${concept.deliveryDays || 14} days
+            </div>
+            <div class="design-actions">
+              <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
+              <button class="btn-customize">🎨 Customize</button>
+            </div>
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+
+      container.appendChild(grid);
+    }
+
+    function updateBudget(trial) {
+      if (!trial) return;
+      
+      const info = document.getElementById('budgetInfo');
+      info.style.display = 'block';
+      document.getElementById('spentAmount').textContent = '₹' + trial.spentAmount;
+      document.getElementById('budgetLimit').textContent = '₹' + trial.cacLimit;
+      
+      const percent = (trial.spentAmount / trial.cacLimit) * 100;
+      document.getElementById('budgetBar').style.width = Math.min(percent, 100) + '%';
+    }
+
+    async function loadPreviousDesigns() {
+      try {
+        const response = await fetch(`${API}/api/designs/my-designs`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        if (data.success && data.designs && data.designs.length > 0) {
+          const historyDiv = document.getElementById('previousDesigns');
+          const historyGrid = document.getElementById('designHistory');
+          
+          historyGrid.innerHTML = data.designs.map((design, i) => `
+            <div class="history-item" onclick="alert('Design from ${new Date(design.createdAt).toLocaleDateString()}')">
+              <div style="font-size: 12px; color: #666;">Design ${i + 1}</div>
+              <div class="history-status">${design.status}</div>
+              <div class="history-date">${new Date(design.createdAt).toLocaleDateString()}</div>
+            </div>
+          `).join('');
+          
+          historyDiv.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading designs:', error);
+      }
+    }
+
+    function sendQuote(conceptIndex) {
+      alert('Sonia will review your design and send a quote within 24 hours!');
+    }
+
+    function submitAppointment(event) {
+      event.preventDefault();
+      alert('Appointment booking coming soon!');
     }
 
     function handleResponse(response) {
-      console.log('Sign-In response received');
-      setStatus('Processing sign-in...', 'success');
+      setStatus('designStatus', 'Processing sign-in...', 'info');
       
       const token = response.credential;
       const parts = token.split('.');
       const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
       
-      console.log('Payload:', payload);
-
       fetch(`${API}/api/auth/google-signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -338,26 +681,22 @@
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          console.log('Sign-in successful!');
           authToken = data.token;
           currentUser = data.user;
           localStorage.setItem('authToken', authToken);
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
-          setStatus('✅ Signed in successfully!', 'success');
+          setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
           updateUI();
+          setTimeout(() => switchTab(null, 'design'), 500);
         } else {
-          setStatus('❌ ' + data.error, 'error');
-          console.error('Error:', data);
+          setStatus('designStatus', '❌ ' + data.error, 'error');
         }
       })
-      .catch(e => {
-        setStatus('❌ ' + e.message, 'error');
-        console.error('Error:', e);
-      });
+      .catch(e => setStatus('designStatus', '❌ ' + e.message, 'error'));
     }
 
     function handleSignOut() {
-      if (confirm('Are you sure you want to sign out?')) {
+      if (confirm('Sign out?')) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
         authToken = null;
@@ -373,8 +712,7 @@
       const signOutBtn = document.getElementById('signOutBtn');
       const signinArea = document.getElementById('signinArea');
 
-      if (authToken && currentUser) {
-        // Signed in
+      if (authToken && currentUser && currentUser._id) {
         landingPage.classList.add('hidden');
         dashboard.classList.add('show');
         userWelcome.classList.add('show');
@@ -382,88 +720,50 @@
         signOutBtn.style.display = 'block';
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
+        loadPreviousDesigns();
       } else {
-        // Not signed in
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
         userWelcome.classList.remove('show');
         signOutBtn.style.display = 'none';
-        renderGoogleButton();
+        
+        if (!googleInitialized && typeof google !== 'undefined') {
+          signinArea.innerHTML = '';
+          google.accounts.id.renderButton(signinArea, { theme: 'filled_blue', size: 'large' });
+        }
       }
-    }
-
-    function renderGoogleButton() {
-      if (typeof google === 'undefined') {
-        console.error('Google SDK not loaded');
-        return;
-      }
-      
-      document.getElementById('signinArea').innerHTML = '';
-      google.accounts.id.renderButton(
-        document.getElementById('signinArea'),
-        { theme: 'filled_blue', size: 'large' }
-      );
-      console.log('Google button rendered');
-    }
-
-    function submitDesign(event) {
-      event.preventDefault();
-      if (!authToken) {
-        alert('Please sign in first');
-        return;
-      }
-      alert('Design generation coming soon! Powered by Claude AI 🤖');
-    }
-
-    function submitAppointment(event) {
-      event.preventDefault();
-      if (!authToken) {
-        alert('Please sign in first');
-        return;
-      }
-      alert('Appointment booking coming soon!');
     }
 
     window.addEventListener('load', () => {
-      console.log('Page loaded');
+      const savedToken = localStorage.getItem('authToken');
+      const savedUser = localStorage.getItem('currentUser');
       
-      // Check if already signed in
-      authToken = localStorage.getItem('authToken');
-      const userData = localStorage.getItem('currentUser');
-      if (authToken && userData) {
+      if (savedToken && savedUser) {
         try {
-          currentUser = JSON.parse(userData);
-          console.log('User already signed in:', currentUser);
+          authToken = savedToken;
+          currentUser = JSON.parse(savedUser);
         } catch (e) {
-          console.error('Error parsing user data:', e);
           localStorage.removeItem('authToken');
           localStorage.removeItem('currentUser');
         }
       }
 
-      // Initialize Google Sign-In
       if (typeof google === 'undefined') {
-        console.error('Google SDK not loaded');
-        setStatus('❌ Google SDK failed to load', 'error');
+        setStatus('designStatus', '❌ Google SDK not loaded', 'error');
         return;
       }
       
-      console.log('Google SDK ready');
       google.accounts.id.initialize({
         client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
         callback: handleResponse,
       });
       
-      // Set up sign out button
+      googleInitialized = true;
       document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
-
-      // Update UI based on auth state
       updateUI();
       
-      // Render Google button if not signed in
       if (!authToken) {
-        renderGoogleButton();
-        setStatus('✅ Ready to sign in', 'success');
+        setStatus('designStatus', '✅ Ready to sign in', 'success');
       }
     });
   </script>
