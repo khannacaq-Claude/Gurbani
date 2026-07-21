@@ -570,7 +570,8 @@
           <form onsubmit="submitDesign(event)" id="designForm">
             <div class="form-group">
               <label>📝 Describe Your Dream Outfit</label>
-              <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required></textarea>
+              <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required oninput="validateDescriptionRealtime()"></textarea>
+              <div id="descValidationFeedback" style="margin-top: 8px; font-size: 13px; display: none; padding: 8px 12px; border-radius: 4px; background: #f0f0f0;"></div>
             </div>
             <div class="form-group">
               <label>🎯 Occasion</label>
@@ -785,6 +786,60 @@
       setStatus('designStatus', '✅ Photo removed', 'info');
     }
 
+    function validateDesignDescription(text) {
+      // Trim whitespace
+      text = text.trim();
+      
+      // Check 1: Minimum length (at least 10 characters)
+      if (text.length < 10) {
+        return { valid: false, error: "कृपया कम से कम 10 शब्द लिखें (Please write at least 10 characters)" };
+      }
+      
+      // Check 2: Maximum length (not more than 500 characters)
+      if (text.length > 500) {
+        return { valid: false, error: "कृपया 500 शब्दों से कम लिखें (Please write less than 500 characters)" };
+      }
+      
+      // Check 3: No excessive special characters (max 2 in a row)
+      const specialCharPattern = /[!@#$%^&*()_+=\[\]{};':"\\|,.<>/?]{3,}/;
+      if (specialCharPattern.test(text)) {
+        return { valid: false, error: "बहुत सारे special characters न लिखें (Avoid excessive special characters)" };
+      }
+      
+      // Check 4: No repeated characters (like "aaaaaaa" or "11111")
+      const repeatedCharPattern = /(.)\1{4,}/;
+      if (repeatedCharPattern.test(text)) {
+        return { valid: false, error: "एक ही अक्षर बार-बार न दोहराएं (Don't repeat same character)" };
+      }
+      
+      // Check 5: Must contain at least some letters/numbers (not just symbols)
+      const alphanumericPattern = /[a-zA-Z0-9]/;
+      if (!alphanumericPattern.test(text)) {
+        return { valid: false, error: "कुछ meaningful text लिखें (Write meaningful text)" };
+      }
+      
+      // Check 6: Gibberish detection - must have actual words (not random keyboard mashing)
+      // Check if there are at least 2 words
+      const words = text.split(/\s+/).filter(w => w.length > 1);
+      if (words.length < 2) {
+        return { valid: false, error: "कम से कम 2-3 words लिखें (Write at least 2-3 words)" };
+      }
+      
+      // Check 7: No all caps with numbers mixed randomly
+      const allCapsRandomNumbers = /^[A-Z0-9\s!@#$%^&*()]{10,}$/.test(text);
+      if (allCapsRandomNumbers && words.length < 3) {
+        return { valid: false, error: "सही तरीके से लिखें (Write properly, not in random caps)" };
+      }
+      
+      // Check 8: At least some vowels (real words have vowels)
+      const vowelPattern = /[aeiouAEIOU]/;
+      if (!vowelPattern.test(text)) {
+        return { valid: false, error: "कुछ vowels होने चाहिए - meaningful text लिखें (Write meaningful text with vowels)" };
+      }
+      
+      return { valid: true, error: null };
+    }
+
     async function submitDesign(e) {
       e.preventDefault();
       if (!authToken) {
@@ -793,6 +848,14 @@
       }
 
       const description = document.getElementById('designDesc').value;
+      
+      // VALIDATE DESCRIPTION
+      const validation = validateDesignDescription(description);
+      if (!validation.valid) {
+        setStatus('designStatus', '❌ ' + validation.error, 'error');
+        return;
+      }
+      
       const occasion = document.getElementById('occasion').value || 'casual';
       const totalPhotos = Object.values(uploadedPhotos).reduce((sum, arr) => sum + arr.length, 0);
 
@@ -817,7 +880,16 @@
 
         const data = await response.json();
 
+        console.log('📊 Backend Response:', {
+          success: data.success,
+          message: data.message,
+          design: data.design,
+          concepts_count: data.design?.aiConcepts?.length,
+          trial: data.trial
+        });
+
         if (response.ok && data.success) {
+          console.log('✅ Response OK, displaying designs with', data.design.aiConcepts.length, 'concepts');
           setStatus('designStatus', '✅ Designs generated! Check how they look on you below.', 'success');
           displayDesigns(data.design.aiConcepts, data.design.photoAnalysis);
           updateBudget(data.trial);
@@ -826,6 +898,7 @@
           displayPhotoGallery();
           document.getElementById('photoInput').value = '';
         } else {
+          console.error('❌ Response not OK or not success:', { response_ok: response.ok, data_success: data.success });
           setStatus('designStatus', '❌ ' + (data.message || data.error || 'Error generating designs'), 'error');
         }
       } catch (error) {
@@ -837,11 +910,23 @@
     }
 
     function displayDesigns(concepts, photoAnalysis) {
+      console.log('🎨 displayDesigns called');
+      console.log('  concepts:', concepts);
+      console.log('  concepts type:', typeof concepts);
+      console.log('  concepts is array?', Array.isArray(concepts));
+      console.log('  concepts length:', concepts?.length);
+      console.log('  photoAnalysis:', photoAnalysis ? 'YES' : 'NO');
+      
       const container = document.getElementById('designsContainer');
+      console.log('  container element:', container);
+      
       if (!concepts || concepts.length === 0) {
-        container.innerHTML = '<p>No designs generated</p>';
+        console.warn('❌ No concepts to display');
+        container.innerHTML = '<p>❌ No designs generated or data missing</p>';
         return;
       }
+      
+      console.log('✅ Rendering', concepts.length, 'designs');
 
       let html = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
       
@@ -881,7 +966,10 @@
       });
       
       html += '</div>';
+      console.log('📝 HTML generated, length:', html.length);
+      console.log('🔄 Setting innerHTML...');
       container.innerHTML = html;
+      console.log('✅ Designs rendered successfully!');
     }
 
     function formatAnalysis(text) {
@@ -1044,6 +1132,32 @@
         setStatus('designStatus', '✅ Ready to sign in', 'success');
       }
     });
+    function validateDescriptionRealtime() {
+      const textarea = document.getElementById('designDesc');
+      const feedback = document.getElementById('descValidationFeedback');
+      const text = textarea.value.trim();
+      const charCount = text.length;
+      
+      if (charCount === 0) {
+        feedback.style.display = 'none';
+        return;
+      }
+      
+      const validation = validateDesignDescription(text);
+      
+      if (!validation.valid) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#d32f2f';
+        feedback.innerHTML = `❌ ${validation.error}`;
+        return;
+      }
+      
+      const words = text.split(/\s+/).filter(w => w.length > 0).length;
+      feedback.style.display = 'block';
+      feedback.style.color = '#388e3c';
+      feedback.innerHTML = `✅ ठीक है! (${charCount} characters, ${words} words)`;
+    }
+
   </script>
 </body>
 </html>
