@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gurbani Fashion</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <title>Gurbani Fashion - AI Design Studio</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #f5f5f5; }
@@ -14,12 +13,13 @@
       color: white;
       padding: 30px 20px;
       text-align: center;
+      position: relative;
     }
     
     header h1 { font-size: 36px; margin-bottom: 5px; }
     header .tagline { font-size: 14px; font-style: italic; }
     
-    .btn-container {
+    .header-right {
       position: absolute;
       top: 20px;
       right: 20px;
@@ -29,14 +29,18 @@
       max-width: 1000px;
       margin: 40px auto;
       padding: 0 20px;
+    }
+    
+    .card {
       background: white;
       padding: 40px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
     }
     
     h2 { color: #C06090; font-size: 28px; margin-bottom: 15px; }
-    p { color: #666; margin-bottom: 15px; line-height: 1.6; }
+    p { color: #666; margin-bottom: 15px; line-height: 1.6; font-size: 15px; }
     
     .features {
       display: grid;
@@ -50,98 +54,214 @@
       padding: 20px;
       border-radius: 6px;
       border-left: 4px solid #C06090;
+      text-align: left;
     }
     
-    .feature h3 { color: #C06090; margin-bottom: 10px; }
-    .feature p { font-size: 13px; }
+    .feature h3 { color: #C06090; margin-bottom: 10px; font-size: 16px; }
+    .feature p { font-size: 13px; margin: 0; }
+    
+    .signin-button {
+      display: inline-block;
+      background: white;
+      color: #C06090;
+      border: 2px solid #C06090;
+      padding: 12px 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .signin-button:hover {
+      background: #C06090;
+      color: white;
+    }
+    
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #c62828;
+    }
+    
+    .success-message {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #2e7d32;
+    }
+    
+    #googleSignInContainer {
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
-  <div class="btn-container">
-    <div id="g_id_onload" data-client_id="302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-    <div class="g_id_signin" data-type="standard"></div>
-  </div>
-
   <header>
     <h1>👗 GURBANI</h1>
     <p class="tagline">Passion For Fashion</p>
+    <div class="header-right">
+      <div id="googleSignInContainer"></div>
+    </div>
   </header>
 
   <div class="container">
-    <h2>Welcome to Gurbani Fashion</h2>
-    <p>Custom stitched outfits powered by AI design ideas</p>
-    <p>Sign in with Google to start creating beautiful designs, book appointments, and track your orders.</p>
-    
-    <div class="features">
-      <div class="feature">
-        <h3>🎨 AI Design Studio</h3>
-        <p>Describe your outfit, get 3 AI-generated concepts with pricing and delivery timelines</p>
-      </div>
-      <div class="feature">
-        <h3>📅 Book Appointments</h3>
-        <p>Schedule styling consultations, video calls, or in-store visits with Sonia</p>
-      </div>
-      <div class="feature">
-        <h3>🎁 Birthday Rewards</h3>
-        <p>Get exclusive ₹500 credits on your birthday month</p>
-      </div>
-      <div class="feature">
-        <h3>📦 Track Orders</h3>
-        <p>Monitor your custom stitched outfit progress in real time</p>
+    <div class="card">
+      <h2>Welcome to Gurbani Fashion</h2>
+      <p>Custom stitched outfits powered by AI design ideas</p>
+      <p style="margin-bottom: 30px;">Sign in with Google to start creating beautiful designs, book appointments, and track your orders.</p>
+      
+      <div id="statusMessage"></div>
+      
+      <div class="features">
+        <div class="feature">
+          <h3>🎨 AI Design Studio</h3>
+          <p>Describe your outfit, get 3 AI-generated concepts with pricing and delivery timelines</p>
+        </div>
+        <div class="feature">
+          <h3>📅 Book Appointments</h3>
+          <p>Schedule styling consultations, video calls, or in-store visits with Sonia</p>
+        </div>
+        <div class="feature">
+          <h3>🎁 Birthday Rewards</h3>
+          <p>Get exclusive ₹500 credits on your birthday month</p>
+        </div>
+        <div class="feature">
+          <h3>📦 Track Orders</h3>
+          <p>Monitor your custom stitched outfit progress in real time</p>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- Google Sign-In SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
   <script>
-    function handleCredentialResponse(response) {
-      console.log("Encoded JWT ID token: " + response.credential);
-      
-      const token = response.credential;
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-      const payload = JSON.parse(jsonPayload);
+    const API_BASE = 'https://gurbani-fashion-backend-production.up.railway.app';
+    
+    console.log('Page loaded, initializing...');
 
-      console.log("User:", payload);
-
-      fetch('https://gurbani-fashion-backend-production.up.railway.app/api/auth/google-signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          googleId: payload.sub,
-          email: payload.email,
-          name: payload.name,
-          avatar: payload.picture,
-        }),
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          localStorage.setItem('authToken', data.token);
-          localStorage.setItem('currentUser', JSON.stringify(data.user));
-          alert('✅ Signed in! Redirecting to dashboard...');
-          window.location.href = 'https://khannacaq-claude.github.io/Gurbani/dashboard.html';
-        } else {
-          alert('❌ Sign in failed: ' + data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('❌ Error: ' + error.message);
-      });
+    function showStatus(message, type = 'info') {
+      const statusDiv = document.getElementById('statusMessage');
+      const className = type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : 'info-message';
+      statusDiv.innerHTML = `<div class="${className}">${message}</div>`;
     }
 
-    window.onload = function() {
-      google.accounts.id.initialize({
-        client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
-        callback: handleCredentialResponse
-      });
-      google.accounts.id.renderButton(
-        document.querySelector('.g_id_signin'),
-        { theme: 'filled_blue', size: 'large' }
-      );
-      console.log('Google Sign-In ready');
-    };
+    function handleCredentialResponse(response) {
+      console.log('Google Sign-In response received');
+      showStatus('Processing sign-in...', 'info');
+      
+      const token = response.credential;
+      
+      try {
+        // Decode JWT
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        
+        console.log('User info decoded:', payload);
+        
+        // Send to backend
+        fetch(`${API_BASE}/api/auth/google-signin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            googleId: payload.sub,
+            email: payload.email,
+            name: payload.name,
+            avatar: payload.picture,
+          }),
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Sign-in successful!');
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            showStatus('✅ Signed in successfully! Redirecting...', 'success');
+            setTimeout(() => {
+              window.location.href = 'https://khannacaq-claude.github.io/Gurbani/';
+            }, 1000);
+          } else {
+            showStatus('❌ Sign-in failed: ' + (data.error || 'Unknown error'), 'error');
+            console.error('Backend error:', data);
+          }
+        })
+        .catch(error => {
+          showStatus('❌ Network error: ' + error.message, 'error');
+          console.error('Fetch error:', error);
+        });
+      } catch (error) {
+        showStatus('❌ Error processing sign-in: ' + error.message, 'error');
+        console.error('Error:', error);
+      }
+    }
+
+    // Wait for Google SDK to load
+    window.addEventListener('load', function() {
+      console.log('Window load event fired');
+      
+      // Check if google is defined
+      if (typeof google === 'undefined') {
+        console.error('Google SDK failed to load!');
+        showStatus('❌ Google Sign-In SDK failed to load. Please refresh the page.', 'error');
+        return;
+      }
+
+      console.log('Google SDK loaded successfully');
+      
+      try {
+        // Initialize Google Sign-In
+        google.accounts.id.initialize({
+          client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
+          callback: handleCredentialResponse,
+        });
+
+        // Render button
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInContainer'),
+          { 
+            theme: 'filled_blue',
+            size: 'large',
+            text: 'signin_with'
+          }
+        );
+        
+        console.log('Google Sign-In button rendered');
+        showStatus('✅ Google Sign-In ready. Click the button above to sign in.', 'success');
+      } catch (error) {
+        console.error('Error initializing Google Sign-In:', error);
+        showStatus('❌ Error: ' + error.message, 'error');
+      }
+    });
+
+    // Also try immediate initialization in case window is already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      console.log('Document already loaded, initializing immediately');
+      setTimeout(() => {
+        if (typeof google !== 'undefined') {
+          google.accounts.id.initialize({
+            client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
+            callback: handleCredentialResponse,
+          });
+          google.accounts.id.renderButton(
+            document.getElementById('googleSignInContainer'),
+            { theme: 'filled_blue', size: 'large', text: 'signin_with' }
+          );
+          console.log('Google Sign-In initialized on immediate load');
+        }
+      }, 100);
+    }
   </script>
 </body>
 </html>
