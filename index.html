@@ -363,12 +363,12 @@
       position: absolute;
       top: 4px;
       right: 4px;
-      background: rgba(180,40,80,0.85);
+      background: rgba(0,0,0,0.65);
       color: white;
-      border: none;
+      border: 1.5px solid rgba(255,255,255,0.5);
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 26px;
+      height: 26px;
       cursor: pointer;
       font-size: 13px;
       display: flex;
@@ -376,9 +376,15 @@
       justify-content: center;
       padding: 0;
       line-height: 1;
+      transition: background 0.15s;
+      z-index: 10;
     }
 
-    .photo-item-remove:hover { background: #a02050; }
+    .photo-item-remove:hover { 
+      background: rgba(200,30,60,0.9);
+      border-color: white;
+      transform: scale(1.1);
+    }
 
     .photo-type-badge {
       position: absolute;
@@ -792,26 +798,47 @@
       const icons = { selfie: '👤', fabric: '🧵', lace: '🎀', accessories: '✨', inspiration: '🌟' };
       const labels = { selfie: 'Selfie', fabric: 'Fabric', lace: 'Lace', accessories: 'Accessory', inspiration: 'Inspiration' };
 
+      // Clear grid
+      grid.innerHTML = '';
       let totalPhotos = 0;
-      let html = '';
 
       for (const [type, photos] of Object.entries(uploadedPhotos)) {
         if (photos && photos.length > 0) {
           photos.forEach((photo, idx) => {
-            html += `
-              <div class="photo-item">
-                <img src="${photo}" alt="${labels[type] || type}" >
-                <div class="photo-item-label">${icons[type] || '📷'} ${labels[type] || type}</div>
-                <button type="button" class="photo-item-remove" onclick="removePhoto('${type}', ${idx})" title="Remove">×</button>
-              </div>
-            `;
+            // Build DOM elements directly — avoids base64 breaking template literals
+            const item = document.createElement('div');
+            item.className = 'photo-item';
+            item.id = 'photo_' + type + '_' + idx;
+
+            const img = document.createElement('img');
+            img.src = photo;
+            img.alt = labels[type] || type;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+
+            const label = document.createElement('div');
+            label.className = 'photo-item-label';
+            label.textContent = (icons[type] || '📷') + ' ' + (labels[type] || type);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'photo-item-remove';
+            removeBtn.title = 'Hatao (Remove)';
+            removeBtn.innerHTML = '🗑️';
+            removeBtn.onclick = (function(t, i) {
+              return function() { removePhoto(t, i); };
+            })(type, idx);
+
+            item.appendChild(img);
+            item.appendChild(label);
+            item.appendChild(removeBtn);
+            grid.appendChild(item);
             totalPhotos++;
           });
         }
       }
 
       // Update tab badges
-      ['selfie','fabric','lace','accessories','inspiration'].forEach(type => {
+      ['selfie','fabric','lace','accessories','inspiration'].forEach(function(type) {
         const badge = document.getElementById('badge_' + type);
         const count = (uploadedPhotos[type] || []).length;
         if (badge) {
@@ -822,23 +849,46 @@
 
       if (totalPhotos > 0) {
         gallery.style.display = 'block';
-        document.getElementById('galleryTitle').innerHTML = 
-          `📸 <strong>${totalPhotos} photo${totalPhotos > 1 ? 's' : ''}</strong> uploaded — scroll to see all`;
-        grid.innerHTML = html;
-        // Gallery is above generate button - always visible
+        const title = document.getElementById('galleryTitle');
+        title.innerHTML = '📸 <strong>' + totalPhotos + ' photo' + (totalPhotos > 1 ? 's' : '') + '</strong> uploaded' +
+          '<button type="button" onclick="clearAllPhotos()" style="' +
+          'float:right;background:none;border:1px solid #C06090;color:#C06090;' +
+          'border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">' +
+          '🗑️ Sab Hatao</button>';
       } else {
         gallery.style.display = 'none';
-        grid.innerHTML = '';
       }
     }
 
     function removePhoto(type, idx) {
-      uploadedPhotos[type].splice(idx, 1);
-      if (uploadedPhotos[type].length === 0) {
-        delete uploadedPhotos[type];
+      // Show a quick visual flash then remove
+      const itemId = 'photo_' + type + '_' + idx;
+      const item = document.getElementById(itemId);
+      if (item) {
+        item.style.transition = 'opacity 0.2s, transform 0.2s';
+        item.style.opacity = '0';
+        item.style.transform = 'scale(0.8)';
+        setTimeout(function() {
+          uploadedPhotos[type].splice(idx, 1);
+          if (uploadedPhotos[type].length === 0) delete uploadedPhotos[type];
+          displayPhotoGallery();
+          const total = Object.values(uploadedPhotos).reduce((s, a) => s + a.length, 0);
+          setStatus('designStatus', total > 0 
+            ? '🗑️ Photo hataaya gaya. ' + total + ' photo(s) bache hain.' 
+            : '🗑️ Sab photos hataaye gaye.', 'info');
+        }, 200);
+      } else {
+        uploadedPhotos[type].splice(idx, 1);
+        if (uploadedPhotos[type].length === 0) delete uploadedPhotos[type];
+        displayPhotoGallery();
+        setStatus('designStatus', '🗑️ Photo hataaya gaya.', 'info');
       }
+    }
+
+    function clearAllPhotos() {
+      uploadedPhotos = {};
       displayPhotoGallery();
-      setStatus('designStatus', '✅ Photo removed', 'info');
+      setStatus('designStatus', '🗑️ Sab photos hataaye gaye.', 'info');
     }
 
     function validateDesignDescription(text) {
