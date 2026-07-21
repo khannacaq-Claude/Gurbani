@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gurbani Fashion - AI Design Studio & Custom Stitching</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * {
       margin: 0;
@@ -16,8 +17,6 @@
       --secondary-color: #8B4B7A;
       --success-color: #4CAF50;
       --error-color: #F44336;
-      --warning-color: #FF9800;
-      --info-color: #2196F3;
       --text-color: #333;
       --light-bg: #f9f9f9;
       --border-color: #ddd;
@@ -48,7 +47,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
     }
 
@@ -77,10 +75,14 @@
     }
 
     .user-info {
-      display: flex;
+      display: none;
       align-items: center;
       gap: 10px;
       font-size: 14px;
+    }
+
+    .user-info.visible {
+      display: flex;
     }
 
     button {
@@ -112,7 +114,124 @@
       padding: 0 20px;
     }
 
-    /* Notifications/Toasts */
+    /* Landing Page (Visible before login) */
+    .landing-page {
+      display: block;
+    }
+
+    .landing-page.hidden {
+      display: none;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 40px 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .hero h2 {
+      font-size: 32px;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .feature-card h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .feature-card button {
+      width: 100%;
+      padding: 10px;
+    }
+
+    /* Main content (Visible after login) */
+    #mainContent {
+      display: none;
+    }
+
+    #mainContent.visible {
+      display: block;
+    }
+
+    /* Tabs */
+    .tabs-container {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .tabs-nav {
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: 2px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 150px;
+      background: transparent;
+      color: var(--text-color);
+      padding: 15px 20px;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn:hover {
+      background: var(--light-bg);
+    }
+
+    .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Toast */
     #toastContainer {
       position: fixed;
       top: 100px;
@@ -144,14 +263,6 @@
       border-left-color: var(--error-color);
     }
 
-    .toast.warning {
-      border-left-color: var(--warning-color);
-    }
-
-    .toast.info {
-      border-left-color: var(--info-color);
-    }
-
     @keyframes slideInRight {
       from {
         transform: translateX(400px);
@@ -163,137 +274,7 @@
       }
     }
 
-    @keyframes slideOutRight {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-    }
-
-    /* Tabs Navigation */
-    .tabs-container {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-
-    .tabs-nav {
-      display: flex;
-      flex-wrap: wrap;
-      border-bottom: 2px solid var(--border-color);
-      overflow-x: auto;
-    }
-
-    .tab-btn {
-      flex: 1;
-      min-width: 150px;
-      background: transparent;
-      color: var(--text-color);
-      padding: 15px 20px;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-      background: var(--light-bg);
-      transform: none;
-      box-shadow: none;
-    }
-
-    .tab-btn.active {
-      color: var(--primary-color);
-      border-bottom-color: var(--primary-color);
-      background: transparent;
-    }
-
-    .tab-content {
-      display: none;
-      padding: 20px;
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    /* Birthday Banner */
-    .birthday-banner {
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-      padding: 15px 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      display: none;
-      align-items: center;
-      gap: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .birthday-banner.show {
-      display: flex;
-    }
-
-    .birthday-banner-icon {
-      font-size: 32px;
-    }
-
-    .birthday-banner-text {
-      flex: 1;
-    }
-
-    .birthday-banner-text h3 {
-      color: #333;
-      margin-bottom: 5px;
-    }
-
-    .birthday-banner-text p {
-      color: #555;
-      font-size: 14px;
-      margin: 0;
-    }
-
-    /* Trial Banner */
-    .trial-banner {
-      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .trial-info {
-      flex: 1;
-    }
-
-    .trial-info p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-
-    /* Forms */
+    /* Form styles */
     .form-group {
       margin-bottom: 15px;
     }
@@ -305,303 +286,19 @@
       color: var(--text-color);
     }
 
-    input,
-    textarea,
-    select {
+    input, textarea, select {
       width: 100%;
       padding: 10px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       font-size: 14px;
       font-family: inherit;
-      transition: border-color 0.3s ease;
     }
 
-    input:focus,
-    textarea:focus,
-    select:focus {
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(192, 96, 144, 0.1);
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    /* Design Concepts Display */
-    .concepts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin: 20px 0;
-    }
-
-    .concept-card {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .concept-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    .concept-image {
-      width: 100%;
-      height: 250px;
-      background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #999;
-      font-size: 14px;
-      text-align: center;
-      padding: 10px;
-    }
-
-    .concept-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .concept-content {
-      padding: 15px;
-    }
-
-    .concept-title {
-      font-size: 18px;
-      font-weight: bold;
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-
-    .concept-description {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-
-    .concept-details {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-      font-size: 13px;
-    }
-
-    .detail-item {
-      background: var(--light-bg);
-      padding: 8px;
-      border-radius: 4px;
-    }
-
-    .detail-label {
-      color: #999;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .detail-value {
-      color: var(--primary-color);
-      font-weight: bold;
-      font-size: 14px;
-      margin-top: 3px;
-    }
-
-    /* Appointments */
-    .appointments-list {
-      display: grid;
-      gap: 15px;
-    }
-
-    .appointment-card {
-      background: white;
-      border-left: 4px solid var(--primary-color);
-      padding: 15px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .appointment-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .appointment-type {
-      font-weight: bold;
-      color: var(--primary-color);
-    }
-
-    .appointment-status {
-      font-size: 12px;
-      padding: 4px 8px;
-      background: var(--light-bg);
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-
-    .appointment-datetime {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .appointment-price {
-      color: var(--primary-color);
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    /* Invoices */
-    .invoices-list {
-      display: grid;
-      gap: 15px;
-    }
-
-    .invoice-card {
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 15px;
-      align-items: center;
-    }
-
-    .invoice-icon {
-      font-size: 32px;
-    }
-
-    .invoice-details {
-      display: grid;
-      gap: 5px;
-    }
-
-    .invoice-number {
-      font-weight: bold;
-      color: var(--primary-color);
-    }
-
-    .invoice-date {
-      font-size: 13px;
-      color: #999;
-    }
-
-    .invoice-amount {
-      font-weight: bold;
-      color: var(--secondary-color);
-      font-size: 16px;
-    }
-
-    .invoice-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .invoice-actions button {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    /* Modals */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 8px;
-      padding: 25px;
-      max-width: 600px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-      from {
-        transform: translateY(-30px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      color: var(--primary-color);
-    }
-
-    .close-btn {
-      background: transparent;
-      color: #999;
-      font-size: 24px;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .close-btn:hover {
-      color: var(--error-color);
-    }
-
-    /* Loading spinner */
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top: 2px solid white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 8px;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
     }
 
     /* Responsive */
@@ -616,29 +313,11 @@
         flex-wrap: wrap;
       }
 
-      .concepts-grid {
-        grid-template-columns: 1fr;
-      }
-
       .tab-btn {
         min-width: 100px;
         padding: 12px 10px;
         font-size: 12px;
       }
-
-      .invoice-card {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .invoice-actions {
-        width: 100%;
-      }
-    }
-
-    /* Hidden class */
-    .hidden {
-      display: none !important;
     }
   </style>
 </head>
@@ -653,216 +332,121 @@
         </div>
       </div>
       <div class="header-actions">
-        <div class="user-info" id="userInfo" style="display: none;">
+        <div class="user-info" id="userInfo">
           <span id="userName">Welcome</span>
         </div>
-        <button id="signInBtn" onclick="handleGoogleSignIn()">👤 Sign In</button>
-        <button id="signOutBtn" onclick="handleSignOut()" style="display: none; background: #E57373;">🚪 Sign Out</button>
+        <div id="googleSignInButton"></div>
+        <button id="signOutBtn" style="display: none; background: #E57373;">🚪 Sign Out</button>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main id="mainContent" style="display: none;">
-    <!-- Birthday Banner -->
-    <div class="birthday-banner" id="birthdayBanner">
-      <div class="birthday-banner-icon">🎂</div>
-      <div class="birthday-banner-text">
-        <h3>Happy Birthday!</h3>
-        <p>Enjoy ₹500 exclusive birthday credit on your next order! 🎉</p>
-      </div>
-      <button onclick="closeBirthdayBanner()" style="background: transparent; color: #333; border: 1px solid #333;">Close</button>
-    </div>
-
-    <!-- Trial Banner -->
-    <div class="trial-banner" id="trialBanner">
-      <div class="trial-info">
-        <p id="trialMessage">💰 Free trial active! You have ₹200 budget for AI designs.</p>
-        <p id="trialRemaining" style="font-size: 12px;">Verify your phone to upgrade to ₹500 budget →</p>
-      </div>
-      <button onclick="showOTPModal()" style="background: white; color: var(--primary-color); padding: 8px 16px;">Verify Phone</button>
-    </div>
-
-    <!-- Tabs Navigation -->
-    <div class="tabs-container">
-      <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('fabrics')">🧵 Fabrics</button>
-        <button class="tab-btn" onclick="switchTab('design-studio')">🎨 AI Design Studio</button>
-        <button class="tab-btn" onclick="switchTab('appointments')">📅 Appointments</button>
-        <button class="tab-btn" onclick="switchTab('orders')">📦 My Orders</button>
-        <button class="tab-btn" id="adminTabBtn" onclick="switchTab('admin')" style="display: none;">👑 Admin</button>
-      </div>
-
-      <!-- Dashboard Tab -->
-      <div id="dashboard" class="tab-content active">
+  <!-- Landing Page (Public) -->
+  <main>
+    <div class="landing-page" id="landingPage">
+      <div class="hero">
         <h2>Welcome to Gurbani Fashion</h2>
-        <p>Discover our AI-powered custom stitching service. Design your dream outfit and let us bring it to life!</p>
-        <br>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: var(--primary-color);">🎨 AI Design Studio</h3>
-            <p>Create unlimited design concepts powered by AI. Get 3 unique variations of your dream outfit in seconds.</p>
-            <button onclick="switchTab('design-studio')" style="width: 100%; margin-top: 10px;">Start Designing</button>
-          </div>
-          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: var(--primary-color);">🧵 Browse Fabrics</h3>
-            <p>Explore our latest fabric arrivals. Reserve your favorite fabrics and come to our boutique for stitching.</p>
-            <button onclick="switchTab('fabrics')" style="width: 100%; margin-top: 10px;">Browse Fabrics</button>
-          </div>
-          <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: var(--primary-color);">📅 Book Appointment</h3>
-            <p>Schedule a consultation, video call, or in-store visit. Get personalized styling advice from Sonia.</p>
-            <button onclick="switchTab('appointments')" style="width: 100%; margin-top: 10px;">Book Now</button>
-          </div>
-        </div>
+        <p>Custom stitched outfits powered by AI design ideas</p>
+        <p>Sign in to get started with your personalized design concepts, book appointments, and track orders</p>
       </div>
 
-      <!-- Fabrics Tab -->
-      <div id="fabrics" class="tab-content">
-        <h2>🧵 Our Fabrics Collection</h2>
-        <div id="fabricsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-          <p style="grid-column: 1/-1; color: #999;">Loading fabrics...</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>🎨 AI Design Studio</h3>
+          <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing and delivery timelines.</p>
+          <p style="font-size: 12px; color: #999;">Sign in to start designing</p>
+        </div>
+        <div class="feature-card">
+          <h3>🧵 Browse Fabrics</h3>
+          <p>Explore our latest fabric arrivals and reserve your favorite fabrics for stitching.</p>
+          <p style="font-size: 12px; color: #999;">Sign in to browse</p>
+        </div>
+        <div class="feature-card">
+          <h3>📅 Book Appointments</h3>
+          <p>Schedule styling consultations, video calls, or in-store visits with personalized guidance.</p>
+          <p style="font-size: 12px; color: #999;">Sign in to book</p>
+        </div>
+        <div class="feature-card">
+          <h3>🎁 Birthday Rewards</h3>
+          <p>Get exclusive ₹500 credits on your birthday month to use on your next order.</p>
+          <p style="font-size: 12px; color: #999;">Sign in to unlock</p>
         </div>
       </div>
+    </div>
 
-      <!-- AI Design Studio Tab -->
-      <div id="design-studio" class="tab-content">
-        <h2>🎨 AI Design Studio</h2>
-        <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing!</p>
-        
-        <form onsubmit="handleDesignSubmit(event)" style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
-          <div class="form-group">
-            <label>📝 Describe Your Design Idea</label>
-            <textarea id="designDescription" placeholder="E.g., Pink embroidered anarkali with gold work for wedding season..." required></textarea>
-          </div>
+    <!-- Main Content (Logged In) -->
+    <div id="mainContent">
+      <div class="tabs-container">
+        <div class="tabs-nav">
+          <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+          <button class="tab-btn" onclick="switchTab('design-studio')">🎨 AI Design Studio</button>
+          <button class="tab-btn" onclick="switchTab('appointments')">📅 Appointments</button>
+          <button class="tab-btn" onclick="switchTab('orders')">📦 My Orders</button>
+        </div>
 
-          <div class="form-group">
-            <label>📷 Upload Inspiration Photo (Optional)</label>
-            <input type="file" id="designPhoto" accept="image/*">
-            <small style="color: #999;">Upload a photo to help AI understand your style better</small>
-          </div>
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+          <h2>Welcome to Gurbani Fashion</h2>
+          <p>Discover our AI-powered custom stitching service. Design your dream outfit and let us bring it to life!</p>
+        </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <!-- Design Studio Tab -->
+        <div id="design-studio" class="tab-content">
+          <h2>🎨 AI Design Studio</h2>
+          <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing!</p>
+          <form onsubmit="handleDesignSubmit(event)" style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
             <div class="form-group">
-              <label>🎭 Occasion</label>
-              <select id="designOccasion">
-                <option value="casual">Casual</option>
-                <option value="festival">Festival</option>
-                <option value="wedding">Wedding</option>
-                <option value="party">Party</option>
-                <option value="formal">Formal</option>
+              <label>📝 Describe Your Design Idea</label>
+              <textarea id="designDescription" placeholder="E.g., Pink embroidered anarkali with gold work for wedding..." required></textarea>
+            </div>
+            <button type="submit">✨ Generate My Designs</button>
+          </form>
+          <div id="designsContainer" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- Appointments Tab -->
+        <div id="appointments" class="tab-content">
+          <h2>📅 Book an Appointment</h2>
+          <p>Schedule a consultation, video call, or in-store visit with Sonia</p>
+          <form onsubmit="handleAppointmentSubmit(event)" style="background: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
+            <div class="form-group">
+              <label>📅 Appointment Type</label>
+              <select id="appointmentType" required>
+                <option value="">-- Select Type --</option>
+                <option value="in-store-free">In-Store Visit (FREE)</option>
+                <option value="styling-consultation">Styling Consultation (₹999)</option>
+                <option value="video-call">Video Call (₹499)</option>
+                <option value="urgent-appointment">Urgent Appointment (₹499)</option>
               </select>
             </div>
-
             <div class="form-group">
-              <label>💰 Budget (₹)</label>
-              <input type="number" id="designBudget" placeholder="E.g., 3000" min="0">
+              <label>📅 Date</label>
+              <input type="date" id="appointmentDate" required>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label>⏰ Timeline</label>
-            <select id="designTimeline">
-              <option value="">No specific timeline</option>
-              <option value="urgent">Urgent (5-7 days)</option>
-              <option value="normal">Normal (10-14 days)</option>
-              <option value="flexible">Flexible (14+ days)</option>
-            </select>
-          </div>
-
-          <button type="submit" id="generateBtn" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold;">
-            ✨ Generate My Designs
-          </button>
-        </form>
-
-        <div id="designsContainer" style="margin-top: 30px;"></div>
-      </div>
-
-      <!-- Appointments Tab -->
-      <div id="appointments" class="tab-content">
-        <h2>📅 Book an Appointment</h2>
-        
-        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h3>Choose Appointment Type</h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0;">
-            <button class="appointment-type-btn" data-type="in-store-free" onclick="selectAppointmentType('in-store-free')">
-              <div style="font-size: 20px; margin-bottom: 5px;">🏪</div>
-              <div>In-Store Visit</div>
-              <div style="font-size: 12px; color: #4CAF50;">FREE</div>
-            </button>
-            <button class="appointment-type-btn" data-type="styling-consultation" onclick="selectAppointmentType('styling-consultation')">
-              <div style="font-size: 20px; margin-bottom: 5px;">👗</div>
-              <div>Styling</div>
-              <div style="font-size: 12px; color: var(--primary-color);">₹999</div>
-            </button>
-            <button class="appointment-type-btn" data-type="video-call" onclick="selectAppointmentType('video-call')">
-              <div style="font-size: 20px; margin-bottom: 5px;">📹</div>
-              <div>Video Call</div>
-              <div style="font-size: 12px; color: var(--primary-color);">₹499</div>
-            </button>
-            <button class="appointment-type-btn" data-type="urgent-appointment" onclick="selectAppointmentType('urgent-appointment')">
-              <div style="font-size: 20px; margin-bottom: 5px;">⚡</div>
-              <div>Urgent</div>
-              <div style="font-size: 12px; color: var(--warning-color);">₹499</div>
-            </button>
-          </div>
+            <div class="form-group">
+              <label>🕐 Time</label>
+              <select id="appointmentTime" required>
+                <option value="">-- Select Time --</option>
+                <option value="09:00">09:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+              </select>
+            </div>
+            <button type="submit">✓ Book Appointment</button>
+          </form>
+          <div id="appointmentsList" style="margin-top: 20px;"></div>
         </div>
 
-        <form id="appointmentForm" onsubmit="handleAppointmentSubmit(event)" style="background: white; padding: 20px; border-radius: 8px; display: none;">
-          <div class="form-group">
-            <label>📅 Select Date</label>
-            <input type="date" id="appointmentDate" required>
+        <!-- Orders Tab -->
+        <div id="orders" class="tab-content">
+          <h2>📦 My Orders</h2>
+          <div id="ordersList">
+            <p>No orders yet. Start designing!</p>
           </div>
-
-          <div class="form-group">
-            <label>🕐 Select Time</label>
-            <select id="appointmentTime" required>
-              <option value="">-- Choose a time --</option>
-              <option value="09:00">09:00 AM</option>
-              <option value="10:00">10:00 AM</option>
-              <option value="11:00">11:00 AM</option>
-              <option value="12:00">12:00 PM</option>
-              <option value="14:00">2:00 PM</option>
-              <option value="15:00">3:00 PM</option>
-              <option value="16:00">4:00 PM</option>
-              <option value="17:00">5:00 PM</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>📝 Notes (Optional)</label>
-            <textarea id="appointmentNotes" placeholder="Any special requests or details..."></textarea>
-          </div>
-
-          <button type="submit" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold;">
-            ✓ Confirm Appointment
-          </button>
-        </form>
-
-        <div id="appointmentsList" style="margin-top: 20px;"></div>
-      </div>
-
-      <!-- Orders Tab -->
-      <div id="orders" class="tab-content">
-        <h2>📦 My Orders</h2>
-        <div id="ordersList" style="margin-top: 15px;">
-          <p style="color: #999;">Loading your orders...</p>
         </div>
-      </div>
-
-      <!-- Admin Tab -->
-      <div id="admin" class="tab-content">
-        <h2>👑 Admin Dashboard</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-          <button class="tab-btn" onclick="switchAdminView('design-requests')" style="background: white; padding: 15px; border: 1px solid var(--border-color);">🎨 Design Requests</button>
-          <button class="tab-btn" onclick="switchAdminView('appointments')" style="background: white; padding: 15px; border: 1px solid var(--border-color);">📅 Appointments</button>
-          <button class="tab-btn" onclick="switchAdminView('invoices')" style="background: white; padding: 15px; border: 1px solid var(--border-color);">📄 Invoices</button>
-        </div>
-
-        <div id="design-requests-admin" style="display: none;"></div>
-        <div id="appointments-admin" style="display: none;"></div>
-        <div id="invoices-admin" style="display: none;"></div>
       </div>
     </div>
   </main>
@@ -870,78 +454,75 @@
   <!-- Toast Container -->
   <div id="toastContainer"></div>
 
-  <!-- OTP Modal -->
-  <div id="otpModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>📱 Verify Phone Number</h2>
-        <button class="close-btn" onclick="closeOTPModal()">✕</button>
-      </div>
-      <form onsubmit="handleOTPSubmit(event)">
-        <div class="form-group">
-          <label>Phone Number</label>
-          <input type="tel" id="otpPhone" placeholder="+91 98998 10977" required>
-        </div>
-        <div class="form-group">
-          <label>OTP (6 digits)</label>
-          <input type="text" id="otpCode" placeholder="000000" maxlength="6" required pattern="[0-9]{6}">
-          <small style="color: #999;">Enter the 6-digit code sent to your phone</small>
-        </div>
-        <button type="submit" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold;">✓ Verify</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Invoice Modal -->
-  <div id="invoiceModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>📄 Invoice</h2>
-        <button class="close-btn" onclick="closeInvoiceModal()">✕</button>
-      </div>
-      <div id="invoiceContent">
-        <p style="color: #999;">Loading invoice...</p>
-      </div>
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button id="downloadInvoiceBtn" style="flex: 1;" onclick="downloadInvoice()">💾 Download PDF</button>
-        <button id="printInvoiceBtn" style="flex: 1;" onclick="printInvoice()">🖨️ Print</button>
-        <button id="emailInvoiceBtn" style="flex: 1;" onclick="emailInvoice()">📧 Email</button>
-      </div>
-    </div>
-  </div>
-
   <!-- JavaScript -->
   <script>
-    // Global state
     const API_BASE = 'https://gurbani-fashion-backend-production.up.railway.app';
     let authToken = localStorage.getItem('authToken');
     let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    let currentAppointmentType = null;
-    let currentInvoiceId = null;
 
-    // Initialize app
-    window.addEventListener('DOMContentLoaded', () => {
-      if (authToken) {
-        showLoggedInUI();
-        loadFabrics();
-        loadAppointments();
-        loadOrders();
-        checkBirthdayStatus();
-        updateTrialBanner();
-      }
-    });
+    // Initialize Google Sign-In
+    window.onload = function() {
+      initializeGoogleSignIn();
+      updateUI();
+    };
 
-    // Google Sign In
-    async function handleGoogleSignIn() {
+    function initializeGoogleSignIn() {
+      google.accounts.id.initialize({
+        client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
+        callback: handleGoogleSignInResponse,
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById('googleSignInButton'),
+        {
+          theme: 'filled_blue',
+          size: 'large',
+          text: 'signin_with',
+        }
+      );
+    }
+
+    async function handleGoogleSignInResponse(response) {
+      const token = response.credential;
+
+      // Decode JWT to get user info
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const payload = JSON.parse(jsonPayload);
+
       try {
-        // This would normally use Google Sign-In SDK
-        // For now, show a message
-        showToast('⚙️ Setting up Google authentication...', 'info');
-        // In real implementation:
-        // const response = await gapi.auth2.getAuthInstance().signIn();
-        // Then send token to backend
+        // Send to backend
+        const response = await fetch(`${API_BASE}/api/auth/google-signin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            googleId: payload.sub,
+            email: payload.email,
+            name: payload.name,
+            avatar: payload.picture,
+          }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem('authToken', authToken);
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          updateUI();
+          showToast('✅ Signed in successfully!', 'success');
+        } else {
+          showToast(data.error || 'Sign in failed', 'error');
+        }
       } catch (error) {
-        showToast('Error signing in', 'error');
+        showToast('Sign in error: ' + error.message, 'error');
+        console.error(error);
       }
     }
 
@@ -949,235 +530,88 @@
       if (confirm('Are you sure you want to sign out?')) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
-        location.reload();
+        authToken = null;
+        currentUser = {};
+        updateUI();
+        showToast('Signed out', 'success');
       }
     }
 
-    function showLoggedInUI() {
-      document.getElementById('mainContent').style.display = 'block';
-      document.getElementById('signInBtn').style.display = 'none';
-      document.getElementById('signOutBtn').style.display = 'block';
-      document.getElementById('userInfo').style.display = 'block';
-      document.getElementById('userName').textContent = `Welcome, ${currentUser.name || 'Guest'}!`;
+    function updateUI() {
+      const landingPage = document.getElementById('landingPage');
+      const mainContent = document.getElementById('mainContent');
+      const userInfo = document.getElementById('userInfo');
+      const signOutBtn = document.getElementById('signOutBtn');
 
-      if (currentUser.role === 'admin') {
-        document.getElementById('adminTabBtn').style.display = 'block';
+      if (authToken && currentUser._id) {
+        // Show main content, hide landing
+        landingPage.classList.add('hidden');
+        mainContent.classList.add('visible');
+        userInfo.classList.add('visible');
+        signOutBtn.style.display = 'block';
+        document.getElementById('userName').textContent = `Welcome, ${currentUser.name}!`;
+      } else {
+        // Show landing, hide main content
+        landingPage.classList.remove('hidden');
+        mainContent.classList.remove('visible');
+        userInfo.classList.remove('visible');
+        signOutBtn.style.display = 'none';
       }
     }
 
     function switchTab(tabName) {
-      // Hide all tabs
-      document.querySelectorAll('.tab-content').forEach(tab => {
+      document.querySelectorAll('.tab-content').forEach((tab) => {
         tab.classList.remove('active');
       });
-      document.querySelectorAll('.tab-btn').forEach(btn => {
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
         btn.classList.remove('active');
       });
 
-      // Show selected tab
       document.getElementById(tabName).classList.add('active');
       event.target.classList.add('active');
-
-      // Load tab-specific data
-      if (tabName === 'appointments') {
-        loadAppointments();
-      } else if (tabName === 'orders') {
-        loadOrders();
-      }
     }
 
-    function switchAdminView(view) {
-      document.querySelectorAll('[id$="-admin"]').forEach(el => {
-        el.style.display = 'none';
-      });
-      document.getElementById(view + '-admin').style.display = 'block';
-
-      if (view === 'design-requests') {
-        loadDesignRequests();
-      } else if (view === 'appointments') {
-        loadAdminAppointments();
-      } else if (view === 'invoices') {
-        loadAdminInvoices();
-      }
-    }
-
-    // Trial Banner & Birthday
-    function updateTrialBanner() {
-      // Fetch from API and update banner
-      const remaining = 155; // Example
-      const total = 200;
-      document.getElementById('trialRemaining').textContent = 
-        `You have ₹${remaining}/₹${total} remaining · Verify your phone to upgrade to ₹500 budget →`;
-    }
-
-    function checkBirthdayStatus() {
-      // Check if today is user's birthday
-      const birthday = currentUser.dateOfBirth;
-      if (birthday) {
-        const today = new Date();
-        const bday = new Date(birthday);
-        if (today.getMonth() === bday.getMonth() && today.getDate() === bday.getDate()) {
-          document.getElementById('birthdayBanner').classList.add('show');
-        }
-      }
-    }
-
-    function closeBirthdayBanner() {
-      document.getElementById('birthdayBanner').classList.remove('show');
-    }
-
-    // OTP Modal
-    function showOTPModal() {
-      document.getElementById('otpModal').classList.add('show');
-    }
-
-    function closeOTPModal() {
-      document.getElementById('otpModal').classList.remove('show');
-    }
-
-    async function handleOTPSubmit(event) {
-      event.preventDefault();
-      const phone = document.getElementById('otpPhone').value;
-      const otp = document.getElementById('otpCode').value;
-
-      try {
-        const response = await fetch(`${API_BASE}/api/designs/verify-trial-phone`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({ phone, otp }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          showToast(data.message, 'success');
-          closeOTPModal();
-          updateTrialBanner();
-        } else {
-          showToast(data.error, 'error');
-        }
-      } catch (error) {
-        showToast('Error verifying phone', 'error');
-        console.error(error);
-      }
-    }
-
-    // Design Studio
     async function handleDesignSubmit(event) {
       event.preventDefault();
       const description = document.getElementById('designDescription').value;
-      const occasion = document.getElementById('designOccasion').value;
-      const budget = document.getElementById('designBudget').value;
-      const timeline = document.getElementById('designTimeline').value;
-      const photoInput = document.getElementById('designPhoto');
 
-      // Show loading
-      const btn = event.target.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Generating designs...';
+      if (!authToken) {
+        showToast('Please sign in first', 'error');
+        return;
+      }
 
       try {
-        let photo = null;
-        if (photoInput.files.length > 0) {
-          photo = await fileToBase64(photoInput.files[0]);
-        }
-
         const response = await fetch(`${API_BASE}/api/designs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify({
-            description,
-            photo,
-            occasion,
-            budget: budget ? parseInt(budget) : null,
-            timeline,
-          }),
+          body: JSON.stringify({ description }),
         });
 
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message, 'success');
-          displayDesignConcepts(data.design);
-          event.target.reset();
+          showToast('✅ Designs generated!', 'success');
+          // Display concepts here
         } else {
-          showToast(data.error, 'error');
+          showToast(data.error || 'Error generating designs', 'error');
         }
       } catch (error) {
-        showToast('Error generating designs', 'error');
-        console.error(error);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '✨ Generate My Designs';
+        showToast('Error: ' + error.message, 'error');
       }
-    }
-
-    function displayDesignConcepts(design) {
-      if (!design.aiConcepts || design.aiConcepts.length === 0) {
-        return;
-      }
-
-      const container = document.getElementById('designsContainer');
-      const html = `
-        <h3>Your AI-Generated Designs</h3>
-        <div class="concepts-grid">
-          ${design.aiConcepts
-            .map(
-              (concept, idx) => `
-            <div class="concept-card">
-              <div class="concept-image">
-                ${concept.imageUrl ? `<img src="${concept.imageUrl}" alt="${concept.title}">` : '🎨 Image generation pending...'}
-              </div>
-              <div class="concept-content">
-                <div class="concept-title">${concept.title}</div>
-                <div class="concept-description">${concept.description}</div>
-                <div class="concept-details">
-                  <div class="detail-item">
-                    <div class="detail-label">Price Range</div>
-                    <div class="detail-value">₹${concept.priceMin.toLocaleString()}-${concept.priceMax.toLocaleString()}</div>
-                  </div>
-                  <div class="detail-item">
-                    <div class="detail-label">Delivery</div>
-                    <div class="detail-value">${concept.deliveryDays} days</div>
-                  </div>
-                </div>
-                <button onclick="selectDesign('${concept.title}')" style="width: 100%; margin-top: 10px;">Select This Design</button>
-              </div>
-            </div>
-          `
-            )
-            .join('')}
-        </div>
-      `;
-      container.innerHTML = html;
-    }
-
-    function selectDesign(title) {
-      showToast(`✅ ${title} selected! Sonia will send you a quote soon.`, 'success');
-    }
-
-    // Appointments
-    function selectAppointmentType(type) {
-      currentAppointmentType = type;
-      document.querySelectorAll('.appointment-type-btn').forEach(btn => {
-        btn.style.background = 'transparent';
-        btn.style.border = '1px solid var(--border-color)';
-        btn.style.color = 'var(--text-color)';
-      });
-      event.target.closest('.appointment-type-btn').style.background = 'var(--light-bg)';
-      event.target.closest('.appointment-type-btn').style.borderColor = 'var(--primary-color)';
-      document.getElementById('appointmentForm').style.display = 'block';
     }
 
     async function handleAppointmentSubmit(event) {
       event.preventDefault();
-      const date = document.getElementById('appointmentDate').value;
-      const time = document.getElementById('appointmentTime').value;
-      const notes = document.getElementById('appointmentNotes').value;
+      if (!authToken) {
+        showToast('Please sign in first', 'error');
+        return;
+      }
+
+      const appointmentType = document.getElementById('appointmentType').value;
+      const appointmentDate = document.getElementById('appointmentDate').value;
+      const appointmentTime = document.getElementById('appointmentTime').value;
 
       try {
         const response = await fetch(`${API_BASE}/api/appointments`, {
@@ -1187,210 +621,34 @@
             'Authorization': `Bearer ${authToken}`,
           },
           body: JSON.stringify({
-            appointmentType: currentAppointmentType,
-            appointmentDate: date,
-            appointmentTime: time,
-            notes,
+            appointmentType,
+            appointmentDate,
+            appointmentTime,
           }),
         });
 
         const data = await response.json();
         if (response.ok) {
-          showToast(data.message, 'success');
+          showToast('✅ Appointment booked!', 'success');
           event.target.reset();
-          document.getElementById('appointmentForm').style.display = 'none';
-          loadAppointments();
         } else {
-          showToast(data.error, 'error');
+          showToast(data.error || 'Error booking appointment', 'error');
         }
       } catch (error) {
-        showToast('Error booking appointment', 'error');
-        console.error(error);
+        showToast('Error: ' + error.message, 'error');
       }
     }
 
-    async function loadAppointments() {
-      try {
-        const response = await fetch(`${API_BASE}/api/appointments/my-appointments`, {
-          headers: { 'Authorization': `Bearer ${authToken}` },
-        });
-        const data = await response.json();
-
-        const container = document.getElementById('appointmentsList');
-        if (data.appointments && data.appointments.length > 0) {
-          container.innerHTML = data.appointments
-            .map(
-              (apt) => `
-            <div class="appointment-card">
-              <div class="appointment-header">
-                <span class="appointment-type">${apt.appointmentType.replace('-', ' ').toUpperCase()}</span>
-                <span class="appointment-status">${apt.status}</span>
-              </div>
-              <div class="appointment-datetime">
-                📅 ${new Date(apt.appointmentDate).toLocaleDateString('en-IN')} at ${apt.appointmentTime}
-              </div>
-              ${apt.price > 0 ? `<div class="appointment-price">₹${apt.price}</div>` : '<div style="color: #4CAF50; font-weight: bold;">FREE</div>'}
-            </div>
-          `
-            )
-            .join('');
-        } else {
-          container.innerHTML = '<p style="color: #999;">No appointments booked yet. Book one above!</p>';
-        }
-      } catch (error) {
-        console.error('Error loading appointments:', error);
-      }
-    }
-
-    async function loadAdminAppointments() {
-      // Similar to loadAppointments but with admin actions
-    }
-
-    // Orders & Invoices
-    async function loadOrders() {
-      try {
-        const response = await fetch(`${API_BASE}/api/orders/my-orders`, {
-          headers: { 'Authorization': `Bearer ${authToken}` },
-        });
-        const data = await response.json();
-
-        const container = document.getElementById('ordersList');
-        if (data.orders && data.orders.length > 0) {
-          container.innerHTML = data.orders
-            .map(
-              (order) => `
-            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center;">
-              <div>
-                <div style="font-weight: bold; color: var(--primary-color);">${order.designName || 'Custom Design'}</div>
-                <div style="font-size: 12px; color: #999;">Order #${order._id.slice(-6)}</div>
-                <div style="color: #666; margin-top: 5px;">₹${order.totalPrice?.toLocaleString() || 0}</div>
-              </div>
-              <div style="display: flex; gap: 10px;">
-                <button onclick="openInvoice('${order._id}')" style="padding: 8px 12px; font-size: 12px;">📄 Invoice</button>
-                <button onclick="alert('Track order ${order._id}')" style="padding: 8px 12px; font-size: 12px;">📍 Track</button>
-              </div>
-            </div>
-          `
-            )
-            .join('');
-        } else {
-          container.innerHTML = '<p style="color: #999;">No orders yet. Start designing!</p>';
-        }
-      } catch (error) {
-        console.error('Error loading orders:', error);
-      }
-    }
-
-    function openInvoice(orderId) {
-      currentInvoiceId = orderId;
-      document.getElementById('invoiceModal').classList.add('show');
-      loadInvoice(orderId);
-    }
-
-    function closeInvoiceModal() {
-      document.getElementById('invoiceModal').classList.remove('show');
-    }
-
-    async function loadInvoice(orderId) {
-      // Fetch and display invoice
-      const content = document.getElementById('invoiceContent');
-      content.innerHTML = '<p style="color: #999;">Loading invoice...</p>';
-      // In real implementation, fetch from API
-    }
-
-    function downloadInvoice() {
-      // Download PDF
-      showToast('Downloading invoice...', 'info');
-    }
-
-    function printInvoice() {
-      window.print();
-    }
-
-    function emailInvoice() {
-      showToast('Sending invoice via email...', 'info');
-    }
-
-    // Fabrics
-    async function loadFabrics() {
-      try {
-        const response = await fetch(`${API_BASE}/api/fabrics`, {
-          headers: { 'Authorization': `Bearer ${authToken}` },
-        });
-        const data = await response.json();
-
-        const container = document.getElementById('fabricsList');
-        if (data.fabrics && data.fabrics.length > 0) {
-          container.innerHTML = data.fabrics
-            .map(
-              (fabric) => `
-            <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="font-weight: bold; color: var(--primary-color);">${fabric.name}</div>
-              <div style="font-size: 12px; color: #999;">₹${fabric.pricePerMeter}/meter</div>
-              <button onclick="alert('Reserve ${fabric.name}')" style="width: 100%; margin-top: 8px; padding: 8px;">Reserve</button>
-            </div>
-          `
-            )
-            .join('');
-        } else {
-          container.innerHTML = '<p style="grid-column: 1/-1; color: #999;">No fabrics available.</p>';
-        }
-      } catch (error) {
-        console.error('Error loading fabrics:', error);
-      }
-    }
-
-    // Admin functions
-    async function loadDesignRequests() {
-      // Fetch all design requests for admin
-    }
-
-    async function loadAdminInvoices() {
-      // Fetch all invoices for admin
-    }
-
-    // Toast notifications
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
-      
-      const icons = {
-        success: '✅',
-        error: '❌',
-        warning: '⚠️',
-        info: 'ℹ️'
-      };
-
-      toast.innerHTML = `
-        <span>${icons[type]}</span>
-        <span>${message}</span>
-      `;
-
+      toast.innerHTML = `<span>${message}</span>`;
       container.appendChild(toast);
 
       setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.4s ease';
-        setTimeout(() => toast.remove(), 400);
+        toast.remove();
       }, 4000);
-    }
-
-    // Utility functions
-    async function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    // Check if user is logged in on page load
-    if (!authToken) {
-      document.getElementById('mainContent').style.display = 'none';
     }
   </script>
 </body>
