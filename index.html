@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gurbani Fashion - AI Design Studio</title>
+  <title>Gurbani Fashion - AI Design Studio with Multi-Photo Virtual Try-On</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -172,7 +172,6 @@
       min-height: 40px;
     }
     
-    /* Design Studio Specific */
     .budget-info {
       background: #e3f2fd;
       padding: 15px;
@@ -264,11 +263,6 @@
       color: white;
     }
     
-    .btn-customize {
-      background: #f0f0f0;
-      color: #333;
-    }
-    
     .loading {
       text-align: center;
       padding: 30px;
@@ -302,53 +296,180 @@
     .status.error { background: #ffebee; color: #c62828; border: 1px solid #f44336; }
     .status.info { background: #e3f2fd; color: #1976d2; border: 1px solid #2196f3; }
     
-    .customize-panel {
-      background: #f9f9f9;
-      padding: 20px;
-      border-radius: 6px;
-      margin-top: 20px;
+    .photo-gallery {
+      margin: 20px 0;
     }
     
-    .previous-designs {
-      margin-top: 30px;
+    .photo-gallery-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #C06090;
     }
     
-    .design-history {
+    .photo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 15px;
     }
     
-    .history-item {
-      background: white;
-      border: 1px solid #e0e0e0;
+    .photo-item {
+      position: relative;
       border-radius: 6px;
-      padding: 10px;
-      text-align: center;
+      overflow: hidden;
+      border: 2px solid #e0e0e0;
       cursor: pointer;
       transition: all 0.3s ease;
     }
     
-    .history-item:hover {
+    .photo-item:hover {
       border-color: #C06090;
-      box-shadow: 0 2px 8px rgba(192, 96, 144, 0.15);
+      transform: scale(1.05);
     }
     
-    .history-date {
-      font-size: 12px;
-      color: #999;
-      margin-top: 8px;
+    .photo-item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
     }
     
-    .history-status {
-      display: inline-block;
+    .photo-item-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 4px;
+      font-size: 11px;
+      text-align: center;
+    }
+    
+    .photo-item-remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
       background: #C06090;
       color: white;
-      padding: 4px 8px;
-      border-radius: 3px;
-      font-size: 11px;
-      margin-top: 8px;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    
+    .photo-upload-tabs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .photo-type-btn {
+      padding: 10px;
+      border: 2px solid #ddd;
+      background: white;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      font-size: 13px;
+    }
+    
+    .photo-type-btn:hover {
+      border-color: #C06090;
+      color: #C06090;
+    }
+    
+    .photo-type-btn.active {
+      background: #C06090;
+      color: white;
+      border-color: #C06090;
+    }
+    
+    .photo-upload-area {
+      border: 2px dashed #C06090;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: #f9f9f9;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .photo-upload-area:hover {
+      background: #ffe8f0;
+      border-color: #8B4B7A;
+    }
+    
+    .personal-analysis {
+      background: linear-gradient(135deg, #fff5f9, #f0e6f0);
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #C06090;
+      margin: 20px 0;
+    }
+    
+    .personal-analysis h4 {
+      color: #C06090;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    
+    .analysis-section {
+      margin-bottom: 15px;
+    }
+    
+    .analysis-section h5 {
+      color: #8B4B7A;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .analysis-item {
+      margin: 8px 0;
+      padding-left: 20px;
+      position: relative;
+      font-size: 14px;
+      color: #333;
+      line-height: 1.4;
+    }
+    
+    .analysis-item:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #C06090;
+      font-weight: bold;
+    }
+    
+    .confidence-score {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #C06090;
+      font-size: 16px;
+    }
+    
+    .stars {
+      color: #FFD700;
+      font-size: 18px;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+      font-style: italic;
     }
   </style>
 </head>
@@ -368,24 +489,24 @@
     <div class="landing-page" id="landingPage">
       <div class="card">
         <h2>Welcome to Gurbani Fashion</h2>
-        <p>Custom stitched outfits powered by AI design ideas</p>
-        <p>Sign in with Google above to start creating beautiful designs, book appointments, and track your orders.</p>
+        <p>Custom stitched outfits powered by AI design ideas + Multi-Photo Virtual Try-On</p>
+        <p>Sign in with Google to create designs, upload multiple reference photos, and see how outfits look on YOU!</p>
         
         <div class="grid">
           <div class="feature-box" onclick="promptSignIn('AI Design Studio')">
             <h3>🎨 AI Design Studio</h3>
-            <p>Describe your outfit, get 3 AI-generated concepts with pricing</p>
+            <p>Describe your outfit, get 3 AI-generated concepts</p>
             <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to start</p>
+          </div>
+          <div class="feature-box" onclick="promptSignIn('Multi-Photo Virtual Try-On')">
+            <h3>🪞 Multi-Photo Try-On</h3>
+            <p>Upload selfies, fabrics, laces & accessories for personalization</p>
+            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to try</p>
           </div>
           <div class="feature-box" onclick="promptSignIn('Appointments')">
             <h3>📅 Appointments</h3>
             <p>Book styling consultations with Sonia</p>
             <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to book</p>
-          </div>
-          <div class="feature-box" onclick="promptSignIn('Birthday Rewards')">
-            <h3>🎁 Birthday Rewards</h3>
-            <p>Get ₹500 credits on your birthday month</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to unlock</p>
           </div>
           <div class="feature-box" onclick="promptSignIn('Track Orders')">
             <h3>📦 Track Orders</h3>
@@ -416,7 +537,7 @@
           <div class="grid" style="margin-top: 30px;">
             <div class="feature-box" onclick="switchTab(null, 'design')">
               <h3>🎨 Create Design</h3>
-              <p>Get 3 AI-generated design concepts</p>
+              <p>Get 3 AI concepts + upload multiple reference photos</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Start designing</p>
             </div>
             <div class="feature-box" onclick="switchTab(null, 'appointments')">
@@ -432,10 +553,10 @@
           </div>
         </div>
 
-        <!-- AI DESIGN TAB -->
+        <!-- AI DESIGN TAB WITH MULTI-PHOTO TRY-ON -->
         <div id="design" class="tab-content">
-          <h3>✨ AI Design Studio</h3>
-          <p>Describe your dream outfit and let AI generate 3 unique design concepts with pricing!</p>
+          <h3>✨ AI Design Studio + Multi-Photo Virtual Try-On</h3>
+          <p>Describe your dream outfit and upload multiple reference photos (selfies, fabrics, laces, accessories) for comprehensive personalized feedback!</p>
           
           <div id="designStatus" class="status"></div>
           
@@ -461,17 +582,38 @@
                 <option value="party">Party / Formal Event</option>
               </select>
             </div>
+
+            <!-- MULTI-PHOTO UPLOAD -->
+            <div class="form-group">
+              <label>📸 Upload Reference Photos (All Optional!)</label>
+              <p class="help-text">Upload multiple photos from different angles + fabric/lace/accessory samples for better personalization</p>
+              
+              <div class="photo-upload-tabs">
+                <button type="button" class="photo-type-btn active" onclick="selectPhotoType('selfie')">👤 Selfies</button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('fabric')">🧵 Fabrics</button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('lace')">🎀 Laces</button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('accessories')">✨ Accessories</button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('inspiration')">🌟 Inspiration</button>
+              </div>
+
+              <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
+                <p style="margin: 0;">📸 Click to upload or drag & drop</p>
+                <p style="font-size: 12px; color: #999; margin-top: 8px;" id="photoTypeHint">Upload selfie photos for best personalization</p>
+              </div>
+              <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+              
+              <!-- Photo Gallery -->
+              <div class="photo-gallery" id="photoGallery" style="display: none;">
+                <div class="photo-gallery-title" id="galleryTitle">📸 Uploaded Photos:</div>
+                <div class="photo-grid" id="photoGrid"></div>
+              </div>
+            </div>
+
             <button type="submit" class="btn-submit" id="generateBtn">✨ Generate My Designs</button>
           </form>
 
-          <!-- DESIGNS DISPLAY -->
+          <!-- DESIGNS DISPLAY WITH PERSONAL ANALYSIS -->
           <div id="designsContainer"></div>
-          
-          <!-- PREVIOUS DESIGNS -->
-          <div class="previous-designs" id="previousDesigns" style="display: none;">
-            <h4>📚 Your Previous Designs</h4>
-            <div class="design-history" id="designHistory"></div>
-          </div>
         </div>
 
         <!-- APPOINTMENTS TAB -->
@@ -510,6 +652,16 @@
     let currentUser = null;
     let authToken = null;
     let googleInitialized = false;
+    let uploadedPhotos = {}; // { type: [base64_images] }
+    let currentPhotoType = 'selfie';
+
+    const photoTypeHints = {
+      selfie: '👤 Upload clear headshots or full-body photos from different angles',
+      fabric: '🧵 Upload fabric swatches you like to match colors',
+      lace: '🎀 Upload lace patterns you prefer for embroidery',
+      accessories: '✨ Upload jewelry, dupatta draping, or accessory ideas',
+      inspiration: '🌟 Upload inspiration photos of complete outfits you love'
+    };
 
     function promptSignIn(feature) {
       alert(`Sign in first to access ${feature}`);
@@ -529,6 +681,110 @@
       document.querySelector(`button[onclick*="${tabName}"]`)?.classList.add('active');
     }
 
+    function selectPhotoType(type) {
+      currentPhotoType = type;
+      document.querySelectorAll('.photo-type-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('photoTypeHint').textContent = photoTypeHints[type];
+    }
+
+    function handlePhotoUpload(event) {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      if (!uploadedPhotos[currentPhotoType]) {
+        uploadedPhotos[currentPhotoType] = [];
+      }
+
+      let processedCount = 0;
+
+      Array.from(files).forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            // Compress to 900px max width
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > 900) {
+              height = Math.round(height * (900 / width));
+              width = 900;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to JPEG base64
+            const base64 = canvas.toDataURL('image/jpeg', 0.8);
+            uploadedPhotos[currentPhotoType].push(base64);
+            
+            processedCount++;
+            if (processedCount === files.length) {
+              displayPhotoGallery();
+              setStatus('designStatus', `✅ ${processedCount} photo(s) uploaded!`, 'success');
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      event.target.value = '';
+    }
+
+    function displayPhotoGallery() {
+      const gallery = document.getElementById('photoGallery');
+      const grid = document.getElementById('photoGrid');
+      
+      let totalPhotos = 0;
+      let html = '';
+
+      for (const [type, photos] of Object.entries(uploadedPhotos)) {
+        if (photos.length > 0) {
+          const icons = {
+            selfie: '👤',
+            fabric: '🧵',
+            lace: '🎀',
+            accessories: '✨',
+            inspiration: '🌟'
+          };
+          
+          photos.forEach((photo, idx) => {
+            html += `
+              <div class="photo-item" id="photo-${type}-${idx}">
+                <img src="${photo}" alt="${type}">
+                <div class="photo-item-label">${icons[type]} ${type}</div>
+                <button type="button" class="photo-item-remove" onclick="removePhoto('${type}', ${idx})">×</button>
+              </div>
+            `;
+            totalPhotos++;
+          });
+        }
+      }
+
+      if (totalPhotos > 0) {
+        gallery.style.display = 'block';
+        document.getElementById('galleryTitle').textContent = `📸 Uploaded Photos: ${totalPhotos} total`;
+        grid.innerHTML = html;
+      } else {
+        gallery.style.display = 'none';
+      }
+    }
+
+    function removePhoto(type, idx) {
+      uploadedPhotos[type].splice(idx, 1);
+      if (uploadedPhotos[type].length === 0) {
+        delete uploadedPhotos[type];
+      }
+      displayPhotoGallery();
+      setStatus('designStatus', '✅ Photo removed', 'info');
+    }
+
     async function submitDesign(e) {
       e.preventDefault();
       if (!authToken) {
@@ -538,28 +794,37 @@
 
       const description = document.getElementById('designDesc').value;
       const occasion = document.getElementById('occasion').value || 'casual';
+      const totalPhotos = Object.values(uploadedPhotos).reduce((sum, arr) => sum + arr.length, 0);
 
-      setStatus('designStatus', '⏳ Generating your designs... This may take 30-60 seconds', 'info');
+      setStatus('designStatus', `⏳ Generating designs${totalPhotos > 0 ? ' + analyzing ' + totalPhotos + ' photo(s)' : ''}... This may take 45-120 seconds`, 'info');
       document.getElementById('generateBtn').disabled = true;
 
       try {
+        const payload = { 
+          description, 
+          occasion,
+          photos: uploadedPhotos || null
+        };
+
         const response = await fetch(`${API}/api/designs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ description, occasion }),
+          body: JSON.stringify(payload),
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-          setStatus('designStatus', '✅ Designs generated successfully! Check them out below.', 'success');
-          displayDesigns(data.design.aiConcepts);
+          setStatus('designStatus', '✅ Designs generated! Check how they look on you below.', 'success');
+          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis);
           updateBudget(data.trial);
           document.getElementById('designDesc').value = '';
-          loadPreviousDesigns();
+          uploadedPhotos = {};
+          displayPhotoGallery();
+          document.getElementById('photoInput').value = '';
         } else {
           setStatus('designStatus', '❌ ' + (data.message || data.error || 'Error generating designs'), 'error');
         }
@@ -571,45 +836,87 @@
       }
     }
 
-    function displayDesigns(concepts) {
+    function displayDesigns(concepts, photoAnalysis) {
       const container = document.getElementById('designsContainer');
       if (!concepts || concepts.length === 0) {
         container.innerHTML = '<p>No designs generated</p>';
         return;
       }
 
-      container.innerHTML = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
-      const grid = document.createElement('div');
-      grid.className = 'design-concepts';
+      let html = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
+      
+      // Show comprehensive analysis if photos were uploaded
+      if (photoAnalysis) {
+        html += `
+          <div class="personal-analysis">
+            <h4>🌟 Personalized Analysis Based on Your Photos</h4>
+            ${formatAnalysis(photoAnalysis)}
+          </div>
+        `;
+      }
 
+      html += '<div class="design-concepts">';
+      
       concepts.forEach((concept, idx) => {
-        const card = document.createElement('div');
-        card.className = 'design-card';
-        
         const imageHtml = concept.imageUrl 
           ? `<img src="${concept.imageUrl}" alt="Design ${idx + 1}">`
           : '<div style="color: #999; font-size: 12px;">Image generation in progress...</div>';
 
-        card.innerHTML = `
-          <div class="design-image">${imageHtml}</div>
-          <div class="design-info">
-            <div class="design-title">Design ${idx + 1}: ${concept.title}</div>
-            <div class="design-desc">${concept.description}</div>
-            <div class="design-pricing">
-              <strong>₹${concept.priceMin || concept.price || 2500} - ₹${concept.priceMax || concept.price || 4000}</strong>
-              <br>Delivery: ${concept.deliveryDays || 14} days
-            </div>
-            <div class="design-actions">
-              <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
-              <button class="btn-customize">🎨 Customize</button>
+        html += `
+          <div class="design-card">
+            <div class="design-image">${imageHtml}</div>
+            <div class="design-info">
+              <div class="design-title">Design ${idx + 1}: ${concept.title}</div>
+              <div class="design-desc">${concept.description}</div>
+              <div class="design-pricing">
+                <strong>₹${concept.priceMin || concept.price || 2500} - ₹${concept.priceMax || concept.price || 4000}</strong>
+                <br>Delivery: ${concept.deliveryDays || 14} days
+              </div>
+              <div class="design-actions">
+                <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
+              </div>
             </div>
           </div>
         `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function formatAnalysis(text) {
+      const sections = text.split('\n\n');
+      let html = '';
+
+      sections.forEach(section => {
+        const lines = section.split('\n').filter(l => l.trim());
+        if (lines.length === 0) return;
+
+        const firstLine = lines[0];
         
-        grid.appendChild(card);
+        if (firstLine.includes('Confidence') || firstLine.includes('confidence')) {
+          html += `<div class="confidence-score">${firstLine} ⭐</div>`;
+        } else if (firstLine.match(/^(Your appearance|Based on|Color|Fit|Embroidery|Special)/)) {
+          html += `<div class="analysis-section">`;
+          html += `<h5>${firstLine.replace(/^(Your appearance|Based on): /, '')}</h5>`;
+          lines.slice(1).forEach(line => {
+            if (line.trim()) {
+              html += `<div class="analysis-item">${line.replace(/^[✓-]\s*/, '')}</div>`;
+            }
+          });
+          html += `</div>`;
+        } else {
+          lines.forEach(line => {
+            if (line.trim().startsWith('✓') || line.trim().startsWith('-')) {
+              html += `<div class="analysis-item">${line.replace(/^[✓-]\s*/, '')}</div>`;
+            } else if (line.trim()) {
+              html += `<div class="analysis-item">${line}</div>`;
+            }
+          });
+        }
       });
 
-      container.appendChild(grid);
+      return html || text;
     }
 
     function updateBudget(trial) {
@@ -622,34 +929,6 @@
       
       const percent = (trial.spentAmount / trial.cacLimit) * 100;
       document.getElementById('budgetBar').style.width = Math.min(percent, 100) + '%';
-    }
-
-    async function loadPreviousDesigns() {
-      try {
-        const response = await fetch(`${API}/api/designs/my-designs`, {
-          headers: { 'Authorization': `Bearer ${authToken}` },
-        });
-
-        if (!response.ok) return;
-        
-        const data = await response.json();
-        if (data.success && data.designs && data.designs.length > 0) {
-          const historyDiv = document.getElementById('previousDesigns');
-          const historyGrid = document.getElementById('designHistory');
-          
-          historyGrid.innerHTML = data.designs.map((design, i) => `
-            <div class="history-item" onclick="alert('Design from ${new Date(design.createdAt).toLocaleDateString()}')">
-              <div style="font-size: 12px; color: #666;">Design ${i + 1}</div>
-              <div class="history-status">${design.status}</div>
-              <div class="history-date">${new Date(design.createdAt).toLocaleDateString()}</div>
-            </div>
-          `).join('');
-          
-          historyDiv.style.display = 'block';
-        }
-      } catch (error) {
-        console.error('Error loading designs:', error);
-      }
     }
 
     function sendQuote(conceptIndex) {
@@ -720,7 +999,6 @@
         signOutBtn.style.display = 'block';
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
-        loadPreviousDesigns();
       } else {
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
