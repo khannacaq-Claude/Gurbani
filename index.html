@@ -647,11 +647,12 @@
               </div>
               <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
               
-              <!-- Photo Gallery -->
-              <div class="photo-gallery" id="photoGallery" style="display: none;">
-                <div class="photo-gallery-title" id="galleryTitle">📸 Uploaded Photos:</div>
-                <div class="photo-grid" id="photoGrid"></div>
-              </div>
+            </div>
+
+            <!-- Photo Gallery - ABOVE generate button so always visible -->
+            <div class="photo-gallery" id="photoGallery" style="display: none;">
+              <div class="photo-gallery-title" id="galleryTitle">📸 Uploaded Photos:</div>
+              <div class="photo-grid" id="photoGrid"></div>
             </div>
 
             <button type="submit" class="btn-submit" id="generateBtn">✨ Generate My Designs</button>
@@ -741,6 +742,7 @@
         uploadedPhotos[currentPhotoType] = [];
       }
 
+      setStatus('designStatus', `⏳ Processing ${files.length} photo(s)...`, 'info');
       let processedCount = 0;
 
       Array.from(files).forEach((file, idx) => {
@@ -771,7 +773,8 @@
             processedCount++;
             if (processedCount === files.length) {
               displayPhotoGallery();
-              setStatus('designStatus', `✅ ${processedCount} photo(s) uploaded!`, 'success');
+              const total = Object.values(uploadedPhotos).reduce((s, a) => s + a.length, 0);
+              setStatus('designStatus', `✅ ${processedCount} photo(s) added! Total: ${total} photo(s) ready.`, 'success');
             }
           };
           img.src = e.target.result;
@@ -797,7 +800,7 @@
           photos.forEach((photo, idx) => {
             html += `
               <div class="photo-item">
-                <img src="${photo}" alt="${labels[type] || type}" loading="lazy">
+                <img src="${photo}" alt="${labels[type] || type}" >
                 <div class="photo-item-label">${icons[type] || '📷'} ${labels[type] || type}</div>
                 <button type="button" class="photo-item-remove" onclick="removePhoto('${type}', ${idx})" title="Remove">×</button>
               </div>
@@ -822,8 +825,7 @@
         document.getElementById('galleryTitle').innerHTML = 
           `📸 <strong>${totalPhotos} photo${totalPhotos > 1 ? 's' : ''}</strong> uploaded — scroll to see all`;
         grid.innerHTML = html;
-        // Scroll gallery into view
-        gallery.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Gallery is above generate button - always visible
       } else {
         gallery.style.display = 'none';
         grid.innerHTML = '';
