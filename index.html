@@ -92,7 +92,6 @@
       font-weight: 700;
       font-size: 13px;
       font-family: var(--font-body);
-      text-transform: uppercase;
       letter-spacing: 0.5px;
       transition: all 0.2s ease;
     }
@@ -131,7 +130,6 @@
       font-family: var(--font-display);
       font-size: 40px;
       line-height: 1.15;
-      text-transform: uppercase;
       color: var(--ink);
       margin-bottom: 18px;
       letter-spacing: 0.5px;
@@ -150,8 +148,8 @@
       margin-bottom: 20px;
     }
 
-    h2 { font-family: var(--font-display); color: var(--ink); font-size: 26px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    h3 { font-family: var(--font-display); color: var(--ink); margin-bottom: 8px; font-size: 16px; text-transform: uppercase; letter-spacing: 0.3px; }
+    h2 { font-family: var(--font-display); color: var(--ink); font-size: 26px; margin-bottom: 10px; letter-spacing: 0.5px; }
+    h3 { font-family: var(--font-display); color: var(--ink); margin-bottom: 8px; font-size: 16px; letter-spacing: 0.3px; }
     p { color: var(--text-muted); margin-bottom: 15px; line-height: 1.65; font-family: var(--font-body); }
 
     .grid {
@@ -200,7 +198,6 @@
       font-weight: 700;
       font-family: var(--font-body);
       font-size: 13px;
-      text-transform: uppercase;
       letter-spacing: 0.3px;
       transition: all 0.2s ease;
     }
@@ -218,7 +215,6 @@
       font-size: 12px;
       font-family: var(--font-body);
       font-weight: 600;
-      text-transform: uppercase;
       transition: all 0.2s ease;
     }
     .admin-filter-btn.active { background: var(--ink); color: var(--marigold); border-color: var(--ink); }
@@ -267,7 +263,6 @@
       font-weight: 700;
       font-family: var(--font-body);
       font-size: 13px;
-      text-transform: uppercase;
       letter-spacing: 0.5px;
       width: auto;
       box-shadow: 0 6px 18px rgba(214, 41, 94, 0.3);
@@ -344,7 +339,6 @@
       color: var(--ink);
       margin-bottom: 8px;
       font-size: 15px;
-      text-transform: uppercase;
       letter-spacing: 0.3px;
     }
 
@@ -545,7 +539,6 @@
       font-family: var(--font-body);
       transition: all 0.25s ease;
       font-size: 12px;
-      text-transform: uppercase;
     }
 
     .photo-type-btn:hover {
@@ -587,7 +580,6 @@
       color: var(--vivid-deep);
       margin-bottom: 12px;
       font-size: 15px;
-      text-transform: uppercase;
     }
 
     .analysis-heading {
@@ -597,7 +589,6 @@
       margin: 14px 0 6px 0;
       padding-bottom: 4px;
       border-bottom: 1px solid rgba(214, 41, 94, 0.2);
-      text-transform: uppercase;
     }
 
     .analysis-section {
@@ -1015,7 +1006,7 @@
                 <div style="font-weight:bold; font-size:15px;">${customer.name || 'Unknown'}</div>
                 <div style="font-size:12px; color:#666;">${customer.email || ''} ${customer.phone ? '· ' + customer.phone : ''}</div>
               </div>
-              <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; text-transform:uppercase; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${d.status}</span>
+              <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${d.status}</span>
             </div>
             <div style="margin:10px 0; font-size:13px; color:#444;">"${d.description}" — ${d.occasion}</div>
             <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">${conceptsHtml}</div>
