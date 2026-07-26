@@ -744,6 +744,10 @@
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 See orders</p>
             </div>
           </div>
+
+          <h4 style="margin: 34px 0 4px 0;">🔮 What's Coming</h4>
+          <p style="font-size: 13px;">We're building these next — tell us which ones you'd actually use in the feedback form after your next design!</p>
+          <div class="grid" id="upcomingFeaturesTeaser" style="margin-top: 16px;"></div>
         </div>
 
         <!-- AI DESIGN TAB WITH MULTI-PHOTO TRY-ON -->
@@ -1024,6 +1028,28 @@
 
   <script>
     const API = 'https://gurbani-fashion-backend-production.up.railway.app';
+
+    // Shared list — used for BOTH the "What's Coming" teaser cards and the
+    // feedback form's "which would you use?" checkboxes, so they always match.
+    const UPCOMING_FEATURES = [
+      { key: 'fabric-marketplace', icon: '🧵', title: 'Fabric Marketplace', desc: 'Browse & buy fabric online, shipped to your door' },
+      { key: 'monthly-plans', icon: '💳', title: 'Monthly Design Plans', desc: 'More designs + bigger discounts every month' },
+      { key: 'birthday-perks', icon: '🎂', title: 'Birthday Perks', desc: 'Automatic discount during your birthday month' },
+      { key: 'instant-booking', icon: '📅', title: 'Instant Appointment Booking', desc: 'Pick your own time slot, no back-and-forth' },
+      { key: 'order-progress', icon: '📦', title: 'Live Order Progress', desc: 'Photo/video updates while your outfit is being stitched' },
+    ];
+
+    function renderUpcomingFeaturesTeaser() {
+      const container = document.getElementById('upcomingFeaturesTeaser');
+      if (!container) return;
+      container.innerHTML = UPCOMING_FEATURES.map(f => `
+        <div class="feature-box" style="cursor: default; position: relative;">
+          <span style="position:absolute; top:10px; right:10px; background: var(--marigold); color: var(--ink); font-size:9px; font-weight:700; text-transform:uppercase; padding:3px 8px; border-radius:10px;">Coming Soon</span>
+          <h3>${f.icon} ${f.title}</h3>
+          <p>${f.desc}</p>
+        </div>
+      `).join('');
+    }
     let currentUser = null;
     let authToken = null;
     let googleInitialized = false;
@@ -1418,6 +1444,7 @@
 
     function displayDesigns(concepts, photoAnalysis, originalDescription) {
       currentConcepts = concepts;
+      feedbackState = { rating: null, price: null, plan: null, featureInterest: [] };
       const container = document.getElementById('designsContainer');
       if (!concepts || concepts.length === 0) {
         container.innerHTML = '<p>No designs generated</p>';
@@ -1512,6 +1539,13 @@
             </div>
           </div>
 
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Which upcoming features would you actually use? (pick any)</label>
+            <div id="featureInterestButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+              ${UPCOMING_FEATURES.map(f => `<button type="button" onclick="toggleFeatureInterest('${f.key}')" data-feature="${f.key}" style="padding:8px 16px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:12px;">${f.icon} ${f.title}</button>`).join('')}
+            </div>
+          </div>
+
           <div class="form-group">
             <label style="font-size:13px;">Anything else? (optional)</label>
             <textarea id="feedbackComments" placeholder="What you liked, what felt off, anything at all..." style="min-height:60px;"></textarea>
@@ -1525,7 +1559,21 @@
       container.innerHTML = html;
     }
 
-    let feedbackState = { rating: null, price: null, plan: null };
+    let feedbackState = { rating: null, price: null, plan: null, featureInterest: [] };
+
+    function toggleFeatureInterest(key) {
+      const idx = feedbackState.featureInterest.indexOf(key);
+      if (idx === -1) {
+        feedbackState.featureInterest.push(key);
+      } else {
+        feedbackState.featureInterest.splice(idx, 1);
+      }
+      const btn = document.querySelector(`#featureInterestButtons button[data-feature="${key}"]`);
+      const active = feedbackState.featureInterest.includes(key);
+      btn.style.background = active ? 'var(--vivid)' : 'white';
+      btn.style.color = active ? 'white' : 'var(--text-ink)';
+      btn.style.borderColor = active ? 'var(--vivid)' : '#E5DCC8';
+    }
 
     function selectRating(n) {
       feedbackState.rating = n;
@@ -1575,6 +1623,7 @@
             pricePreference: feedbackState.price,
             planPreference: feedbackState.plan,
             comments: document.getElementById('feedbackComments').value,
+            featureInterest: feedbackState.featureInterest,
           }),
         });
         const data = await res.json();
@@ -1830,6 +1879,10 @@
                   <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PLAN PREFERENCE</div>
                   ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:#999;">No data yet</div>'}
                 </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">FEATURE INTEREST</div>
+                  ${UPCOMING_FEATURES.map(feat => `<div style="font-size:13px;">${feat.icon} ${feat.title}: ${f.featureInterestCounts[feat.key] || 0} vote(s)</div>`).join('')}
+                </div>
               </div>
               ${f.recentComments.length > 0 ? `
                 <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">RECENT COMMENTS</div>
@@ -2037,6 +2090,7 @@
     }
 
     window.addEventListener('load', () => {
+      renderUpcomingFeaturesTeaser();
       const savedToken = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('currentUser');
       
