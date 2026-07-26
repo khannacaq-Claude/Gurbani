@@ -1396,7 +1396,41 @@
         return;
       }
       
-      const occasion = document.getElementById('occasion').value || 'casual';
+      const occasionValue = document.getElementById('occasion').value;
+
+      // Nudge: occasion left unselected — cheap check, no API cost, catches a
+      // common case where the design would be generated without useful context.
+      if (!occasionValue) {
+        const proceedAnyway = confirm('You haven\'t selected an occasion — this helps us suggest better-fitted designs. Continue without one, or go back and choose?\n\nClick OK to continue anyway, or Cancel to go back and select one.');
+        if (!proceedAnyway) return;
+      }
+      const occasion = occasionValue || 'casual';
+
+      // Sensibility pre-check: a cheap call BEFORE the expensive full
+      // generation runs, to catch likely mistakes (garbled text, wrong-gender
+      // requests, etc.) and confirm with the customer before money is spent.
+      setStatus('designStatus', '🔍 Quick check before we generate...', 'info');
+      try {
+        const checkRes = await fetch(`${API}/api/designs/validate-description`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ description, occasion }),
+        });
+        const checkData = await checkRes.json();
+        if (checkRes.ok && checkData.valid === false && checkData.concern) {
+          const proceedAnyway = confirm(`⚠️ ${checkData.concern}\n\nClick OK to generate anyway, or Cancel to go back and edit your description.`);
+          if (!proceedAnyway) {
+            document.getElementById('designStatus').classList.remove('show');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Pre-check failed, proceeding with generation:', err.message);
+      }
+
       const totalPhotos = Object.values(uploadedPhotos).reduce((sum, arr) => sum + arr.length, 0);
 
       setStatus('designStatus', `⏳ Generating designs${totalPhotos > 0 ? ' + analyzing ' + totalPhotos + ' photo(s)' : ''}... This may take 45-120 seconds`, 'info');
