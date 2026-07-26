@@ -827,18 +827,29 @@
       renderAdminRequests();
     }
 
-    async function markAsOrdered(designId) {
-      if (!confirm('Mark this design request as ordered?')) return;
+    async function markAsOrdered(designId, quotedConceptIndex) {
+      const hoursInput = prompt('Estimated stitching hours for this order? (used to compute pricing — a 10% AI Design Studio discount is applied to stitching automatically)');
+      if (hoursInput === null) return; // cancelled
+      const hours = Number(hoursInput);
+      if (isNaN(hours) || hours <= 0) {
+        alert('Please enter a valid number of hours.');
+        return;
+      }
       try {
-        const res = await fetch(`${API}/api/designs/${designId}/mark-ordered`, {
+        const res = await fetch(`${API}/api/designs/${designId}/create-order`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ conceptIndex: quotedConceptIndex, stitchingHours: hours }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
+          alert(`✅ ${data.message}\nOrder ${data.order.orderNumber}: ₹${data.order.pricing.totalPrice} total (${data.order.pricing.marginPct}% margin)`);
           loadAdminRequests();
         } else {
-          alert('❌ ' + (data.error || 'Failed to update'));
+          alert('❌ ' + (data.error || 'Failed to create order'));
         }
       } catch (err) {
         alert('❌ ' + err.message);
@@ -871,7 +882,7 @@
           : '';
 
         const orderBtn = d.status !== 'ordered'
-          ? `<button onclick="markAsOrdered('${d._id}')" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:#C06090; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">✓ Mark as Ordered</button>`
+          ? `<button onclick="markAsOrdered('${d._id}', ${d.quotedConceptIndex ?? 0})" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:#C06090; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">✓ Mark as Ordered</button>`
           : '';
 
         return `
@@ -1431,10 +1442,11 @@
             `Design: ${concept.title || 'Design ' + (conceptIndex + 1)}\n` +
             `Details: ${concept.description || ''}\n` +
             `Estimated price: ${priceText}\n` +
-            `Original request: ${currentDesignDescription}`
+            `Original request: ${currentDesignDescription}\n\n` +
+            `(Ordering via AI Design Studio — eligible for stitching discount!)`
           );
           window.open(`https://wa.me/919899810977?text=${waMessage}`, '_blank');
-          alert('✅ Quote request sent! We\'ve also opened WhatsApp so you can message Sonia directly — she\'ll respond within 24 hours.');
+          alert('✅ Quote request sent! You get a discount on stitching for ordering through AI Design Studio. We\'ve also opened WhatsApp so you can message Sonia directly — she\'ll respond within 24 hours.');
         } else {
           alert('❌ ' + (data.error || 'Failed to send quote request. Please try again.'));
         }
