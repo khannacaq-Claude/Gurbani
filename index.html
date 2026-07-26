@@ -1482,7 +1482,7 @@
       }
     }
 
-    function displayDesigns(concepts, photoAnalysis, originalDescription) {
+    function displayDesigns(concepts, photoAnalysis, originalDescription, alreadyGaveFeedback) {
       currentConcepts = concepts;
       feedbackState = { rating: null, price: null, plan: null, featureInterest: [] };
       const container = document.getElementById('designsContainer');
@@ -1552,49 +1552,59 @@
 
       // Feedback widget — right after designs, while the experience is fresh.
       // Keeps engagement in-app instead of relying only on a later WhatsApp message.
-      html += `
-        <div id="feedbackWidget" style="margin-top: 30px; background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 8px; padding: 22px;">
-          <h4 style="margin-bottom: 6px;">💬 How did we do?</h4>
-          <p style="font-size: 13px; margin-bottom: 14px;">Your answers directly shape what we build next — takes 30 seconds.</p>
+      // Skipped (replaced with a thank-you note) if feedback was already given —
+      // otherwise re-viewing an old design from "My Designs" would ask again every time.
+      if (alreadyGaveFeedback) {
+        html += `
+          <div style="margin-top: 30px; background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 8px; padding: 18px 22px; font-size: 14px;">
+            🙏 You already shared feedback on this design — thank you!
+          </div>
+        `;
+      } else {
+        html += `
+          <div id="feedbackWidget" style="margin-top: 30px; background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 8px; padding: 22px;">
+            <h4 style="margin-bottom: 6px;">💬 How did we do?</h4>
+            <p style="font-size: 13px; margin-bottom: 14px;">Your answers directly shape what we build next — takes 30 seconds.</p>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Rate these designs (1-10)</label>
-            <div id="ratingButtons" style="display:flex; gap:6px; flex-wrap:wrap;">
-              ${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<button type="button" onclick="selectRating(${n})" data-rating="${n}" style="width:34px; height:34px; border-radius:6px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">${n}</button>`).join('')}
+            <div style="margin-bottom: 16px;">
+              <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Rate these designs (1-10)</label>
+              <div id="ratingButtons" style="display:flex; gap:6px; flex-wrap:wrap;">
+                ${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<button type="button" onclick="selectRating(${n})" data-rating="${n}" style="width:34px; height:34px; border-radius:6px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">${n}</button>`).join('')}
+              </div>
             </div>
-          </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">What would feel fair to pay per design?</label>
-            <div id="priceButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
-              ${[50, 75, 100].map(p => `<button type="button" onclick="selectPrice(${p})" data-price="${p}" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">₹${p}</button>`).join('')}
+            <div style="margin-bottom: 16px;">
+              <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">What would feel fair to pay per design?</label>
+              <div id="priceButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+                ${[50, 75, 100].map(p => `<button type="button" onclick="selectPrice(${p})" data-price="${p}" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">₹${p}</button>`).join('')}
+              </div>
             </div>
-          </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Which would you prefer?</label>
-            <div id="planButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" onclick="selectPlan('per-design')" data-plan="per-design" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">Pay per design</button>
-              <button type="button" onclick="selectPlan('subscription')" data-plan="subscription" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">Monthly plan + discount</button>
+            <div style="margin-bottom: 16px;">
+              <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Which would you prefer?</label>
+              <div id="planButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" onclick="selectPlan('per-design')" data-plan="per-design" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">Pay per design</button>
+                <button type="button" onclick="selectPlan('subscription')" data-plan="subscription" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">Monthly plan + discount</button>
+              </div>
             </div>
-          </div>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Which upcoming features would you actually use? (pick any)</label>
-            <div id="featureInterestButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
-              ${UPCOMING_FEATURES.map(f => `<button type="button" onclick="toggleFeatureInterest('${f.key}')" data-feature="${f.key}" style="padding:8px 16px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:12px;">${f.icon} ${f.title}</button>`).join('')}
+            <div style="margin-bottom: 16px;">
+              <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Which upcoming features would you actually use? (pick any)</label>
+              <div id="featureInterestButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+                ${UPCOMING_FEATURES.map(f => `<button type="button" onclick="toggleFeatureInterest('${f.key}')" data-feature="${f.key}" style="padding:8px 16px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:12px;">${f.icon} ${f.title}</button>`).join('')}
+              </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label style="font-size:13px;">Anything else? (optional)</label>
-            <textarea id="feedbackComments" placeholder="What you liked, what felt off, anything at all..." style="min-height:60px;"></textarea>
-          </div>
+            <div class="form-group">
+              <label style="font-size:13px;">Anything else? (optional)</label>
+              <textarea id="feedbackComments" placeholder="What you liked, what felt off, anything at all..." style="min-height:60px;"></textarea>
+            </div>
 
-          <button type="button" onclick="submitFeedback()" class="btn-submit">Submit Feedback</button>
-          <div id="feedbackStatus" style="margin-top:10px; font-size:13px;"></div>
-        </div>
-      `;
+            <button type="button" onclick="submitFeedback()" class="btn-submit">Submit Feedback</button>
+            <div id="feedbackStatus" style="margin-top:10px; font-size:13px;"></div>
+          </div>
+        `;
+      }
 
       container.innerHTML = html;
     }
@@ -1994,7 +2004,7 @@
       document.getElementById('design').classList.add('active');
       // Find and activate the AI Design tab button (2nd tab)
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
-      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description);
+      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
