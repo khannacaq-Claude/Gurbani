@@ -638,7 +638,17 @@
             <div class="form-group">
               <label>📸 Upload Reference Photos (All Optional!)</label>
               <p class="help-text">Upload multiple photos from different angles + fabric/lace/accessory samples for better personalization</p>
-              
+
+              <div style="background: #fdf2f6; border: 1px solid #C06090; border-radius: 6px; padding: 12px; margin-bottom: 14px;">
+                <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="photoConsentCheckbox" style="margin-top: 3px; flex-shrink: 0;" onchange="handleConsentChange()">
+                  <span>
+                    I consent to Gurbani Fashion using my uploaded photos to generate AI design previews (processed via Anthropic Claude and Replicate AI services). Selfies are used only for personalized style suggestions and are never used to generate design images.
+                    <a href="#" onclick="openPrivacyModal(event)" style="color: #C06090; font-weight: bold;">Read full Privacy Notice</a>.
+                  </span>
+                </label>
+              </div>
+
               <div class="photo-upload-tabs">
                 <button type="button" class="photo-type-btn active" onclick="selectPhotoType('selfie')" style="position:relative;">👤 Selfies<span id="badge_selfie" class="photo-type-badge" style="display:none;">0</span></button>
                 <button type="button" class="photo-type-btn" onclick="selectPhotoType('fabric')" style="position:relative;">🧵 Fabrics<span id="badge_fabric" class="photo-type-badge" style="display:none;">0</span></button>
@@ -647,9 +657,9 @@
                 <button type="button" class="photo-type-btn" onclick="selectPhotoType('inspiration')" style="position:relative;">🌟 Inspiration<span id="badge_inspiration" class="photo-type-badge" style="display:none;">0</span></button>
               </div>
 
-              <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
+              <div class="photo-upload-area" id="photoUploadArea" onclick="handlePhotoAreaClick()" style="opacity: 0.5;">
                 <p style="margin: 0;">📸 Click to upload or drag & drop</p>
-                <p style="font-size: 12px; color: #999; margin-top: 8px;" id="photoTypeHint">Upload selfie photos for best personalization</p>
+                <p style="font-size: 12px; color: #999; margin-top: 8px;" id="photoTypeHint">Please check the consent box above to enable photo upload</p>
               </div>
               <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
               
@@ -740,7 +750,46 @@
       document.getElementById('photoTypeHint').textContent = photoTypeHints[type];
     }
 
+    function handleConsentChange() {
+      const consented = document.getElementById('photoConsentCheckbox').checked;
+      const uploadArea = document.getElementById('photoUploadArea');
+      const hint = document.getElementById('photoTypeHint');
+      if (consented) {
+        uploadArea.style.opacity = '1';
+        hint.textContent = 'Upload selfie photos for best personalization';
+      } else {
+        uploadArea.style.opacity = '0.5';
+        hint.textContent = 'Please check the consent box above to enable photo upload';
+      }
+    }
+
+    function handlePhotoAreaClick() {
+      const consented = document.getElementById('photoConsentCheckbox').checked;
+      if (!consented) {
+        alert('Please check the consent checkbox above before uploading photos.');
+        return;
+      }
+      document.getElementById('photoInput').click();
+    }
+
+    function openPrivacyModal(event) {
+      if (event) event.preventDefault();
+      document.getElementById('privacyModal').style.display = 'flex';
+    }
+
+    function closePrivacyModal() {
+      document.getElementById('privacyModal').style.display = 'none';
+    }
+
     function handlePhotoUpload(event) {
+      // Defense-in-depth: re-check consent even though the upload area click
+      // is already gated, in case this fires via another path.
+      const consented = document.getElementById('photoConsentCheckbox').checked;
+      if (!consented) {
+        alert('Please check the consent checkbox above before uploading photos.');
+        event.target.value = '';
+        return;
+      }
       console.log('📸 handlePhotoUpload called, type:', currentPhotoType);
       const files = event.target.files;
       if (!files.length) {
@@ -1209,7 +1258,18 @@
         landingPage.classList.add('hidden');
         dashboard.classList.add('show');
         userWelcome.classList.add('show');
-        userWelcome.textContent = `👋 ${currentUser.name}`;
+        userWelcome.textContent = ''; // clear before rebuilding
+        const nameLine = document.createElement('div');
+        nameLine.textContent = `👋 ${currentUser.name}`;
+        userWelcome.appendChild(nameLine);
+        if (currentUser.email) {
+          const emailLine = document.createElement('div');
+          emailLine.style.fontSize = '11px';
+          emailLine.style.opacity = '0.85';
+          emailLine.style.fontWeight = 'normal';
+          emailLine.textContent = currentUser.email;
+          userWelcome.appendChild(emailLine);
+        }
         signOutBtn.style.display = 'block';
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
@@ -1285,5 +1345,41 @@
     }
 
   </script>
+    <!-- FOOTER -->
+    <footer style="text-align: center; padding: 24px 16px; font-size: 12px; color: #999; border-top: 1px solid #eee; margin-top: 40px;">
+      <a href="#" onclick="openPrivacyModal(event)" style="color: #C06090; text-decoration: none; font-weight: bold;">Privacy Notice</a>
+      &nbsp;·&nbsp; Gurbani Fashion Boutique &nbsp;·&nbsp; 9899810977
+    </footer>
+
+    <!-- PRIVACY NOTICE MODAL -->
+    <div id="privacyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: white; border-radius: 8px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 28px; position: relative;">
+        <button onclick="closePrivacyModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999;">&times;</button>
+        <h2 style="color: #C06090; margin-top: 0;">Privacy Notice</h2>
+
+        <h3>What We Collect</h3>
+        <p>Name, phone number, email, photos you choose to upload (selfies, fabric samples, lace/accessory references, inspiration images), body measurements (if provided), and design descriptions/preferences you type.</p>
+
+        <h3>Why We Collect It</h3>
+        <p>To generate AI-powered design concepts tailored to your request, provide personalized style suggestions, process and fulfill orders, and improve our recommendations over time.</p>
+
+        <h3>How Your Photos Are Used</h3>
+        <p><strong>Fabric, lace, accessory, and inspiration photos:</strong> used to generate AI design images reflecting your actual materials, sent to our AI image partner (Replicate) for this purpose only.</p>
+        <p><strong>Selfies:</strong> used only to generate a written personalized style analysis (e.g. suggestions on necklines, colors, and fits). Selfies are never used to generate design images and are never shared with our image-generation provider.</p>
+
+        <h3>Who We Share Data With</h3>
+        <p><strong>Anthropic (Claude AI)</strong> — processes text and photos to generate design concepts and style analysis.<br>
+        <strong>Replicate</strong> — processes design descriptions and reference photos (excluding selfies) to generate preview images.<br>
+        We do not sell your data to advertisers or unrelated third parties.</p>
+
+        <h3>Your Rights</h3>
+        <p>You can request a copy of your data, request correction, or request deletion at any time by contacting us at <strong>9899810977</strong> or <strong>khannacaq@gmail.com</strong>. We'll respond within 7 business days.</p>
+
+        <h3>Security</h3>
+        <p>Data is stored on MongoDB Atlas (Mumbai region) with access restricted to authorized Gurbani Fashion administrators. We do not store payment card details — payments are processed via Razorpay directly.</p>
+
+        <button onclick="closePrivacyModal()" style="margin-top: 20px; background: #C06090; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Close</button>
+      </div>
+    </div>
 </body>
 </html>
