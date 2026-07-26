@@ -1420,8 +1420,13 @@
           body: JSON.stringify({ description, occasion }),
         });
         const checkData = await checkRes.json();
-        if (checkRes.ok && checkData.valid === false && checkData.concern) {
-          const proceedAnyway = confirm(`⚠️ ${checkData.concern}\n\nClick OK to generate anyway, or Cancel to go back and edit your description.`);
+        if (checkRes.ok && checkData.action === 'block') {
+          document.getElementById('designStatus').classList.remove('show');
+          alert(`❌ ${checkData.message || "This doesn't look like a clothing design request — please describe an outfit you'd like designed."}`);
+          return;
+        }
+        if (checkRes.ok && checkData.action === 'warn' && checkData.message) {
+          const proceedAnyway = confirm(`⚠️ ${checkData.message}\n\nClick OK to generate anyway, or Cancel to go back and edit your description.`);
           if (!proceedAnyway) {
             document.getElementById('designStatus').classList.remove('show');
             return;
@@ -1531,8 +1536,8 @@
               <div class="design-title">Design ${idx + 1}: ${concept.title}</div>
               <div class="design-desc">${concept.description}</div>
               <div class="design-pricing">
-                <strong>₹${concept.priceMin || concept.price || 2500} - ₹${concept.priceMax || concept.price || 4000}</strong>
-                <br>Delivery: ${concept.deliveryDays || 14} days
+                📅 Delivery: ${concept.deliveryDays || 14} days
+                <br><span style="font-size:11px; opacity:0.85;">Pricing shared by Sonia when you ask for a quote</span>
               </div>
               <div class="design-actions">
                 <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
@@ -1739,13 +1744,12 @@
           const concept = currentConcepts[conceptIndex] || {};
           const customerName = currentUser?.name || 'Customer';
           const customerPhone = currentUser?.phone || '';
-          const priceText = `₹${concept.priceMin || ''}-${concept.priceMax || ''}`;
           const waMessage = encodeURIComponent(
             `Hi Sonia! I'd like a quote for a design:\n\n` +
             `Customer: ${customerName}${customerPhone ? ' (' + customerPhone + ')' : ''}\n` +
             `Design: ${concept.title || 'Design ' + (conceptIndex + 1)}\n` +
             `Details: ${concept.description || ''}\n` +
-            `Estimated price: ${priceText}\n` +
+            `Delivery: ${concept.deliveryDays || 14} days\n` +
             `Original request: ${currentDesignDescription}\n\n` +
             `(Ordering via AI Design Studio — eligible for stitching discount!)`
           );
