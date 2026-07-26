@@ -120,7 +120,20 @@
     
     .tab-btn:hover { color: #C06090; }
     .tab-btn.active { color: #C06090; border-bottom-color: #C06090; }
-    
+
+    .admin-filter-btn {
+      padding: 8px 14px;
+      border: 1px solid #C06090;
+      background: white;
+      color: #C06090;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    .admin-filter-btn.active { background: #C06090; color: white; }
+    .admin-filter-btn:hover { opacity: 0.9; }
+
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
@@ -578,6 +591,7 @@
           <button class="tab-btn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
           <button class="tab-btn" onclick="switchTab(event, 'appointments')">📅 Appointments</button>
           <button class="tab-btn" onclick="switchTab(event, 'orders')">📦 Orders</button>
+          <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -705,9 +719,117 @@
           <h3>📦 My Orders</h3>
           <p>You don't have any orders yet. Start by creating a design!</p>
         </div>
+
+        <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
+        <div id="admin" class="tab-content">
+          <h3>🔐 Design Requests (Admin)</h3>
+          <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
+            <button type="button" class="admin-filter-btn active" onclick="filterAdminRequests('all', event)">All</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('generated', event)">Generated</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('quoted', event)">Quote Requested</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('ordered', event)">Ordered</button>
+          </div>
+          <div id="adminRequestsList">Loading...</div>
+        </div>
       </div>
     </div>
   </main>
+
+  <script>
+    let allAdminDesigns = [];
+    let currentAdminFilter = 'all';
+
+    async function loadAdminRequests() {
+      const list = document.getElementById('adminRequestsList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/designs/admin/all-designs`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load requests'}</p>`;
+          return;
+        }
+        allAdminDesigns = data.designs || [];
+        renderAdminRequests();
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function filterAdminRequests(status, event) {
+      currentAdminFilter = status;
+      document.querySelectorAll('.admin-filter-btn').forEach(b => b.classList.remove('active'));
+      if (event) event.target.classList.add('active');
+      renderAdminRequests();
+    }
+
+    async function markAsOrdered(designId) {
+      if (!confirm('Mark this design request as ordered?')) return;
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/mark-ordered`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadAdminRequests();
+        } else {
+          alert('❌ ' + (data.error || 'Failed to update'));
+        }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    function renderAdminRequests() {
+      const list = document.getElementById('adminRequestsList');
+      const filtered = currentAdminFilter === 'all'
+        ? allAdminDesigns
+        : allAdminDesigns.filter(d => d.status === currentAdminFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<p style="color:#999; padding: 20px 0;">No requests in this category yet.</p>';
+        return;
+      }
+
+      const statusColors = { generated: '#1565c0', quoted: '#e65100', ordered: '#2e7d32' };
+
+      list.innerHTML = filtered.map(d => {
+        const customer = d.userId || {};
+        const conceptsHtml = (d.aiConcepts || []).map((c, i) => {
+          const isSelected = d.quotedConceptIndex === i;
+          return `<div style="border:1px solid ${isSelected ? '#C06090' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'};">${isSelected ? '⭐ ' : ''}${c.title} (₹${c.priceMin}-${c.priceMax})</div>`;
+        }).join('');
+
+        const waPhone = (customer.phone || '').replace(/[^0-9]/g, '');
+        const waLink = waPhone
+          ? `<a href="https://wa.me/91${waPhone}" target="_blank" style="display:inline-block; margin-top:8px; padding:6px 12px; background:#25D366; color:white; text-decoration:none; border-radius:4px; font-size:12px;">💬 WhatsApp Customer</a>`
+          : '';
+
+        const orderBtn = d.status !== 'ordered'
+          ? `<button onclick="markAsOrdered('${d._id}')" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:#C06090; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">✓ Mark as Ordered</button>`
+          : '';
+
+        return `
+          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div style="font-weight:bold; font-size:15px;">${customer.name || 'Unknown'}</div>
+                <div style="font-size:12px; color:#666;">${customer.email || ''} ${customer.phone ? '· ' + customer.phone : ''}</div>
+              </div>
+              <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; text-transform:uppercase; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${d.status}</span>
+            </div>
+            <div style="margin:10px 0; font-size:13px; color:#444;">"${d.description}" — ${d.occasion}</div>
+            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">${conceptsHtml}</div>
+            <div style="font-size:11px; color:#999; margin-top:8px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
+            ${waLink}${orderBtn}
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
 
   <script>
     const API = 'https://gurbani-fashion-backend-production.up.railway.app';
@@ -716,6 +838,9 @@
     let googleInitialized = false;
     let uploadedPhotos = {}; // { type: [base64_images] }
     let currentPhotoType = 'selfie';
+    let currentDesignId = null;
+    let currentDesignDescription = '';
+    let currentConcepts = [];
 
     const photoTypeHints = {
       selfie: '👤 Upload clear headshots or full-body photos from different angles',
@@ -1069,6 +1194,8 @@
 
         if (response.ok && data.success) {
           setStatus('designStatus', '✅ Designs generated! Check how they look on you below.', 'success');
+          currentDesignId = data.design._id;
+          currentDesignDescription = description;
           displayDesigns(data.design.aiConcepts, data.design.photoAnalysis);
           updateBudget(data.trial);
           document.getElementById('designDesc').value = '';
@@ -1087,6 +1214,7 @@
     }
 
     function displayDesigns(concepts, photoAnalysis) {
+      currentConcepts = concepts;
       const container = document.getElementById('designsContainer');
       if (!concepts || concepts.length === 0) {
         container.innerHTML = '<p>No designs generated</p>';
@@ -1194,8 +1322,43 @@
       document.getElementById('budgetBar').style.width = Math.min(percent, 100) + '%';
     }
 
-    function sendQuote(conceptIndex) {
-      alert('Sonia will review your design and send a quote within 24 hours!');
+    async function sendQuote(conceptIndex) {
+      if (!currentDesignId) {
+        alert('Something went wrong — please generate the design again before requesting a quote.');
+        return;
+      }
+      try {
+        const response = await fetch(`${API}/api/designs/${currentDesignId}/quote`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ conceptIndex }),
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const concept = currentConcepts[conceptIndex] || {};
+          const customerName = currentUser?.name || 'Customer';
+          const customerPhone = currentUser?.phone || '';
+          const priceText = `₹${concept.priceMin || ''}-${concept.priceMax || ''}`;
+          const waMessage = encodeURIComponent(
+            `Hi Sonia! I'd like a quote for a design:\n\n` +
+            `Customer: ${customerName}${customerPhone ? ' (' + customerPhone + ')' : ''}\n` +
+            `Design: ${concept.title || 'Design ' + (conceptIndex + 1)}\n` +
+            `Details: ${concept.description || ''}\n` +
+            `Estimated price: ${priceText}\n` +
+            `Original request: ${currentDesignDescription}`
+          );
+          window.open(`https://wa.me/919899810977?text=${waMessage}`, '_blank');
+          alert('✅ Quote request sent! We\'ve also opened WhatsApp so you can message Sonia directly — she\'ll respond within 24 hours.');
+        } else {
+          alert('❌ ' + (data.error || 'Failed to send quote request. Please try again.'));
+        }
+      } catch (error) {
+        alert('❌ ' + error.message);
+      }
     }
 
     function submitAppointment(event) {
@@ -1273,6 +1436,7 @@
         signOutBtn.style.display = 'block';
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
+        document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
       } else {
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
