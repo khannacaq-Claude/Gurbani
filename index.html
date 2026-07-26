@@ -667,7 +667,7 @@
       <div class="card">
         <div class="trust-badge">✨ AI-Powered Custom Design Studio</div>
         <div class="hero-eyebrow">Finally, a boutique that designs with you...</div>
-        <h2 class="hero-headline" style="text-transform: none;">Your Vision. <span class="accent">Your Fit.</span><br>Stitched to Perfection.</h2>
+        <h2 class="hero-headline" style="text-transform: none;">Passion For Fashion. <span class="accent">Designed For You.</span></h2>
         <p>Custom stitched outfits powered by AI design ideas + Multi-Photo Virtual Try-On</p>
         <p>Sign in with Google to create designs, upload multiple reference photos, and see how outfits look on YOU!</p>
         
@@ -872,24 +872,19 @@
 
         <!-- APPOINTMENTS TAB -->
         <div id="appointments" class="tab-content">
-          <h3>📅 Book an Appointment</h3>
-          <form onsubmit="submitAppointment(event)">
-            <div class="form-group">
-              <label>Type of Appointment</label>
-              <select required>
-                <option value="">-- Select --</option>
-                <option value="in-store">In-Store Visit (FREE)</option>
-                <option value="consultation">Styling Consultation (₹999)</option>
-                <option value="video">Video Call (₹499)</option>
-                <option value="urgent">Urgent Appointment (₹499)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Preferred Date</label>
-              <input type="date" required>
-            </div>
-            <button type="submit" class="btn-submit">✓ Book Now</button>
-          </form>
+          <h3>📅 Appointments</h3>
+          <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 20px; margin-bottom: 20px;">
+            <p style="margin-bottom: 10px; font-weight: 600; color: var(--text-ink);">🚧 Online booking is coming soon!</p>
+            <p style="margin-bottom: 6px;">We're building self-serve booking for:</p>
+            <ul style="margin: 0 0 12px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+              <li>In-Store Visit (Free)</li>
+              <li>Styling Consultation</li>
+              <li>Video Call Consultation</li>
+              <li>Urgent Appointment</li>
+            </ul>
+            <p style="margin-bottom: 0;">Meanwhile, message Sonia directly and she'll set up a time that works for you:</p>
+          </div>
+          <a href="https://wa.me/919899810977?text=Hi%20Sonia!%20I'd%20like%20to%20book%20an%20appointment." target="_blank" class="btn-submit" style="display: inline-block; text-decoration: none; text-align: center;">💬 Message Sonia on WhatsApp</a>
         </div>
 
         <!-- ORDERS TAB (shows design history + their status) -->
@@ -1487,7 +1482,110 @@
       });
       
       html += '</div>';
+
+      // Feedback widget — right after designs, while the experience is fresh.
+      // Keeps engagement in-app instead of relying only on a later WhatsApp message.
+      html += `
+        <div id="feedbackWidget" style="margin-top: 30px; background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 8px; padding: 22px;">
+          <h4 style="margin-bottom: 6px;">💬 How did we do?</h4>
+          <p style="font-size: 13px; margin-bottom: 14px;">Your answers directly shape what we build next — takes 30 seconds.</p>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Rate these designs (1-10)</label>
+            <div id="ratingButtons" style="display:flex; gap:6px; flex-wrap:wrap;">
+              ${Array.from({ length: 10 }, (_, i) => i + 1).map(n => `<button type="button" onclick="selectRating(${n})" data-rating="${n}" style="width:34px; height:34px; border-radius:6px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">${n}</button>`).join('')}
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">What would feel fair to pay per design?</label>
+            <div id="priceButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+              ${[50, 75, 100].map(p => `<button type="button" onclick="selectPrice(${p})" data-price="${p}" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">₹${p}</button>`).join('')}
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:8px;">Which would you prefer?</label>
+            <div id="planButtons" style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" onclick="selectPlan('per-design')" data-plan="per-design" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">Pay per design</button>
+              <button type="button" onclick="selectPlan('subscription')" data-plan="subscription" style="padding:8px 18px; border-radius:30px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-weight:600; font-size:13px;">Monthly plan + discount</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="font-size:13px;">Anything else? (optional)</label>
+            <textarea id="feedbackComments" placeholder="What you liked, what felt off, anything at all..." style="min-height:60px;"></textarea>
+          </div>
+
+          <button type="button" onclick="submitFeedback()" class="btn-submit">Submit Feedback</button>
+          <div id="feedbackStatus" style="margin-top:10px; font-size:13px;"></div>
+        </div>
+      `;
+
       container.innerHTML = html;
+    }
+
+    let feedbackState = { rating: null, price: null, plan: null };
+
+    function selectRating(n) {
+      feedbackState.rating = n;
+      document.querySelectorAll('#ratingButtons button').forEach(b => {
+        const active = Number(b.dataset.rating) === n;
+        b.style.background = active ? 'var(--vivid)' : 'white';
+        b.style.color = active ? 'white' : 'var(--text-ink)';
+        b.style.borderColor = active ? 'var(--vivid)' : '#E5DCC8';
+      });
+    }
+
+    function selectPrice(p) {
+      feedbackState.price = p;
+      document.querySelectorAll('#priceButtons button').forEach(b => {
+        const active = Number(b.dataset.price) === p;
+        b.style.background = active ? 'var(--vivid)' : 'white';
+        b.style.color = active ? 'white' : 'var(--text-ink)';
+        b.style.borderColor = active ? 'var(--vivid)' : '#E5DCC8';
+      });
+    }
+
+    function selectPlan(plan) {
+      feedbackState.plan = plan;
+      document.querySelectorAll('#planButtons button').forEach(b => {
+        const active = b.dataset.plan === plan;
+        b.style.background = active ? 'var(--vivid)' : 'white';
+        b.style.color = active ? 'white' : 'var(--text-ink)';
+        b.style.borderColor = active ? 'var(--vivid)' : '#E5DCC8';
+      });
+    }
+
+    async function submitFeedback() {
+      if (!feedbackState.rating) {
+        setStatus('feedbackStatus', '❌ Please pick a rating first.', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/feedback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            designId: currentDesignId,
+            rating: feedbackState.rating,
+            pricePreference: feedbackState.price,
+            planPreference: feedbackState.plan,
+            comments: document.getElementById('feedbackComments').value,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          document.getElementById('feedbackWidget').innerHTML = '<p style="text-align:center; padding: 10px 0;">🙏 Thank you! Your feedback helps us build a better experience for everyone.</p>';
+        } else {
+          setStatus('feedbackStatus', '❌ ' + (data.error || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        setStatus('feedbackStatus', '❌ ' + err.message, 'error');
+      }
     }
 
     function formatAnalysis(text) {
@@ -1578,11 +1676,6 @@
       }
     }
 
-    function submitAppointment(event) {
-      event.preventDefault();
-      alert('Appointment booking coming soon!');
-    }
-
     function handleResponse(response) {
       setStatus('designStatus', 'Processing sign-in...', 'info');
       
@@ -1631,12 +1724,14 @@
       const container = document.getElementById('profitDashboardContent');
       container.innerHTML = 'Loading...';
       try {
-        const [statsRes, ordersRes] = await Promise.all([
+        const [statsRes, ordersRes, feedbackRes] = await Promise.all([
           fetch(`${API}/api/orders/admin/stats`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
           fetch(`${API}/api/orders?limit=20`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+          fetch(`${API}/api/feedback/admin/summary`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
         ]);
         const statsData = await statsRes.json();
         const ordersData = await ordersRes.json();
+        const feedbackData = await feedbackRes.json();
 
         if (!statsRes.ok || statsData.status !== 'OK') {
           container.innerHTML = `<p style="color:#c62828;">❌ ${statsData.message || 'Failed to load stats'}</p>`;
@@ -1712,6 +1807,36 @@
             </table>
             </div>
           `;
+        }
+
+        // Customer feedback summary
+        if (feedbackRes.ok && feedbackData.success) {
+          const f = feedbackData.data;
+          html += `<h4 style="margin: 24px 0 10px 0;">💬 Customer Feedback</h4>`;
+          if (f.totalCount === 0) {
+            html += '<p style="color:#999;">No feedback submitted yet.</p>';
+          } else {
+            html += `
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                ${profitCard('⭐', 'Avg Rating', f.avgRating + '/10')}
+                ${profitCard('📝', 'Responses', f.totalCount)}
+              </div>
+              <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PRICE PREFERENCE</div>
+                  ${Object.entries(f.pricePreferenceCounts).map(([price, count]) => `<div style="font-size:13px;">₹${price}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:#999;">No data yet</div>'}
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PLAN PREFERENCE</div>
+                  ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:#999;">No data yet</div>'}
+                </div>
+              </div>
+              ${f.recentComments.length > 0 ? `
+                <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">RECENT COMMENTS</div>
+                ${f.recentComments.map(c => `<div style="background:var(--sand); border-radius:6px; padding:10px 12px; margin-bottom:8px; font-size:13px;"><strong>${c.name}</strong> (${c.rating}/10): ${c.comment}</div>`).join('')}
+              ` : ''}
+            `;
+          }
         }
 
         container.innerHTML = html;
