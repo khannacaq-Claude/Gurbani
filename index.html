@@ -685,7 +685,7 @@
               <div class="photo-grid" id="photoGrid"></div>
             </div>
 
-            <button type="submit" class="btn-submit" id="generateBtn">✨ Generate My Designs</button>
+            <button type="submit" class="btn-submit" id="generateBtn" disabled title="Please check the consent checkbox above first">✨ Generate My Designs</button>
           </form>
 
           <!-- DESIGNS DISPLAY WITH PERSONAL ANALYSIS -->
@@ -879,12 +879,17 @@
       const consented = document.getElementById('photoConsentCheckbox').checked;
       const uploadArea = document.getElementById('photoUploadArea');
       const hint = document.getElementById('photoTypeHint');
+      const generateBtn = document.getElementById('generateBtn');
       if (consented) {
         uploadArea.style.opacity = '1';
         hint.textContent = 'Upload selfie photos for best personalization';
+        generateBtn.disabled = false;
+        generateBtn.title = '';
       } else {
         uploadArea.style.opacity = '0.5';
         hint.textContent = 'Please check the consent box above to enable photo upload';
+        generateBtn.disabled = true;
+        generateBtn.title = 'Please check the consent checkbox above first';
       }
     }
 
@@ -1156,6 +1161,12 @@
       e.preventDefault();
       if (!authToken) {
         alert('Please sign in first');
+        return;
+      }
+
+      const consented = document.getElementById('photoConsentCheckbox').checked;
+      if (!consented) {
+        alert('Please check the consent checkbox (above the photo upload section) before generating designs — this covers how your description and any photos are processed by our AI partners.');
         return;
       }
 
