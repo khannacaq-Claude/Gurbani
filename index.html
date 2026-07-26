@@ -589,8 +589,9 @@
         <div class="tabs">
           <button class="tab-btn active" onclick="switchTab(event, 'overview')">📊 Overview</button>
           <button class="tab-btn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
+          <button class="tab-btn" onclick="switchTab(event, 'profile'); loadProfileTab();">👤 My Profile</button>
           <button class="tab-btn" onclick="switchTab(event, 'appointments')">📅 Appointments</button>
-          <button class="tab-btn" onclick="switchTab(event, 'orders')">📦 Orders</button>
+          <button class="tab-btn" onclick="switchTab(event, 'orders'); loadMyDesigns();">📦 Orders</button>
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
         </div>
 
@@ -598,6 +599,17 @@
         <div id="overview" class="tab-content active">
           <h3>Your Dashboard</h3>
           <p>Welcome to Gurbani Fashion! Here's what you can do:</p>
+
+          <div id="profileNudgeBanner" style="display: none; background: #fdf2f6; border: 1px solid #C06090; border-radius: 8px; padding: 14px 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="font-size: 13px; color: #333;">
+              📏 <strong>Add your measurements</strong> for even better-fitted design suggestions — totally optional, covered by our <a href="#" onclick="openPrivacyModal(event)" style="color: #C06090; font-weight: bold;">Privacy Notice</a>.
+            </div>
+            <div style="display: flex; gap: 8px; flex-shrink: 0;">
+              <button type="button" onclick="switchTab(null, 'profile'); loadProfileTab();" style="background: #C06090; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">Complete Profile</button>
+              <button type="button" onclick="dismissProfileNudge()" style="background: transparent; color: #999; border: none; padding: 8px; font-size: 13px; cursor: pointer;">Not now</button>
+            </div>
+          </div>
+
           <div class="grid" style="margin-top: 30px;">
             <div class="feature-box" onclick="switchTab(null, 'design')">
               <h3>🎨 Create Design</h3>
@@ -692,6 +704,55 @@
           <div id="designsContainer"></div>
         </div>
 
+        <!-- MY PROFILE TAB -->
+        <div id="profile" class="tab-content">
+          <h3>👤 My Profile</h3>
+          <p style="color: #666; margin-bottom: 20px;">
+            Adding your measurements is completely optional — it just helps us
+            suggest better-fitted silhouettes in your AI designs. Covered by our
+            <a href="#" onclick="openPrivacyModal(event)" style="color: #C06090; font-weight: bold;">Privacy Notice</a>.
+          </p>
+          <div id="profileStatus" class="status"></div>
+          <form onsubmit="saveProfile(event)">
+            <div class="form-group">
+              <label>📱 Phone Number</label>
+              <input type="tel" id="profilePhone" placeholder="e.g. 9899810977">
+            </div>
+            <h4 style="margin: 20px 0 10px 0; color: #C06090;">📏 Measurements (all optional, in inches)</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px;">
+              <div class="form-group">
+                <label>Bust</label>
+                <input type="number" id="measBust" step="0.1" placeholder="e.g. 36">
+              </div>
+              <div class="form-group">
+                <label>Waist</label>
+                <input type="number" id="measWaist" step="0.1" placeholder="e.g. 30">
+              </div>
+              <div class="form-group">
+                <label>Hip</label>
+                <input type="number" id="measHip" step="0.1" placeholder="e.g. 38">
+              </div>
+              <div class="form-group">
+                <label>Shoulder</label>
+                <input type="number" id="measShoulder" step="0.1" placeholder="e.g. 14">
+              </div>
+              <div class="form-group">
+                <label>Arm Length</label>
+                <input type="number" id="measArmLength" step="0.1" placeholder="e.g. 22">
+              </div>
+              <div class="form-group">
+                <label>Length (full)</label>
+                <input type="number" id="measLength" step="0.1" placeholder="e.g. 40">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Notes (optional)</label>
+              <textarea id="measNotes" placeholder="e.g. prefer looser fit around the waist"></textarea>
+            </div>
+            <button type="submit" class="btn-submit">💾 Save Profile</button>
+          </form>
+        </div>
+
         <!-- APPOINTMENTS TAB -->
         <div id="appointments" class="tab-content">
           <h3>📅 Book an Appointment</h3>
@@ -714,10 +775,11 @@
           </form>
         </div>
 
-        <!-- ORDERS TAB -->
+        <!-- ORDERS TAB (shows design history + their status) -->
         <div id="orders" class="tab-content">
-          <h3>📦 My Orders</h3>
-          <p>You don't have any orders yet. Start by creating a design!</p>
+          <h3>📦 My Designs & Orders</h3>
+          <p style="color: #666; margin-bottom: 16px;">Every design you've generated, and its status.</p>
+          <div id="myDesignsList">Loading...</div>
         </div>
 
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
@@ -1189,7 +1251,8 @@
         const payload = { 
           description, 
           occasion,
-          photos: uploadedPhotos || null
+          photos: uploadedPhotos || null,
+          measurements: (currentUser?.measurements && Object.keys(currentUser.measurements).some((k) => currentUser.measurements[k])) ? currentUser.measurements : null
         };
 
         const response = await fetch(`${API}/api/designs`, {
@@ -1207,7 +1270,7 @@
           setStatus('designStatus', '✅ Designs generated! Check how they look on you below.', 'success');
           currentDesignId = data.design._id;
           currentDesignDescription = description;
-          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis);
+          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description);
           updateBudget(data.trial);
           document.getElementById('designDesc').value = '';
           uploadedPhotos = {};
@@ -1224,7 +1287,7 @@
       }
     }
 
-    function displayDesigns(concepts, photoAnalysis) {
+    function displayDesigns(concepts, photoAnalysis, originalDescription) {
       currentConcepts = concepts;
       const container = document.getElementById('designsContainer');
       if (!concepts || concepts.length === 0) {
@@ -1233,7 +1296,15 @@
       }
 
       let html = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
-      
+
+      if (originalDescription) {
+        html += `
+          <div style="background: #f5f5f5; border-left: 3px solid #C06090; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #555;">
+            <strong>You asked for:</strong> "${originalDescription}"
+          </div>
+        `;
+      }
+
       // Show comprehensive analysis if photos were uploaded — COLLAPSIBLE
       if (photoAnalysis) {
         const analysisId = 'photoAnalysis_' + Date.now();
@@ -1261,7 +1332,7 @@
       concepts.forEach((concept, idx) => {
         const imageHtml = concept.imageUrl 
           ? `<img src="${concept.imageUrl}" alt="Design ${idx + 1}">`
-          : '<div style="color: #999; font-size: 12px;">Image generation in progress...</div>';
+          : '<div style="color: #999; font-size: 12px; text-align: center; padding: 20px;">⚠️ Image preview unavailable this time<br><span style="font-size: 11px;">The design description below is still accurate — ask Sonia for a hand-sketched preview if helpful.</span></div>';
 
         html += `
           <div class="design-card">
@@ -1421,6 +1492,145 @@
       }
     }
 
+    let myDesignsCache = [];
+
+    async function loadMyDesigns() {
+      const list = document.getElementById('myDesignsList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/designs/my-designs`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load your designs'}</p>`;
+          return;
+        }
+        myDesignsCache = data.designs || [];
+        if (myDesignsCache.length === 0) {
+          list.innerHTML = '<p style="color:#999;">You haven\'t generated any designs yet. Head to the AI Design tab to start!</p>';
+          return;
+        }
+
+        const statusLabels = { generated: 'Generated', quoted: 'Quote Requested', ordered: 'Ordered ✅', completed: 'Completed', archived: 'Archived' };
+        const statusColors = { generated: '#1565c0', quoted: '#e65100', ordered: '#2e7d32', completed: '#2e7d32', archived: '#999' };
+
+        list.innerHTML = myDesignsCache.map((d, i) => `
+          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); cursor:pointer;" onclick="viewPastDesign(${i})">
+            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
+              <div style="font-size:13px; color:#444;">"${d.description}" — ${d.occasion}</div>
+              <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${statusLabels[d.status] || d.status}</span>
+            </div>
+            <div style="font-size:11px; color:#999; margin-top:8px;">${new Date(d.createdAt).toLocaleString('en-IN')} · Tap to view designs again</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function viewPastDesign(index) {
+      const d = myDesignsCache[index];
+      if (!d) return;
+      currentDesignId = d._id;
+      currentDesignDescription = d.description;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('design').classList.add('active');
+      // Find and activate the AI Design tab button (2nd tab)
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function checkProfileNudge() {
+      // Refresh currentUser with full profile data (Google sign-in only returns
+      // a minimal user object — this fills in measurements/phone if previously
+      // saved, so they're available both for the banner decision here and
+      // later when generating designs).
+      try {
+        const res = await fetch(`${API}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentUser = { ...currentUser, ...data.user };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+      } catch (err) {
+        console.error('Failed to refresh profile:', err);
+      }
+
+      const dismissed = localStorage.getItem('profileNudgeDismissed') === 'true';
+      const hasMeasurements = currentUser?.measurements && Object.keys(currentUser.measurements).some((k) => currentUser.measurements[k]);
+      document.getElementById('profileNudgeBanner').style.display = (!dismissed && !hasMeasurements) ? 'flex' : 'none';
+    }
+
+    function dismissProfileNudge() {
+      localStorage.setItem('profileNudgeDismissed', 'true');
+      document.getElementById('profileNudgeBanner').style.display = 'none';
+    }
+
+    async function loadProfileTab() {
+      try {
+        const res = await fetch(`${API}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const user = data.user;
+          document.getElementById('profilePhone').value = user.phone || '';
+          const m = user.measurements || {};
+          document.getElementById('measBust').value = m.bust || '';
+          document.getElementById('measWaist').value = m.waist || '';
+          document.getElementById('measHip').value = m.hip || '';
+          document.getElementById('measShoulder').value = m.shoulder || '';
+          document.getElementById('measArmLength').value = m.armLength || '';
+          document.getElementById('measLength').value = m.length || '';
+          document.getElementById('measNotes').value = m.notes || '';
+        }
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+      }
+    }
+
+    async function saveProfile(event) {
+      event.preventDefault();
+      const payload = {
+        phone: document.getElementById('profilePhone').value.trim(),
+        measurements: {
+          bust: document.getElementById('measBust').value,
+          waist: document.getElementById('measWaist').value,
+          hip: document.getElementById('measHip').value,
+          shoulder: document.getElementById('measShoulder').value,
+          armLength: document.getElementById('measArmLength').value,
+          length: document.getElementById('measLength').value,
+          notes: document.getElementById('measNotes').value,
+        },
+      };
+      try {
+        const res = await fetch(`${API}/api/auth/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setStatus('profileStatus', '✅ Profile saved! Your future designs will factor in your measurements.', 'success');
+          currentUser = { ...currentUser, ...data.user };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          dismissProfileNudge();
+        } else {
+          setStatus('profileStatus', '❌ ' + (data.error || 'Failed to save'), 'error');
+        }
+      } catch (err) {
+        setStatus('profileStatus', '❌ ' + err.message, 'error');
+      }
+    }
+
     function updateUI() {
       const landingPage = document.getElementById('landingPage');
       const dashboard = document.getElementById('dashboard');
@@ -1448,6 +1658,7 @@
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        checkProfileNudge();
       } else {
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
