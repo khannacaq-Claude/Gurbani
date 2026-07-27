@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -731,10 +732,15 @@
           <button class="tab-btn active" onclick="switchTab(event, 'overview')">📊 Overview</button>
           <button class="tab-btn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
           <button class="tab-btn" onclick="switchTab(event, 'profile'); loadProfileTab();">👤 My Profile</button>
-          <button class="tab-btn" onclick="switchTab(event, 'appointments')">📅 Appointments</button>
-          <button class="tab-btn" onclick="switchTab(event, 'orders'); loadMyDesigns();">📦 My Designs</button>
+          <button class="tab-btn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
+          <button class="tab-btn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
+          <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
+          <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
+          <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
+          <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
+          <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -758,12 +764,12 @@
               <p>Get 3 AI concepts + upload multiple reference photos</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Start designing</p>
             </div>
-            <div class="feature-box" onclick="switchTab(null, 'appointments')">
+            <div class="feature-box" onclick="switchTab(null, 'appointments'); loadMyAppointments();">
               <h3>📅 Book Appointment</h3>
               <p>Schedule a consultation with Sonia</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Book now</p>
             </div>
-            <div class="feature-box" onclick="switchTab(null, 'orders')">
+            <div class="feature-box" onclick="switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
               <h3>📦 My Designs</h3>
               <p>See every design you've generated and its status</p>
               <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 View designs</p>
@@ -902,18 +908,29 @@
         <!-- APPOINTMENTS TAB -->
         <div id="appointments" class="tab-content">
           <h3>📅 Appointments</h3>
-          <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 20px; margin-bottom: 20px;">
-            <p style="margin-bottom: 10px; font-weight: 600; color: var(--text-ink);">🚧 Online booking is coming soon!</p>
-            <p style="margin-bottom: 6px;">We're building self-serve booking for:</p>
-            <ul style="margin: 0 0 12px 20px; color: var(--text-muted); font-size: 14px; line-height: 1.8;">
-              <li>In-Store Visit (Free)</li>
-              <li>Styling Consultation</li>
-              <li>Video Call Consultation</li>
-              <li>Urgent Appointment</li>
-            </ul>
-            <p style="margin-bottom: 0;">Meanwhile, message Sonia directly and she'll set up a time that works for you:</p>
+          <div class="card" style="padding: 20px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 12px;">Book an Appointment</h4>
+            <form id="apptForm" onsubmit="submitAppointment(event)">
+              <div class="form-group">
+                <label>Type</label>
+                <select id="apptType" required>
+                  <option value="in-store">In-Store Visit (Free)</option>
+                  <option value="styling">Styling Consultation</option>
+                  <option value="video">Video Call Consultation</option>
+                  <option value="urgent">Urgent Appointment</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Preferred Date</label><input type="date" id="apptDate" required></div>
+              <div class="form-group"><label>Preferred Time</label><input type="time" id="apptTime" required></div>
+              <div class="form-group"><label>Notes (optional)</label><textarea id="apptNotes" rows="2"></textarea></div>
+              <button type="submit" class="btn-submit">Book Appointment</button>
+            </form>
           </div>
-          <a href="https://wa.me/919899810977?text=Hi%20Sonia!%20I'd%20like%20to%20book%20an%20appointment." target="_blank" class="btn-submit" style="display: inline-block; text-decoration: none; text-align: center;">💬 Message Sonia on WhatsApp</a>
+          <h4 style="margin-bottom: 10px;">My Appointments</h4>
+          <div id="myAppointmentsList">Loading...</div>
+          <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 16px; margin-top: 20px;">
+            <p style="margin-bottom: 0;">Prefer to just message? <a href="https://wa.me/919899810977?text=Hi%20Sonia!%20I'd%20like%20to%20book%20an%20appointment." target="_blank">Message Sonia on WhatsApp</a></p>
+          </div>
         </div>
 
         <!-- ORDERS TAB (shows design history + their status) -->
@@ -921,6 +938,10 @@
           <h3>📦 My Designs & Orders</h3>
           <p style="color: #666; margin-bottom: 16px;">Every design you've generated, and its status.</p>
           <div id="myDesignsList">Loading...</div>
+          <h4 style="margin: 24px 0 10px 0;">🧺 My Orders</h4>
+          <div id="myOrdersList">Loading...</div>
+          <h4 style="margin: 24px 0 10px 0;">🧾 My Invoices</h4>
+          <div id="myInvoicesList">Loading...</div>
         </div>
 
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
@@ -939,6 +960,67 @@
         <div id="profit" class="tab-content">
           <h3>💰 Profit Dashboard</h3>
           <div id="profitDashboardContent">Loading...</div>
+        </div>
+
+        <!-- ADMIN: MANAGE ORDERS -->
+        <div id="adminOrders" class="tab-content">
+          <h3>📦 Manage Orders</h3>
+          <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
+            <button type="button" class="admin-filter-btn active" onclick="filterAdminOrders('all', event)">All</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('pending', event)">Pending</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('in-progress', event)">In Progress</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('ready', event)">Ready</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('delivered', event)">Delivered</button>
+          </div>
+          <div id="adminOrdersList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: INVENTORY MANAGEMENT -->
+        <div id="adminInventory" class="tab-content">
+          <h3>🧵 Inventory Management</h3>
+          <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
+            <button type="button" class="admin-filter-btn active" data-inv="fabrics" onclick="loadInventoryTab('fabrics', event)">Fabrics</button>
+            <button type="button" class="admin-filter-btn" data-inv="laces" onclick="loadInventoryTab('laces', event)">Laces</button>
+            <button type="button" class="admin-filter-btn" data-inv="buttons" onclick="loadInventoryTab('buttons', event)">Buttons</button>
+            <button type="button" class="admin-filter-btn" data-inv="threads" onclick="loadInventoryTab('threads', event)">Threads</button>
+            <button type="button" class="admin-filter-btn" data-inv="linings" onclick="loadInventoryTab('linings', event)">Linings</button>
+          </div>
+          <div class="card" style="padding: 20px; margin-bottom: 16px;">
+            <h4 id="invFormTitle" style="margin-bottom: 12px;">Add Fabric</h4>
+            <form id="invForm" onsubmit="submitInventoryForm(event)">
+              <input type="hidden" id="invEditId" value="">
+              <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group"><label>Name</label><input id="invName" required></div>
+                <div class="form-group"><label>Price (₹)</label><input id="invPrice" type="number" step="0.01" required></div>
+                <div class="form-group"><label>Color</label><input id="invColor"></div>
+                <div class="form-group"><label>Available Qty</label><input id="invQty" type="number" step="0.01"></div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="btn-submit">Save</button>
+                <button type="button" class="btn-submit" style="background:#999;" onclick="resetInventoryForm()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div id="inventoryList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: MANAGE APPOINTMENTS -->
+        <div id="adminAppointments" class="tab-content">
+          <h3>📅 Manage Appointments</h3>
+          <div id="adminAppointmentsList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: INVOICES -->
+        <div id="adminInvoices" class="tab-content">
+          <h3>🧾 All Invoices</h3>
+          <div id="adminInvoicesList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: CUSTOMERS -->
+        <div id="adminCustomers" class="tab-content">
+          <h3>👥 Customers</h3>
+          <input type="text" id="customerSearchInput" placeholder="Search by name, email or phone..." oninput="loadAdminCustomers()" style="margin-bottom: 16px;">
+          <div id="adminCustomersList">Loading...</div>
         </div>
       </div>
     </div>
@@ -1981,6 +2063,433 @@
       `;
     }
 
+    /* ============================================================
+       PHASE 1 — wiring existing backend APIs into new admin +
+       customer UI (Orders, Inventory, Appointments, Invoices, Customers)
+       ============================================================ */
+
+    // ---------- ADMIN: MANAGE ORDERS ----------
+    let allAdminOrders = [];
+    let currentAdminOrderFilter = 'all';
+
+    async function loadAdminOrders() {
+      const list = document.getElementById('adminOrdersList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/orders?limit=100`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'OK') {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.message || 'Failed to load orders'}</p>`;
+          return;
+        }
+        allAdminOrders = data.data || [];
+        renderAdminOrders();
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function filterAdminOrders(status, event) {
+      currentAdminOrderFilter = status;
+      document.querySelectorAll('#adminOrders .admin-filter-btn').forEach(b => b.classList.remove('active'));
+      if (event) event.target.classList.add('active');
+      renderAdminOrders();
+    }
+
+    function renderAdminOrders() {
+      const list = document.getElementById('adminOrdersList');
+      const orders = currentAdminOrderFilter === 'all' ? allAdminOrders : allAdminOrders.filter(o => o.status === currentAdminOrderFilter);
+      if (orders.length === 0) {
+        list.innerHTML = '<p style="color:#999;">No orders in this filter.</p>';
+        return;
+      }
+      list.innerHTML = orders.map(o => `
+        <div class="card" style="padding:14px;">
+          <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${o.orderNumber || o._id}</strong> — ${o.customerId?.name || 'Unknown'} (${o.customerId?.phone || o.customerId?.email || ''})
+              <div style="font-size:12px; color:#999;">${new Date(o.dates?.orderDate).toLocaleDateString('en-IN')} · ₹${o.pricing?.totalPrice || 0} · Payment: <strong>${o.paymentStatus || 'pending'}</strong></div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:flex-start; flex-wrap:wrap;">
+              <select class="status-select" onchange="updateOrderAdmin('${o._id}', 'status', this.value)">
+                ${['pending','in-progress','ready','delivered'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+              </select>
+              <select class="status-select" onchange="updateOrderAdmin('${o._id}', 'paymentStatus', this.value)">
+                ${['pending','paid','refunded'].map(s => `<option value="${s}" ${o.paymentStatus===s?'selected':''}>${s}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function updateOrderAdmin(orderId, field, value) {
+      try {
+        const res = await fetch(`${API}/api/orders/${orderId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ [field]: value }),
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'OK') {
+          alert('✅ ' + `Order ${field} set to ${value}`);
+          loadAdminOrders();
+        } else {
+          alert('❌ ' + data.message || 'Failed to update order');
+        }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    // ---------- ADMIN: INVENTORY MANAGEMENT ----------
+    const INVENTORY_ENDPOINTS = { fabrics: 'fabrics', laces: 'laces', buttons: 'buttons', threads: 'threads', linings: 'linings' };
+    let currentInventoryCategory = 'fabrics';
+    let currentInventoryItems = [];
+
+    async function loadInventoryTab(category, event) {
+      currentInventoryCategory = category;
+      document.querySelectorAll('#adminInventory .admin-filter-btn').forEach(b => b.classList.remove('active'));
+      if (event) event.target.classList.add('active');
+      else { const btn = document.querySelector(`#adminInventory .admin-filter-btn[data-inv="${category}"]`); if (btn) btn.classList.add('active'); }
+      document.getElementById('invFormTitle').textContent = 'Add ' + category.charAt(0).toUpperCase() + category.slice(1, -1);
+      resetInventoryForm();
+      const list = document.getElementById('inventoryList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/inventory/${INVENTORY_ENDPOINTS[category]}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        currentInventoryItems = data.data || data.fabrics || data.items || [];
+        renderInventoryList();
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function renderInventoryList() {
+      const list = document.getElementById('inventoryList');
+      if (currentInventoryItems.length === 0) {
+        list.innerHTML = '<p style="color:#999;">Nothing in this category yet.</p>';
+        return;
+      }
+      list.innerHTML = currentInventoryItems.map(item => `
+        <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>${item.name}</strong> ${item.color ? '· ' + item.color : ''}
+            <div style="font-size:12px; color:#999;">₹${item.price || 0} · Available: ${item.inventory?.available ?? item.available ?? 0}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="admin-filter-btn" onclick="editInventoryItem('${item._id}')">Edit</button>
+            <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="deleteInventoryItem('${item._id}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function editInventoryItem(id) {
+      const item = currentInventoryItems.find(i => i._id === id);
+      if (!item) return;
+      document.getElementById('invEditId').value = id;
+      document.getElementById('invName').value = item.name || '';
+      document.getElementById('invPrice').value = item.price || '';
+      document.getElementById('invColor').value = item.color || '';
+      document.getElementById('invQty').value = item.inventory?.available ?? item.available ?? '';
+      document.getElementById('invFormTitle').textContent = 'Edit ' + item.name;
+      window.scrollTo({ top: document.getElementById('adminInventory').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function resetInventoryForm() {
+      document.getElementById('invEditId').value = '';
+      document.getElementById('invForm').reset();
+    }
+
+    async function submitInventoryForm(event) {
+      event.preventDefault();
+      const id = document.getElementById('invEditId').value;
+      const body = {
+        name: document.getElementById('invName').value.trim(),
+        price: Number(document.getElementById('invPrice').value),
+        color: document.getElementById('invColor').value.trim(),
+        inventory: { available: Number(document.getElementById('invQty').value) || 0 },
+      };
+      const endpoint = `${API}/api/inventory/${INVENTORY_ENDPOINTS[currentInventoryCategory]}${id ? '/' + id : ''}`;
+      try {
+        const res = await fetch(endpoint, {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ ' + `${body.name} saved successfully`);
+          resetInventoryForm();
+          loadInventoryTab(currentInventoryCategory);
+        } else {
+          alert('❌ ' + data.message || data.error || 'Failed to save');
+        }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    async function deleteInventoryItem(id) {
+      if (!confirm('Delete this item? This cannot be undone.')) return;
+      try {
+        const res = await fetch(`${API}/api/inventory/${INVENTORY_ENDPOINTS[currentInventoryCategory]}/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        if (res.ok) {
+          alert('✅ Item removed');
+          loadInventoryTab(currentInventoryCategory);
+        } else {
+          const data = await res.json();
+          alert('❌ ' + data.message || 'Failed to delete');
+        }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    // ---------- ADMIN: MANAGE APPOINTMENTS ----------
+    async function loadAdminAppointments() {
+      const list = document.getElementById('adminAppointmentsList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/appointments/admin/all-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const appts = data.data || data.appointments || [];
+        if (appts.length === 0) { list.innerHTML = '<p style="color:#999;">No appointments booked yet.</p>'; return; }
+        list.innerHTML = appts.map(a => `
+          <div class="card" style="padding:14px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <div>
+                <strong>${a.customerId?.name || 'Customer'}</strong> — ${a.type || ''}
+                <div style="font-size:12px; color:#999;">${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''} · ${a.customerId?.phone || ''}</div>
+                ${a.notes ? `<div style="font-size:12px; color:#666; margin-top:4px;">${a.notes}</div>` : ''}
+              </div>
+              <select class="status-select" onchange="updateAppointmentStatusAdmin('${a._id}', this.value)">
+                ${['requested','confirmed','completed','cancelled'].map(s => `<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function updateAppointmentStatusAdmin(id, status) {
+      try {
+        const res = await fetch(`${API}/api/appointments/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ status }),
+        });
+        if (res.ok) { alert('✅ Appointment status updated'); loadAdminAppointments(); }
+        else { const data = await res.json(); alert('❌ ' + data.message || 'Failed to update'); }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    // ---------- ADMIN: INVOICES ----------
+    async function loadAdminInvoices() {
+      const list = document.getElementById('adminInvoicesList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/invoices/admin/all-invoices`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const invoices = data.data || data.invoices || [];
+        if (invoices.length === 0) { list.innerHTML = '<p style="color:#999;">No invoices yet.</p>'; return; }
+        list.innerHTML = invoices.map(inv => `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${inv.invoiceNumber || inv._id}</strong> — ${inv.customerId?.name || inv.orderId?.customerId?.name || ''}
+              <div style="font-size:12px; color:#999;">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
+            </div>
+            <a class="admin-filter-btn" style="text-decoration:none; display:inline-block;" href="${API}/api/invoices/${inv._id}/download" target="_blank">Download PDF</a>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    // ---------- ADMIN: CUSTOMERS ----------
+    async function loadAdminCustomers() {
+      const list = document.getElementById('adminCustomersList');
+      list.innerHTML = 'Loading...';
+      const q = document.getElementById('customerSearchInput')?.value || '';
+      try {
+        const res = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const customers = data.data || data.customers || [];
+        if (customers.length === 0) { list.innerHTML = '<p style="color:#999;">No customers found.</p>'; return; }
+        list.innerHTML = customers.map(c => `
+          <div class="card" style="padding:12px 14px;">
+            <strong>${c.name}</strong>
+            <div style="font-size:12px; color:#999;">${c.email || ''} ${c.phone ? '· ' + c.phone : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    // ---------- CUSTOMER: MY APPOINTMENTS ----------
+    async function submitAppointment(event) {
+      event.preventDefault();
+      const body = {
+        type: document.getElementById('apptType').value,
+        date: document.getElementById('apptDate').value,
+        time: document.getElementById('apptTime').value,
+        notes: document.getElementById('apptNotes').value.trim(),
+      };
+      try {
+        const res = await fetch(`${API}/api/appointments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ Your appointment request has been sent to Sonia!');
+          document.getElementById('apptForm').reset();
+          loadMyAppointments();
+        } else {
+          alert('❌ ' + data.message || 'Failed to book appointment');
+        }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    async function loadMyAppointments() {
+      const list = document.getElementById('myAppointmentsList');
+      if (!list) return;
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/appointments/my-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const appts = data.data || data.appointments || [];
+        if (appts.length === 0) { list.innerHTML = '<p style="color:#999;">No appointments booked yet.</p>'; return; }
+        list.innerHTML = appts.map(a => `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${a.type}</strong> — ${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''}
+              <div style="font-size:12px; color:#999;">Status: ${a.status}</div>
+            </div>
+            ${a.status !== 'cancelled' && a.status !== 'completed' ? `<button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="cancelMyAppointment('${a._id}')">Cancel</button>` : ''}
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function cancelMyAppointment(id) {
+      if (!confirm('Cancel this appointment?')) return;
+      try {
+        const res = await fetch(`${API}/api/appointments/${id}/cancel`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        if (res.ok) { alert('✅ Appointment cancelled'); loadMyAppointments(); }
+        else { const data = await res.json(); alert('❌ ' + data.message || 'Failed to cancel'); }
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    // ---------- CUSTOMER: MY ORDERS + PAY NOW ----------
+    async function loadMyOrders() {
+      const list = document.getElementById('myOrdersList');
+      if (!list) return;
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/orders?limit=50`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const orders = data.data || [];
+        if (orders.length === 0) { list.innerHTML = '<p style="color:#999;">No orders placed yet.</p>'; return; }
+        list.innerHTML = orders.map(o => `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${o.orderNumber || o._id}</strong>
+              <div style="font-size:12px; color:#999;">₹${o.pricing?.totalPrice || 0} · Status: ${o.status} · Payment: ${o.paymentStatus || 'pending'}</div>
+            </div>
+            ${o.paymentStatus !== 'paid' ? `<button type="button" class="btn-submit" style="width:auto; padding:8px 16px;" onclick="payForOrder('${o._id}')">💳 Pay Now</button>` : '<span style="color:#2e7d32; font-weight:600; font-size:13px;">✅ Paid</span>'}
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function payForOrder(orderId) {
+      try {
+        const res = await fetch(`${API}/api/orders/${orderId}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (!res.ok || !data.data) { alert('❌ Could not load order details'); return; }
+        const order = data.data;
+        if (!data.payment?.razorpayKeyId && !order.razorpayKeyId) {
+          alert('❌ Online payment isn\'t set up yet — please contact Sonia to arrange payment.');
+          return;
+        }
+        const options = {
+          key: data.payment?.razorpayKeyId || order.razorpayKeyId,
+          amount: Math.round((order.pricing?.totalPrice || 0) * 100),
+          currency: 'INR',
+          name: 'Gurbani Fashion',
+          description: order.orderNumber || 'Order Payment',
+          handler: async function (response) {
+            const verifyRes = await fetch(`${API}/api/orders/verify-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+              body: JSON.stringify({
+                orderId,
+                razorpayOrderId: response.razorpay_order_id || '',
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature || '',
+              }),
+            });
+            if (verifyRes.ok) { alert('✅ Thank you! Your payment has been recorded.'); loadMyOrders(); }
+            else { alert('❌ Payment made but verification failed — contact Sonia with your payment ID.'); }
+          },
+          prefill: { name: currentUser?.name || '', email: currentUser?.email || '', contact: currentUser?.phone || '' },
+          theme: { color: '#C99A3D' },
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    // ---------- CUSTOMER: MY INVOICES ----------
+    async function loadMyInvoices() {
+      const list = document.getElementById('myInvoicesList');
+      if (!list) return;
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/invoices/my-invoices`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const invoices = data.data || data.invoices || [];
+        if (invoices.length === 0) { list.innerHTML = '<p style="color:#999;">No invoices yet.</p>'; return; }
+        list.innerHTML = invoices.map(inv => `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${inv.invoiceNumber || inv._id}</strong>
+              <div style="font-size:12px; color:#999;">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
+            </div>
+            <a class="admin-filter-btn" style="text-decoration:none; display:inline-block;" href="${API}/api/invoices/${inv._id}/download" target="_blank">Download PDF</a>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
     let myDesignsCache = [];
 
     async function loadMyDesigns() {
@@ -2148,6 +2657,11 @@
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminOrdersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminInventoryTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminAppointmentsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminInvoicesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminCustomersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         checkProfileNudge();
       } else {
         landingPage.classList.remove('hidden');
