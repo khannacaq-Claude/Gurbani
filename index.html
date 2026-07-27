@@ -11,7 +11,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gambetta:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ============================================================
        GURBANI FASHION — DESIGN TOKENS (v2: Bold & Vivid)
@@ -22,10 +22,10 @@
        everything else stays disciplined around it.
        ============================================================ */
     :root {
-      --ink: #141414;
-      --ink-soft: #262223;
-      --vivid: #D6295E;
-      --vivid-deep: #A81846;
+      --ink: #141a29;
+      --ink-soft: #1c2338;
+      --vivid: #C99A3D;
+      --vivid-deep: #A67B24;
       --marigold: #F2A93B;
       --marigold-deep: #D68C1F;
       --cream: #FDF8F0;
@@ -34,9 +34,10 @@
       --text-ink: #1F1B1D;
       --text-muted: #7A6F6A;
 
-      --font-display: 'Gambetta', Georgia, serif;
+      --font-display: 'Playfair Display', Georgia, serif;
       --font-body: 'Poppins', Arial, sans-serif;
-      --font-accent: 'Gambetta', Georgia, serif;
+      --font-accent: 'Playfair Display', Georgia, serif;
+      --font-script: 'Alex Brush', cursive;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,17 +54,39 @@
     }
 
     header h1 {
-      font-family: var(--font-display);
-      font-size: 34px;
+      font-family: var(--font-script);
+      font-weight: 400;
+      font-size: 54px;
       margin: 0;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      letter-spacing: 0;
+      text-transform: none;
+      line-height: 1;
+    }
+    header .flourish {
+      width: 220px;
+      height: 10px;
+      margin: 10px auto 4px auto;
+      border: none;
+      border-top: 1px solid var(--marigold);
+      opacity: 0.7;
+      position: relative;
+    }
+    header .flourish::after {
+      content: "\2726";
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: var(--marigold);
+      font-size: 11px;
+      padding: 0 8px;
     }
     header p {
       font-family: var(--font-accent);
       font-style: italic;
       font-size: 15px;
-      margin: 6px 0 0 0;
+      margin: 10px 0 0 0;
       color: var(--marigold);
       letter-spacing: 0.5px;
     }
@@ -88,7 +111,7 @@
 
     button {
       background: var(--vivid);
-      color: white;
+      color: var(--ink);
       border: none;
       padding: 11px 22px;
       border-radius: 30px;
@@ -175,7 +198,7 @@
     .feature-box:hover {
       background: #EFE2C4;
       transform: translateY(-4px);
-      box-shadow: 0 10px 24px rgba(214, 41, 94, 0.18);
+      box-shadow: 0 10px 24px rgba(201, 154, 61, 0.18);
       border-left-color: var(--marigold);
     }
 
@@ -207,7 +230,7 @@
     }
 
     .tab-btn:hover { color: white; }
-    .tab-btn.active { color: white; background: var(--vivid); }
+    .tab-btn.active { color: var(--ink); background: var(--vivid); }
 
     .admin-filter-btn {
       padding: 8px 16px;
@@ -254,12 +277,12 @@
     input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--vivid);
-      box-shadow: 0 0 0 3px rgba(214, 41, 94, 0.12);
+      box-shadow: 0 0 0 3px rgba(201, 154, 61, 0.12);
     }
 
     .btn-submit {
       background: var(--vivid);
-      color: white;
+      color: var(--ink);
       padding: 14px 34px;
       border: none;
       border-radius: 30px;
@@ -269,11 +292,11 @@
       font-size: 13px;
       letter-spacing: 0.5px;
       width: auto;
-      box-shadow: 0 6px 18px rgba(214, 41, 94, 0.3);
+      box-shadow: 0 6px 18px rgba(201, 154, 61, 0.3);
       transition: all 0.2s ease;
     }
 
-    .btn-submit:hover { background: var(--vivid-deep); transform: translateY(-1px); box-shadow: 0 8px 22px rgba(214, 41, 94, 0.4); }
+    .btn-submit:hover { background: var(--vivid-deep); transform: translateY(-1px); box-shadow: 0 8px 22px rgba(201, 154, 61, 0.4); }
     .btn-submit:disabled {
       background: #ddd;
       cursor: not-allowed;
@@ -311,7 +334,7 @@
 
     .design-card:hover {
       border-color: var(--marigold);
-      box-shadow: 0 12px 30px rgba(214, 41, 94, 0.2);
+      box-shadow: 0 12px 30px rgba(201, 154, 61, 0.2);
       transform: translateY(-3px);
     }
 
@@ -378,7 +401,7 @@
 
     .btn-quote {
       background: var(--vivid);
-      color: white;
+      color: var(--ink);
     }
 
     .loading {
@@ -455,7 +478,7 @@
 
     .photo-item:hover {
       border-color: var(--vivid);
-      box-shadow: 0 4px 12px rgba(214,41,94,0.3);
+      box-shadow: 0 4px 12px rgba(201,154,61,0.3);
     }
 
     .photo-item img {
@@ -592,7 +615,7 @@
       font-weight: 700;
       margin: 14px 0 6px 0;
       padding-bottom: 4px;
-      border-bottom: 1px solid rgba(214, 41, 94, 0.2);
+      border-bottom: 1px solid rgba(201, 154, 61, 0.2);
     }
 
     .analysis-section {
@@ -648,7 +671,8 @@
 </head>
 <body>
   <header>
-    <h1><img src="gurbani_mark.svg" alt="Gurbani" style="height: 1em; width: 1em; vertical-align: -0.18em; margin-right: 10px;"> GURBANI</h1>
+    <h1><img src="gurbani_mark.svg" alt="" style="height: 0.85em; width: 0.85em; vertical-align: -0.1em; margin-right: 12px;" onerror="this.style.display='none'"> Gurbani Fashion</h1>
+    <hr class="flourish">
     <p>Your Vision. Your Fit. Stitched to Perfection.</p>
     <div class="header-right">
       <div class="user-welcome" id="userWelcome"></div>
