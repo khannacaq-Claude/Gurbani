@@ -675,9 +675,105 @@
       margin-top: 5px;
       font-style: italic;
     }
+
+    /* ============================================================
+       CUSTOM NOTIFICATIONS — replaces native alert()/confirm() popups
+       ============================================================ */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      pointer-events: none;
+      width: 100%;
+      padding: 0 16px;
+    }
+    .toast {
+      background: var(--ink);
+      color: var(--cream);
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      max-width: 420px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--vivid);
+      pointer-events: auto;
+      animation: toastIn 0.25s ease;
+    }
+    .toast.success { border-left-color: #6BA361; }
+    .toast.error { border-left-color: #D9534F; }
+    .toast.warning { border-left-color: var(--marigold); }
+    .toast.info { border-left-color: var(--vivid); }
+    .toast.hide { animation: toastOut 0.25s ease forwards; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes toastOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(12px); } }
+
+    #confirmOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 26, 41, 0.55);
+      z-index: 3100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #confirmOverlay.show { display: flex; }
+    .confirm-box {
+      background: var(--cream-card);
+      border-radius: 12px;
+      padding: 26px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      border-top: 4px solid var(--vivid);
+      text-align: center;
+      animation: toastIn 0.2s ease;
+    }
+    .confirm-box p {
+      color: var(--text-ink);
+      font-size: 14.5px;
+      line-height: 1.55;
+      margin-bottom: 20px;
+      white-space: pre-line;
+    }
+    .confirm-box .confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .confirm-box button {
+      flex: 1;
+      width: auto;
+    }
+    .confirm-box .confirm-cancel {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid #ddd;
+    }
+    .confirm-box .confirm-cancel:hover { background: #f5f5f5; }
   </style>
 </head>
 <body>
+  <div id="toastContainer"></div>
+  <div id="confirmOverlay">
+    <div class="confirm-box">
+      <p id="confirmMessage"></p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel" id="confirmCancelBtn">Cancel</button>
+        <button type="button" id="confirmOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
   <header>
     <img src="gurbani_wordmark_punchline.svg" alt="Gurbani Fashion — Your Vision. Your Fit. Stitched to Perfection." class="header-wordmark">
     <div class="header-right">
@@ -1061,7 +1157,7 @@
       if (hoursInput === null) return; // cancelled
       const hours = Number(hoursInput);
       if (isNaN(hours) || hours <= 0) {
-        alert('Please enter a valid number of hours.');
+        showToast('Please enter a valid number of hours.');
         return;
       }
       try {
@@ -1075,13 +1171,13 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          alert(`✅ ${data.message}\nOrder ${data.order.orderNumber}: ₹${data.order.pricing.totalPrice} total (${data.order.pricing.marginPct}% margin)`);
+          showToast(`✅ ${data.message}\nOrder ${data.order.orderNumber}: ₹${data.order.pricing.totalPrice} total (${data.order.pricing.marginPct}% margin)`);
           loadAdminRequests();
         } else {
-          alert('❌ ' + (data.error || 'Failed to create order'));
+          showToast('❌ ' + (data.error || 'Failed to create order'));
         }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -1136,6 +1232,52 @@
   <script>
     const API = 'https://gurbani-fashion-backend-production.up.railway.app';
 
+    /* ============================================================
+       CUSTOM NOTIFICATIONS — replaces native alert()/confirm()
+       showToast(message): non-blocking, auto-dismissing
+       showConfirm(message): returns a Promise<boolean>, await it
+       ============================================================ */
+    function showToast(message, durationMs = 4500) {
+      const container = document.getElementById('toastContainer');
+      let type = 'info';
+      if (message.startsWith('✅')) type = 'success';
+      else if (message.startsWith('❌')) type = 'error';
+      else if (message.startsWith('⚠️')) type = 'warning';
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 250);
+      }, durationMs);
+    }
+
+    function showConfirm(message) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('confirmOverlay');
+        document.getElementById('confirmMessage').textContent = message;
+        overlay.classList.add('show');
+
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+
+        function cleanup(result) {
+          overlay.classList.remove('show');
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+          resolve(result);
+        }
+        function onOk() { cleanup(true); }
+        function onCancel() { cleanup(false); }
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+      });
+    }
+
     // Shared list — used for BOTH the "What's Coming" teaser cards and the
     // feedback form's "which would you use?" checkboxes, so they always match.
     const UPCOMING_FEATURES = [
@@ -1175,7 +1317,7 @@
     };
 
     function promptSignIn(feature) {
-      alert(`Sign in first to access ${feature}`);
+      showToast(`Sign in first to access ${feature}`);
     }
 
     function setStatus(elementId, msg, type) {
@@ -1220,7 +1362,7 @@
     function handlePhotoAreaClick() {
       const consented = document.getElementById('photoConsentCheckbox').checked;
       if (!consented) {
-        alert('Please check the consent checkbox above before uploading photos.');
+        showToast('Please check the consent checkbox above before uploading photos.');
         return;
       }
       document.getElementById('photoInput').click();
@@ -1240,7 +1382,7 @@
       // is already gated, in case this fires via another path.
       const consented = document.getElementById('photoConsentCheckbox').checked;
       if (!consented) {
-        alert('Please check the consent checkbox above before uploading photos.');
+        showToast('Please check the consent checkbox above before uploading photos.');
         event.target.value = '';
         return;
       }
@@ -1484,13 +1626,13 @@
     async function submitDesign(e) {
       e.preventDefault();
       if (!authToken) {
-        alert('Please sign in first');
+        showToast('Please sign in first');
         return;
       }
 
       const consented = document.getElementById('photoConsentCheckbox').checked;
       if (!consented) {
-        alert('Please check the consent checkbox (above the photo upload section) before generating designs — this covers how your description and any photos are processed by our AI partners.');
+        showToast('Please check the consent checkbox (above the photo upload section) before generating designs — this covers how your description and any photos are processed by our AI partners.');
         return;
       }
 
@@ -1508,7 +1650,7 @@
       // Nudge: occasion left unselected — cheap check, no API cost, catches a
       // common case where the design would be generated without useful context.
       if (!occasionValue) {
-        const proceedAnyway = confirm('You haven\'t selected an occasion — this helps us suggest better-fitted designs. Continue without one, or go back and choose?\n\nClick OK to continue anyway, or Cancel to go back and select one.');
+        const proceedAnyway = await showConfirm('You haven\'t selected an occasion — this helps us suggest better-fitted designs. Continue without one, or go back and choose?\n\nClick OK to continue anyway, or Cancel to go back and select one.');
         if (!proceedAnyway) return;
       }
       const occasion = occasionValue || 'casual';
@@ -1529,11 +1671,11 @@
         const checkData = await checkRes.json();
         if (checkRes.ok && checkData.action === 'block') {
           document.getElementById('designStatus').classList.remove('show');
-          alert(`❌ ${checkData.message || "This doesn't look like a clothing design request — please describe an outfit you'd like designed."}`);
+          showToast(`❌ ${checkData.message || "This doesn't look like a clothing design request — please describe an outfit you'd like designed."}`);
           return;
         }
         if (checkRes.ok && checkData.action === 'warn' && checkData.message) {
-          const proceedAnyway = confirm(`⚠️ ${checkData.message}\n\nClick OK to generate anyway, or Cancel to go back and edit your description.`);
+          const proceedAnyway = await showConfirm(`⚠️ ${checkData.message}\n\nClick OK to generate anyway, or Cancel to go back and edit your description.`);
           if (!proceedAnyway) {
             document.getElementById('designStatus').classList.remove('show');
             return;
@@ -1843,7 +1985,7 @@
 
     async function sendQuote(conceptIndex) {
       if (!currentDesignId) {
-        alert('Something went wrong — please generate the design again before requesting a quote.');
+        showToast('Something went wrong — please generate the design again before requesting a quote.');
         return;
       }
       try {
@@ -1871,12 +2013,12 @@
             `(Ordering via AI Design Studio — eligible for stitching discount!)`
           );
           window.open(`https://wa.me/919899810977?text=${waMessage}`, '_blank');
-          alert('✅ Quote request sent! You get a discount on stitching for ordering through AI Design Studio. We\'ve also opened WhatsApp so you can message Sonia directly — she\'ll respond within 24 hours.');
+          showToast('✅ Quote request sent! You get a discount on stitching for ordering through AI Design Studio. We\'ve also opened WhatsApp so you can message Sonia directly — she\'ll respond within 24 hours.');
         } else {
-          alert('❌ ' + (data.error || 'Failed to send quote request. Please try again.'));
+          showToast('❌ ' + (data.error || 'Failed to send quote request. Please try again.'));
         }
       } catch (error) {
-        alert('❌ ' + error.message);
+        showToast('❌ ' + error.message);
       }
     }
 
@@ -1914,8 +2056,8 @@
       .catch(e => setStatus('designStatus', '❌ ' + e.message, 'error'));
     }
 
-    function handleSignOut() {
-      if (confirm('Sign out?')) {
+    async function handleSignOut() {
+      if (await showConfirm('Sign out?')) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
         authToken = null;
@@ -2132,13 +2274,13 @@
         });
         const data = await res.json();
         if (res.ok && data.status === 'OK') {
-          alert('✅ ' + `Order ${field} set to ${value}`);
+          showToast('✅ ' + `Order ${field} set to ${value}`);
           loadAdminOrders();
         } else {
-          alert('❌ ' + data.message || 'Failed to update order');
+          showToast('❌ ' + data.message || 'Failed to update order');
         }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -2221,33 +2363,33 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert('✅ ' + `${body.name} saved successfully`);
+          showToast('✅ ' + `${body.name} saved successfully`);
           resetInventoryForm();
           loadInventoryTab(currentInventoryCategory);
         } else {
-          alert('❌ ' + data.message || data.error || 'Failed to save');
+          showToast('❌ ' + data.message || data.error || 'Failed to save');
         }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
     async function deleteInventoryItem(id) {
-      if (!confirm('Delete this item? This cannot be undone.')) return;
+      if (!(await showConfirm('Delete this item? This cannot be undone.'))) return;
       try {
         const res = await fetch(`${API}/api/inventory/${INVENTORY_ENDPOINTS[currentInventoryCategory]}/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
         if (res.ok) {
-          alert('✅ Item removed');
+          showToast('✅ Item removed');
           loadInventoryTab(currentInventoryCategory);
         } else {
           const data = await res.json();
-          alert('❌ ' + data.message || 'Failed to delete');
+          showToast('❌ ' + data.message || 'Failed to delete');
         }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -2286,10 +2428,10 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ status }),
         });
-        if (res.ok) { alert('✅ Appointment status updated'); loadAdminAppointments(); }
-        else { const data = await res.json(); alert('❌ ' + data.message || 'Failed to update'); }
+        if (res.ok) { showToast('✅ Appointment status updated'); loadAdminAppointments(); }
+        else { const data = await res.json(); showToast('❌ ' + data.message || 'Failed to update'); }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -2354,14 +2496,14 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert('✅ Your appointment request has been sent to Sonia!');
+          showToast('✅ Your appointment request has been sent to Sonia!');
           document.getElementById('apptForm').reset();
           loadMyAppointments();
         } else {
-          alert('❌ ' + data.message || 'Failed to book appointment');
+          showToast('❌ ' + data.message || 'Failed to book appointment');
         }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -2389,16 +2531,16 @@
     }
 
     async function cancelMyAppointment(id) {
-      if (!confirm('Cancel this appointment?')) return;
+      if (!(await showConfirm('Cancel this appointment?'))) return;
       try {
         const res = await fetch(`${API}/api/appointments/${id}/cancel`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
-        if (res.ok) { alert('✅ Appointment cancelled'); loadMyAppointments(); }
-        else { const data = await res.json(); alert('❌ ' + data.message || 'Failed to cancel'); }
+        if (res.ok) { showToast('✅ Appointment cancelled'); loadMyAppointments(); }
+        else { const data = await res.json(); showToast('❌ ' + data.message || 'Failed to cancel'); }
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -2430,10 +2572,10 @@
       try {
         const res = await fetch(`${API}/api/orders/${orderId}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
-        if (!res.ok || !data.data) { alert('❌ Could not load order details'); return; }
+        if (!res.ok || !data.data) { showToast('❌ Could not load order details'); return; }
         const order = data.data;
         if (!data.payment?.razorpayKeyId && !order.razorpayKeyId) {
-          alert('❌ Online payment isn\'t set up yet — please contact Sonia to arrange payment.');
+          showToast('❌ Online payment isn\'t set up yet — please contact Sonia to arrange payment.');
           return;
         }
         const options = {
@@ -2453,8 +2595,8 @@
                 razorpaySignature: response.razorpay_signature || '',
               }),
             });
-            if (verifyRes.ok) { alert('✅ Thank you! Your payment has been recorded.'); loadMyOrders(); }
-            else { alert('❌ Payment made but verification failed — contact Sonia with your payment ID.'); }
+            if (verifyRes.ok) { showToast('✅ Thank you! Your payment has been recorded.'); loadMyOrders(); }
+            else { showToast('❌ Payment made but verification failed — contact Sonia with your payment ID.'); }
           },
           prefill: { name: currentUser?.name || '', email: currentUser?.email || '', contact: currentUser?.phone || '' },
           theme: { color: '#C99A3D' },
@@ -2462,7 +2604,7 @@
         const rzp = new Razorpay(options);
         rzp.open();
       } catch (err) {
-        alert('❌ ' + err.message);
+        showToast('❌ ' + err.message);
       }
     }
 
