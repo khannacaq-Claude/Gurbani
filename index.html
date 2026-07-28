@@ -334,6 +334,12 @@
 
     .tab-btn:hover { color: white; }
     .tab-btn.active { color: var(--ink); background: var(--vivid); }
+    .tab-icon {
+      width: 15px;
+      height: 15px;
+      vertical-align: -3px;
+      margin-right: 2px;
+    }
 
     .admin-filter-btn {
       padding: 8px 16px;
@@ -351,7 +357,22 @@
     .admin-filter-btn:hover { opacity: 0.85; }
 
     .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    .tab-content.active {
+      display: block;
+      animation: tabFadeIn 0.35s ease;
+    }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tab-content.active { animation: none; }
+      .design-card { animation: none !important; }
+    }
+    @keyframes cardReveal {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .form-group {
       margin-bottom: 15px;
@@ -2321,6 +2342,50 @@
       }
     });
 
+    // Swaps emoji tab icons for real SVG icons (Lucide) — emoji render
+    // inconsistently across Windows/Mac/Android and get read aloud by
+    // screen readers as their literal name. Lazy-loaded here (only once the
+    // dashboard actually shows, never on the landing page) rather than
+    // added to the unconditional page-load scripts.
+    const TAB_ICON_MAP = {
+      overviewTabBtn: { icon: 'layout-dashboard', label: 'Overview' },
+      designTabBtn: { icon: 'sparkles', label: 'AI Design' },
+      profileTabBtn: { icon: 'user', label: 'My Profile' },
+      appointmentsTabBtn: { icon: 'calendar', label: 'Appointments' },
+      myDesignsTabBtn: { icon: 'package', label: 'My Designs' },
+      adminTabBtn: { icon: 'shield-check', label: 'Admin: Requests' },
+      profitTabBtn: { icon: 'trending-up', label: 'Profit Dashboard' },
+      adminOrdersTabBtn: { icon: 'package', label: 'Manage Orders' },
+      adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
+      adminAppointmentsTabBtn: { icon: 'calendar-check', label: 'Manage Appointments' },
+      adminInvoicesTabBtn: { icon: 'receipt', label: 'Invoices' },
+      adminCustomersTabBtn: { icon: 'users', label: 'Customers' },
+      adminEmployeesTabBtn: { icon: 'user-cog', label: 'Employees & Payroll' },
+      adminMeasurementsTabBtn: { icon: 'ruler', label: 'Measurements' },
+      adminImportTabBtn: { icon: 'upload', label: 'Import Data' },
+    };
+    let _tabIconsLoaded = false;
+    async function loadTabIcons() {
+      if (_tabIconsLoaded) return;
+      _tabIconsLoaded = true; // set immediately so a rapid double sign-in doesn't double-load
+      try {
+        await loadScriptOnce('https://unpkg.com/lucide@0.330.0');
+        Object.entries(TAB_ICON_MAP).forEach(([id, cfg]) => {
+          const btn = document.getElementById(id);
+          if (!btn) return;
+          btn.innerHTML = `<i data-lucide="${cfg.icon}" aria-hidden="true" class="tab-icon"></i> ${cfg.label}`;
+        });
+        const themeBtn = document.querySelector('.theme-picker-btn');
+        if (themeBtn) themeBtn.innerHTML = `<i data-lucide="palette" aria-hidden="true" class="tab-icon"></i>`;
+        const signOutBtn = document.getElementById('signOutBtn');
+        if (signOutBtn) signOutBtn.innerHTML = `<i data-lucide="log-out" aria-hidden="true" class="tab-icon"></i> Sign Out`;
+        lucide.createIcons({ attrs: { stroke: 'currentColor', 'stroke-width': 2 } });
+      } catch (err) {
+        _tabIconsLoaded = false; // allow retry on next sign-in if the CDN failed
+        console.error('Icon library failed to load, keeping emoji fallback:', err);
+      }
+    }
+
     const API = 'https://gurbani-fashion-backend-production.up.railway.app';
 
     // Loads a third-party script only when it's actually needed, instead of
@@ -2477,7 +2542,7 @@
         if (!panelId) return;
         const btn = document.querySelector(`button[onclick*="${panelId}"]`);
         if (!btn) return;
-        const btnId = `tabbtn-${panelId}`;
+        const btnId = btn.id || `tabbtn-${panelId}`;
         btn.id = btnId;
         btn.setAttribute('role', 'tab');
         btn.setAttribute('aria-controls', panelId);
@@ -2983,7 +3048,7 @@
         }
 
         html += `
-          <div class="design-card">
+          <div class="design-card" style="animation: cardReveal 0.4s ease both; animation-delay: ${idx * 0.12}s;">
             <div class="design-image" id="designImage_${idx}">${imageHtml}</div>
             <div class="design-info">
               <div class="design-title">Design ${idx + 1}: ${escapeHtml(concept.title)}</div>
@@ -4359,6 +4424,7 @@
       if (authToken && currentUser && currentUser._id) {
         landingPage.classList.add('hidden');
         dashboard.classList.add('show');
+        loadTabIcons();
         userWelcome.classList.add('show');
         userWelcome.textContent = ''; // clear before rebuilding
         const nameLine = document.createElement('div');
