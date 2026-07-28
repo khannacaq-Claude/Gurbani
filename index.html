@@ -996,7 +996,7 @@
           <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
           <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
           <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
-          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); loadEmployees();" style="display: none;">🧑‍🔧 Employees</button>
+          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees</button>
           <button class="tab-btn" id="adminPayrollTabBtn" onclick="switchTab(event, 'adminPayroll'); loadPayroll();" style="display: none;">💵 Payroll</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
           <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
@@ -1287,6 +1287,12 @@
         <!-- ADMIN: EMPLOYEES -->
         <div id="adminEmployees" class="tab-content">
           <h3>🧑‍🔧 Employees</h3>
+          <div id="employeesGate" class="card" style="padding: 24px; max-width: 360px;">
+            <p style="margin-bottom: 12px;">This section has an extra password lock to protect employee ID documents — a different password from Measurements, since not everyone who can view measurements should see employee data.</p>
+            <input type="password" id="employeesPasswordInput" placeholder="Enter employee data password" style="margin-bottom: 10px;">
+            <button type="button" class="btn-submit" onclick="submitEmployeesPassword()">Unlock</button>
+          </div>
+          <div id="employeesContent" style="display:none;">
           <div class="card" style="padding: 20px; margin-bottom: 16px;">
             <h4 id="empFormTitle" style="margin-bottom: 12px;">Add Employee</h4>
             <form id="empForm" onsubmit="submitEmployeeForm(event)">
@@ -1301,6 +1307,11 @@
                   </select>
                 </div>
                 <div class="form-group"><label>Monthly Salary (₹)</label><input id="empSalary" type="number" required></div>
+                <div class="form-group"><label>PAN <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input id="empPan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase;" oninput="validateEmpIdField('empPan', /^[A-Za-z]{5}[0-9]{4}[A-Za-z]$/)"></div>
+                <div class="form-group"><label>Aadhaar <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input id="empAadhaar" placeholder="12-digit number" maxlength="12" oninput="validateEmpIdField('empAadhaar', /^\d{12}$/)"></div>
+                <div class="form-group"><label>PAN Card Photo <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input type="file" id="empPanDoc" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="form-group"><label>Aadhaar Card Photo — Front <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input type="file" id="empAadhaarDocFront" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="form-group"><label>Aadhaar Card Photo — Back <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input type="file" id="empAadhaarDocBack" accept=".jpg,.jpeg,.png,.webp"></div>
                 <div class="form-group"><label>Status</label>
                   <select id="empStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
                 </div>
@@ -1312,6 +1323,7 @@
             </form>
           </div>
           <div id="employeesList">Loading...</div>
+          </div>
         </div>
 
         <!-- ADMIN: PAYROLL -->
@@ -3357,6 +3369,68 @@
     // ---------- ADMIN: EMPLOYEES ----------
     let currentEmployees = [];
 
+    // ---------- ADMIN: EMPLOYEES (password-gated, separate password from Measurements) ----------
+    function openEmployeesGate() {
+      const unlocked = sessionStorage.getItem('employeesUnlocked') === 'true';
+      document.getElementById('employeesGate').style.display = unlocked ? 'none' : 'block';
+      document.getElementById('employeesContent').style.display = unlocked ? 'block' : 'none';
+      if (unlocked) loadEmployees();
+    }
+
+    async function submitEmployeesPassword() {
+      const password = document.getElementById('employeesPasswordInput').value;
+      try {
+        const res = await fetch(`${API}/api/employees/verify-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ password }),
+        });
+        if (res.ok) {
+          sessionStorage.setItem('employeesUnlocked', 'true');
+          openEmployeesGate();
+        } else {
+          showToast('❌ Incorrect password');
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    // Reads a <input type="file"> (if a file was chosen) and returns a resized
+    // base64 JPEG, reusing the same resize logic as the Bill Scanner. Returns
+    // null if no file was selected, so existing documents aren't overwritten
+    // on edit unless the admin actually picks a new photo.
+    async function readFileAsResizedBase64(fileInputId, maxSize = 1200) {
+      const input = document.getElementById(fileInputId);
+      if (!input.files || input.files.length === 0) return null;
+      const file = input.files[0];
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+      return billResizeImage(dataUrl, maxSize);
+    }
+
+    function maskSensitiveId(value) {
+      if (!value) return '';
+      if (value.length <= 4) return value;
+      return 'X'.repeat(value.length - 4) + value.slice(-4);
+    }
+
+    function validateEmpIdField(fieldId, pattern) {
+      const el = document.getElementById(fieldId);
+      const val = el.value.trim();
+      el.style.borderColor = (val === '' || pattern.test(val)) ? '#ccc' : '#D9534F';
+    }
+
+    function toggleEmpIdVisibility(empId) {
+      const el = document.getElementById(`empIds_${empId}`);
+      if (!el) return;
+      el.dataset.revealed = el.dataset.revealed === 'true' ? 'false' : 'true';
+      renderEmployeesList();
+    }
+
     async function loadEmployees() {
       const list = document.getElementById('employeesList');
       list.innerHTML = 'Loading...';
@@ -3364,22 +3438,48 @@
         const res = await fetch(`${API}/api/employees`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         currentEmployees = data.data || [];
-        if (currentEmployees.length === 0) { list.innerHTML = '<p style="color:#999;">No employees added yet.</p>'; return; }
-        list.innerHTML = currentEmployees.map(e => `
-          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div>
-              <strong>${e.name}</strong> — ${e.role} ${e.status === 'inactive' ? '<span style="color:#c62828;">(inactive)</span>' : ''}
-              <div style="font-size:12px; color:#999;">${e.phone} · ₹${e.monthlySalary}/mo</div>
-            </div>
-            <div style="display:flex; gap:6px;">
-              <button type="button" class="admin-filter-btn" onclick="editEmployee('${e._id}')">Edit</button>
-              <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="deleteEmployee('${e._id}')">Delete</button>
-            </div>
-          </div>
-        `).join('');
+        renderEmployeesList();
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
+    }
+
+    function viewEmployeeDocument(base64) {
+      if (!base64) return;
+      const win = window.open('');
+      if (win) win.document.write(`<img src="${base64}" style="max-width:100%;">`);
+    }
+
+    function renderEmployeesList() {
+      const list = document.getElementById('employeesList');
+      if (currentEmployees.length === 0) { list.innerHTML = '<p style="color:#999;">No employees added yet.</p>'; return; }
+      list.innerHTML = currentEmployees.map(e => {
+        const idsEl = document.getElementById(`empIds_${e._id}`);
+        const revealed = idsEl?.dataset.revealed === 'true';
+        const panDisplay = e.pan ? (revealed ? e.pan : maskSensitiveId(e.pan)) : '—';
+        const aadhaarDisplay = e.aadhaar ? (revealed ? e.aadhaar : maskSensitiveId(e.aadhaar)) : '—';
+        const docLinks = [];
+        if (e.panDocument) docLinks.push(`<button type="button" onclick='viewEmployeeDocument(${JSON.stringify(e.panDocument)})' style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:11px; text-decoration:underline;">📎 View PAN Photo</button>`);
+        if (e.aadhaarDocumentFront) docLinks.push(`<button type="button" onclick='viewEmployeeDocument(${JSON.stringify(e.aadhaarDocumentFront)})' style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:11px; text-decoration:underline;">📎 View Aadhaar (Front)</button>`);
+        if (e.aadhaarDocumentBack) docLinks.push(`<button type="button" onclick='viewEmployeeDocument(${JSON.stringify(e.aadhaarDocumentBack)})' style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:11px; text-decoration:underline;">📎 View Aadhaar (Back)</button>`);
+        return `
+        <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>${e.name}</strong> — ${e.role} ${e.status === 'inactive' ? '<span style="color:#c62828;">(inactive)</span>' : ''}
+            <div style="font-size:12px; color:#999;">${e.phone} · ₹${e.monthlySalary}/mo</div>
+            <div id="empIds_${e._id}" data-revealed="${revealed ? 'true' : 'false'}" style="font-size:11px; color:#999; margin-top:2px;">
+              PAN: ${panDisplay} &nbsp;|&nbsp; Aadhaar: ${aadhaarDisplay}
+              ${(e.pan || e.aadhaar) ? `<button type="button" onclick="toggleEmpIdVisibility('${e._id}')" style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:11px; text-decoration:underline;">${revealed ? 'Hide' : 'Show'}</button>` : ''}
+            </div>
+            ${docLinks.length > 0 ? `<div style="font-size:11px; margin-top:4px; display:flex; gap:10px; flex-wrap:wrap;">${docLinks.join('')}</div>` : ''}
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="admin-filter-btn" onclick="editEmployee('${e._id}')">Edit</button>
+            <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="deleteEmployee('${e._id}')">Delete</button>
+          </div>
+        </div>
+      `;
+      }).join('');
     }
 
     function editEmployee(id) {
@@ -3390,6 +3490,8 @@
       document.getElementById('empPhone').value = e.phone;
       document.getElementById('empRole').value = e.role;
       document.getElementById('empSalary').value = e.monthlySalary;
+      document.getElementById('empPan').value = e.pan || '';
+      document.getElementById('empAadhaar').value = e.aadhaar || '';
       document.getElementById('empStatus').value = e.status;
       document.getElementById('empFormTitle').textContent = 'Edit ' + e.name;
       window.scrollTo({ top: document.getElementById('adminEmployees').offsetTop - 20, behavior: 'smooth' });
@@ -3404,13 +3506,40 @@
     async function submitEmployeeForm(event) {
       event.preventDefault();
       const id = document.getElementById('empEditId').value;
+      const pan = document.getElementById('empPan').value.trim().toUpperCase();
+      const aadhaar = document.getElementById('empAadhaar').value.trim();
+
+      if (pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+        showToast('❌ PAN format looks wrong — expected e.g. ABCDE1234F');
+        return;
+      }
+      if (aadhaar && !/^\d{12}$/.test(aadhaar)) {
+        showToast('❌ Aadhaar must be exactly 12 digits');
+        return;
+      }
+
+      showToast('⏳ Saving...');
+      const [panDocument, aadhaarDocumentFront, aadhaarDocumentBack] = await Promise.all([
+        readFileAsResizedBase64('empPanDoc'),
+        readFileAsResizedBase64('empAadhaarDocFront'),
+        readFileAsResizedBase64('empAadhaarDocBack'),
+      ]);
+
       const body = {
         name: document.getElementById('empName').value.trim(),
         phone: document.getElementById('empPhone').value.trim(),
         role: document.getElementById('empRole').value,
         monthlySalary: Number(document.getElementById('empSalary').value),
+        pan: pan,
+        aadhaar: aadhaar,
         status: document.getElementById('empStatus').value,
       };
+      // Only include document fields if a new file was actually chosen —
+      // otherwise leaving them out means existing stored documents are left
+      // untouched on edit, since the backend does a partial update.
+      if (panDocument) body.panDocument = panDocument;
+      if (aadhaarDocumentFront) body.aadhaarDocumentFront = aadhaarDocumentFront;
+      if (aadhaarDocumentBack) body.aadhaarDocumentBack = aadhaarDocumentBack;
       try {
         const res = await fetch(`${API}/api/employees${id ? '/' + id : ''}`, {
           method: id ? 'PUT' : 'POST',
