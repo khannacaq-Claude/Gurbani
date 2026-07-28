@@ -1,0 +1,42 @@
+{
+  "name": "Gurbani Fashion - AI Design Studio",
+  "short_name": "Gurbani Fashion",
+  "description": "Describe it. See it. Get it stitched. AI-powered custom design studio and boutique management for Gurbani Fashion.",
+  "start_url": "/Gurbani/",
+  "scope": "/Gurbani/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#141a29",
+  "theme_color": "#141a29",
+  "icons": [
+    {
+      "src": "favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

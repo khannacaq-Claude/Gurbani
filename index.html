@@ -4,10 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gurbani Fashion - AI Design Studio</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#141a29">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gurbani Fashion">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -761,6 +765,135 @@
       border: 1.5px solid #ddd;
     }
     .confirm-box .confirm-cancel:hover { background: #f5f5f5; }
+
+    /* ============================================================
+       COLOR THEME PICKER — lets customers switch the site's accent
+       ============================================================ */
+    .theme-picker-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      color: white;
+      font-size: 16px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .theme-picker-panel {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+      padding: 16px;
+      z-index: 500;
+      width: 240px;
+    }
+    .theme-picker-panel.show { display: block; }
+    .theme-picker-panel h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-family: var(--font-body);
+    }
+    .theme-swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .theme-swatch {
+      cursor: pointer;
+      text-align: center;
+      padding: 6px 4px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .theme-swatch:hover { background: #fafafa; }
+    .theme-swatch.active { border-color: var(--vivid); }
+    .theme-swatch .swatch-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      margin: 0 auto 6px auto;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .theme-swatch .swatch-label {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      line-height: 1.2;
+      font-family: var(--font-body);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+
+    /* ============================================================
+       MOBILE RESPONSIVE — most customer interactions happen on
+       phones, so this is not an afterthought.
+       ============================================================ */
+    @media (max-width: 640px) {
+      header { padding: 18px 14px 16px 14px; }
+      header .header-wordmark { max-width: 320px; width: 92%; }
+      header .flourish { width: 150px; }
+      header p { font-size: 13px; }
+
+      /* header-right (theme picker, sign in/out) overlaps the wordmark
+         when absolutely positioned on a narrow screen — drop it back
+         into normal flow, centered below the tagline instead. */
+      .header-right {
+        position: static;
+        justify-content: center;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .theme-picker-panel { right: 50%; transform: translateX(50%); top: auto; }
+
+      main { padding: 0 12px; margin: 20px auto; }
+      .card { padding: 20px 16px; }
+
+      .hero-eyebrow { font-size: 14px; }
+      .hero-headline { font-size: 26px; margin-bottom: 12px; }
+
+      h2 { font-size: 21px; }
+
+      /* tab bar: horizontal scroll instead of wrapping into a wall of
+         buttons that eats the whole screen */
+      .tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        justify-content: flex-start;
+      }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 12px 14px;
+        min-height: 44px;
+      }
+
+      /* touch-friendly minimum tap targets */
+      button, .admin-filter-btn, .btn-submit { min-height: 44px; }
+
+      .grid-2, .grid-4 { grid-template-columns: 1fr; }
+
+      .feature-box { padding: 16px; }
+    }
+
+    @media (max-width: 400px) {
+      header .header-wordmark { max-width: 260px; }
+      .hero-headline { font-size: 22px; }
+    }
   </style>
 </head>
 <body>
@@ -775,11 +908,16 @@
     </div>
   </div>
   <header>
-    <img src="gurbani_wordmark_punchline.svg" alt="Gurbani Fashion — Your Vision. Your Fit. Stitched to Perfection." class="header-wordmark">
+    <img src="gurbani_wordmark_punchline_transparent.svg" alt="Gurbani Fashion — Your Vision. Your Fit. Stitched to Perfection." class="header-wordmark">
     <div class="header-right">
+      <button type="button" class="theme-picker-btn" onclick="toggleThemePanel()" title="Choose a color theme">🎨</button>
       <div class="user-welcome" id="userWelcome"></div>
       <div id="signinArea"></div>
       <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
+    </div>
+    <div class="theme-picker-panel" id="themePickerPanel">
+      <h4>Choose a Look</h4>
+      <div class="theme-swatch-grid" id="themeSwatchGrid"></div>
     </div>
   </header>
 
@@ -837,6 +975,9 @@
           <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
           <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
           <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
+          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); loadEmployees();" style="display: none;">🧑‍🔧 Employees</button>
+          <button class="tab-btn" id="adminPayrollTabBtn" onclick="switchTab(event, 'adminPayroll'); loadPayroll();" style="display: none;">💵 Payroll</button>
+          <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -1085,7 +1226,7 @@
             <h4 id="invFormTitle" style="margin-bottom: 12px;">Add Fabric</h4>
             <form id="invForm" onsubmit="submitInventoryForm(event)">
               <input type="hidden" id="invEditId" value="">
-              <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="grid-2">
                 <div class="form-group"><label>Name</label><input id="invName" required></div>
                 <div class="form-group"><label>Price (₹)</label><input id="invPrice" type="number" step="0.01" required></div>
                 <div class="form-group"><label>Color</label><input id="invColor"></div>
@@ -1117,6 +1258,105 @@
           <h3>👥 Customers</h3>
           <input type="text" id="customerSearchInput" placeholder="Search by name, email or phone..." oninput="loadAdminCustomers()" style="margin-bottom: 16px;">
           <div id="adminCustomersList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: EMPLOYEES -->
+        <div id="adminEmployees" class="tab-content">
+          <h3>🧑‍🔧 Employees</h3>
+          <div class="card" style="padding: 20px; margin-bottom: 16px;">
+            <h4 id="empFormTitle" style="margin-bottom: 12px;">Add Employee</h4>
+            <form id="empForm" onsubmit="submitEmployeeForm(event)">
+              <input type="hidden" id="empEditId" value="">
+              <div class="grid-2">
+                <div class="form-group"><label>Name</label><input id="empName" required></div>
+                <div class="form-group"><label>Phone</label><input id="empPhone" required></div>
+                <div class="form-group"><label>Role</label>
+                  <select id="empRole">
+                    <option>Tailor</option><option>Master Tailor</option><option>Cutter</option>
+                    <option>Helper</option><option>Manager</option><option>Other</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Monthly Salary (₹)</label><input id="empSalary" type="number" required></div>
+                <div class="form-group"><label>Status</label>
+                  <select id="empStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="btn-submit">Save</button>
+                <button type="button" class="btn-submit" style="background:#999;" onclick="resetEmployeeForm()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div id="employeesList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: PAYROLL -->
+        <div id="adminPayroll" class="tab-content">
+          <h3>💵 Payroll</h3>
+          <div class="card" style="padding: 20px; margin-bottom: 16px;">
+            <h4 style="margin-bottom: 12px;">Generate Payroll Entry</h4>
+            <form id="payrollForm" onsubmit="submitPayrollForm(event)">
+              <div class="grid-2">
+                <div class="form-group"><label>Employee</label><select id="payEmployeeId" required></select></div>
+                <div class="form-group"><label>Month</label>
+                  <select id="payMonth" required>
+                    <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option>
+                    <option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option>
+                    <option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Year</label><input id="payYear" type="number" value="2026" required></div>
+                <div class="form-group"><label>Bonus (₹)</label><input id="payBonus" type="number" value="0"></div>
+                <div class="form-group"><label>Deductions (₹)</label><input id="payDeductions" type="number" value="0"></div>
+                <div class="form-group"><label>Advance (₹)</label><input id="payAdvance" type="number" value="0"></div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="btn-submit">Generate</button>
+              </div>
+            </form>
+          </div>
+          <div id="payrollList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: MEASUREMENTS (password-gated) -->
+        <div id="adminMeasurements" class="tab-content">
+          <h3>📏 Measurements</h3>
+          <div id="measurementsGate" class="card" style="padding: 24px; max-width: 360px;">
+            <p style="margin-bottom: 12px;">This section has an extra password lock to protect customer body measurements.</p>
+            <input type="password" id="measurementsPasswordInput" placeholder="Enter measurements password" style="margin-bottom: 10px;">
+            <button type="button" class="btn-submit" onclick="submitMeasurementsPassword()">Unlock</button>
+          </div>
+          <div id="measurementsContent" style="display:none;">
+            <div class="card" style="padding: 20px; margin-bottom: 16px;">
+              <h4 style="margin-bottom: 12px;">Add Measurement Record</h4>
+              <form id="measForm" onsubmit="submitMeasurementForm(event)">
+                <div class="grid-2">
+                  <div class="form-group"><label>Customer Name</label><input id="measName" required></div>
+                  <div class="form-group"><label>Phone</label><input id="measPhone" required></div>
+                  <div class="form-group"><label>Garment Type</label>
+                    <select id="measGarment">
+                      <option>Lehenga</option><option>Anarkali</option><option>Kurti</option><option>Gown</option><option>Blouse</option><option>Other</option>
+                    </select>
+                  </div>
+                </div>
+                <h5 style="margin: 14px 0 8px 0;">Measurements (inches)</h5>
+                <div class="grid-4">
+                  <div class="form-group"><label>Chest</label><input id="measChest" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Waist</label><input id="measWaist" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Hip</label><input id="measHip" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Shoulder</label><input id="measShoulder" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Sleeve Length</label><input id="measSleeveLength" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Shirt/Kurti Length</label><input id="measShirtLength" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Neck</label><input id="measNeck" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Armhole</label><input id="measArmhole" type="number" step="0.25"></div>
+                </div>
+                <div class="form-group" style="margin-top:10px;"><label>Notes</label><textarea id="measNotes" rows="2"></textarea></div>
+                <button type="submit" class="btn-submit" style="margin-top:10px;">Save Record</button>
+              </form>
+            </div>
+            <input type="text" id="measSearchInput" placeholder="Search by name or phone..." oninput="loadMeasurements()" style="margin-bottom: 16px;">
+            <div id="measurementsList">Loading...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1230,6 +1470,59 @@
   </script>
 
   <script>
+    /* ============================================================
+       COLOR THEME PICKER — customers can pick their own accent theme.
+       Only the header/chrome + accent colors change; page body stays
+       light/cream everywhere so forms and text stay easy to read.
+       ============================================================ */
+    const THEMES = {
+      navy:    { label: 'Midnight Navy', ink: '#141a29', vivid: '#e3ad4b', vividDeep: '#c4912f', marigold: '#F3D488', marigoldDeep: '#d9bd6e' },
+      emerald: { label: 'Emerald & Gold', ink: '#0f2e24', vivid: '#d4af37', vividDeep: '#b8952c', marigold: '#e8cf7a', marigoldDeep: '#cdb35e' },
+      wine:    { label: 'Wine & Gold',    ink: '#3d1220', vivid: '#d9a441', vividDeep: '#b98a34', marigold: '#e8c27a', marigoldDeep: '#cba75f' },
+      charcoal:{ label: 'Charcoal & Rose Gold', ink: '#1c1c1c', vivid: '#cd919e', vividDeep: '#b57786', marigold: '#e0b3bd', marigoldDeep: '#c99aa5' },
+      ivory:   { label: 'Ivory & Bronze', ink: '#5a4626', vivid: '#9c6b1f', vividDeep: '#7d551a', marigold: '#c99a3d', marigoldDeep: '#a97f2e' },
+      blush:   { label: 'Blush & Wine',   ink: '#5a2a30', vivid: '#7a2436', vividDeep: '#611c2b', marigold: '#c98a94', marigoldDeep: '#b06f7a' },
+    };
+
+    function applyTheme(themeKey, save = true) {
+      const t = THEMES[themeKey];
+      if (!t) return;
+      const root = document.documentElement.style;
+      root.setProperty('--ink', t.ink);
+      root.setProperty('--vivid', t.vivid);
+      root.setProperty('--vivid-deep', t.vividDeep);
+      root.setProperty('--marigold', t.marigold);
+      root.setProperty('--marigold-deep', t.marigoldDeep);
+      if (save) localStorage.setItem('gurbaniTheme', themeKey);
+      document.querySelectorAll('.theme-swatch').forEach(el => el.classList.toggle('active', el.dataset.theme === themeKey));
+    }
+
+    function toggleThemePanel() {
+      document.getElementById('themePickerPanel').classList.toggle('show');
+    }
+
+    function renderThemeSwatches() {
+      const grid = document.getElementById('themeSwatchGrid');
+      const current = localStorage.getItem('gurbaniTheme') || 'navy';
+      grid.innerHTML = Object.entries(THEMES).map(([key, t]) => `
+        <div class="theme-swatch ${key === current ? 'active' : ''}" data-theme="${key}" onclick="applyTheme('${key}')">
+          <div class="swatch-dot" style="background: linear-gradient(135deg, ${t.ink} 50%, ${t.vivid} 50%);"></div>
+          <div class="swatch-label">${t.label}</div>
+        </div>
+      `).join('');
+    }
+
+    renderThemeSwatches();
+    applyTheme(localStorage.getItem('gurbaniTheme') || 'navy', false);
+
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('themePickerPanel');
+      const btn = document.querySelector('.theme-picker-btn');
+      if (panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn) {
+        panel.classList.remove('show');
+      }
+    });
+
     const API = 'https://gurbani-fashion-backend-production.up.railway.app';
 
     /* ============================================================
@@ -2479,6 +2772,259 @@
       }
     }
 
+    /* ============================================================
+       PHASE 2 — Employees, Payroll, Measurements (net-new backend)
+       ============================================================ */
+
+    // ---------- ADMIN: EMPLOYEES ----------
+    let currentEmployees = [];
+
+    async function loadEmployees() {
+      const list = document.getElementById('employeesList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/employees`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        currentEmployees = data.data || [];
+        if (currentEmployees.length === 0) { list.innerHTML = '<p style="color:#999;">No employees added yet.</p>'; return; }
+        list.innerHTML = currentEmployees.map(e => `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${e.name}</strong> — ${e.role} ${e.status === 'inactive' ? '<span style="color:#c62828;">(inactive)</span>' : ''}
+              <div style="font-size:12px; color:#999;">${e.phone} · ₹${e.monthlySalary}/mo</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="admin-filter-btn" onclick="editEmployee('${e._id}')">Edit</button>
+              <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="deleteEmployee('${e._id}')">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function editEmployee(id) {
+      const e = currentEmployees.find(x => x._id === id);
+      if (!e) return;
+      document.getElementById('empEditId').value = id;
+      document.getElementById('empName').value = e.name;
+      document.getElementById('empPhone').value = e.phone;
+      document.getElementById('empRole').value = e.role;
+      document.getElementById('empSalary').value = e.monthlySalary;
+      document.getElementById('empStatus').value = e.status;
+      document.getElementById('empFormTitle').textContent = 'Edit ' + e.name;
+      window.scrollTo({ top: document.getElementById('adminEmployees').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function resetEmployeeForm() {
+      document.getElementById('empEditId').value = '';
+      document.getElementById('empForm').reset();
+      document.getElementById('empFormTitle').textContent = 'Add Employee';
+    }
+
+    async function submitEmployeeForm(event) {
+      event.preventDefault();
+      const id = document.getElementById('empEditId').value;
+      const body = {
+        name: document.getElementById('empName').value.trim(),
+        phone: document.getElementById('empPhone').value.trim(),
+        role: document.getElementById('empRole').value,
+        monthlySalary: Number(document.getElementById('empSalary').value),
+        status: document.getElementById('empStatus').value,
+      };
+      try {
+        const res = await fetch(`${API}/api/employees${id ? '/' + id : ''}`, {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`✅ ${body.name} saved`);
+          resetEmployeeForm();
+          loadEmployees();
+        } else {
+          showToast(`❌ ${data.message || 'Failed to save employee'}`);
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function deleteEmployee(id) {
+      if (!(await showConfirm('Delete this employee? This cannot be undone.'))) return;
+      try {
+        const res = await fetch(`${API}/api/employees/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } });
+        if (res.ok) { showToast('✅ Employee deleted'); loadEmployees(); }
+        else { const data = await res.json(); showToast(`❌ ${data.message || 'Failed to delete'}`); }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    // ---------- ADMIN: PAYROLL ----------
+    async function loadPayroll() {
+      const list = document.getElementById('payrollList');
+      list.innerHTML = 'Loading...';
+      try {
+        // populate employee dropdown too
+        if (currentEmployees.length === 0) {
+          const eRes = await fetch(`${API}/api/employees`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+          const eData = await eRes.json();
+          currentEmployees = eData.data || [];
+        }
+        const select = document.getElementById('payEmployeeId');
+        select.innerHTML = currentEmployees.map(e => `<option value="${e._id}">${e.name}</option>`).join('');
+
+        const res = await fetch(`${API}/api/payroll`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const records = data.data || [];
+        if (records.length === 0) { list.innerHTML = '<p style="color:#999;">No payroll records yet.</p>'; return; }
+        const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        list.innerHTML = records.map(r => `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${r.employeeId?.name || 'Employee'}</strong> — ${monthNames[r.month]} ${r.year}
+              <div style="font-size:12px; color:#999;">Base ₹${r.baseSalary} + Bonus ₹${r.bonus} − Deductions ₹${r.deductions} − Advance ₹${r.advance} = <strong>₹${r.netAmount}</strong></div>
+            </div>
+            <select class="status-select" onchange="updatePayrollStatus('${r._id}', this.value)">
+              <option value="pending" ${r.status==='pending'?'selected':''}>Pending</option>
+              <option value="paid" ${r.status==='paid'?'selected':''}>Paid</option>
+            </select>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function submitPayrollForm(event) {
+      event.preventDefault();
+      const body = {
+        employeeId: document.getElementById('payEmployeeId').value,
+        month: Number(document.getElementById('payMonth').value),
+        year: Number(document.getElementById('payYear').value),
+        bonus: Number(document.getElementById('payBonus').value) || 0,
+        deductions: Number(document.getElementById('payDeductions').value) || 0,
+        advance: Number(document.getElementById('payAdvance').value) || 0,
+      };
+      try {
+        const res = await fetch(`${API}/api/payroll`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (res.ok) { showToast('✅ Payroll entry generated'); loadPayroll(); }
+        else { showToast(`❌ ${data.message || 'Failed to generate payroll'}`); }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function updatePayrollStatus(id, status) {
+      try {
+        const res = await fetch(`${API}/api/payroll/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ status }),
+        });
+        if (res.ok) { showToast('✅ Payroll status updated'); loadPayroll(); }
+        else { const data = await res.json(); showToast(`❌ ${data.message || 'Failed to update'}`); }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    // ---------- ADMIN: MEASUREMENTS (password-gated) ----------
+    function openMeasurementsGate() {
+      const unlocked = sessionStorage.getItem('measurementsUnlocked') === 'true';
+      document.getElementById('measurementsGate').style.display = unlocked ? 'none' : 'block';
+      document.getElementById('measurementsContent').style.display = unlocked ? 'block' : 'none';
+      if (unlocked) loadMeasurements();
+    }
+
+    async function submitMeasurementsPassword() {
+      const password = document.getElementById('measurementsPasswordInput').value;
+      try {
+        const res = await fetch(`${API}/api/measurements/verify-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ password }),
+        });
+        if (res.ok) {
+          sessionStorage.setItem('measurementsUnlocked', 'true');
+          openMeasurementsGate();
+        } else {
+          showToast('❌ Incorrect password');
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function loadMeasurements() {
+      const list = document.getElementById('measurementsList');
+      list.innerHTML = 'Loading...';
+      const q = document.getElementById('measSearchInput')?.value || '';
+      try {
+        const res = await fetch(`${API}/api/measurements?search=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const records = data.data || [];
+        if (records.length === 0) { list.innerHTML = '<p style="color:#999;">No measurement records yet.</p>'; return; }
+        list.innerHTML = records.map(m => `
+          <div class="card" style="padding:12px 14px;">
+            <strong>${m.customerName}</strong> — ${m.garmentType}
+            <div style="font-size:12px; color:#999;">${m.customerPhone}</div>
+            <div style="font-size:12px; color:#666; margin-top:4px;">
+              Chest ${m.measurements?.chest ?? '-'}" · Waist ${m.measurements?.waist ?? '-'}" · Hip ${m.measurements?.hip ?? '-'}" ·
+              Shoulder ${m.measurements?.shoulder ?? '-'}" · Sleeve ${m.measurements?.sleeveLength ?? '-'}" · Length ${m.measurements?.shirtLength ?? '-'}"
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function submitMeasurementForm(event) {
+      event.preventDefault();
+      const body = {
+        customerName: document.getElementById('measName').value.trim(),
+        customerPhone: document.getElementById('measPhone').value.trim(),
+        garmentType: document.getElementById('measGarment').value,
+        measurements: {
+          chest: Number(document.getElementById('measChest').value) || undefined,
+          waist: Number(document.getElementById('measWaist').value) || undefined,
+          hip: Number(document.getElementById('measHip').value) || undefined,
+          shoulder: Number(document.getElementById('measShoulder').value) || undefined,
+          sleeveLength: Number(document.getElementById('measSleeveLength').value) || undefined,
+          shirtLength: Number(document.getElementById('measShirtLength').value) || undefined,
+          neck: Number(document.getElementById('measNeck').value) || undefined,
+          armhole: Number(document.getElementById('measArmhole').value) || undefined,
+        },
+        notes: document.getElementById('measNotes').value.trim(),
+      };
+      try {
+        const res = await fetch(`${API}/api/measurements`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('✅ Measurement record saved');
+          document.getElementById('measForm').reset();
+          loadMeasurements();
+        } else {
+          showToast(`❌ ${data.message || 'Failed to save'}`);
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     // ---------- CUSTOMER: MY APPOINTMENTS ----------
     async function submitAppointment(event) {
       event.preventDefault();
@@ -2804,6 +3350,9 @@
         document.getElementById('adminAppointmentsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInvoicesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminCustomersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminEmployeesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminPayrollTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         checkProfileNudge();
       } else {
         landingPage.classList.remove('hidden');
@@ -2914,5 +3463,17 @@
         <button onclick="closePrivacyModal()" style="margin-top: 20px; background: #C06090; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Close</button>
       </div>
     </div>
+
+    <script>
+      // Register service worker for PWA installability + offline app shell.
+      // Never blocks page load; fails silently on unsupported browsers.
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch((err) => {
+            console.warn('Service worker registration failed:', err);
+          });
+        });
+      }
+    </script>
 </body>
 </html>
