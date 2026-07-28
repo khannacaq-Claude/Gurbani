@@ -1026,7 +1026,7 @@
         <div class="hero-eyebrow">Finally, a boutique that designs with you...</div>
         <h2 class="hero-headline" style="text-transform: none;">Passion For Fashion. <span class="accent">Designed For You.</span></h2>
         <p>Custom stitched outfits powered by AI design ideas + personalized photo-based styling</p>
-        <p>Sign in with Google to create designs, upload multiple reference photos, and see how outfits look on YOU!</p>
+        <p>Sign in with Google to create designs, upload multiple reference photos, and get personalized AI styling feedback!</p>
         
         <div class="grid">
           <div class="feature-box" onclick="promptSignIn('AI Design Studio')">
@@ -2906,7 +2906,7 @@
         const data = await response.json();
 
         if (response.ok && data.success) {
-          setStatus('designStatus', '✅ Designs generated! Check how they look on you below.', 'success');
+          setStatus('designStatus', '✅ Designs generated! Check your concepts and styling feedback below.', 'success');
           currentDesignId = data.design._id;
           currentDesignDescription = description;
           displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description);
