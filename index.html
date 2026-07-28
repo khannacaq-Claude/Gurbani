@@ -14,6 +14,7 @@
   <meta name="apple-mobile-web-app-title" content="Gurbani Fashion">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1408,9 +1409,59 @@
             </div>
             <div id="orderImportResult" style="margin-top:12px; font-size:13px;"></div>
           </div>
+
+          <div class="card" style="padding:20px; margin-top:20px;">
+            <h4 style="margin-bottom:8px;">📸 Scan Supplier Bill</h4>
+            <p style="font-size:12px; color:#888; margin-bottom:12px;">Photograph a supplier invoice — items are extracted automatically (OCR runs in your browser, nothing is uploaded anywhere for this step). Review and edit every field before importing into real inventory.</p>
+
+            <div id="billUploadBox" onclick="document.getElementById('billFileInput').click()" ondragover="billHandleDragOver(event)" ondragleave="billHandleDragLeave(event)" ondrop="billHandleDrop(event)" style="border:2px dashed #C9B8AE; border-radius:10px; padding:24px; text-align:center; cursor:pointer; background:#FDFBFA; min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <div style="font-size:28px; margin-bottom:6px;">📤</div>
+              <div style="font-size:13px; font-weight:600; color:var(--ink);">Click or drag-drop a bill photo</div>
+              <div style="font-size:11px; color:#999; margin-top:4px;">JPG, PNG — Max 5MB (PDF not yet supported)</div>
+            </div>
+            <input type="file" id="billFileInput" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="billHandleFileSelect(event)">
+
+            <div id="billProgressContainer" style="display:none; margin:16px 0;">
+              <div style="width:100%; height:8px; background:#EEE; border-radius:4px; overflow:hidden; margin-bottom:6px;">
+                <div id="billProgressFill" style="height:100%; background:linear-gradient(90deg, var(--ink), var(--vivid)); width:0%; transition:width .3s;"></div>
+              </div>
+              <div id="billProgressText" style="font-size:12px; color:#666;"></div>
+            </div>
+
+            <div id="billInfoSection" style="display:none; background:#FFFBF5; border:1px solid var(--marigold); border-radius:8px; padding:12px; margin:12px 0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+              <div><div style="font-size:11px; color:#999;">Vendor</div><div id="billVendorName" style="font-weight:600; font-size:13px;"></div></div>
+              <div><div style="font-size:11px; color:#999;">Bill Date</div><div id="billDate" style="font-weight:600; font-size:13px;"></div></div>
+              <div><div style="font-size:11px; color:#999;">Items Found</div><div id="billItemsFound" style="font-weight:600; font-size:13px;"></div></div>
+            </div>
+
+            <button type="button" onclick="billToggleDebugText()" style="display:none;" id="billDebugToggleBtn" class="admin-filter-btn" style="font-size:11px; margin-bottom:8px;">🐛 Show OCR Text</button>
+            <div id="billExtractedTextBox" style="display:none; background:#F5F5F5; border:1px solid #DDD; border-radius:6px; padding:12px; font-size:11px; font-family:monospace; max-height:120px; overflow-y:auto; margin:8px 0; white-space:pre-wrap; word-break:break-all;"></div>
+
+            <div id="billReviewSection" style="display:none; margin-top:16px;">
+              <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                  <thead>
+                    <tr style="text-align:left; border-bottom:2px solid var(--marigold);">
+                      <th style="padding:6px;">Item Name</th>
+                      <th style="padding:6px;">Category</th>
+                      <th style="padding:6px;">Code</th>
+                      <th style="padding:6px;">Qty</th>
+                      <th style="padding:6px;">Price/Unit</th>
+                      <th style="padding:6px;">Total</th>
+                      <th style="padding:6px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="billItemsTableBody"></tbody>
+                </table>
+              </div>
+              <div id="billSummary" style="margin:14px 0; font-size:13px; font-weight:600;"></div>
+              <button type="button" onclick="importScannedBillItems()" class="btn-submit" style="width:auto; padding:10px 24px;">✅ Import All Valid Items</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
   </main>
 
   <script>
@@ -1606,6 +1657,259 @@
         }
       } catch (err) {
         resultEl.innerHTML = `❌ ${err.message}`;
+      }
+    }
+
+    /* ============================================================
+       BILL SCANNER — OCR-based supplier bill import.
+       OCR runs entirely client-side (Tesseract.js); only the final,
+       admin-reviewed items get POSTed to the real inventory API.
+       Parsing/categorization logic adapted from the standalone
+       gurbani_bill_scanner_v1.0.html prototype.
+       ============================================================ */
+    let billExtractedText = '';
+    let billParsedItems = [];
+
+    const BILL_FABRIC_KEYWORDS = ['silk', 'cotton', 'georgette', 'linen', 'wool', 'satin', 'chiffon', 'crepe', 'rayon', 'polyester', 'bridal', 'tussar', 'cambric'];
+    const BILL_LACE_KEYWORDS = ['lace', 'lacing', 'border', 'trim', 'guipure', 'crochet', 'cane', 'gota', 'patti', 'embellishment', 'ribbon'];
+    const BILL_LINING_KEYWORDS = ['lining', 'interlining', 'backing', 'fusible'];
+    const BILL_BUTTON_KEYWORDS = ['button', 'buttons', 'snap', 'toggle', 'fastener', 'hook'];
+    const BILL_THREAD_KEYWORDS = ['thread', 'threads', 'spool', 'embroidery thread'];
+
+    // Maps a bill category to the real backend endpoint + inventory quantity field
+    const BILL_CATEGORY_CONFIG = {
+      fabric: { endpoint: 'fabrics', qtyField: 'totalMeters', prefix: 'FAB', label: '🧵 Fabric' },
+      lace: { endpoint: 'laces', qtyField: 'totalMeters', prefix: 'LAC', label: '🎀 Lace' },
+      lining: { endpoint: 'linings', qtyField: 'totalMeters', prefix: 'LIN', label: '🧵 Lining' },
+      button: { endpoint: 'buttons', qtyField: 'totalPieces', prefix: 'BTN', label: '🔘 Button' },
+      thread: { endpoint: 'threads', qtyField: 'totalSpools', prefix: 'THR', label: '🧶 Thread' },
+    };
+
+    function billHandleDragOver(e) { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--vivid)'; }
+    function billHandleDragLeave(e) { e.currentTarget.style.borderColor = '#C9B8AE'; }
+    function billHandleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.style.borderColor = '#C9B8AE';
+      if (e.dataTransfer.files.length > 0) billProcessFile(e.dataTransfer.files[0]);
+    }
+    function billHandleFileSelect(e) {
+      if (e.target.files.length > 0) billProcessFile(e.target.files[0]);
+    }
+
+    async function billResizeImage(dataUrl, maxSize) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+            else { w = Math.round(w * maxSize / h); h = maxSize; }
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    async function billProcessFile(file) {
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+      const isValidExt = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+      if (!isValidExt) { showToast('❌ Invalid file type. Use JPG, PNG, or WEBP'); return; }
+      if (file.size > 5 * 1024 * 1024) { showToast('❌ File too large. Max 5MB'); return; }
+
+      const progressContainer = document.getElementById('billProgressContainer');
+      const progressFill = document.getElementById('billProgressFill');
+      const progressText = document.getElementById('billProgressText');
+      progressContainer.style.display = 'block';
+      progressFill.style.width = '10%';
+      progressText.textContent = 'Reading file...';
+
+      try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          progressFill.style.width = '20%';
+          progressText.textContent = 'Processing image...';
+          const resized = await billResizeImage(e.target.result, 1024);
+          progressFill.style.width = '30%';
+          progressText.textContent = 'Extracting text via OCR...';
+
+          const result = await Tesseract.recognize(resized, 'eng', {
+            logger: (m) => {
+              const progress = Math.round((m.progress || 0) * 70) + 30;
+              progressFill.style.width = progress + '%';
+              progressText.textContent = `OCR processing... ${Math.round((m.progress || 0) * 100)}%`;
+            }
+          });
+
+          billExtractedText = result.data.text;
+          progressFill.style.width = '100%';
+          progressText.textContent = '✅ Extraction complete!';
+
+          setTimeout(() => {
+            billParseExtractedText();
+            progressContainer.style.display = 'none';
+            document.getElementById('billReviewSection').style.display = 'block';
+            document.getElementById('billInfoSection').style.display = 'grid';
+            document.getElementById('billDebugToggleBtn').style.display = 'inline-block';
+            document.getElementById('billExtractedTextBox').textContent = billExtractedText;
+          }, 400);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        showToast('❌ Error processing file: ' + error.message);
+        progressContainer.style.display = 'none';
+      }
+    }
+
+    function billSmartCategorize(itemName) {
+      const name = itemName.toLowerCase();
+      if (BILL_FABRIC_KEYWORDS.some(kw => name.includes(kw))) return 'fabric';
+      if (BILL_LACE_KEYWORDS.some(kw => name.includes(kw))) return 'lace';
+      if (BILL_LINING_KEYWORDS.some(kw => name.includes(kw))) return 'lining';
+      if (BILL_BUTTON_KEYWORDS.some(kw => name.includes(kw))) return 'button';
+      if (BILL_THREAD_KEYWORDS.some(kw => name.includes(kw))) return 'thread';
+      return 'fabric'; // no confident match — defaults to fabric, admin can override via dropdown
+    }
+
+    function billParseExtractedText() {
+      const lines = billExtractedText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+      let vendorName = 'Unknown Vendor';
+      lines.forEach((line, idx) => {
+        if (idx < 3 && line.length > 3 && line.length < 50) {
+          if (!line.match(/\d+/) || /fabrics|silk|store/i.test(line)) vendorName = line;
+        }
+      });
+      document.getElementById('billVendorName').textContent = vendorName;
+
+      let billDateStr = 'N/A';
+      const dateMatch = billExtractedText.match(/(?:date|bill|invoice)[:\s]+(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}|\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/i);
+      if (dateMatch) billDateStr = dateMatch[1];
+      document.getElementById('billDate').textContent = billDateStr;
+
+      billParsedItems = [];
+      const itemPatterns = [
+        /^([a-zA-Z\s]+?)\s+(\d+(?:\.\d+)?)\s*([a-zA-Z]{1,3})\s+([₹]?)\s*(\d+(?:\.\d+)?)/,
+        /^([a-zA-Z\s]+?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)/
+      ];
+
+      lines.forEach((line) => {
+        if (line.length < 10 || line.match(/^[a-z]{1,2}$/i)) return;
+        if (line.match(/total|tds|tax|discount|amount due/i)) return;
+
+        for (const pattern of itemPatterns) {
+          const match = line.match(pattern);
+          if (match) {
+            const itemName = match[1].trim();
+            const qty = parseFloat(match[2]) || 1;
+            const price = parseFloat(match[match.length - 1]) || 0;
+            if (itemName.length > 2 && itemName.length < 80 && price > 0) {
+              const category = billSmartCategorize(itemName);
+              billParsedItems.push({
+                itemName, qty, price, category,
+                color: '',
+                code: `${BILL_CATEGORY_CONFIG[category].prefix}-${Date.now()}-${billParsedItems.length}`,
+                skip: false,
+              });
+              break;
+            }
+          }
+        }
+      });
+
+      document.getElementById('billItemsFound').textContent = billParsedItems.length;
+      if (billParsedItems.length === 0) {
+        showToast('⚠️ No items detected automatically — check "Show OCR Text" below, or add items manually via the Inventory tab.');
+      }
+      billRenderItemsTable();
+    }
+
+    function billRenderItemsTable() {
+      const tbody = document.getElementById('billItemsTableBody');
+      tbody.innerHTML = billParsedItems.map((item, idx) => {
+        const catOptions = Object.keys(BILL_CATEGORY_CONFIG).map(c => `<option value="${c}" ${item.category === c ? 'selected' : ''}>${BILL_CATEGORY_CONFIG[c].label}</option>`).join('');
+        const invalid = !item.itemName.trim() || item.qty <= 0 || item.price <= 0;
+        return `
+          <tr style="opacity:${item.skip ? 0.4 : 1}; border-bottom:1px solid #eee;">
+            <td style="padding:4px;"><input value="${item.itemName}" oninput="billUpdateItem(${idx}, 'itemName', this.value)" style="width:130px; border:1px solid ${invalid ? '#D9534F' : '#ccc'}; border-radius:4px; padding:4px; font-size:12px;"></td>
+            <td style="padding:4px;"><select onchange="billUpdateItem(${idx}, 'category', this.value)" style="font-size:12px; padding:4px;">${catOptions}</select></td>
+            <td style="padding:4px;"><input value="${item.code}" oninput="billUpdateItem(${idx}, 'code', this.value)" style="width:110px; border:1px solid #ccc; border-radius:4px; padding:4px; font-size:11px;"></td>
+            <td style="padding:4px;"><input type="number" step="0.01" value="${item.qty}" oninput="billUpdateItem(${idx}, 'qty', this.value)" style="width:60px; border:1px solid ${item.qty <= 0 ? '#D9534F' : '#ccc'}; border-radius:4px; padding:4px; font-size:12px;"></td>
+            <td style="padding:4px;"><input type="number" step="0.01" value="${item.price}" oninput="billUpdateItem(${idx}, 'price', this.value)" style="width:70px; border:1px solid ${item.price <= 0 ? '#D9534F' : '#ccc'}; border-radius:4px; padding:4px; font-size:12px;"></td>
+            <td style="padding:4px; font-weight:600;">₹${(item.qty * item.price).toFixed(2)}</td>
+            <td style="padding:4px;">
+              <button type="button" onclick="billToggleSkip(${idx})" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid #ccc; background:white; cursor:pointer;">${item.skip ? 'Unskip' : 'Skip'}</button>
+              <button type="button" onclick="billDeleteItem(${idx})" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid #D9534F; color:#D9534F; background:white; cursor:pointer;">Delete</button>
+            </td>
+          </tr>`;
+      }).join('');
+      billUpdateSummary();
+    }
+
+    function billUpdateItem(idx, field, value) {
+      if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
+      billParsedItems[idx][field] = value;
+      billRenderItemsTable();
+    }
+    function billToggleSkip(idx) { billParsedItems[idx].skip = !billParsedItems[idx].skip; billRenderItemsTable(); }
+    function billDeleteItem(idx) { billParsedItems.splice(idx, 1); billRenderItemsTable(); }
+    function billToggleDebugText() {
+      const box = document.getElementById('billExtractedTextBox');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function billUpdateSummary() {
+      const valid = billParsedItems.filter(i => !i.skip && i.itemName.trim() && i.qty > 0 && i.price > 0);
+      const invalid = billParsedItems.filter(i => !i.skip && (!i.itemName.trim() || i.qty <= 0 || i.price <= 0));
+      const totalValue = valid.reduce((sum, i) => sum + i.qty * i.price, 0);
+      document.getElementById('billSummary').innerHTML = `Valid: ${valid.length} &nbsp;|&nbsp; Invalid: ${invalid.length} &nbsp;|&nbsp; Total value: ₹${totalValue.toFixed(2)}`;
+    }
+
+    async function importScannedBillItems() {
+      const validItems = billParsedItems.filter(i => !i.skip && i.itemName.trim() && i.qty > 0 && i.price > 0);
+      if (validItems.length === 0) {
+        showToast('No valid items to import — fix red fields or add items manually');
+        return;
+      }
+      if (!(await showConfirm(`Import ${validItems.length} item(s) into real inventory?`))) return;
+
+      let imported = 0;
+      const failures = [];
+
+      for (const item of validItems) {
+        const config = BILL_CATEGORY_CONFIG[item.category];
+        const body = {
+          code: item.code,
+          name: item.itemName,
+          color: item.color || undefined,
+          price: item.price,
+          inventory: { [config.qtyField]: item.qty, available: item.qty, reserved: 0 },
+        };
+        try {
+          const res = await fetch(`${API}/api/inventory/${config.endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (res.ok) imported++;
+          else failures.push(`${item.itemName}: ${data.error || 'failed'}`);
+        } catch (err) {
+          failures.push(`${item.itemName}: ${err.message}`);
+        }
+      }
+
+      showToast(`✅ ${imported}/${validItems.length} items imported to inventory`);
+      if (failures.length > 0) {
+        document.getElementById('billSummary').innerHTML += `<div style="margin-top:8px; color:#c62828;">Failed:<ul style="margin:4px 0 0 18px;">${failures.map(f => `<li>${f}</li>`).join('')}</ul></div>`;
+      }
+      if (imported > 0) {
+        // Remove successfully imported items from the review list, keep failures for retry
+        billParsedItems = billParsedItems.filter(i => i.skip || !validItems.includes(i) || failures.some(f => f.startsWith(i.itemName + ':')));
+        billRenderItemsTable();
       }
     }
 
