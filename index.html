@@ -1209,6 +1209,8 @@
             <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('generated', event)">Generated</button>
             <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('quoted', event)">Quote Requested</button>
             <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('ordered', event)">Ordered</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('completed', event)">Completed</button>
+            <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('archived', event)">Archived</button>
           </div>
           <div id="adminRequestsList">Loading...</div>
         </div>
@@ -1441,6 +1443,86 @@
       }
     }
 
+    async function markAsCompleted(designId) {
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/mark-completed`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ ' + data.message);
+          loadAdminRequests();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to mark as completed'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function archiveDesignRequest(designId) {
+      if (!(await showConfirm('Archive this request? It\'ll move out of the active filters but stays on record.'))) return;
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/archive`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('🗄️ ' + data.message);
+          loadAdminRequests();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to archive'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function deleteDesignRequest(designId) {
+      if (!(await showConfirm('Delete this request permanently? This cannot be undone.'))) return;
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('🗑️ ' + data.message);
+          loadAdminRequests();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to delete'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function saveAdminNote(designId, note) {
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/note`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ note }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('📝 Note saved');
+          // Update local cache so a re-render (e.g. switching filters) keeps the note without a re-fetch
+          const design = allAdminDesigns.find(d => d._id === designId);
+          if (design) design.adminNote = note;
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to save note'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
     function renderAdminRequests() {
       const list = document.getElementById('adminRequestsList');
       const filtered = currentAdminFilter === 'all'
@@ -1452,7 +1534,7 @@
         return;
       }
 
-      const statusColors = { generated: '#1565c0', quoted: '#e65100', ordered: '#2e7d32' };
+      const statusColors = { generated: '#1565c0', quoted: '#e65100', ordered: '#2e7d32', completed: '#00695c', archived: '#757575' };
 
       list.innerHTML = filtered.map(d => {
         const customer = d.userId || {};
@@ -1466,9 +1548,29 @@
           ? `<a href="https://wa.me/91${waPhone}" target="_blank" style="display:inline-block; margin-top:8px; padding:6px 12px; background:#25D366; color:white; text-decoration:none; border-radius:4px; font-size:12px;">💬 WhatsApp Customer</a>`
           : '';
 
-        const orderBtn = d.status !== 'ordered'
+        const orderBtn = d.status !== 'ordered' && d.status !== 'completed' && d.status !== 'archived'
           ? `<button onclick="markAsOrdered('${d._id}', ${d.quotedConceptIndex ?? 0})" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:#C06090; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">✓ Mark as Ordered</button>`
           : '';
+
+        const completeBtn = d.status === 'ordered'
+          ? `<button onclick="markAsCompleted('${d._id}')" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:#00695c; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">✔️ Mark Completed</button>`
+          : '';
+
+        const archiveBtn = d.status !== 'archived'
+          ? `<button onclick="archiveDesignRequest('${d._id}')" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:#757575; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer;">🗄️ Archive</button>`
+          : '';
+
+        const deleteBtn = `<button onclick="deleteDesignRequest('${d._id}')" style="margin-top:8px; margin-left:8px; padding:6px 12px; background:white; color:#c62828; border:1px solid #c62828; border-radius:4px; font-size:12px; cursor:pointer;">🗑️ Delete</button>`;
+
+        const noteBoxId = `note-${d._id}`;
+        const noteHtml = `
+          <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0d8d0;">
+            <label style="font-size:11px; color:#999; display:block; margin-bottom:4px;">📝 Internal note (only admins see this)</label>
+            <div style="display:flex; gap:6px; align-items:flex-start;">
+              <textarea id="${noteBoxId}" rows="1" style="flex:1; font-size:12px; padding:6px 8px; border:1px solid #ddd; border-radius:4px; font-family:inherit; resize:vertical;" placeholder="e.g. price agreed ₹5500, wants delivery before Diwali">${d.adminNote || ''}</textarea>
+              <button onclick="saveAdminNote('${d._id}', document.getElementById('${noteBoxId}').value)" style="padding:6px 10px; background:#141a29; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer; white-space:nowrap;">Save Note</button>
+            </div>
+          </div>`;
 
         return `
           <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
@@ -1482,7 +1584,8 @@
             <div style="margin:10px 0; font-size:13px; color:#444;">"${d.description}" — ${d.occasion}</div>
             <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">${conceptsHtml}</div>
             <div style="font-size:11px; color:#999; margin-top:8px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
-            ${waLink}${orderBtn}
+            ${waLink}${orderBtn}${completeBtn}${archiveBtn}${deleteBtn}
+            ${noteHtml}
           </div>
         `;
       }).join('');
