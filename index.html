@@ -204,12 +204,14 @@
     }
     .hero-headline {
       font-family: var(--font-display);
+      font-style: normal;
       font-size: 40px;
       line-height: 1.15;
       color: var(--ink);
       margin-bottom: 18px;
       letter-spacing: 0.5px;
     }
+    .hero-headline::after { content: none; }
     .hero-headline .accent { color: var(--vivid); }
     .trust-badge {
       display: inline-block;
@@ -243,8 +245,43 @@
       vertical-align: middle;
     }
 
-    h2 { font-family: var(--font-display); color: var(--ink); font-size: 26px; margin-bottom: 10px; letter-spacing: 0.5px; }
-    h3 { font-family: var(--font-display); color: var(--ink); margin-bottom: 8px; font-size: 16px; letter-spacing: 0.3px; }
+    h2 {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 600;
+      color: var(--ink);
+      font-size: 26px;
+      margin-bottom: 10px;
+      letter-spacing: 0.6px;
+      position: relative;
+      padding-bottom: 8px;
+    }
+    h2::after {
+      content: "";
+      display: block;
+      width: 46px;
+      height: 2px;
+      background: var(--vivid);
+      margin-top: 8px;
+      opacity: 0.75;
+    }
+    h3 {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+      font-size: 17px;
+      letter-spacing: 0.4px;
+    }
+    h4 {
+      font-family: var(--font-display);
+      font-style: italic;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: 0.3px;
+    }
     p { color: var(--text-muted); margin-bottom: 15px; line-height: 1.65; font-family: var(--font-body); }
 
     .grid {
