@@ -1077,7 +1077,7 @@
           <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
           <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
           <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees</button>
-          <button class="tab-btn" id="adminPayrollTabBtn" onclick="switchTab(event, 'adminPayroll'); loadPayroll();" style="display: none;">💵 Payroll</button>
+          <button class="tab-btn" id="adminPayrollTabBtn" onclick="switchTab(event, 'adminPayroll'); openPayrollGate();" style="display: none;">💵 Payroll</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
           <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
         </div>
@@ -1409,6 +1409,12 @@
         <!-- ADMIN: PAYROLL -->
         <div id="adminPayroll" class="tab-content">
           <h3>💵 Payroll</h3>
+          <div id="payrollGate" class="card" style="padding: 24px; max-width: 360px;">
+            <p style="margin-bottom: 12px;">This section shares the same password lock as Employees, since payroll data (salaries, bonuses) is just as sensitive.</p>
+            <input type="password" id="payrollPasswordInput" placeholder="Enter employee data password" style="margin-bottom: 10px;">
+            <button type="button" class="btn-submit" onclick="submitPayrollPassword()">Unlock</button>
+          </div>
+          <div id="payrollContent" style="display:none;">
           <div class="card" style="padding: 20px; margin-bottom: 16px;">
             <h4 style="margin-bottom: 12px;">Generate Payroll Entry</h4>
             <form id="payrollForm" onsubmit="submitPayrollForm(event)">
@@ -1432,6 +1438,7 @@
             </form>
           </div>
           <div id="payrollList">Loading...</div>
+          </div>
         </div>
 
         <!-- ADMIN: MEASUREMENTS (password-gated) -->
@@ -3468,6 +3475,35 @@
         if (res.ok) {
           sessionStorage.setItem('employeesUnlocked', 'true');
           openEmployeesGate();
+        } else {
+          showToast('❌ Incorrect password');
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    // Payroll shares the exact same password/session as Employees — same
+    // backend verify-password endpoint, same sessionStorage key. Unlocking
+    // either tab unlocks both, since they're intentionally the same lock.
+    function openPayrollGate() {
+      const unlocked = sessionStorage.getItem('employeesUnlocked') === 'true';
+      document.getElementById('payrollGate').style.display = unlocked ? 'none' : 'block';
+      document.getElementById('payrollContent').style.display = unlocked ? 'block' : 'none';
+      if (unlocked) loadPayroll();
+    }
+
+    async function submitPayrollPassword() {
+      const password = document.getElementById('payrollPasswordInput').value;
+      try {
+        const res = await fetch(`${API}/api/employees/verify-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ password }),
+        });
+        if (res.ok) {
+          sessionStorage.setItem('employeesUnlocked', 'true');
+          openPayrollGate();
         } else {
           showToast('❌ Incorrect password');
         }
