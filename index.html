@@ -998,7 +998,6 @@
           <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); loadEmployees();" style="display: none;">🧑‍🔧 Employees</button>
           <button class="tab-btn" id="adminPayrollTabBtn" onclick="switchTab(event, 'adminPayroll'); loadPayroll();" style="display: none;">💵 Payroll</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
-          <button class="tab-btn" id="customerViewToggleBtn" onclick="toggleCustomerTabsForAdmin()" style="display: none; opacity: 0.7; font-size: 12px;">🧪 Show Customer Tabs</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -1659,16 +1658,6 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabName).classList.add('active');
       document.querySelector(`button[onclick*="${tabName}"]`)?.classList.add('active');
-    }
-
-    // Admin-only: reveal/hide the customer-facing tabs, for occasionally
-    // testing the customer experience from an admin-logged-in account.
-    function toggleCustomerTabsForAdmin() {
-      const customerOnlyTabIds = ['overviewTabBtn', 'designTabBtn', 'profileTabBtn', 'appointmentsTabBtn', 'myDesignsTabBtn'];
-      const toggleBtn = document.getElementById('customerViewToggleBtn');
-      const currentlyHidden = document.getElementById('overviewTabBtn').style.display === 'none';
-      customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = currentlyHidden ? 'inline-block' : 'none');
-      toggleBtn.textContent = currentlyHidden ? '🧪 Hide Customer Tabs' : '🧪 Show Customer Tabs';
     }
 
     function selectPhotoType(type) {
@@ -3400,21 +3389,18 @@
         document.getElementById('adminPayrollTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
 
-        // Admins don't need the customer-facing tabs cluttering their view by
-        // default (Overview/AI Design/My Profile/Appointments/My Designs) —
-        // hide them and show a small toggle to reveal for testing if needed.
+        // Admin dashboard is purely admin-only — the customer-facing tabs
+        // (Overview/AI Design/My Profile/Appointments/My Designs) never show
+        // for admin accounts. Sonia/Sanjeev test the customer side via their
+        // own personal-email customer logins instead.
         const customerOnlyTabIds = ['overviewTabBtn', 'designTabBtn', 'profileTabBtn', 'appointmentsTabBtn', 'myDesignsTabBtn'];
-        const customerViewToggleBtn = document.getElementById('customerViewToggleBtn');
         if (currentUser.role === 'admin') {
           customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'none');
-          customerViewToggleBtn.style.display = 'inline-block';
-          customerViewToggleBtn.textContent = '🧪 Show Customer Tabs';
           // Land admins on their own home tab instead of the now-hidden Overview
           switchTab(null, 'admin');
           loadAdminRequests();
         } else {
           customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'inline-block');
-          customerViewToggleBtn.style.display = 'none';
         }
         checkProfileNudge();
       } else {
