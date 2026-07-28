@@ -4,12 +4,12 @@
 // any /api/* calls to your Railway backend — orders, designs, prices etc.
 // must always come fresh from the network, never from a stale cache.
 
-const CACHE_NAME = 'gurbani-shell-v1';
+const CACHE_NAME = 'gurbani-shell-v2';
 const SHELL_FILES = [
   './',
   './index.html',
   './manifest.json',
-  './favicon.svg',
+  './favicon-16.png',
   './favicon-32.png',
   './icon-192.png',
   './icon-512.png',
@@ -46,20 +46,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first: always try to get the latest version when online, and
+  // only fall back to the cache if the network fails (genuinely offline).
+  // This is what actually delivers "works offline" without also trapping
+  // users on stale content every time something is fixed/deployed.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached); // offline fallback to cache if network fails
-
-      // Cache-first for instant loads, but still refresh cache in background.
-      return cached || networkFetch;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
