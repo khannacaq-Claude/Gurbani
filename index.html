@@ -990,7 +990,7 @@
   </style>
 </head>
 <body>
-  <div id="toastContainer"></div>
+  <div id="toastContainer" role="status" aria-live="polite"></div>
   <div id="confirmOverlay">
     <div class="confirm-box">
       <p id="confirmMessage"></p>
@@ -1008,7 +1008,7 @@
     <hr class="flourish">
     <p>Your Vision. Your Fit. Stitched to Perfection.</p>
     <div class="header-right">
-      <button type="button" class="theme-picker-btn" onclick="toggleThemePanel()" title="Choose a color theme">🎨</button>
+      <button type="button" class="theme-picker-btn" onclick="toggleThemePanel()" title="Choose a color theme" aria-label="Choose a color theme">🎨</button>
       <div class="user-welcome" id="userWelcome"></div>
       <div id="signinArea"></div>
       <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
@@ -1034,22 +1034,22 @@
           <div class="feature-box" onclick="promptSignIn('AI Design Studio')">
             <h3>🎨 AI Design Studio</h3>
             <p>Describe your outfit, get 3 AI-generated concepts</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to start</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Sign in to start</p>
           </div>
           <div class="feature-box" onclick="promptSignIn('Multi-Photo Personalization')">
             <h3>📸 Multi-Photo Personalization</h3>
             <p>Upload selfies, fabrics, laces & accessories for personalization</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to try</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Sign in to try</p>
           </div>
           <div class="feature-box" onclick="promptSignIn('Appointments')">
             <h3>📅 Appointments</h3>
             <p>Book styling consultations with Sonia</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to book</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Sign in to book</p>
           </div>
           <div class="feature-box" onclick="promptSignIn('My Designs')">
             <h3>📦 My Designs</h3>
             <p>See every design you've created and its status</p>
-            <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Sign in to view</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Sign in to view</p>
           </div>
         </div>
       </div>
@@ -1090,7 +1090,7 @@
             </div>
             <div style="display: flex; gap: 8px; flex-shrink: 0;">
               <button type="button" onclick="switchTab(null, 'profile'); loadProfileTab();" style="background: var(--vivid); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">Complete Profile</button>
-              <button type="button" onclick="dismissProfileNudge()" style="background: transparent; color: #999; border: none; padding: 8px; font-size: 13px; cursor: pointer;">Not now</button>
+              <button type="button" onclick="dismissProfileNudge()" style="background: transparent; color: var(--text-muted); border: none; padding: 8px; font-size: 13px; cursor: pointer;">Not now</button>
             </div>
           </div>
 
@@ -1098,17 +1098,17 @@
             <div class="feature-box" onclick="switchTab(null, 'design')">
               <h3>🎨 Create Design</h3>
               <p>Get 3 AI concepts + upload multiple reference photos</p>
-              <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Start designing</p>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Start designing</p>
             </div>
             <div class="feature-box" onclick="switchTab(null, 'appointments'); loadMyAppointments();">
               <h3>📅 Book Appointment</h3>
               <p>Schedule a consultation with Sonia</p>
-              <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 Book now</p>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Book now</p>
             </div>
             <div class="feature-box" onclick="switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
               <h3>📦 My Designs</h3>
               <p>See every design you've generated and its status</p>
-              <p style="font-size: 11px; color: #999; margin-top: 10px;">👆 View designs</p>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 View designs</p>
             </div>
           </div>
 
@@ -1122,7 +1122,7 @@
           <h3>✨ AI Design Studio + Multi-Photo Personalization</h3>
           <p>Describe your dream outfit and upload multiple reference photos (selfies, fabrics, laces, accessories) for comprehensive personalized feedback!</p>
           
-          <div id="designStatus" class="status"></div>
+          <div id="designStatus" class="status" role="status" aria-live="polite"></div>
           
           <div class="budget-info" id="budgetInfo" style="display: none;">
             <strong>💰 Trial Budget:</strong> <span id="spentAmount">₹0</span> / <span id="budgetLimit">₹200</span> used
@@ -1135,7 +1135,7 @@
             <div class="form-group">
               <label>📝 Describe Your Dream Outfit</label>
               <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required oninput="validateDescriptionRealtime()"></textarea>
-              <div id="descValidationFeedback" style="margin-top: 8px; font-size: 13px; display: none; padding: 8px 12px; border-radius: 4px; background: #f0f0f0;"></div>
+              <div id="descValidationFeedback" role="status" aria-live="polite" style="margin-top: 8px; font-size: 13px; display: none; padding: 8px 12px; border-radius: 4px; background: #f0f0f0;"></div>
             </div>
             <div class="form-group">
               <label>🎯 Occasion</label>
@@ -1173,7 +1173,7 @@
 
               <div class="photo-upload-area" id="photoUploadArea" onclick="handlePhotoAreaClick()" style="opacity: 0.5;">
                 <p style="margin: 0;">📸 Click to upload or drag & drop</p>
-                <p style="font-size: 12px; color: #999; margin-top: 8px;" id="photoTypeHint">Please check the consent box above to enable photo upload</p>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;" id="photoTypeHint">Please check the consent box above to enable photo upload</p>
               </div>
               <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
               
@@ -1385,11 +1385,11 @@
                   </select>
                 </div>
                 <div class="form-group"><label>Monthly Salary (₹)</label><input id="empSalary" type="number" required></div>
-                <div class="form-group"><label>PAN <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input id="empPan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase;" oninput="validateEmpIdField('empPan', /^[A-Za-z]{5}[0-9]{4}[A-Za-z]$/)"></div>
-                <div class="form-group"><label>Aadhaar <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input id="empAadhaar" placeholder="12-digit number" maxlength="12" oninput="validateEmpIdField('empAadhaar', /^\d{12}$/)"></div>
-                <div class="form-group"><label>PAN Card Photo <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input type="file" id="empPanDoc" accept=".jpg,.jpeg,.png,.webp"></div>
-                <div class="form-group"><label>Aadhaar Card Photo — Front <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input type="file" id="empAadhaarDocFront" accept=".jpg,.jpeg,.png,.webp"></div>
-                <div class="form-group"><label>Aadhaar Card Photo — Back <span style="font-weight:normal; color:#999; font-size:11px;">(optional)</span></label><input type="file" id="empAadhaarDocBack" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="form-group"><label>PAN <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">(optional)</span></label><input id="empPan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase;" oninput="validateEmpIdField('empPan', /^[A-Za-z]{5}[0-9]{4}[A-Za-z]$/)"></div>
+                <div class="form-group"><label>Aadhaar <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">(optional)</span></label><input id="empAadhaar" placeholder="12-digit number" maxlength="12" oninput="validateEmpIdField('empAadhaar', /^\d{12}$/)"></div>
+                <div class="form-group"><label>PAN Card Photo <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">(optional)</span></label><input type="file" id="empPanDoc" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="form-group"><label>Aadhaar Card Photo — Front <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">(optional)</span></label><input type="file" id="empAadhaarDocFront" accept=".jpg,.jpeg,.png,.webp"></div>
+                <div class="form-group"><label>Aadhaar Card Photo — Back <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">(optional)</span></label><input type="file" id="empAadhaarDocBack" accept=".jpg,.jpeg,.png,.webp"></div>
                 <div class="form-group"><label>Status</label>
                   <select id="empStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
                 </div>
@@ -1522,7 +1522,7 @@
             <div id="billUploadBox" onclick="document.getElementById('billFileInput').click()" ondragover="billHandleDragOver(event)" ondragleave="billHandleDragLeave(event)" ondrop="billHandleDrop(event)" style="border:2px dashed #C9B8AE; border-radius:10px; padding:24px; text-align:center; cursor:pointer; background:#FDFBFA; min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
               <div style="font-size:28px; margin-bottom:6px;">📤</div>
               <div style="font-size:13px; font-weight:600; color:var(--ink);">Click or drag-drop a bill photo</div>
-              <div style="font-size:11px; color:#999; margin-top:4px;">JPG, PNG — Max 5MB (PDF not yet supported)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">JPG, PNG — Max 5MB (PDF not yet supported)</div>
             </div>
             <input type="file" id="billFileInput" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="billHandleFileSelect(event)">
 
@@ -1534,9 +1534,9 @@
             </div>
 
             <div id="billInfoSection" style="display:none; background:#FFFBF5; border:1px solid var(--marigold); border-radius:8px; padding:12px; margin:12px 0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
-              <div><div style="font-size:11px; color:#999;">Vendor</div><div id="billVendorName" style="font-weight:600; font-size:13px;"></div></div>
-              <div><div style="font-size:11px; color:#999;">Bill Date</div><div id="billDate" style="font-weight:600; font-size:13px;"></div></div>
-              <div><div style="font-size:11px; color:#999;">Items Found</div><div id="billItemsFound" style="font-weight:600; font-size:13px;"></div></div>
+              <div><div style="font-size:11px; color:var(--text-muted);">Vendor</div><div id="billVendorName" style="font-weight:600; font-size:13px;"></div></div>
+              <div><div style="font-size:11px; color:var(--text-muted);">Bill Date</div><div id="billDate" style="font-weight:600; font-size:13px;"></div></div>
+              <div><div style="font-size:11px; color:var(--text-muted);">Items Found</div><div id="billItemsFound" style="font-weight:600; font-size:13px;"></div></div>
             </div>
 
             <button type="button" onclick="billToggleDebugText()" style="display:none;" id="billDebugToggleBtn" class="admin-filter-btn" style="font-size:11px; margin-bottom:8px;">🐛 Show OCR Text</button>
@@ -2174,7 +2174,7 @@
         : allAdminDesigns.filter(d => d.status === currentAdminFilter);
 
       if (filtered.length === 0) {
-        list.innerHTML = '<p style="color:#999; padding: 20px 0;">No requests in this category yet.</p>';
+        list.innerHTML = '<p style="color:var(--text-muted); padding: 20px 0;">No requests in this category yet.</p>';
         return;
       }
 
@@ -2209,7 +2209,7 @@
         const noteBoxId = `note-${d._id}`;
         const noteHtml = `
           <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0d8d0;">
-            <label style="font-size:11px; color:#999; display:block; margin-bottom:4px;">📝 Internal note (only admins see this)</label>
+            <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">📝 Internal note (only admins see this)</label>
             <div style="display:flex; gap:6px; align-items:flex-start;">
               <textarea id="${noteBoxId}" rows="1" style="flex:1; font-size:12px; padding:6px 8px; border:1px solid #ddd; border-radius:4px; font-family:inherit; resize:vertical;" placeholder="e.g. price agreed ₹5500, wants delivery before Diwali">${escapeHtml(d.adminNote) || ''}</textarea>
               <button onclick="saveAdminNote('${d._id}', document.getElementById('${noteBoxId}').value)" style="padding:6px 10px; background:#141a29; color:white; border:none; border-radius:4px; font-size:12px; cursor:pointer; white-space:nowrap;">Save Note</button>
@@ -2227,7 +2227,7 @@
             </div>
             <div style="margin:10px 0; font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
             <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">${conceptsHtml}</div>
-            <div style="font-size:11px; color:#999; margin-top:8px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
             ${waLink}${orderBtn}${completeBtn}${archiveBtn}${deleteBtn}
             ${noteHtml}
           </div>
@@ -2292,8 +2292,26 @@
       `).join('');
     }
 
+    // Pairs each <label> with the nearest input/select/textarea sharing its
+    // parent container, so screen readers associate the label when focusing
+    // or clicking the field. Runtime-based rather than hand-editing every
+    // label, since the ~47 labels across the app consistently follow the
+    // pattern <div class="form-group"><label>Text</label><input id="x">...
+    function initLabelPairing() {
+      document.querySelectorAll('label:not([for])').forEach((label) => {
+        const parent = label.parentElement;
+        if (!parent) return;
+        const field = parent.querySelector('input, select, textarea');
+        if (field && field.id) {
+          label.setAttribute('for', field.id);
+        }
+      });
+    }
+
     renderThemeSwatches();
     applyTheme(localStorage.getItem('gurbaniTheme') || 'navy', false);
+    initTabAria();
+    initLabelPairing();
 
     document.addEventListener('click', (e) => {
       const panel = document.getElementById('themePickerPanel');
@@ -2440,9 +2458,33 @@
     function switchTab(event, tabName) {
       if (event) event.preventDefault();
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
       document.getElementById(tabName).classList.add('active');
-      document.querySelector(`button[onclick*="${tabName}"]`)?.classList.add('active');
+      const activeBtn = document.querySelector(`button[onclick*="${tabName}"]`);
+      activeBtn?.classList.add('active');
+      activeBtn?.setAttribute('aria-selected', 'true');
+    }
+
+    // Wires up proper ARIA tab semantics (role="tablist"/"tab"/"tabpanel",
+    // aria-selected, aria-controls) by matching each panel to its button
+    // the same way switchTab() already does — screen readers previously had
+    // no way to know these buttons formed a tab set or which was active.
+    function initTabAria() {
+      const tabsContainer = document.querySelector('.tabs');
+      if (tabsContainer) tabsContainer.setAttribute('role', 'tablist');
+      document.querySelectorAll('.tab-content').forEach((panel) => {
+        const panelId = panel.id;
+        if (!panelId) return;
+        const btn = document.querySelector(`button[onclick*="${panelId}"]`);
+        if (!btn) return;
+        const btnId = `tabbtn-${panelId}`;
+        btn.id = btnId;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-controls', panelId);
+        btn.setAttribute('aria-selected', panel.classList.contains('active') ? 'true' : 'false');
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', btnId);
+      });
     }
 
     function selectPhotoType(type) {
@@ -2601,7 +2643,7 @@
 
             const img = document.createElement('img');
             img.src = photo;
-            img.alt = labels[type] || type;
+            img.alt = (labels[type] || type) + ' reference photo';
             img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
 
             const label = document.createElement('div');
@@ -2612,6 +2654,7 @@
             removeBtn.type = 'button';
             removeBtn.className = 'photo-item-remove';
             removeBtn.title = 'Hatao (Remove)';
+            removeBtn.setAttribute('aria-label', 'Remove this ' + (labels[type] || type) + ' photo');
             removeBtn.innerHTML = '🗑️';
             removeBtn.onclick = (function(t, i) {
               return function() { removePhoto(t, i); };
@@ -2861,7 +2904,7 @@
         const data = await res.json();
         if (res.ok && data.success && data.concept?.imageUrl) {
           if (currentConcepts[idx]) currentConcepts[idx].imageUrl = data.concept.imageUrl;
-          if (imgContainer) imgContainer.innerHTML = `<img src="${data.concept.imageUrl}" alt="Design ${idx + 1}">`;
+          if (imgContainer) imgContainer.innerHTML = `<img src="${data.concept.imageUrl}" alt="${escapeHtml(currentConcepts[idx]?.title) || 'Design ' + (idx + 1)}">`;
         } else {
           showToast('❌ ' + (data.error || 'Failed to generate this design — please try again'));
           if (btn) {
@@ -2926,10 +2969,10 @@
       concepts.forEach((concept, idx) => {
         let imageHtml;
         if (concept.imageUrl) {
-          imageHtml = `<img src="${concept.imageUrl}" alt="Design ${idx + 1}">`;
+          imageHtml = `<img src="${concept.imageUrl}" alt="${escapeHtml(concept.title) || 'Design ' + (idx + 1)}">`;
         } else if (idx === 0) {
           // Design 1's image is always generated upfront — a missing image here is a genuine failure
-          imageHtml = '<div style="color: #999; font-size: 12px; text-align: center; padding: 20px;">⚠️ Image preview unavailable this time<br><span style="font-size: 11px;">The design description below is still accurate.</span></div>';
+          imageHtml = '<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px;">⚠️ Image preview unavailable this time<br><span style="font-size: 11px;">The design description below is still accurate.</span></div>';
         } else {
           // Designs 2 & 3 are generated on-demand only — this is the normal
           // not-yet-requested state, not a failure, so show a clear CTA instead.
@@ -3276,7 +3319,7 @@
             }).join('')}
           </div>
           <div style="display: flex; gap: 4px; margin-top: 4px;">
-            ${s.dailyTrend.map(d => `<div style="flex:1; font-size:9px; color:#999; text-align:center;">${new Date(d._id).getDate()}</div>`).join('')}
+            ${s.dailyTrend.map(d => `<div style="flex:1; font-size:9px; color:var(--text-muted); text-align:center;">${new Date(d._id).getDate()}</div>`).join('')}
           </div>
         `;
 
@@ -3284,7 +3327,7 @@
         const orders = ordersData.data || [];
         html += `<h4 style="margin: 24px 0 10px 0;">📋 Recent Orders</h4>`;
         if (orders.length === 0) {
-          html += '<p style="color:#999;">No orders yet.</p>';
+          html += '<p style="color:var(--text-muted);">No orders yet.</p>';
         } else {
           html += `
             <div style="overflow-x: auto;">
@@ -3323,7 +3366,7 @@
           const f = feedbackData.data;
           html += `<h4 style="margin: 24px 0 10px 0;">💬 Customer Feedback</h4>`;
           if (f.totalCount === 0) {
-            html += '<p style="color:#999;">No feedback submitted yet.</p>';
+            html += '<p style="color:var(--text-muted);">No feedback submitted yet.</p>';
           } else {
             html += `
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px;">
@@ -3333,11 +3376,11 @@
               <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
                 <div>
                   <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PRICE PREFERENCE</div>
-                  ${Object.entries(f.pricePreferenceCounts).map(([price, count]) => `<div style="font-size:13px;">₹${price}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:#999;">No data yet</div>'}
+                  ${Object.entries(f.pricePreferenceCounts).map(([price, count]) => `<div style="font-size:13px;">₹${price}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
                 </div>
                 <div>
                   <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PLAN PREFERENCE</div>
-                  ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:#999;">No data yet</div>'}
+                  ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
                 </div>
                 <div>
                   <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">FEATURE INTEREST</div>
@@ -3363,7 +3406,7 @@
         <div style="background: white; border: 1px solid #eee; border-radius: 8px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); text-align: center;">
           <div style="font-size: 22px;">${icon}</div>
           <div style="font-size: 18px; font-weight: bold; color: var(--vivid); margin: 4px 0;">${value}</div>
-          <div style="font-size: 11px; color: #999;">${label}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${label}</div>
         </div>
       `;
     }
@@ -3405,7 +3448,7 @@
       const list = document.getElementById('adminOrdersList');
       const orders = currentAdminOrderFilter === 'all' ? allAdminOrders : allAdminOrders.filter(o => o.status === currentAdminOrderFilter);
       if (orders.length === 0) {
-        list.innerHTML = '<p style="color:#999;">No orders in this filter.</p>';
+        list.innerHTML = '<p style="color:var(--text-muted);">No orders in this filter.</p>';
         return;
       }
       list.innerHTML = orders.map(o => `
@@ -3413,7 +3456,7 @@
           <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${o.orderNumber || o._id}</strong> — ${o.customerId?.name || 'Unknown'} (${o.customerId?.phone || o.customerId?.email || ''})
-              <div style="font-size:12px; color:#999;">${new Date(o.dates?.orderDate).toLocaleDateString('en-IN')} · ₹${o.pricing?.totalPrice || 0} · Payment: <strong>${o.paymentStatus || 'pending'}</strong></div>
+              <div style="font-size:12px; color:var(--text-muted);">${new Date(o.dates?.orderDate).toLocaleDateString('en-IN')} · ₹${o.pricing?.totalPrice || 0} · Payment: <strong>${o.paymentStatus || 'pending'}</strong></div>
             </div>
             <div style="display:flex; gap:6px; align-items:flex-start; flex-wrap:wrap;">
               <select class="status-select" onchange="updateOrderAdmin('${o._id}', 'status', this.value)">
@@ -3474,14 +3517,14 @@
     function renderInventoryList() {
       const list = document.getElementById('inventoryList');
       if (currentInventoryItems.length === 0) {
-        list.innerHTML = '<p style="color:#999;">Nothing in this category yet.</p>';
+        list.innerHTML = '<p style="color:var(--text-muted);">Nothing in this category yet.</p>';
         return;
       }
       list.innerHTML = currentInventoryItems.map(item => `
         <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <strong>${escapeHtml(item.name)}</strong> ${item.color ? '· ' + escapeHtml(item.color) : ''}
-            <div style="font-size:12px; color:#999;">₹${item.price || 0} · Available: ${item.inventory?.available ?? item.available ?? 0}</div>
+            <div style="font-size:12px; color:var(--text-muted);">₹${item.price || 0} · Available: ${item.inventory?.available ?? item.available ?? 0}</div>
           </div>
           <div style="display:flex; gap:6px;">
             <button type="button" class="admin-filter-btn" onclick="editInventoryItem('${item._id}')">Edit</button>
@@ -3564,13 +3607,13 @@
         const res = await fetch(`${API}/api/appointments/admin/all-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const appts = data.data || data.appointments || [];
-        if (appts.length === 0) { list.innerHTML = '<p style="color:#999;">No appointments booked yet.</p>'; return; }
+        if (appts.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No appointments booked yet.</p>'; return; }
         list.innerHTML = appts.map(a => `
           <div class="card" style="padding:14px;">
             <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
               <div>
                 <strong>${escapeHtml(a.customerId?.name) || 'Customer'}</strong> — ${escapeHtml(a.type) || ''}
-                <div style="font-size:12px; color:#999;">${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''} · ${escapeHtml(a.customerId?.phone) || ''}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''} · ${escapeHtml(a.customerId?.phone) || ''}</div>
                 ${a.notes ? `<div style="font-size:12px; color:#666; margin-top:4px;">${escapeHtml(a.notes)}</div>` : ''}
               </div>
               <select class="status-select" onchange="updateAppointmentStatusAdmin('${a._id}', this.value)">
@@ -3606,12 +3649,12 @@
         const res = await fetch(`${API}/api/invoices/admin/all-invoices`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const invoices = data.data || data.invoices || [];
-        if (invoices.length === 0) { list.innerHTML = '<p style="color:#999;">No invoices yet.</p>'; return; }
+        if (invoices.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No invoices yet.</p>'; return; }
         list.innerHTML = invoices.map(inv => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${inv.invoiceNumber || inv._id}</strong> — ${inv.customerId?.name || inv.orderId?.customerId?.name || ''}
-              <div style="font-size:12px; color:#999;">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
+              <div style="font-size:12px; color:var(--text-muted);">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
             </div>
             <a class="admin-filter-btn" style="text-decoration:none; display:inline-block;" href="${API}/api/invoices/${inv._id}/download" target="_blank">Download PDF</a>
           </div>
@@ -3630,11 +3673,11 @@
         const res = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const customers = data.data || data.customers || [];
-        if (customers.length === 0) { list.innerHTML = '<p style="color:#999;">No customers found.</p>'; return; }
+        if (customers.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No customers found.</p>'; return; }
         list.innerHTML = customers.map(c => `
           <div class="card" style="padding:12px 14px;">
             <strong>${escapeHtml(c.name)}</strong>
-            <div style="font-size:12px; color:#999;">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
+            <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
           </div>
         `).join('');
       } catch (err) {
@@ -3727,12 +3770,12 @@
     function viewEmployeeDocument(base64) {
       if (!base64) return;
       const win = window.open('');
-      if (win) win.document.write(`<img src="${base64}" style="max-width:100%;">`);
+      if (win) win.document.write(`<img src="${base64}" alt="ID document photo" style="max-width:100%;">`);
     }
 
     function renderEmployeesList() {
       const list = document.getElementById('employeesList');
-      if (currentEmployees.length === 0) { list.innerHTML = '<p style="color:#999;">No employees added yet.</p>'; return; }
+      if (currentEmployees.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No employees added yet.</p>'; return; }
       list.innerHTML = currentEmployees.map(e => {
         const idsEl = document.getElementById(`empIds_${e._id}`);
         const revealed = idsEl?.dataset.revealed === 'true';
@@ -3746,8 +3789,8 @@
         <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <strong>${escapeHtml(e.name)}</strong> — ${escapeHtml(e.role)} ${e.status === 'inactive' ? '<span style="color:#c62828;">(inactive)</span>' : ''}
-            <div style="font-size:12px; color:#999;">${escapeHtml(e.phone)} · ₹${e.monthlySalary}/mo</div>
-            <div id="empIds_${e._id}" data-revealed="${revealed ? 'true' : 'false'}" style="font-size:11px; color:#999; margin-top:2px;">
+            <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(e.phone)} · ₹${e.monthlySalary}/mo</div>
+            <div id="empIds_${e._id}" data-revealed="${revealed ? 'true' : 'false'}" style="font-size:11px; color:var(--text-muted); margin-top:2px;">
               PAN: ${panDisplay} &nbsp;|&nbsp; Aadhaar: ${aadhaarDisplay}
               ${(e.pan || e.aadhaar) ? `<button type="button" onclick="toggleEmpIdVisibility('${e._id}')" style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:11px; text-decoration:underline;">${revealed ? 'Hide' : 'Show'}</button>` : ''}
             </div>
@@ -3867,13 +3910,13 @@
         const res = await fetch(`${API}/api/payroll`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const records = data.data || [];
-        if (records.length === 0) { list.innerHTML = '<p style="color:#999;">No payroll records yet.</p>'; return; }
+        if (records.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No payroll records yet.</p>'; return; }
         const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         list.innerHTML = records.map(r => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${r.employeeId?.name || 'Employee'}</strong> — ${monthNames[r.month]} ${r.year}
-              <div style="font-size:12px; color:#999;">Base ₹${r.baseSalary} + Bonus ₹${r.bonus} − Deductions ₹${r.deductions} − Advance ₹${r.advance} = <strong>₹${r.netAmount}</strong></div>
+              <div style="font-size:12px; color:var(--text-muted);">Base ₹${r.baseSalary} + Bonus ₹${r.bonus} − Deductions ₹${r.deductions} − Advance ₹${r.advance} = <strong>₹${r.netAmount}</strong></div>
             </div>
             <select class="status-select" onchange="updatePayrollStatus('${r._id}', this.value)">
               <option value="pending" ${r.status==='pending'?'selected':''}>Pending</option>
@@ -3959,11 +4002,11 @@
         const res = await fetch(`${API}/api/measurements?search=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const records = data.data || [];
-        if (records.length === 0) { list.innerHTML = '<p style="color:#999;">No measurement records yet.</p>'; return; }
+        if (records.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No measurement records yet.</p>'; return; }
         list.innerHTML = records.map(m => `
           <div class="card" style="padding:12px 14px;">
             <strong>${m.customerName}</strong> — ${m.garmentType}
-            <div style="font-size:12px; color:#999;">${m.customerPhone}</div>
+            <div style="font-size:12px; color:var(--text-muted);">${m.customerPhone}</div>
             <div style="font-size:12px; color:#666; margin-top:4px;">
               Chest ${m.measurements?.chest ?? '-'}" · Waist ${m.measurements?.waist ?? '-'}" · Hip ${m.measurements?.hip ?? '-'}" ·
               Shoulder ${m.measurements?.shoulder ?? '-'}" · Sleeve ${m.measurements?.sleeveLength ?? '-'}" · Length ${m.measurements?.shirtLength ?? '-'}"
@@ -4048,12 +4091,12 @@
         const res = await fetch(`${API}/api/appointments/my-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const appts = data.data || data.appointments || [];
-        if (appts.length === 0) { list.innerHTML = '<p style="color:#999;">No appointments booked yet.</p>'; return; }
+        if (appts.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No appointments booked yet.</p>'; return; }
         list.innerHTML = appts.map(a => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${a.type}</strong> — ${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''}
-              <div style="font-size:12px; color:#999;">Status: ${a.status}</div>
+              <div style="font-size:12px; color:var(--text-muted);">Status: ${a.status}</div>
             </div>
             ${a.status !== 'cancelled' && a.status !== 'completed' ? `<button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="cancelMyAppointment('${a._id}')">Cancel</button>` : ''}
           </div>
@@ -4086,12 +4129,12 @@
         const res = await fetch(`${API}/api/orders?limit=50`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const orders = data.data || [];
-        if (orders.length === 0) { list.innerHTML = '<p style="color:#999;">No orders placed yet.</p>'; return; }
+        if (orders.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No orders placed yet.</p>'; return; }
         list.innerHTML = orders.map(o => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${o.orderNumber || o._id}</strong>
-              <div style="font-size:12px; color:#999;">₹${o.pricing?.totalPrice || 0} · Status: ${o.status} · Payment: ${o.paymentStatus || 'pending'}</div>
+              <div style="font-size:12px; color:var(--text-muted);">₹${o.pricing?.totalPrice || 0} · Status: ${o.status} · Payment: ${o.paymentStatus || 'pending'}</div>
             </div>
             ${o.paymentStatus !== 'paid' ? `<button type="button" class="btn-submit" style="width:auto; padding:8px 16px;" onclick="payForOrder('${o._id}')">💳 Pay Now</button>` : '<span style="color:#2e7d32; font-weight:600; font-size:13px;">✅ Paid</span>'}
           </div>
@@ -4152,12 +4195,12 @@
         const res = await fetch(`${API}/api/invoices/my-invoices`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const invoices = data.data || data.invoices || [];
-        if (invoices.length === 0) { list.innerHTML = '<p style="color:#999;">No invoices yet.</p>'; return; }
+        if (invoices.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No invoices yet.</p>'; return; }
         list.innerHTML = invoices.map(inv => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${inv.invoiceNumber || inv._id}</strong>
-              <div style="font-size:12px; color:#999;">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
+              <div style="font-size:12px; color:var(--text-muted);">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
             </div>
             <a class="admin-filter-btn" style="text-decoration:none; display:inline-block;" href="${API}/api/invoices/${inv._id}/download" target="_blank">Download PDF</a>
           </div>
@@ -4183,7 +4226,7 @@
         }
         myDesignsCache = data.designs || [];
         if (myDesignsCache.length === 0) {
-          list.innerHTML = '<p style="color:#999;">You haven\'t generated any designs yet. Head to the AI Design tab to start!</p>';
+          list.innerHTML = '<p style="color:var(--text-muted);">You haven\'t generated any designs yet. Head to the AI Design tab to start!</p>';
           return;
         }
 
@@ -4196,7 +4239,7 @@
               <div style="font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
               <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${statusLabels[d.status] || d.status}</span>
             </div>
-            <div style="font-size:11px; color:#999; margin-top:8px;">${new Date(d.createdAt).toLocaleString('en-IN')} · Tap to view designs again</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">${new Date(d.createdAt).toLocaleString('en-IN')} · Tap to view designs again</div>
           </div>
         `).join('');
       } catch (err) {
@@ -4431,7 +4474,7 @@
 
   </script>
     <!-- FOOTER -->
-    <footer style="text-align: center; padding: 24px 16px; font-size: 12px; color: #999; border-top: 1px solid #eee; margin-top: 40px;">
+    <footer style="text-align: center; padding: 24px 16px; font-size: 12px; color: var(--text-muted); border-top: 1px solid #eee; margin-top: 40px;">
       <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Privacy Notice</a>
       &nbsp;·&nbsp; Gurbani Fashion Boutique &nbsp;·&nbsp; 9899810977
     </footer>
@@ -4439,7 +4482,7 @@
     <!-- PRIVACY NOTICE MODAL -->
     <div id="privacyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
       <div style="background: white; border-radius: 8px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 28px; position: relative;">
-        <button onclick="closePrivacyModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999;">&times;</button>
+        <button onclick="closePrivacyModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted);">&times;</button>
         <h2 style="color: var(--vivid); margin-top: 0;">Privacy Notice</h2>
 
         <h3>What We Collect</h3>
