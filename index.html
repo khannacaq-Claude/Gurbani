@@ -84,30 +84,12 @@
       border-bottom: 4px solid var(--vivid);
     }
 
-    header h1 {
-      font-family: var(--font-script);
-      font-weight: 400;
-      font-size: 54px;
-      margin: 0;
-      letter-spacing: 0;
-      text-transform: none;
-      line-height: 1;
-      color: var(--vivid);
-    }
-    .header-brand {
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
-      gap: 0;
-    }
-    .header-icon {
-      height: 80px;
-      width: auto;
-      flex-shrink: 0;
-      margin-right: -22px;
-      position: relative;
-      top: 18px;
-      z-index: 1;
+    .header-wordmark-final {
+      display: block;
+      max-width: 420px;
+      width: 80%;
+      height: auto;
+      margin: 0 auto;
     }
     header .flourish {
       width: 220px;
@@ -954,8 +936,7 @@
        ============================================================ */
     @media (max-width: 640px) {
       header { padding: 18px 14px 16px 14px; }
-      header h1 { font-size: 38px; }
-      .header-icon { height: 56px; margin-right: -15px; top: 13px; }
+      .header-wordmark-final { max-width: 300px; width: 88%; }
       header .flourish { width: 150px; }
       header p { font-size: 13px; }
 
@@ -1004,8 +985,7 @@
     }
 
     @media (max-width: 400px) {
-      header h1 { font-size: 30px; }
-      .header-icon { height: 44px; margin-right: -12px; top: 10px; }
+      .header-wordmark-final { max-width: 240px; }
       .hero-headline { font-size: 22px; }
     }
   </style>
@@ -1022,10 +1002,7 @@
     </div>
   </div>
   <header>
-    <div class="header-brand">
-      <img src="gurbani_hanger_g_mark.png" alt="Gurbani Fashion" class="header-icon">
-      <h1>urbani Fashion</h1>
-    </div>
+    <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
     <hr class="flourish">
     <p>Your Vision. Your Fit. Stitched to Perfection.</p>
     <div class="header-right">
