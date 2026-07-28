@@ -186,6 +186,25 @@
       border-radius: 30px;
       margin-bottom: 20px;
     }
+    .version-badge {
+      display: inline-block;
+      margin: -10px 0 20px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      vertical-align: middle;
+    }
+    .version-badge .dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--vivid);
+      margin-right: 6px;
+      vertical-align: middle;
+    }
 
     h2 { font-family: var(--font-display); color: var(--ink); font-size: 26px; margin-bottom: 10px; letter-spacing: 0.5px; }
     h3 { font-family: var(--font-display); color: var(--ink); margin-bottom: 8px; font-size: 16px; letter-spacing: 0.3px; }
@@ -926,6 +945,7 @@
     <div class="landing-page" id="landingPage">
       <div class="card">
         <div class="trust-badge">✨ AI-Powered Custom Design Studio</div>
+        <span class="version-badge" id="versionBadge"></span>
         <div class="hero-eyebrow">Finally, a boutique that designs with you...</div>
         <h2 class="hero-headline" style="text-transform: none;">Passion For Fashion. <span class="accent">Designed For You.</span></h2>
         <p>Custom stitched outfits powered by AI design ideas + personalized photo-based styling</p>
@@ -1470,6 +1490,19 @@
   </script>
 
   <script>
+    /* ============================================================
+       SITE VERSION — bump these two lines whenever a change ships.
+       Rendered into the landing-page badge (#versionBadge) below.
+       This is the ONLY place these should be edited.
+       ============================================================ */
+    const APP_VERSION = '8.1';
+    const APP_VERSION_DATE = '2026-07-28';
+    (function renderVersionBadge() {
+      const el = document.getElementById('versionBadge');
+      if (el) el.innerHTML = '<span class="dot"></span>v' + APP_VERSION + ' &middot; ' +
+        new Date(APP_VERSION_DATE + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    })();
+
     /* ============================================================
        COLOR THEME PICKER — customers can pick their own accent theme.
        Only the header/chrome + accent colors change; page body stays
