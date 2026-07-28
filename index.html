@@ -1076,8 +1076,7 @@
           <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
           <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
           <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
-          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees</button>
-          <button class="tab-btn" id="adminPayrollTabBtn" onclick="switchTab(event, 'adminPayroll'); openPayrollGate();" style="display: none;">💵 Payroll</button>
+          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
           <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
         </div>
@@ -1366,13 +1365,14 @@
 
         <!-- ADMIN: EMPLOYEES -->
         <div id="adminEmployees" class="tab-content">
-          <h3>🧑‍🔧 Employees</h3>
+          <h3>🧑‍🔧 Employees &amp; Payroll</h3>
           <div id="employeesGate" class="card" style="padding: 24px; max-width: 360px;">
-            <p style="margin-bottom: 12px;">This section has an extra password lock to protect employee ID documents — a different password from Measurements, since not everyone who can view measurements should see employee data.</p>
+            <p style="margin-bottom: 12px;">This section has an extra password lock to protect employee ID documents and payroll data — a different password from Measurements, since not everyone who can view measurements should see employee/payroll data.</p>
             <input type="password" id="employeesPasswordInput" placeholder="Enter employee data password" style="margin-bottom: 10px;">
             <button type="button" class="btn-submit" onclick="submitEmployeesPassword()">Unlock</button>
           </div>
           <div id="employeesContent" style="display:none;">
+          <h4 style="margin-bottom: 12px;">🧑‍🔧 Employees</h4>
           <div class="card" style="padding: 20px; margin-bottom: 16px;">
             <h4 id="empFormTitle" style="margin-bottom: 12px;">Add Employee</h4>
             <form id="empForm" onsubmit="submitEmployeeForm(event)">
@@ -1403,18 +1403,8 @@
             </form>
           </div>
           <div id="employeesList">Loading...</div>
-          </div>
-        </div>
 
-        <!-- ADMIN: PAYROLL -->
-        <div id="adminPayroll" class="tab-content">
-          <h3>💵 Payroll</h3>
-          <div id="payrollGate" class="card" style="padding: 24px; max-width: 360px;">
-            <p style="margin-bottom: 12px;">This section shares the same password lock as Employees, since payroll data (salaries, bonuses) is just as sensitive.</p>
-            <input type="password" id="payrollPasswordInput" placeholder="Enter employee data password" style="margin-bottom: 10px;">
-            <button type="button" class="btn-submit" onclick="submitPayrollPassword()">Unlock</button>
-          </div>
-          <div id="payrollContent" style="display:none;">
+          <h4 style="margin: 28px 0 12px 0;">💵 Payroll</h4>
           <div class="card" style="padding: 20px; margin-bottom: 16px;">
             <h4 style="margin-bottom: 12px;">Generate Payroll Entry</h4>
             <form id="payrollForm" onsubmit="submitPayrollForm(event)">
@@ -1507,6 +1497,24 @@
               <button type="button" onclick="uploadImportFile('orders')" class="btn-submit" style="width:auto; padding:8px 18px;">Upload &amp; Import</button>
             </div>
             <div id="orderImportResult" style="margin-top:12px; font-size:13px;"></div>
+          </div>
+
+          <div class="card" style="padding:20px; margin-top:20px;">
+            <h4 style="margin-bottom:8px;">🧵 Import Inventory (Fabric/Lace/Button/Thread/Lining)</h4>
+            <p style="font-size:12px; color:#888; margin-bottom:12px;">Columns: <code>itemType</code> (fabric/lace/button/thread/lining, required), <code>code</code> (required, unique), <code>name</code> (required), <code>color</code>, <code>price</code> (required), <code>quantity</code>, <code>category</code>, <code>imageFilename</code> (matches a photo filename you select below)</p>
+            <button type="button" onclick="downloadImportTemplate('inventory')" style="margin-bottom:12px; padding:6px 14px; background:white; border:1px solid #ccc; border-radius:4px; font-size:12px; cursor:pointer;">⬇️ Download Template</button>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div>
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">1. Spreadsheet (.csv only — if you have an Excel file, use "Save As" &rarr; CSV first)</label>
+                <input type="file" id="inventoryImportCsv" accept=".csv">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">2. Photos (select all at once — matched to rows by filename in the <code>imageFilename</code> column)</label>
+                <input type="file" id="inventoryImportPhotos" accept=".jpg,.jpeg,.png,.webp" multiple>
+              </div>
+              <button type="button" onclick="uploadInventoryImportFile()" class="btn-submit" style="width:auto; padding:8px 18px; align-self:flex-start;">Upload &amp; Import</button>
+            </div>
+            <div id="inventoryImportResult" style="margin-top:12px; font-size:13px;"></div>
           </div>
 
           <div class="card" style="padding:20px; margin-top:20px;">
@@ -1706,6 +1714,7 @@
       const templates = {
         customers: { filename: 'customers_template.csv', headers: ['name', 'phone', 'email', 'address'] },
         orders: { filename: 'orders_template.csv', headers: ['customerPhone', 'customerEmail', 'customerName', 'designDescription', 'totalPrice', 'status', 'paymentStatus', 'orderDate', 'deliveryDate', 'notes'] },
+        inventory: { filename: 'inventory_template.csv', headers: ['itemType', 'code', 'name', 'color', 'price', 'quantity', 'category', 'imageFilename'] },
       };
       const t = templates[type];
       if (!t) return;
@@ -1719,6 +1728,151 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    // Minimal CSV parser (handles quoted fields with embedded commas) —
+    // used for the inventory import since photo-matching has to happen
+    // client-side, unlike Customers/Orders which parse server-side.
+    function parseCSVLine(line) {
+      const result = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (ch === ',' && !inQuotes) {
+          result.push(cur); cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      result.push(cur);
+      return result;
+    }
+
+    function parseCSV(text) {
+      const lines = text.split(/\r\n|\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) return [];
+      const headers = parseCSVLine(lines[0]).map(h => h.trim());
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => row[h] = (values[idx] || '').trim());
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    async function resizeFileToBase64(file, maxSize = 1000) {
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+      return billResizeImage(dataUrl, maxSize);
+    }
+
+    const INVENTORY_ITEM_CONFIG = {
+      fabric: { endpoint: 'fabrics', qtyField: 'totalMeters' },
+      lace: { endpoint: 'laces', qtyField: 'totalMeters' },
+      lining: { endpoint: 'linings', qtyField: 'totalMeters' },
+      button: { endpoint: 'buttons', qtyField: 'totalPieces' },
+      thread: { endpoint: 'threads', qtyField: 'totalSpools' },
+    };
+
+    async function uploadInventoryImportFile() {
+      const csvInput = document.getElementById('inventoryImportCsv');
+      const photosInput = document.getElementById('inventoryImportPhotos');
+      const resultEl = document.getElementById('inventoryImportResult');
+
+      if (!csvInput.files || csvInput.files.length === 0) {
+        showToast('Please choose a CSV file first');
+        return;
+      }
+
+      resultEl.innerHTML = '⏳ Importing...';
+
+      const csvText = await csvInput.files[0].text();
+      const rows = parseCSV(csvText);
+
+      const photoMap = {};
+      if (photosInput.files) {
+        Array.from(photosInput.files).forEach((f) => { photoMap[f.name] = f; });
+      }
+
+      let imported = 0, skipped = 0, matchedPhotos = 0;
+      const errors = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const itemType = (row.itemType || '').toLowerCase().trim();
+        const config = INVENTORY_ITEM_CONFIG[itemType];
+        if (!config) {
+          errors.push(`Row ${i + 2}: unknown itemType "${row.itemType}" (must be fabric/lace/button/thread/lining)`);
+          skipped++;
+          continue;
+        }
+
+        const code = (row.code || '').trim();
+        const name = (row.name || '').trim();
+        const price = Number(row.price || 0);
+        const quantity = Number(row.quantity || 0);
+
+        if (!code || !name || !price) {
+          errors.push(`Row ${i + 2}: missing code, name, or price`);
+          skipped++;
+          continue;
+        }
+
+        let images = [];
+        const imageFilename = (row.imageFilename || '').trim();
+        if (imageFilename) {
+          if (photoMap[imageFilename]) {
+            try {
+              const b64 = await resizeFileToBase64(photoMap[imageFilename]);
+              images = [b64];
+              matchedPhotos++;
+            } catch (e) {
+              // photo processing failed — continue without it rather than skipping the whole row
+            }
+          } else {
+            errors.push(`Row ${i + 2} (${code}): imageFilename "${imageFilename}" not found among selected photos — imported without photo`);
+          }
+        }
+
+        const body = {
+          code,
+          name,
+          color: row.color || undefined,
+          price,
+          category: row.category || undefined,
+          inventory: { [config.qtyField]: quantity, available: quantity, reserved: 0 },
+          images,
+        };
+
+        try {
+          const res = await fetch(`${API}/api/inventory/${config.endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (res.ok) imported++;
+          else { errors.push(`Row ${i + 2} (${code}): ${data.error || 'failed'}`); skipped++; }
+        } catch (err) {
+          errors.push(`Row ${i + 2} (${code}): ${err.message}`);
+          skipped++;
+        }
+      }
+
+      let html = `✅ ${imported} imported, ${skipped} skipped out of ${rows.length} rows. (${matchedPhotos} photos matched)`;
+      if (errors.length > 0) {
+        html += `<div style="margin-top:8px; color:#c62828;">Issues:<ul style="margin:4px 0 0 18px;">${errors.slice(0, 20).map((e) => `<li>${e}</li>`).join('')}</ul></div>`;
+      }
+      resultEl.innerHTML = html;
     }
 
     async function uploadImportFile(type) {
@@ -3461,7 +3615,7 @@
       const unlocked = sessionStorage.getItem('employeesUnlocked') === 'true';
       document.getElementById('employeesGate').style.display = unlocked ? 'none' : 'block';
       document.getElementById('employeesContent').style.display = unlocked ? 'block' : 'none';
-      if (unlocked) loadEmployees();
+      if (unlocked) { loadEmployees(); loadPayroll(); }
     }
 
     async function submitEmployeesPassword() {
@@ -3475,35 +3629,6 @@
         if (res.ok) {
           sessionStorage.setItem('employeesUnlocked', 'true');
           openEmployeesGate();
-        } else {
-          showToast('❌ Incorrect password');
-        }
-      } catch (err) {
-        showToast(`❌ ${err.message}`);
-      }
-    }
-
-    // Payroll shares the exact same password/session as Employees — same
-    // backend verify-password endpoint, same sessionStorage key. Unlocking
-    // either tab unlocks both, since they're intentionally the same lock.
-    function openPayrollGate() {
-      const unlocked = sessionStorage.getItem('employeesUnlocked') === 'true';
-      document.getElementById('payrollGate').style.display = unlocked ? 'none' : 'block';
-      document.getElementById('payrollContent').style.display = unlocked ? 'block' : 'none';
-      if (unlocked) loadPayroll();
-    }
-
-    async function submitPayrollPassword() {
-      const password = document.getElementById('payrollPasswordInput').value;
-      try {
-        const res = await fetch(`${API}/api/employees/verify-password`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ password }),
-        });
-        if (res.ok) {
-          sessionStorage.setItem('employeesUnlocked', 'true');
-          openPayrollGate();
         } else {
           showToast('❌ Incorrect password');
         }
@@ -4174,7 +4299,6 @@
         document.getElementById('adminInvoicesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminCustomersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminEmployeesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
-        document.getElementById('adminPayrollTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
 
