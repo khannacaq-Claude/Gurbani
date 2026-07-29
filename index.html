@@ -860,71 +860,26 @@
     }
     .confirm-box .confirm-cancel:hover { background: #f5f5f5; }
 
-    /* ============================================================
-       COLOR THEME PICKER — lets customers switch the site's accent
-       ============================================================ */
-    .theme-picker-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.12);
-      border: 1.5px solid rgba(255,255,255,0.35);
+    .voice-input-btn {
+      background: var(--sand);
+      color: var(--text-ink);
+      border: 1.5px solid var(--vivid);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .voice-input-btn:hover { background: #ece2cc; }
+    .voice-input-btn.recording {
+      background: var(--vivid);
       color: white;
-      font-size: 16px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      animation: voicePulse 1.4s ease-in-out infinite;
     }
-    .theme-picker-panel {
-      display: none;
-      position: absolute;
-      top: 60px;
-      right: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.22);
-      padding: 16px;
-      z-index: 500;
-      width: 240px;
-    }
-    .theme-picker-panel.show { display: block; }
-    .theme-picker-panel h4 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      font-family: var(--font-body);
-    }
-    .theme-swatch-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .theme-swatch {
-      cursor: pointer;
-      text-align: center;
-      padding: 6px 4px;
-      border-radius: 8px;
-      border: 2px solid transparent;
-      transition: border-color 0.15s;
-    }
-    .theme-swatch:hover { background: #fafafa; }
-    .theme-swatch.active { border-color: var(--vivid); }
-    .theme-swatch .swatch-dot {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      margin: 0 auto 6px auto;
-      border: 1px solid rgba(0,0,0,0.08);
-    }
-    .theme-swatch .swatch-label {
-      font-size: 9.5px;
-      color: var(--text-muted);
-      line-height: 1.2;
-      font-family: var(--font-body);
+    @keyframes voicePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(214,140,31,0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(214,140,31,0); }
     }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -949,8 +904,6 @@
         margin-top: 14px;
         flex-wrap: wrap;
       }
-      .theme-picker-panel { right: 50%; transform: translateX(50%); top: auto; }
-
       main { padding: 0 12px; margin: 20px auto; }
       .card { padding: 20px 16px; }
 
@@ -1006,14 +959,9 @@
     <hr class="flourish">
     <p>Your Vision. Your Fit. Stitched to Perfection.</p>
     <div class="header-right">
-      <button type="button" class="theme-picker-btn" onclick="toggleThemePanel()" title="Choose a color theme" aria-label="Choose a color theme">🎨</button>
       <div class="user-welcome" id="userWelcome"></div>
       <div id="signinArea"></div>
       <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
-    </div>
-    <div class="theme-picker-panel" id="themePickerPanel">
-      <h4>Choose a Look</h4>
-      <div class="theme-swatch-grid" id="themeSwatchGrid"></div>
     </div>
   </header>
 
@@ -1076,6 +1024,7 @@
           <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
           <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
+          <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -1134,6 +1083,14 @@
             <div class="form-group">
               <label>📝 Describe Your Dream Outfit</label>
               <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required oninput="validateDescriptionRealtime()"></textarea>
+              <div class="voice-input-row" style="display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+                <button type="button" id="voiceInputBtn" class="voice-input-btn" onclick="toggleVoiceInput()" aria-label="Describe by voice instead of typing">🎤 Speak instead</button>
+                <select id="voiceInputLang" aria-label="Voice input language" style="font-size: 12px; padding: 4px 6px; width: auto;">
+                  <option value="en-IN">English</option>
+                  <option value="hi-IN">हिन्दी</option>
+                </select>
+                <span id="voiceInputStatus" role="status" aria-live="polite" style="font-size: 12px; color: var(--text-muted);"></span>
+              </div>
               <div id="descValidationFeedback" role="status" aria-live="polite" style="margin-top: 8px; font-size: 13px; display: none; padding: 8px 12px; border-radius: 4px; background: #f0f0f0;"></div>
             </div>
             <div class="form-group">
@@ -1584,6 +1541,61 @@
             </div>
           </div>
         </div>
+
+        <!-- QUICK GUIDE (always-available reference, especially for Sonia) -->
+        <div id="adminHelp" class="tab-content">
+          <h3>📖 Quick Guide</h3>
+          <p style="color:#666; margin-bottom:20px; font-size:13px;">A quick reference for using the admin dashboard day to day. This tab is always here — no need to keep a separate printout.</p>
+
+          <div class="card" style="padding:20px; margin-bottom:16px;">
+            <h4 style="margin-bottom:8px;">🔐 Signing In</h4>
+            <p style="font-size:13px; line-height:1.6;">Go to <strong>gurbanifashion.com</strong> and click <strong>Sign in with Google</strong> — use the same Google account every time (pssupplier.in@gmail.com). No separate password needed for sign-in itself.</p>
+          </div>
+
+          <div class="card" style="padding:20px; margin-bottom:16px;">
+            <h4 style="margin-bottom:8px;">📋 Your Tabs</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+              <thead>
+                <tr style="text-align:left; border-bottom:2px solid var(--sand);">
+                  <th style="padding:6px 8px;">Tab</th>
+                  <th style="padding:6px 8px;">What it's for</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 8px; font-weight:600;">🔐 Requests</td><td style="padding:6px 8px;">New AI design requests customers have submitted. Mark as Ordered, Completed, Archived, or add a private note.</td></tr>
+                <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 8px; font-weight:600;">📦 Manage Orders</td><td style="padding:6px 8px;">Confirmed orders — pricing, stitching status, delivery.</td></tr>
+                <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 8px; font-weight:600;">📅 Manage Appointments</td><td style="padding:6px 8px;">Appointment requests coming in via WhatsApp.</td></tr>
+                <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 8px; font-weight:600;">🧾 Invoices</td><td style="padding:6px 8px;">Generate and view customer invoices.</td></tr>
+                <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 8px; font-weight:600;">👥 Customers</td><td style="padding:6px 8px;">Customer list and contact details.</td></tr>
+                <tr style="border-bottom:1px solid #eee;"><td style="padding:6px 8px; font-weight:600;">🧵 Inventory</td><td style="padding:6px 8px;">Fabric, lace, button, thread, lining stock.</td></tr>
+                <tr><td style="padding:6px 8px; font-weight:600;">📏 Measurements</td><td style="padding:6px 8px;">Customer measurements — password-protected (see below).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="padding:20px; margin-bottom:16px;">
+            <h4 style="margin-bottom:8px;">🔑 Measurements Password</h4>
+            <p style="font-size:13px; line-height:1.6;">The Measurements tab asks for a password before it opens — this is on top of your Google sign-in, so it's already two layers of protection. Once you're inside, look for the <strong>"🔑 Change this password"</strong> link to set your own password any time. If you ever forget it, Sanjeev can always get back in using the original recovery password, so nothing is ever permanently locked.</p>
+          </div>
+
+          <div class="card" style="padding:20px; margin-bottom:16px;">
+            <h4 style="margin-bottom:8px;">📱 Installing as an App</h4>
+            <p style="font-size:13px; line-height:1.6;"><strong>Android (Chrome):</strong> open the ⋮ menu → "Add to Home screen".<br>
+            <strong>iPhone (Safari):</strong> tap the Share icon → "Add to Home Screen".<br>
+            This puts a Gurbani Fashion icon on your home screen so you don't need to open a browser and type the address each time.</p>
+          </div>
+
+          <div class="card" style="padding:20px;">
+            <h4 style="margin-bottom:8px;">🛠️ If Something Looks Broken</h4>
+            <ul style="font-size:13px; line-height:1.8; padding-left:20px;">
+              <li>First, try a hard refresh: close the tab/app fully and reopen it.</li>
+              <li>If sign-in isn't working, tap Sign Out (if visible) and sign in again.</li>
+              <li>If a page looks stuck on old information, it may be your phone's saved copy — reinstalling the app icon (remove it, then "Add to Home screen" again) usually fixes this.</li>
+              <li>Anything beyond this — message Sanjeev. Most fixes need access he has and you don't (and that's by design, so you never have to worry about breaking something).</li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -2270,48 +2282,6 @@
         new Date(APP_VERSION_DATE + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     })();
 
-    /* ============================================================
-       COLOR THEME PICKER — customers can pick their own accent theme.
-       Only the header/chrome + accent colors change; page body stays
-       light/cream everywhere so forms and text stay easy to read.
-       ============================================================ */
-    const THEMES = {
-      navy:    { label: 'Midnight Navy', ink: '#141a29', vivid: '#e3ad4b', vividDeep: '#c4912f', marigold: '#F3D488', marigoldDeep: '#d9bd6e' },
-      emerald: { label: 'Emerald & Gold', ink: '#0f2e24', vivid: '#d4af37', vividDeep: '#b8952c', marigold: '#e8cf7a', marigoldDeep: '#cdb35e' },
-      wine:    { label: 'Wine & Gold',    ink: '#3d1220', vivid: '#d9a441', vividDeep: '#b98a34', marigold: '#e8c27a', marigoldDeep: '#cba75f' },
-      charcoal:{ label: 'Charcoal & Rose Gold', ink: '#1c1c1c', vivid: '#cd919e', vividDeep: '#b57786', marigold: '#e0b3bd', marigoldDeep: '#c99aa5' },
-      ivory:   { label: 'Ivory & Bronze', ink: '#5a4626', vivid: '#9c6b1f', vividDeep: '#7d551a', marigold: '#c99a3d', marigoldDeep: '#a97f2e' },
-      blush:   { label: 'Blush & Wine',   ink: '#5a2a30', vivid: '#7a2436', vividDeep: '#611c2b', marigold: '#c98a94', marigoldDeep: '#b06f7a' },
-    };
-
-    function applyTheme(themeKey, save = true) {
-      const t = THEMES[themeKey];
-      if (!t) return;
-      const root = document.documentElement.style;
-      root.setProperty('--ink', t.ink);
-      root.setProperty('--vivid', t.vivid);
-      root.setProperty('--vivid-deep', t.vividDeep);
-      root.setProperty('--marigold', t.marigold);
-      root.setProperty('--marigold-deep', t.marigoldDeep);
-      if (save) localStorage.setItem('gurbaniTheme', themeKey);
-      document.querySelectorAll('.theme-swatch').forEach(el => el.classList.toggle('active', el.dataset.theme === themeKey));
-    }
-
-    function toggleThemePanel() {
-      document.getElementById('themePickerPanel').classList.toggle('show');
-    }
-
-    function renderThemeSwatches() {
-      const grid = document.getElementById('themeSwatchGrid');
-      const current = localStorage.getItem('gurbaniTheme') || 'navy';
-      grid.innerHTML = Object.entries(THEMES).map(([key, t]) => `
-        <div class="theme-swatch ${key === current ? 'active' : ''}" data-theme="${key}" onclick="applyTheme('${key}')">
-          <div class="swatch-dot" style="background: linear-gradient(135deg, ${t.ink} 50%, ${t.vivid} 50%);"></div>
-          <div class="swatch-label">${t.label}</div>
-        </div>
-      `).join('');
-    }
-
     // Pairs each <label> with the nearest input/select/textarea sharing its
     // parent container, so screen readers associate the label when focusing
     // or clicking the field. Runtime-based rather than hand-editing every
@@ -2328,18 +2298,8 @@
       });
     }
 
-    renderThemeSwatches();
-    applyTheme(localStorage.getItem('gurbaniTheme') || 'navy', false);
     initTabAria();
     initLabelPairing();
-
-    document.addEventListener('click', (e) => {
-      const panel = document.getElementById('themePickerPanel');
-      const btn = document.querySelector('.theme-picker-btn');
-      if (panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn) {
-        panel.classList.remove('show');
-      }
-    });
 
     // Swaps emoji tab icons for real SVG icons (Lucide) — emoji render
     // inconsistently across Windows/Mac/Android and get read aloud by
@@ -2362,6 +2322,7 @@
       adminEmployeesTabBtn: { icon: 'user-cog', label: 'Employees & Payroll' },
       adminMeasurementsTabBtn: { icon: 'ruler', label: 'Measurements' },
       adminImportTabBtn: { icon: 'upload', label: 'Import Data' },
+      adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
     };
     let _tabIconsLoaded = false;
     async function loadTabIcons() {
@@ -2374,8 +2335,6 @@
           if (!btn) return;
           btn.innerHTML = `<i data-lucide="${cfg.icon}" aria-hidden="true" class="tab-icon"></i> ${cfg.label}`;
         });
-        const themeBtn = document.querySelector('.theme-picker-btn');
-        if (themeBtn) themeBtn.innerHTML = `<i data-lucide="palette" aria-hidden="true" class="tab-icon"></i>`;
         const signOutBtn = document.getElementById('signOutBtn');
         if (signOutBtn) signOutBtn.innerHTML = `<i data-lucide="log-out" aria-hidden="true" class="tab-icon"></i> Sign Out`;
         lucide.createIcons({ attrs: { stroke: 'currentColor', 'stroke-width': 2 } });
@@ -4500,6 +4459,7 @@
         document.getElementById('adminEmployeesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
 
         // Simplified view for staff who aren't comfortable with tech (Sonia) —
         // hides power-user/business-owner tools (bulk import, bill scanner,
@@ -4509,6 +4469,8 @@
         // needs (Requests/Orders/Appointments/Invoices/Customers/Inventory/
         // Measurements) is affected. Add more emails here if other staff
         // need the same simplified view later.
+        // Quick Guide stays visible in the simplified view deliberately —
+        // it's reference material for exactly the tabs Sonia does see.
         const SIMPLIFIED_VIEW_EMAILS = ['pssupplier.in@gmail.com'];
         if (currentUser.role === 'admin' && SIMPLIFIED_VIEW_EMAILS.includes((currentUser.email || '').toLowerCase())) {
           document.getElementById('profitTabBtn').style.display = 'none';
@@ -4545,6 +4507,7 @@
 
     window.addEventListener('load', () => {
       renderUpcomingFeaturesTeaser();
+      initVoiceInput();
       const savedToken = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('currentUser');
       
@@ -4576,6 +4539,96 @@
         setStatus('designStatus', '✅ Ready to sign in', 'success');
       }
     });
+    // Voice input for the design description — native browser Web Speech
+    // API, no new dependency. Appends to whatever's already typed rather
+    // than replacing it, so customers can mix typing and speaking freely.
+    // Hindi/Hinglish code-switching isn't perfectly accurate with either
+    // language setting (this is an inherent limitation of the browser API,
+    // not something we can fix here) — the language dropdown lets a
+    // customer pick whichever gets closer for what they're saying, and the
+    // transcript stays fully editable in the textarea either way.
+    let voiceRecognition = null;
+    let voiceRecognizing = false;
+
+    function initVoiceInput() {
+      const micBtn = document.getElementById('voiceInputBtn');
+      const langSelect = document.getElementById('voiceInputLang');
+      const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognitionCtor) {
+        // Not supported (e.g. Firefox, some older browsers) — hide the
+        // control entirely; typing the description still works as normal.
+        if (micBtn) micBtn.style.display = 'none';
+        if (langSelect) langSelect.style.display = 'none';
+        return;
+      }
+
+      voiceRecognition = new SpeechRecognitionCtor();
+      voiceRecognition.continuous = true;
+      voiceRecognition.interimResults = true;
+      voiceRecognition.lang = langSelect.value;
+
+      let baseText = '';
+      let finalTranscript = '';
+
+      voiceRecognition.onstart = () => {
+        voiceRecognizing = true;
+        baseText = document.getElementById('designDesc').value;
+        finalTranscript = '';
+        micBtn.textContent = '⏹️ Stop';
+        micBtn.classList.add('recording');
+        document.getElementById('voiceInputStatus').textContent = '🎙️ Listening…';
+      };
+
+      voiceRecognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+        const textarea = document.getElementById('designDesc');
+        const needsSpace = baseText && !/[\s]$/.test(baseText);
+        textarea.value = (baseText + (needsSpace ? ' ' : '') + finalTranscript + interim).trim();
+        validateDescriptionRealtime();
+      };
+
+      voiceRecognition.onerror = (event) => {
+        const statusEl = document.getElementById('voiceInputStatus');
+        statusEl.textContent = event.error === 'not-allowed'
+          ? '🚫 Microphone permission denied — you can still type'
+          : '⚠️ Voice input hiccup — you can still type';
+      };
+
+      voiceRecognition.onend = () => {
+        voiceRecognizing = false;
+        micBtn.textContent = '🎤 Speak instead';
+        micBtn.classList.remove('recording');
+        document.getElementById('voiceInputStatus').textContent = '';
+      };
+
+      langSelect.addEventListener('change', () => {
+        if (voiceRecognition) voiceRecognition.lang = langSelect.value;
+      });
+    }
+
+    function toggleVoiceInput() {
+      if (!voiceRecognition) return;
+      if (voiceRecognizing) {
+        voiceRecognition.stop();
+        return;
+      }
+      try {
+        voiceRecognition.lang = document.getElementById('voiceInputLang').value;
+        voiceRecognition.start();
+      } catch (err) {
+        console.error('Voice input failed to start:', err);
+        document.getElementById('voiceInputStatus').textContent = '⚠️ Could not start voice input';
+      }
+    }
+
     function validateDescriptionRealtime() {
       const textarea = document.getElementById('designDesc');
       const feedback = document.getElementById('descValidationFeedback');
