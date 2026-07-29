@@ -1356,6 +1356,15 @@
           </div>
 
           <div class="card" style="padding:20px; margin-bottom:20px;">
+            <h4 style="margin-bottom:8px;">📥 Import Paytm Transactions</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Upload a transaction report exported from your Paytm Business dashboard (Reports & Invoices → Reports). Safe to import any date range, any time — already-imported transactions are automatically skipped, never double-counted.</p>
+            <input type="file" id="paytmImportFile" accept=".csv,.xlsx,.xls" style="margin-bottom:10px;">
+            <br>
+            <button type="button" onclick="submitPaytmImport()" id="paytmImportBtn" class="btn-submit" style="width:auto; padding:10px 24px;">Import File</button>
+            <div id="paytmImportResult" style="margin-top:14px;"></div>
+          </div>
+
+          <div class="card" style="padding:20px; margin-bottom:20px;">
             <h4 style="margin-bottom:12px;">➕ Add Entry</h4>
             <div style="display:flex; gap:8px; margin-bottom:12px;">
               <button type="button" id="cashTypeInBtn" class="admin-filter-btn active" onclick="setCashEntryType('in')" style="flex:1;">💰 Cash In</button>
@@ -3914,6 +3923,51 @@
         loadCashDay();
       } catch (err) {
         showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function submitPaytmImport() {
+      const fileInput = document.getElementById('paytmImportFile');
+      const resultDiv = document.getElementById('paytmImportResult');
+      if (!fileInput.files.length) {
+        showToast('❌ Choose a file first');
+        return;
+      }
+      const btn = document.getElementById('paytmImportBtn');
+      btn.disabled = true;
+      btn.textContent = 'Importing...';
+      resultDiv.innerHTML = '';
+
+      try {
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        const res = await fetch(`${API}/api/paytm/import`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          resultDiv.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Import failed'}</p>`;
+          return;
+        }
+        const s = data.summary;
+        resultDiv.innerHTML = `
+          <div style="background:#f0f7f0; border-radius:8px; padding:12px 16px; font-size:13px;">
+            ✅ <strong>${s.imported}</strong> new transaction(s) added to the Cash Register<br>
+            ${s.duplicates > 0 ? `↻ ${s.duplicates} already imported before (skipped)<br>` : ''}
+            ${s.skippedNotSuccess > 0 ? `⏭️ ${s.skippedNotSuccess} not-successful transaction(s) skipped<br>` : ''}
+            ${s.errorCount > 0 ? `⚠️ ${s.errorCount} row(s) couldn't be read — check the file's Transaction_ID/Amount/Transaction_Date columns` : ''}
+          </div>
+        `;
+        showToast(`✅ Imported ${s.imported} transaction(s)`);
+        fileInput.value = '';
+        loadCashDay(); // refresh totals since the import may have added entries for today
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Import File';
       }
     }
 
