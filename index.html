@@ -1026,6 +1026,10 @@
           </div>
         </div>
         <p style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 28px; letter-spacing: 0.3px;">✨ Always adding something new</p>
+
+        <h3 id="landingRateCardHeading" style="margin-top:36px; text-align:center;">💰 Starting Prices</h3>
+        <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">A quick idea before you sign in — full rate card and exact quotes inside.</p>
+        <div id="landingRateCardTeaser" class="grid"></div>
       </div>
     </div>
 
@@ -1041,6 +1045,7 @@
           <button class="tab-btn" id="profileTabBtn" onclick="switchTab(event, 'profile'); loadProfileTab();">👤 My Profile</button>
           <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
           <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
+          <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
@@ -1273,6 +1278,14 @@
           <div id="myOrdersList">Loading...</div>
           <h4 style="margin: 24px 0 10px 0;">🧾 My Invoices</h4>
           <div id="myInvoicesList">Loading...</div>
+        </div>
+
+        <!-- RATE CARD (customers: read-only; admins: editable) -->
+        <div id="rateCard" class="tab-content">
+          <h3>💰 Standard Rate Card</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Indicative starting prices — your final quote depends on fabric, design complexity, and any customization. Ask Sonia for an exact quote.</p>
+          <div id="rateCardAdminControls" style="display:none; margin-bottom:20px;"></div>
+          <div id="rateCardList">Loading...</div>
         </div>
 
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
@@ -2476,6 +2489,38 @@
     // this before interpolating into a template that gets assigned to
     // .innerHTML. Numbers, dates, and admin-authored static UI strings
     // don't need it.
+    async function loadLandingRateCardTeaser() {
+      const container = document.getElementById('landingRateCardTeaser');
+      if (!container) return;
+      try {
+        const res = await fetch(`${API}/api/ratecard`);
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.items.length) return;
+
+        const lowestByCategory = {};
+        data.items.forEach(i => {
+          if (i.priceFrom <= 0) return; // not priced yet — don't advertise ₹0 publicly
+          if (!lowestByCategory[i.category] || i.priceFrom < lowestByCategory[i.category]) {
+            lowestByCategory[i.category] = i.priceFrom;
+          }
+        });
+        if (Object.keys(lowestByCategory).length === 0) {
+          document.getElementById('landingRateCardHeading').style.display = 'none';
+          document.getElementById('landingRateCardSubtitle').style.display = 'none';
+          return;
+        }
+        container.innerHTML = Object.entries(lowestByCategory).map(([cat, price]) => `
+          <div class="feature-box" onclick="promptSignIn('Rate Card')" style="text-align:center;">
+            <h3 style="font-size:15px;">${escapeHtml(cat)}</h3>
+            <p style="font-size:13px; color:var(--vivid-deep); font-weight:700;">Starting ₹${price.toLocaleString('en-IN')}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        // Silent fail — this is a nice-to-have teaser, not critical
+        console.error('loadLandingRateCardTeaser error:', err);
+      }
+    }
+
     function escapeHtml(value) {
       if (value === null || value === undefined) return '';
       return String(value)
@@ -3621,6 +3666,177 @@
       cashSelectedDate = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
       picker.value = cashSelectedDate;
       loadCashDay();
+    }
+
+    // ============================================================
+    // RATE CARD — everyone signed in can view it; admins (Sanjeev +
+    // Sonia) get inline add/edit/delete controls, no code deploy
+    // needed to change a price.
+    // ============================================================
+    let rateCardEditingId = null;
+
+    async function loadRateCardTab() {
+      const list = document.getElementById('rateCardList');
+      const adminControls = document.getElementById('rateCardAdminControls');
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      adminControls.style.display = isAdmin ? 'block' : 'none';
+      if (isAdmin) renderRateCardForm();
+
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/ratecard`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load rate card'}</p>`;
+          return;
+        }
+        renderRateCardList(data.items, isAdmin);
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function renderRateCardList(items, isAdmin) {
+      const list = document.getElementById('rateCardList');
+      if (!items.length) {
+        list.innerHTML = '<p style="color:var(--text-muted);">No rates added yet.</p>';
+        return;
+      }
+      const byCategory = {};
+      items.forEach(i => {
+        if (!byCategory[i.category]) byCategory[i.category] = [];
+        byCategory[i.category].push(i);
+      });
+      list.innerHTML = Object.entries(byCategory).map(([cat, rows]) => `
+        <div class="card" style="padding:16px 20px; margin-bottom:14px;">
+          <h4 style="margin-bottom:10px; color:var(--vivid-deep);">${escapeHtml(cat)}</h4>
+          ${rows.map(r => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee; gap:10px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:14px;">${escapeHtml(r.item)}</div>
+                ${r.note ? `<div style="font-size:11px; color:var(--text-muted);">${escapeHtml(r.note)}</div>` : ''}
+                ${r.offer ? `<div style="display:inline-block; margin-top:4px; padding:2px 8px; border-radius:12px; background:var(--marigold); color:var(--ink); font-size:11px; font-weight:700;">🎉 ${escapeHtml(r.offer)}</div>` : ''}
+              </div>
+              <div style="font-weight:700; white-space:nowrap;">
+                ${r.priceFrom > 0 ? `₹${r.priceFrom.toLocaleString('en-IN')}${r.priceTo ? ' – ₹' + r.priceTo.toLocaleString('en-IN') : ''}` : '<span style="font-weight:400; font-style:italic; color:var(--text-muted); font-size:12px;">Price coming soon</span>'}
+                ${r.unit && r.priceFrom > 0 ? `<span style="font-weight:400; font-size:11px; color:var(--text-muted);"> ${escapeHtml(r.unit)}</span>` : ''}
+              </div>
+              ${isAdmin ? `
+                <div style="display:flex; gap:4px;">
+                  <button type="button" onclick='editRateCardItem(${JSON.stringify(r).replace(/'/g, "&#39;")})' style="background:none; border:none; cursor:pointer; font-size:14px;">✏️</button>
+                  <button type="button" onclick="deleteRateCardItem('${r._id}')" style="background:none; border:none; cursor:pointer; font-size:14px;">🗑️</button>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    function renderRateCardForm() {
+      const container = document.getElementById('rateCardAdminControls');
+      container.innerHTML = `
+        <div class="card" style="padding:18px 20px;">
+          <h4 id="rateCardFormTitle" style="margin-bottom:12px;">➕ Add a Rate</h4>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div class="form-group" style="margin:0;"><label>Category</label><input type="text" id="rcCategory" placeholder="e.g. Lehenga"></div>
+            <div class="form-group" style="margin:0;"><label>Item</label><input type="text" id="rcItem" placeholder="e.g. Bridal / heavy embroidery"></div>
+          </div>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div class="form-group" style="margin:0;"><label>Price From (₹)</label><input type="number" id="rcPriceFrom" min="0"></div>
+            <div class="form-group" style="margin:0;"><label>Price To (₹, optional)</label><input type="number" id="rcPriceTo" min="0"></div>
+          </div>
+          <div class="grid-2" style="margin-bottom:12px;">
+            <div class="form-group" style="margin:0;"><label>Unit (optional)</label><input type="text" id="rcUnit" placeholder="e.g. per piece"></div>
+            <div class="form-group" style="margin:0;"><label>Note (optional)</label><input type="text" id="rcNote" placeholder="e.g. excludes fabric cost"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Current Offer (optional)</label>
+            <input type="text" id="rcOffer" placeholder="e.g. 15% off for July bookings — shown as a highlighted badge">
+          </div>
+          <button type="button" onclick="submitRateCardItem()" class="btn-submit" style="width:auto; padding:10px 24px;" id="rcSubmitBtn">Add Rate</button>
+          <button type="button" onclick="cancelRateCardEdit()" id="rcCancelBtn" style="display:none; padding:10px 24px; margin-left:8px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
+        </div>
+      `;
+    }
+
+    function editRateCardItem(item) {
+      rateCardEditingId = item._id;
+      document.getElementById('rateCardFormTitle').textContent = '✏️ Edit Rate';
+      document.getElementById('rcCategory').value = item.category;
+      document.getElementById('rcItem').value = item.item;
+      document.getElementById('rcPriceFrom').value = item.priceFrom;
+      document.getElementById('rcPriceTo').value = item.priceTo || '';
+      document.getElementById('rcUnit').value = item.unit || '';
+      document.getElementById('rcNote').value = item.note || '';
+      document.getElementById('rcOffer').value = item.offer || '';
+      document.getElementById('rcSubmitBtn').textContent = 'Save Changes';
+      document.getElementById('rcCancelBtn').style.display = 'inline-block';
+      document.getElementById('rateCardAdminControls').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function cancelRateCardEdit() {
+      rateCardEditingId = null;
+      renderRateCardForm();
+    }
+
+    async function submitRateCardItem() {
+      const category = document.getElementById('rcCategory').value.trim();
+      const item = document.getElementById('rcItem').value.trim();
+      const priceFrom = document.getElementById('rcPriceFrom').value;
+      const priceTo = document.getElementById('rcPriceTo').value;
+      const unit = document.getElementById('rcUnit').value.trim();
+      const note = document.getElementById('rcNote').value.trim();
+      const offer = document.getElementById('rcOffer').value.trim();
+
+      if (!category || !item || priceFrom === '') {
+        showToast('❌ Category, item, and price from are required (use 0 if not decided yet)');
+        return;
+      }
+
+      const body = JSON.stringify({ category, item, priceFrom, priceTo, unit, note, offer });
+      const isEdit = !!rateCardEditingId;
+      const url = isEdit ? `${API}/api/ratecard/${rateCardEditingId}` : `${API}/api/ratecard`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body,
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to save'}`);
+          return;
+        }
+        showToast(isEdit ? '✅ Rate updated' : '✅ Rate added');
+        rateCardEditingId = null;
+        renderRateCardForm();
+        loadRateCardTab();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function deleteRateCardItem(itemId) {
+      const confirmed = await showConfirm('Delete this rate card entry?');
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`${API}/api/ratecard/${itemId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to delete'}`);
+          return;
+        }
+        showToast('✅ Deleted');
+        loadRateCardTab();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
     }
 
     async function loadCashDay() {
@@ -4879,6 +5095,7 @@
     window.addEventListener('load', () => {
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
+      loadLandingRateCardTeaser();
       const savedToken = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('currentUser');
       
