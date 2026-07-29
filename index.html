@@ -1363,7 +1363,9 @@
           <div class="card" style="padding:20px; margin-bottom:20px;">
             <h4 style="margin-bottom:8px;">📥 Import Paytm Transactions</h4>
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Upload a transaction report exported from your Paytm Business dashboard (Reports & Invoices → Reports). Safe to import any date range, any time — already-imported transactions are automatically skipped, never double-counted.</p>
-            <input type="file" id="paytmImportFile" accept=".csv,.xlsx,.xls" style="margin-bottom:10px;">
+            <button type="button" onclick="document.getElementById('paytmImportFile').click()" style="padding:10px 20px; border-radius:8px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer; margin-bottom:10px;">📎 Choose File</button>
+            <span id="paytmImportFileName" style="font-size:12px; color:var(--text-muted); margin-left:10px;">No file chosen</span>
+            <input type="file" id="paytmImportFile" accept=".csv,.xlsx,.xls" onchange="document.getElementById('paytmImportFileName').textContent = this.files[0]?.name || 'No file chosen'" style="margin-bottom:10px;">
             <br>
             <button type="button" onclick="submitPaytmImport()" id="paytmImportBtn" class="btn-submit" style="width:auto; padding:10px 24px;">Import File</button>
             <div id="paytmImportResult" style="margin-top:14px;"></div>
@@ -1454,6 +1456,18 @@
         <!-- ADMIN: INVOICES -->
         <div id="adminInvoices" class="tab-content">
           <h3>🧾 All Invoices</h3>
+
+          <div class="card" style="padding:16px 20px; margin-bottom:16px;">
+            <h4 style="margin-bottom:8px;">🔎 Find Unsettled Invoices by Phone</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Search a customer's phone number to see what they still owe — settle right after a cash/Paytm payment comes in, whenever that happens to be.</p>
+            <div style="display:flex; gap:8px;">
+              <input type="tel" id="invoicePhoneSearch" placeholder="Customer phone number" style="flex:1;">
+              <button type="button" onclick="searchUnsettledByPhone()" class="admin-filter-btn" style="white-space:nowrap;">Search</button>
+              <button type="button" onclick="loadAllUnsettledInvoices()" class="admin-filter-btn" style="white-space:nowrap;">Show All Unsettled</button>
+            </div>
+            <div id="unsettledInvoicesList" style="margin-top:14px;"></div>
+          </div>
+
           <div id="adminInvoicesList">Loading...</div>
         </div>
 
@@ -3928,6 +3942,34 @@
       }
     }
 
+    async function offerInvoiceSettlementIfAny(phone, amountJustPaid) {
+      if (!phone) return;
+      try {
+        const res = await fetch(`${API}/api/invoices/unsettled?phone=${encodeURIComponent(phone)}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.invoices.length) return;
+
+        const inv = data.invoices[0]; // most recent unsettled invoice for this phone
+        const owed = inv.remainingAmount ?? inv.totalAmount;
+        const confirmed = await showConfirm(`${inv.customerDetails?.name || 'This customer'} has an unsettled invoice ${inv.invoiceNumber} — ₹${owed} owed. Mark it settled with this ₹${amountJustPaid} payment?`);
+        if (!confirmed) return;
+
+        const settleRes = await fetch(`${API}/api/invoices/${inv._id}/settle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ amountPaid: Math.min(amountJustPaid, owed), paymentMethod: 'Cash' }),
+        });
+        const settleData = await settleRes.json();
+        if (settleRes.ok && settleData.success) {
+          showToast(settleData.invoice.status === 'paid' ? '✅ Invoice fully settled' : '✅ Partial payment recorded on invoice');
+        }
+      } catch (err) {
+        console.error('offerInvoiceSettlementIfAny error:', err);
+      }
+    }
+
     async function submitCashEntry() {
       const amount = Number(document.getElementById('cashEntryAmount').value);
       const category = document.getElementById('cashEntryCategory').value;
@@ -3962,6 +4004,7 @@
         document.getElementById('cashEntryCustomerPhone').value = '';
         showToast('✅ Entry added');
         loadCashDay();
+        if (isCustomerPayment) offerInvoiceSettlementIfAny(customerPhone, amount);
       } catch (err) {
         showToast(`❌ ${err.message}`);
       }
@@ -4183,6 +4226,7 @@
         document.getElementById('quickCashCustomerName').value = '';
         document.getElementById('quickCashCustomerPhone').value = '';
         document.getElementById('quickCashAmount').focus();
+        if (isCustomerPayment) offerInvoiceSettlementIfAny(customerPhone, amount);
       } catch (err) {
         showToast(`❌ ${err.message}`);
       } finally {
@@ -4441,6 +4485,76 @@
     }
 
     // ---------- ADMIN: INVOICES ----------
+    async function searchUnsettledByPhone() {
+      const phone = document.getElementById('invoicePhoneSearch').value.trim();
+      if (!phone) {
+        showToast('❌ Enter a phone number to search');
+        return;
+      }
+      await fetchAndRenderUnsettled(`${API}/api/invoices/unsettled?phone=${encodeURIComponent(phone)}`);
+    }
+
+    async function loadAllUnsettledInvoices() {
+      document.getElementById('invoicePhoneSearch').value = '';
+      await fetchAndRenderUnsettled(`${API}/api/invoices/unsettled`);
+    }
+
+    async function fetchAndRenderUnsettled(url) {
+      const list = document.getElementById('unsettledInvoicesList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Search failed'}</p>`;
+          return;
+        }
+        if (!data.invoices.length) {
+          list.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nothing owed — all clear ✅</p>';
+          return;
+        }
+        list.innerHTML = data.invoices.map(inv => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee; gap:10px; flex-wrap:wrap;">
+            <div>
+              <strong>${escapeHtml(inv.invoiceNumber)}</strong> — ${escapeHtml(inv.customerDetails?.name || '')} (${escapeHtml(inv.customerDetails?.phone || '')})
+              <div style="font-size:12px; color:var(--text-muted);">Total ₹${inv.totalAmount} · Paid ₹${inv.paidAmount || 0} · <strong style="color:#c62828;">Owed ₹${inv.remainingAmount ?? inv.totalAmount}</strong></div>
+            </div>
+            <button type="button" onclick="settleInvoicePrompt('${inv._id}', ${inv.remainingAmount ?? inv.totalAmount})" class="admin-filter-btn" style="white-space:nowrap;">💰 Settle</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function settleInvoicePrompt(invoiceId, remainingAmount) {
+      const amountStr = window.prompt(`Amount received (owed: ₹${remainingAmount}):`, remainingAmount);
+      if (!amountStr) return;
+      const amountPaid = Number(amountStr);
+      if (!amountPaid || amountPaid <= 0) {
+        showToast('❌ Invalid amount');
+        return;
+      }
+      const paymentMethod = window.prompt('Paid via? (e.g. Cash, Paytm QR, Razorpay)', 'Cash') || '';
+      try {
+        const res = await fetch(`${API}/api/invoices/${invoiceId}/settle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ amountPaid, paymentMethod }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to settle'}`);
+          return;
+        }
+        showToast(data.invoice.status === 'paid' ? '✅ Invoice fully settled' : '✅ Partial payment recorded');
+        document.getElementById('invoicePhoneSearch').value ? searchUnsettledByPhone() : loadAllUnsettledInvoices();
+        loadAdminInvoices();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function loadAdminInvoices() {
       const list = document.getElementById('adminInvoicesList');
       list.innerHTML = 'Loading...';
@@ -4449,13 +4563,18 @@
         const data = await res.json();
         const invoices = data.data || data.invoices || [];
         if (invoices.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No invoices yet.</p>'; return; }
+        const statusColor = { paid: '#2e7d32', 'partially-paid': '#e08e00', draft: '#888', sent: '#888', viewed: '#888' };
         list.innerHTML = invoices.map(inv => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong>${inv.invoiceNumber || inv._id}</strong> — ${inv.customerId?.name || inv.orderId?.customerId?.name || ''}
-              <div style="font-size:12px; color:var(--text-muted);">₹${inv.totalAmount || inv.amount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
+              <span style="font-size:11px; font-weight:700; color:${statusColor[inv.status] || '#888'}; margin-left:6px; text-transform:uppercase;">${inv.status || 'draft'}</span>
+              <div style="font-size:12px; color:var(--text-muted);">₹${inv.totalAmount || inv.amount || 0} · Paid ₹${inv.paidAmount || 0} · ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</div>
             </div>
-            <a class="admin-filter-btn" style="text-decoration:none; display:inline-block;" href="${API}/api/invoices/${inv._id}/download" target="_blank">Download PDF</a>
+            <div style="display:flex; gap:6px;">
+              ${inv.status !== 'paid' ? `<button type="button" onclick="settleInvoicePrompt('${inv._id}', ${(inv.remainingAmount ?? inv.totalAmount) || 0})" class="admin-filter-btn" style="white-space:nowrap;">💰 Settle</button>` : ''}
+              <a class="admin-filter-btn" style="text-decoration:none; display:inline-block;" href="${API}/api/invoices/${inv._id}/download" target="_blank">Download PDF</a>
+            </div>
           </div>
         `).join('');
       } catch (err) {
