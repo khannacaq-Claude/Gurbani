@@ -1019,6 +1019,7 @@
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
+          <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
           <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
           <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
           <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
@@ -1270,6 +1271,69 @@
             <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('delivered', event)">Delivered</button>
           </div>
           <div id="adminOrdersList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: DAILY CASH REGISTER (replaces Sonia's handwritten register) -->
+        <div id="adminCash" class="tab-content">
+          <h3>💵 Cash Register</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Log every cash in and cash out as it happens — this replaces the handwritten register. The balance below is always calculated from every entry ever logged, so it can't drift.</p>
+
+          <div style="display:flex; gap:10px; margin-bottom:16px;">
+            <button type="button" onclick="changeCashDay(-1)" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;">◀</button>
+            <input type="date" id="cashDayPicker" onchange="loadCashDay()" style="flex:1;">
+            <button type="button" onclick="changeCashDay(1)" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;">▶</button>
+          </div>
+
+          <div class="grid-4" style="margin-bottom:10px;">
+            <div class="card" style="padding:14px; text-align:center;">
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">OPENING BALANCE</div>
+              <div id="cashOpeningBalance" style="font-size:18px; font-weight:700;">₹0</div>
+            </div>
+            <div class="card" style="padding:14px; text-align:center;">
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">CASH IN TODAY</div>
+              <div id="cashTotalIn" style="font-size:18px; font-weight:700; color:#2e7d32;">₹0</div>
+            </div>
+            <div class="card" style="padding:14px; text-align:center;">
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">CASH OUT TODAY</div>
+              <div id="cashTotalOut" style="font-size:18px; font-weight:700; color:#c62828;">₹0</div>
+            </div>
+            <div class="card" style="padding:14px; text-align:center; background:var(--sand);">
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">CLOSING BALANCE</div>
+              <div id="cashClosingBalance" style="font-size:18px; font-weight:700;">₹0</div>
+            </div>
+          </div>
+          <div class="card" style="padding:10px 14px; margin-bottom:20px; font-size:12px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+            <span>📲 Paytm QR collected today (bank, not cash-in-hand — tracked separately)</span>
+            <strong id="cashTotalQR" style="color:var(--text-ink);">₹0</strong>
+          </div>
+
+          <div class="card" style="padding:20px; margin-bottom:20px;">
+            <h4 style="margin-bottom:12px;">➕ Add Entry</h4>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button type="button" id="cashTypeInBtn" class="admin-filter-btn active" onclick="setCashEntryType('in')" style="flex:1;">💰 Cash In</button>
+              <button type="button" id="cashTypeOutBtn" class="admin-filter-btn" onclick="setCashEntryType('out')" style="flex:1;">💸 Cash Out</button>
+            </div>
+            <div class="grid-2" style="margin-bottom:12px;">
+              <div class="form-group" style="margin:0;">
+                <label>Amount (₹)</label>
+                <input type="number" id="cashEntryAmount" min="0" step="1" placeholder="e.g. 1500">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Category</label>
+                <select id="cashEntryCategory"></select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Note (optional)</label>
+              <input type="text" id="cashEntryNote" placeholder="e.g. Ramesh — lehenga advance">
+            </div>
+            <button type="button" onclick="submitCashEntry()" class="btn-submit" style="width:auto; padding:10px 28px;">Add Entry</button>
+          </div>
+
+          <div class="card" style="padding:20px;">
+            <h4 style="margin-bottom:12px;">📋 Today's Entries</h4>
+            <div id="cashEntriesList">Loading...</div>
+          </div>
         </div>
 
         <!-- ADMIN: INVENTORY MANAGEMENT -->
@@ -2317,6 +2381,7 @@
       adminTabBtn: { icon: 'shield-check', label: 'Admin: Requests' },
       profitTabBtn: { icon: 'trending-up', label: 'Profit Dashboard' },
       adminOrdersTabBtn: { icon: 'package', label: 'Manage Orders' },
+      adminCashTabBtn: { icon: 'banknote', label: 'Cash Register' },
       adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
       adminAppointmentsTabBtn: { icon: 'calendar-check', label: 'Manage Appointments' },
       adminInvoicesTabBtn: { icon: 'receipt', label: 'Invoices' },
@@ -3445,6 +3510,151 @@
     let allAdminOrders = [];
     let currentAdminOrderFilter = 'all';
 
+    // ============================================================
+    // CASH REGISTER — Sonia's daily cash inflow/outflow tracking,
+    // replacing the handwritten register. Balance is always computed
+    // server-side from the full entry history, never trusted from
+    // the client, so it can't drift.
+    // ============================================================
+    const CASH_CATEGORIES = {
+      in: [
+        { value: 'order-payment', label: 'Order Payment (cash)' },
+        { value: 'customer-advance', label: 'Customer Advance' },
+        { value: 'paytm-qr', label: 'Paytm QR Collection' },
+        { value: 'other', label: 'Other Income' },
+      ],
+      out: [
+        { value: 'supplier-payment', label: 'Supplier Payment' },
+        { value: 'petty-expense', label: 'Petty Expense' },
+        { value: 'salary-wages', label: 'Salary / Wages' },
+        { value: 'owner-withdrawal', label: 'Owner Withdrawal' },
+        { value: 'bank-deposit', label: 'Deposited to Bank' },
+        { value: 'other', label: 'Other Expense' },
+      ],
+    };
+    let cashEntryType = 'in';
+    let cashSelectedDate = null; // yyyy-mm-dd string; null = today
+
+    function todayDateStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function setCashEntryType(type) {
+      cashEntryType = type;
+      document.getElementById('cashTypeInBtn').classList.toggle('active', type === 'in');
+      document.getElementById('cashTypeOutBtn').classList.toggle('active', type === 'out');
+      const catSelect = document.getElementById('cashEntryCategory');
+      catSelect.innerHTML = CASH_CATEGORIES[type].map(c => `<option value="${c.value}">${escapeHtml(c.label)}</option>`).join('');
+    }
+
+    function changeCashDay(deltaDays) {
+      const picker = document.getElementById('cashDayPicker');
+      const current = new Date(picker.value || todayDateStr());
+      current.setDate(current.getDate() + deltaDays);
+      cashSelectedDate = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+      picker.value = cashSelectedDate;
+      loadCashDay();
+    }
+
+    async function loadCashDay() {
+      const picker = document.getElementById('cashDayPicker');
+      if (!picker.value) picker.value = todayDateStr();
+      cashSelectedDate = picker.value;
+      setCashEntryType('in');
+
+      const list = document.getElementById('cashEntriesList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/cash/day?date=${cashSelectedDate}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load cash register'}</p>`;
+          return;
+        }
+        document.getElementById('cashOpeningBalance').textContent = `₹${data.openingBalance.toLocaleString('en-IN')}`;
+        document.getElementById('cashTotalIn').textContent = `₹${data.totalIn.toLocaleString('en-IN')}`;
+        document.getElementById('cashTotalOut').textContent = `₹${data.totalOut.toLocaleString('en-IN')}`;
+        document.getElementById('cashTotalQR').textContent = `₹${(data.totalQR || 0).toLocaleString('en-IN')}`;
+        document.getElementById('cashClosingBalance').textContent = `₹${data.closingBalance.toLocaleString('en-IN')}`;
+
+        if (data.entries.length === 0) {
+          list.innerHTML = '<p style="color:var(--text-muted);">No entries logged for this day yet.</p>';
+          return;
+        }
+        list.innerHTML = data.entries.map(e => {
+          const catLabel = [...CASH_CATEGORIES.in, ...CASH_CATEGORIES.out].find(c => c.value === e.category)?.label || e.category;
+          const sign = e.type === 'in' ? '+' : '−';
+          const color = e.type === 'in' ? '#2e7d32' : '#c62828';
+          const time = new Date(e.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee; gap:10px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:600; font-size:13px;">${escapeHtml(catLabel)}${e.note ? ' — ' + escapeHtml(e.note) : ''}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${time} · ${escapeHtml(e.recordedBy?.name || '')}</div>
+              </div>
+              <div style="font-weight:700; color:${color}; white-space:nowrap;">${sign}₹${e.amount.toLocaleString('en-IN')}</div>
+              <button type="button" onclick="deleteCashEntry('${e._id}')" title="Delete (correction)" style="background:none; border:none; color:#c62828; cursor:pointer; font-size:14px; padding:2px 6px;">🗑️</button>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function submitCashEntry() {
+      const amount = Number(document.getElementById('cashEntryAmount').value);
+      const category = document.getElementById('cashEntryCategory').value;
+      const note = document.getElementById('cashEntryNote').value.trim();
+
+      if (!amount || amount <= 0) {
+        showToast('❌ Enter a valid amount');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/cash`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ date: cashSelectedDate, type: cashEntryType, amount, category, note }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to add entry'}`);
+          return;
+        }
+        document.getElementById('cashEntryAmount').value = '';
+        document.getElementById('cashEntryNote').value = '';
+        showToast('✅ Entry added');
+        loadCashDay();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function deleteCashEntry(entryId) {
+      const confirmed = await showConfirm('Delete this entry? This is meant for correcting mistakes only.');
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`${API}/api/cash/${entryId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to delete entry'}`);
+          return;
+        }
+        showToast('✅ Entry deleted');
+        loadCashDay();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function loadAdminOrders() {
       const list = document.getElementById('adminOrdersList');
       list.innerHTML = 'Loading...';
@@ -4454,6 +4664,7 @@
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminOrdersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminCashTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInventoryTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAppointmentsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInvoicesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
