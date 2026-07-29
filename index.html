@@ -1155,10 +1155,12 @@
               </div>
 
               <div class="photo-upload-area" id="photoUploadArea" onclick="handlePhotoAreaClick()" style="opacity: 0.5;">
-                <p style="margin: 0;">📸 Click to upload or drag & drop</p>
+                <p style="margin: 0;">📸 Tap to choose from gallery</p>
                 <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;" id="photoTypeHint">Please check the consent box above to enable photo upload</p>
               </div>
+              <button type="button" id="takePhotoBtn" onclick="handleTakePhotoClick()" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; font-size:14px; cursor:pointer; opacity:0.5;">📷 Take a Photo Now</button>
               <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+              <input type="file" id="photoCameraInput" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)">
               
             </div>
 
@@ -2611,15 +2613,18 @@
     function handleConsentChange() {
       const consented = document.getElementById('photoConsentCheckbox').checked;
       const uploadArea = document.getElementById('photoUploadArea');
+      const takePhotoBtn = document.getElementById('takePhotoBtn');
       const hint = document.getElementById('photoTypeHint');
       const generateBtn = document.getElementById('generateBtn');
       if (consented) {
         uploadArea.style.opacity = '1';
+        takePhotoBtn.style.opacity = '1';
         hint.textContent = 'Upload selfie photos for best personalization';
         generateBtn.disabled = false;
         generateBtn.title = '';
       } else {
         uploadArea.style.opacity = '0.5';
+        takePhotoBtn.style.opacity = '0.5';
         hint.textContent = 'Please check the consent box above to enable photo upload';
         generateBtn.disabled = true;
         generateBtn.title = 'Please check the consent checkbox above first';
@@ -2633,6 +2638,15 @@
         return;
       }
       document.getElementById('photoInput').click();
+    }
+
+    function handleTakePhotoClick() {
+      const consented = document.getElementById('photoConsentCheckbox').checked;
+      if (!consented) {
+        showToast('Please check the consent checkbox above before uploading photos.');
+        return;
+      }
+      document.getElementById('photoCameraInput').click();
     }
 
     function openPrivacyModal(event) {
