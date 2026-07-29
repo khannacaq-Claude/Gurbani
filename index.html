@@ -1206,6 +1206,7 @@
               <input type="tel" id="profilePhone" placeholder="e.g. 9899810977">
             </div>
             <h4 style="margin: 20px 0 10px 0; color: var(--vivid);">📏 Measurements (all optional, in inches)</h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">🔒 Extra protected — your measurements sit behind an additional password inside our admin system, separate from regular staff access.</p>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px;">
               <div class="form-group">
                 <label>Bust</label>
@@ -1369,6 +1370,16 @@
             <button type="button" class="btn-submit" onclick="submitEmployeesPassword()">Unlock</button>
           </div>
           <div id="employeesContent" style="display:none;">
+          <div style="text-align:right; margin-bottom:10px;">
+            <button type="button" onclick="toggleChangePasswordForm('employees')" style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:12px; text-decoration:underline;">🔑 Change this password</button>
+          </div>
+          <div id="changePasswordForm_employees" class="card" style="display:none; padding:16px; margin-bottom:16px; max-width:360px;">
+            <h4 style="margin-bottom:10px; font-size:14px;">Change Employees/Payroll Password</h4>
+            <input type="password" id="currentPassword_employees" placeholder="Current password" style="margin-bottom:8px;">
+            <input type="password" id="newPassword_employees" placeholder="New password (min 4 characters)" style="margin-bottom:8px;">
+            <input type="password" id="confirmPassword_employees" placeholder="Confirm new password" style="margin-bottom:10px;">
+            <button type="button" class="btn-submit" onclick="submitChangePassword('employees')">Save New Password</button>
+          </div>
           <h4 style="margin-bottom: 12px;">🧑‍🔧 Employees</h4>
           <div class="card" style="padding: 20px; margin-bottom: 16px;">
             <h4 id="empFormTitle" style="margin-bottom: 12px;">Add Employee</h4>
@@ -1437,6 +1448,16 @@
             <button type="button" class="btn-submit" onclick="submitMeasurementsPassword()">Unlock</button>
           </div>
           <div id="measurementsContent" style="display:none;">
+            <div style="text-align:right; margin-bottom:10px;">
+              <button type="button" onclick="toggleChangePasswordForm('measurements')" style="border:none; background:none; color:var(--vivid); cursor:pointer; font-size:12px; text-decoration:underline;">🔑 Change this password</button>
+            </div>
+            <div id="changePasswordForm_measurements" class="card" style="display:none; padding:16px; margin-bottom:16px; max-width:360px;">
+              <h4 style="margin-bottom:10px; font-size:14px;">Change Measurements Password</h4>
+              <input type="password" id="currentPassword_measurements" placeholder="Current password" style="margin-bottom:8px;">
+              <input type="password" id="newPassword_measurements" placeholder="New password (min 4 characters)" style="margin-bottom:8px;">
+              <input type="password" id="confirmPassword_measurements" placeholder="Confirm new password" style="margin-bottom:10px;">
+              <button type="button" class="btn-submit" onclick="submitChangePassword('measurements')">Save New Password</button>
+            </div>
             <div class="card" style="padding: 20px; margin-bottom: 16px;">
               <h4 style="margin-bottom: 12px;">Add Measurement Record</h4>
               <form id="measForm" onsubmit="submitMeasurementForm(event)">
@@ -4018,6 +4039,56 @@
       if (unlocked) loadMeasurements();
     }
 
+    // Lets an admin change the Measurements or Employees password themselves
+    // instead of needing Railway access — directly addresses Sonia needing
+    // a way to reset it without depending on Sanjeev every time.
+    const CHANGE_PASSWORD_CONFIG = {
+      measurements: { endpoint: 'measurements', sessionKey: 'measurementsUnlocked' },
+      employees: { endpoint: 'employees', sessionKey: 'employeesUnlocked' },
+    };
+
+    function toggleChangePasswordForm(type) {
+      const form = document.getElementById(`changePasswordForm_${type}`);
+      if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitChangePassword(type) {
+      const cfg = CHANGE_PASSWORD_CONFIG[type];
+      if (!cfg) return;
+      const currentPassword = document.getElementById(`currentPassword_${type}`).value;
+      const newPassword = document.getElementById(`newPassword_${type}`).value;
+      const confirmPassword = document.getElementById(`confirmPassword_${type}`).value;
+
+      if (!newPassword || newPassword.length < 4) {
+        showToast('❌ New password must be at least 4 characters');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('❌ New password and confirmation don\'t match');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/${cfg.endpoint}/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ currentPassword, newPassword }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Password changed successfully');
+          document.getElementById(`currentPassword_${type}`).value = '';
+          document.getElementById(`newPassword_${type}`).value = '';
+          document.getElementById(`confirmPassword_${type}`).value = '';
+          toggleChangePasswordForm(type);
+        } else {
+          showToast('❌ ' + (data.message || 'Failed to change password'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
     async function submitMeasurementsPassword() {
       const password = document.getElementById('measurementsPasswordInput').value;
       try {
@@ -4430,6 +4501,21 @@
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
 
+        // Simplified view for staff who aren't comfortable with tech (Sonia) —
+        // hides power-user/business-owner tools (bulk import, bill scanner,
+        // payroll, revenue reporting) from her tab bar specifically. This is
+        // a UI simplification only, NOT a security boundary — her account
+        // keeps full admin permissions server-side, so nothing she legitimately
+        // needs (Requests/Orders/Appointments/Invoices/Customers/Inventory/
+        // Measurements) is affected. Add more emails here if other staff
+        // need the same simplified view later.
+        const SIMPLIFIED_VIEW_EMAILS = ['pssupplier.in@gmail.com'];
+        if (currentUser.role === 'admin' && SIMPLIFIED_VIEW_EMAILS.includes((currentUser.email || '').toLowerCase())) {
+          document.getElementById('profitTabBtn').style.display = 'none';
+          document.getElementById('adminEmployeesTabBtn').style.display = 'none';
+          document.getElementById('adminImportTabBtn').style.display = 'none';
+        }
+
         // Admin dashboard is purely admin-only — the customer-facing tabs
         // (Overview/AI Design/My Profile/Appointments/My Designs) never show
         // for admin accounts. Sonia/Sanjeev test the customer side via their
@@ -4548,7 +4634,7 @@
         <p>You can request a copy of your data, request correction, or request deletion at any time by contacting us at <strong>9899810977</strong> or <strong>khannacaq@gmail.com</strong>. We'll respond within 7 business days.</p>
 
         <h3>Security</h3>
-        <p>Data is stored on MongoDB Atlas (Mumbai region) with access restricted to authorized Gurbani Fashion administrators. We do not store payment card details — payments are processed via Razorpay directly.</p>
+        <p>Data is stored on MongoDB Atlas (Mumbai region) with access restricted to authorized Gurbani Fashion administrators. Body measurements specifically are protected behind an additional password inside our admin system, separate from regular order and customer management access — so measurements aren't visible to just any staff login. We do not store payment card details — payments are processed via Razorpay directly.</p>
 
         <button onclick="closePrivacyModal()" style="margin-top: 20px; background: var(--vivid); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Close</button>
       </div>
