@@ -76,9 +76,11 @@
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); }
 
     header {
-      background: var(--ink);
+      background:
+        radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.10), transparent 65%),
+        var(--ink);
       color: white;
-      padding: 44px 20px 38px 20px;
+      padding: 64px 20px 56px 20px;
       text-align: center;
       position: relative;
       border-bottom: 4px solid var(--vivid);
@@ -86,8 +88,8 @@
 
     .header-wordmark-final {
       display: block;
-      max-width: 480px;
-      width: 80%;
+      max-width: 520px;
+      width: 82%;
       height: auto;
       margin: 0 auto;
     }
@@ -122,8 +124,8 @@
 
     .header-right {
       position: absolute;
-      top: 28px;
-      right: 20px;
+      top: 24px;
+      right: 24px;
       display: flex;
       gap: 10px;
       align-items: center;
@@ -4500,7 +4502,7 @@
         
         if (googleInitialized && typeof google !== 'undefined') {
           signinArea.innerHTML = '';
-          google.accounts.id.renderButton(signinArea, { theme: 'filled_blue', size: 'large' });
+          google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
         }
       }
     }
