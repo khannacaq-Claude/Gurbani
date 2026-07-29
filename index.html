@@ -972,6 +972,11 @@
 
       <div id="quickCashCategoryGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;"></div>
 
+      <div id="quickCashCustomerFields" style="display:none; margin-bottom:16px;">
+        <input type="text" id="quickCashCustomerName" placeholder="Customer name" style="width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:8px; font-size:14px;">
+        <input type="tel" id="quickCashCustomerPhone" placeholder="Customer phone *" style="width:100%; padding:12px; border-radius:8px; border:none; font-size:14px;">
+      </div>
+
       <input type="text" id="quickCashNote" placeholder="Note (optional) — e.g. Ramesh, lehenga advance" style="width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:20px; font-size:14px;">
 
       <button type="button" onclick="submitQuickCash()" id="quickCashSubmitBtn" style="width:100%; padding:16px; border-radius:12px; font-size:17px; font-weight:700;">Add Entry</button>
@@ -1383,7 +1388,19 @@
               </div>
               <div class="form-group" style="margin:0;">
                 <label>Category</label>
-                <select id="cashEntryCategory"></select>
+                <select id="cashEntryCategory" onchange="toggleCashCustomerFields()"></select>
+              </div>
+            </div>
+            <div id="cashCustomerFields" style="display:none;">
+              <div class="grid-2" style="margin-bottom:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label>Customer Name</label>
+                  <input type="text" id="cashEntryCustomerName" placeholder="e.g. Priya Sharma">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label>Customer Phone <span style="color:#c62828;">*</span></label>
+                  <input type="tel" id="cashEntryCustomerPhone" placeholder="e.g. 98XXXXXXXX">
+                </div>
               </div>
             </div>
             <div class="form-group" style="margin-bottom:12px;">
@@ -3672,6 +3689,13 @@
       document.getElementById('cashTypeOutBtn').classList.toggle('active', type === 'out');
       const catSelect = document.getElementById('cashEntryCategory');
       catSelect.innerHTML = CASH_CATEGORIES[type].map(c => `<option value="${c.value}">${escapeHtml(c.label)}</option>`).join('');
+      toggleCashCustomerFields();
+    }
+
+    function toggleCashCustomerFields() {
+      const category = document.getElementById('cashEntryCategory').value;
+      const isCustomerPayment = category === 'order-payment' || category === 'customer-advance';
+      document.getElementById('cashCustomerFields').style.display = isCustomerPayment ? 'block' : 'none';
     }
 
     function changeCashDay(deltaDays) {
@@ -3891,6 +3915,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee; gap:10px;">
               <div style="flex:1; min-width:0;">
                 <div style="font-weight:600; font-size:13px;">${escapeHtml(catLabel)}${e.note ? ' — ' + escapeHtml(e.note) : ''}</div>
+                ${e.customerPhone ? `<div style="font-size:11px; color:var(--vivid-deep);">👤 ${escapeHtml(e.customerName || 'No name')} · ${escapeHtml(e.customerPhone)}</div>` : ''}
                 <div style="font-size:11px; color:var(--text-muted);">${time} · ${escapeHtml(e.recordedBy?.name || '')}</div>
               </div>
               <div style="font-weight:700; color:${color}; white-space:nowrap;">${sign}₹${e.amount.toLocaleString('en-IN')}</div>
@@ -3907,9 +3932,16 @@
       const amount = Number(document.getElementById('cashEntryAmount').value);
       const category = document.getElementById('cashEntryCategory').value;
       const note = document.getElementById('cashEntryNote').value.trim();
+      const customerName = document.getElementById('cashEntryCustomerName').value.trim();
+      const customerPhone = document.getElementById('cashEntryCustomerPhone').value.trim();
 
       if (!amount || amount <= 0) {
         showToast('❌ Enter a valid amount');
+        return;
+      }
+      const isCustomerPayment = category === 'order-payment' || category === 'customer-advance';
+      if (isCustomerPayment && !customerPhone) {
+        showToast('❌ Customer phone number is required for this category');
         return;
       }
 
@@ -3917,7 +3949,7 @@
         const res = await fetch(`${API}/api/cash`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ date: cashSelectedDate, type: cashEntryType, amount, category, note }),
+          body: JSON.stringify({ date: cashSelectedDate, type: cashEntryType, amount, category, note, customerName, customerPhone }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -3926,6 +3958,8 @@
         }
         document.getElementById('cashEntryAmount').value = '';
         document.getElementById('cashEntryNote').value = '';
+        document.getElementById('cashEntryCustomerName').value = '';
+        document.getElementById('cashEntryCustomerPhone').value = '';
         showToast('✅ Entry added');
         loadCashDay();
       } catch (err) {
@@ -4088,6 +4122,8 @@
 
       document.getElementById('quickCashAmount').value = '';
       document.getElementById('quickCashNote').value = '';
+      document.getElementById('quickCashCustomerName').value = '';
+      document.getElementById('quickCashCustomerPhone').value = '';
       document.getElementById('quickCashRecent').innerHTML = '';
       document.getElementById('quickCashOverlay').style.display = 'block';
       setTimeout(() => document.getElementById('quickCashAmount').focus(), 150);
@@ -4098,6 +4134,8 @@
       document.querySelectorAll('.quick-cash-cat-btn').forEach(b => {
         b.style.borderColor = b.dataset.cat === cat ? 'var(--marigold)' : 'transparent';
       });
+      const isCustomerPayment = cat === 'order-payment' || cat === 'customer-advance';
+      document.getElementById('quickCashCustomerFields').style.display = isCustomerPayment ? 'block' : 'none';
     }
 
     function closeQuickCash() {
@@ -4110,8 +4148,15 @@
     async function submitQuickCash() {
       const amount = Number(document.getElementById('quickCashAmount').value);
       const note = document.getElementById('quickCashNote').value.trim();
+      const customerName = document.getElementById('quickCashCustomerName').value.trim();
+      const customerPhone = document.getElementById('quickCashCustomerPhone').value.trim();
       if (!amount || amount <= 0) {
         showToast('❌ Enter a valid amount');
+        return;
+      }
+      const isCustomerPayment = quickCashCategory === 'order-payment' || quickCashCategory === 'customer-advance';
+      if (isCustomerPayment && !customerPhone) {
+        showToast('❌ Customer phone number is required for this category');
         return;
       }
       const btn = document.getElementById('quickCashSubmitBtn');
@@ -4122,7 +4167,7 @@
         const res = await fetch(`${API}/api/cash`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ type: quickCashType, amount, category: quickCashCategory, note }),
+          body: JSON.stringify({ type: quickCashType, amount, category: quickCashCategory, note, customerName, customerPhone }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -4135,6 +4180,8 @@
         recent.innerHTML = `<div style="padding:8px 0; border-top:1px solid rgba(255,255,255,0.15);">✅ ${sign}₹${amount.toLocaleString('en-IN')} — ${escapeHtml(catLabel)}</div>` + recent.innerHTML;
         document.getElementById('quickCashAmount').value = '';
         document.getElementById('quickCashNote').value = '';
+        document.getElementById('quickCashCustomerName').value = '';
+        document.getElementById('quickCashCustomerPhone').value = '';
         document.getElementById('quickCashAmount').focus();
       } catch (err) {
         showToast(`❌ ${err.message}`);
