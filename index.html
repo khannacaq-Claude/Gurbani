@@ -956,6 +956,30 @@
       </div>
     </div>
   </div>
+
+  <!-- QUICK CASH ENTRY — reached by scanning the printed Inflow/Outflow QR
+       codes, skips straight past the dashboard so Sonia never has to
+       navigate tabs to log a single entry. -->
+  <div id="quickCashOverlay" style="display:none; position:fixed; inset:0; background:var(--ink); z-index:2000; overflow-y:auto;">
+    <div style="max-width:420px; margin:0 auto; padding:24px 20px 60px 20px;">
+      <div style="text-align:right;">
+        <button type="button" onclick="closeQuickCash()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:6px;">✕</button>
+      </div>
+      <h2 id="quickCashHeading" style="color:var(--marigold); text-align:center; margin-bottom:4px;">💰 Quick Cash In</h2>
+      <p style="color:rgba(255,255,255,0.7); text-align:center; font-size:13px; margin-bottom:24px;">Enter the amount, tap a category, done.</p>
+
+      <input type="number" id="quickCashAmount" placeholder="₹ Amount" inputmode="decimal" style="width:100%; font-size:32px; font-weight:700; text-align:center; padding:18px; border-radius:12px; border:none; margin-bottom:16px;">
+
+      <div id="quickCashCategoryGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;"></div>
+
+      <input type="text" id="quickCashNote" placeholder="Note (optional) — e.g. Ramesh, lehenga advance" style="width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:20px; font-size:14px;">
+
+      <button type="button" onclick="submitQuickCash()" id="quickCashSubmitBtn" style="width:100%; padding:16px; border-radius:12px; font-size:17px; font-weight:700;">Add Entry</button>
+
+      <div id="quickCashRecent" style="margin-top:28px; color:rgba(255,255,255,0.85); font-size:13px;"></div>
+    </div>
+  </div>
+
   <header>
     <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
     <hr class="flourish">
@@ -3534,6 +3558,8 @@
     };
     let cashEntryType = 'in';
     let cashSelectedDate = null; // yyyy-mm-dd string; null = today
+    let quickCashType = 'in';
+    let quickCashCategory = null;
 
     function todayDateStr() {
       const d = new Date();
@@ -3652,6 +3678,97 @@
         loadCashDay();
       } catch (err) {
         showToast(`❌ ${err.message}`);
+      }
+    }
+
+    // ============================================================
+    // QUICK CASH ENTRY — reached by scanning one of the two printed
+    // QR codes (Inflow / Outflow). Skips the dashboard entirely so
+    // Sonia can log an entry in a few taps. Auth still applies as
+    // normal — if she's not already signed in, the usual Google
+    // Sign-In shows first, and the quick-entry screen opens right
+    // after (the intent survives in the URL, not lost on sign-in).
+    // ============================================================
+    function getQuickCashParam() {
+      const val = new URLSearchParams(window.location.search).get('quickCash');
+      return (val === 'in' || val === 'out') ? val : null;
+    }
+
+    function maybeOpenQuickCash() {
+      const type = getQuickCashParam();
+      if (!type) return;
+      openQuickCash(type);
+    }
+
+    function openQuickCash(type) {
+      quickCashType = type;
+      document.getElementById('quickCashHeading').textContent = type === 'in' ? '💰 Quick Cash In' : '💸 Quick Cash Out';
+      const submitBtn = document.getElementById('quickCashSubmitBtn');
+      submitBtn.style.background = type === 'in' ? '#2e7d32' : '#c62828';
+      submitBtn.style.color = 'white';
+      submitBtn.style.border = 'none';
+
+      const grid = document.getElementById('quickCashCategoryGrid');
+      grid.innerHTML = CASH_CATEGORIES[type].map(c => `
+        <button type="button" class="quick-cash-cat-btn" data-cat="${c.value}" onclick="selectQuickCashCategory('${c.value}')" style="padding:14px 8px; border-radius:10px; border:2px solid transparent; background:white; font-size:13px; font-weight:600; cursor:pointer;">${escapeHtml(c.label)}</button>
+      `).join('');
+      selectQuickCashCategory(CASH_CATEGORIES[type][0].value);
+
+      document.getElementById('quickCashAmount').value = '';
+      document.getElementById('quickCashNote').value = '';
+      document.getElementById('quickCashRecent').innerHTML = '';
+      document.getElementById('quickCashOverlay').style.display = 'block';
+      setTimeout(() => document.getElementById('quickCashAmount').focus(), 150);
+    }
+
+    function selectQuickCashCategory(cat) {
+      quickCashCategory = cat;
+      document.querySelectorAll('.quick-cash-cat-btn').forEach(b => {
+        b.style.borderColor = b.dataset.cat === cat ? 'var(--marigold)' : 'transparent';
+      });
+    }
+
+    function closeQuickCash() {
+      document.getElementById('quickCashOverlay').style.display = 'none';
+      const url = new URL(window.location);
+      url.searchParams.delete('quickCash');
+      window.history.replaceState({}, '', url);
+    }
+
+    async function submitQuickCash() {
+      const amount = Number(document.getElementById('quickCashAmount').value);
+      const note = document.getElementById('quickCashNote').value.trim();
+      if (!amount || amount <= 0) {
+        showToast('❌ Enter a valid amount');
+        return;
+      }
+      const btn = document.getElementById('quickCashSubmitBtn');
+      btn.disabled = true;
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Adding...';
+      try {
+        const res = await fetch(`${API}/api/cash`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ type: quickCashType, amount, category: quickCashCategory, note }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to add entry'}`);
+          return;
+        }
+        const catLabel = CASH_CATEGORIES[quickCashType].find(c => c.value === quickCashCategory)?.label || quickCashCategory;
+        const sign = quickCashType === 'in' ? '+' : '−';
+        const recent = document.getElementById('quickCashRecent');
+        recent.innerHTML = `<div style="padding:8px 0; border-top:1px solid rgba(255,255,255,0.15);">✅ ${sign}₹${amount.toLocaleString('en-IN')} — ${escapeHtml(catLabel)}</div>` + recent.innerHTML;
+        document.getElementById('quickCashAmount').value = '';
+        document.getElementById('quickCashNote').value = '';
+        document.getElementById('quickCashAmount').focus();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
       }
     }
 
@@ -4701,6 +4818,7 @@
           // Land admins on their own home tab instead of the now-hidden Overview
           switchTab(null, 'admin');
           loadAdminRequests();
+          maybeOpenQuickCash();
         } else {
           customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'inline-block');
         }
