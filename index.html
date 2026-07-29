@@ -1364,6 +1364,12 @@
             <div id="paytmImportResult" style="margin-top:14px;"></div>
           </div>
 
+          <div class="card" style="padding:20px; margin-bottom:20px;" id="paytmReviewCard">
+            <h4 style="margin-bottom:8px;">⚠️ Paytm Outflows Needing Review</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Money that left your Paytm account — could be a business payment or personal use of the same account. Nothing here has touched the Cash Register yet; pick one for each.</p>
+            <div id="paytmReviewList">Loading...</div>
+          </div>
+
           <div class="card" style="padding:20px; margin-bottom:20px;">
             <h4 style="margin-bottom:12px;">➕ Add Entry</h4>
             <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -3853,6 +3859,7 @@
       if (!picker.value) picker.value = todayDateStr();
       cashSelectedDate = picker.value;
       setCashEntryType('in');
+      loadPaytmReviewQueue();
 
       const list = document.getElementById('cashEntriesList');
       list.innerHTML = 'Loading...';
@@ -3926,6 +3933,60 @@
       }
     }
 
+    async function loadPaytmReviewQueue() {
+      const list = document.getElementById('paytmReviewList');
+      if (!list) return;
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/paytm/pending-outflows`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load'}</p>`;
+          return;
+        }
+        if (!data.transactions.length) {
+          list.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nothing waiting on review right now.</p>';
+          return;
+        }
+        list.innerHTML = data.transactions.map(t => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee; gap:10px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:180px;">
+              <div style="font-size:13px; font-weight:600;">₹${t.amount.toLocaleString('en-IN')} — ${new Date(t.transactionDate).toLocaleDateString('en-IN')}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(t.customerName || 'No name on record')}${t.customerPhone ? ' · ' + escapeHtml(t.customerPhone) : ''}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick="classifyPaytmOutflow('${t._id}', 'business')" class="admin-filter-btn" style="white-space:nowrap;">🏪 Business</button>
+              <button type="button" onclick="classifyPaytmOutflow('${t._id}', 'personal')" class="admin-filter-btn" style="white-space:nowrap;">🙋 Personal — Exclude</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function classifyPaytmOutflow(transactionId, classification) {
+      try {
+        const res = await fetch(`${API}/api/paytm/classify-outflow`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ transactionId, classification }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to classify'}`);
+          return;
+        }
+        showToast(classification === 'business' ? '✅ Added as a business expense' : '✅ Excluded as personal');
+        loadPaytmReviewQueue();
+        loadCashDay(); // may have added a new Cash Out entry
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function submitPaytmImport() {
       const fileInput = document.getElementById('paytmImportFile');
       const resultDiv = document.getElementById('paytmImportResult');
@@ -3955,6 +4016,7 @@
         resultDiv.innerHTML = `
           <div style="background:#f0f7f0; border-radius:8px; padding:12px 16px; font-size:13px;">
             ✅ <strong>${s.imported}</strong> new transaction(s) added to the Cash Register<br>
+            ${s.flaggedForReview > 0 ? `⚠️ <strong>${s.flaggedForReview}</strong> outflow(s) need Business/Personal review below<br>` : ''}
             ${s.duplicates > 0 ? `↻ ${s.duplicates} already imported before (skipped)<br>` : ''}
             ${s.skippedNotSuccess > 0 ? `⏭️ ${s.skippedNotSuccess} not-successful transaction(s) skipped<br>` : ''}
             ${s.errorCount > 0 ? `⚠️ ${s.errorCount} row(s) couldn't be read — check the file's Transaction_ID/Amount/Transaction_Date columns` : ''}
@@ -3962,7 +4024,7 @@
         `;
         showToast(`✅ Imported ${s.imported} transaction(s)`);
         fileInput.value = '';
-        loadCashDay(); // refresh totals since the import may have added entries for today
+        loadCashDay(); // refresh totals + review queue since the import may have added entries for today
       } catch (err) {
         resultDiv.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       } finally {
@@ -4127,10 +4189,38 @@
               <select class="status-select" onchange="updateOrderAdmin('${o._id}', 'paymentStatus', this.value)">
                 ${['pending','paid','refunded'].map(s => `<option value="${s}" ${o.paymentStatus===s?'selected':''}>${s}</option>`).join('')}
               </select>
+              <button type="button" onclick="generateInvoiceForOrder('${o._id}', '${escapeHtml(o.customerId?.phone || '')}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 Generate Invoice</button>
             </div>
           </div>
         </div>
       `).join('');
+    }
+
+    async function generateInvoiceForOrder(orderId, existingPhone) {
+      let phone = existingPhone;
+      if (!phone) {
+        phone = window.prompt("This customer doesn't have a phone number on file yet. Enter it to generate the invoice (it'll be saved to their profile for next time):");
+        if (!phone || !phone.trim()) {
+          showToast('❌ Invoice needs a phone number — cancelled');
+          return;
+        }
+      }
+      try {
+        const res = await fetch(`${API}/api/invoices/${orderId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ phone: phone.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(`❌ ${data.message || data.error || 'Failed to generate invoice'}`);
+          return;
+        }
+        showToast('✅ Invoice generated');
+        loadAdminOrders();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
     }
 
     async function updateOrderAdmin(orderId, field, value) {
