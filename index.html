@@ -1055,6 +1055,7 @@
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
           <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
+          <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
           <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
           <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
           <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
@@ -1323,6 +1324,13 @@
             <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('ready', event)">Ready</button>
             <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('delivered', event)">Delivered</button>
           </div>
+          <div id="orderInvoiceSelectionBar" style="display:none; background:var(--sand); border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span id="orderInvoiceSelectionCount" style="font-size:13px; font-weight:600;"></span>
+            <div style="display:flex; gap:8px;">
+              <button type="button" onclick="generateInvoiceForSelectedOrders()" class="btn-submit" style="width:auto; padding:8px 18px;">🧾 Generate Invoice for Selected</button>
+              <button type="button" onclick="clearOrderInvoiceSelection()" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Clear</button>
+            </div>
+          </div>
           <div id="adminOrdersList">Loading...</div>
         </div>
 
@@ -1416,6 +1424,13 @@
             <h4 style="margin-bottom:12px;">📋 Today's Entries</h4>
             <div id="cashEntriesList">Loading...</div>
           </div>
+        </div>
+
+        <!-- ADMIN: RECONCILIATION QUEUE -->
+        <div id="adminReconcile" class="tab-content">
+          <h3>🔄 Reconciliation</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Every real customer inflow (cash payments/advances, Paytm QR collections) needs to be tagged eventually — linked to an invoice, or marked as a genuine non-invoice collection (refund, cashback, etc.). No rush — clear this whenever there's time, not at the moment of sale.</p>
+          <div id="reconciliationQueueList">Loading...</div>
         </div>
 
         <!-- ADMIN: INVENTORY MANAGEMENT -->
@@ -2476,6 +2491,7 @@
       profitTabBtn: { icon: 'trending-up', label: 'Profit Dashboard' },
       adminOrdersTabBtn: { icon: 'package', label: 'Manage Orders' },
       adminCashTabBtn: { icon: 'banknote', label: 'Cash Register' },
+      adminReconcileTabBtn: { icon: 'refresh-cw', label: 'Reconciliation' },
       adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
       adminAppointmentsTabBtn: { icon: 'calendar-check', label: 'Manage Appointments' },
       adminInvoicesTabBtn: { icon: 'receipt', label: 'Invoices' },
@@ -3664,6 +3680,7 @@
     // ---------- ADMIN: MANAGE ORDERS ----------
     let allAdminOrders = [];
     let currentAdminOrderFilter = 'all';
+    const selectedOrderIdsForInvoice = new Map(); // orderId -> { customerId, phone, amount }
 
     // ============================================================
     // CASH REGISTER — Sonia's daily cash inflow/outflow tracking,
@@ -3887,6 +3904,181 @@
         }
         showToast('✅ Deleted');
         loadRateCardTab();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    // ============================================================
+    // RECONCILIATION QUEUE — every real customer inflow (cash or Paytm)
+    // eventually gets tagged: linked to an invoice (settles it), or
+    // marked non-invoice (refund, cashback, etc. — nothing to match).
+    // A queue to clear at leisure, not a gate at point of sale.
+    // ============================================================
+    let reconciliationEntries = [];
+
+    async function loadReconciliationQueue() {
+      const list = document.getElementById('reconciliationQueueList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/cash/unreconciled`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load'}</p>`;
+          return;
+        }
+        reconciliationEntries = data.entries;
+        if (!reconciliationEntries.length) {
+          list.innerHTML = '<p style="color:var(--text-muted);">Nothing waiting — everything is reconciled ✅</p>';
+          return;
+        }
+        list.innerHTML = reconciliationEntries.map(e => `
+          <div class="card" style="padding:14px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <strong>₹${e.amount.toLocaleString('en-IN')}</strong> — ${e.category === 'paytm-qr' ? '📲 Paytm QR' : e.category === 'customer-advance' ? '💰 Advance' : '💵 Order Payment'}
+                <div style="font-size:12px; color:var(--text-muted);">${new Date(e.date).toLocaleDateString('en-IN')} · ${escapeHtml(e.customerName || 'No name')} ${e.customerPhone ? '· ' + escapeHtml(e.customerPhone) : '(no phone on this entry)'}</div>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button type="button" onclick="toggleReconcilePanel('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 Link to Invoice</button>
+                <button type="button" onclick="tagEntryNonInvoice('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🚫 Non-Invoice</button>
+              </div>
+            </div>
+            <div id="reconcilePanel-${e._id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #eee;"></div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function toggleReconcilePanel(entryId) {
+      const panel = document.getElementById(`reconcilePanel-${entryId}`);
+      const isOpen = panel.style.display === 'block';
+      // close any other open panels first
+      document.querySelectorAll('[id^="reconcilePanel-"]').forEach(p => p.style.display = 'none');
+      if (isOpen) return;
+
+      const entry = reconciliationEntries.find(e => e._id === entryId);
+      panel.style.display = 'block';
+      panel.innerHTML = `
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <input type="tel" id="reconcilePhone-${entryId}" value="${escapeHtml(entry.customerPhone || '')}" placeholder="Customer phone" style="flex:1;">
+          <button type="button" onclick="searchReconcileMatches('${entryId}')" class="admin-filter-btn" style="white-space:nowrap;">Find Matches</button>
+        </div>
+        <div id="reconcileResults-${entryId}"></div>
+      `;
+    }
+
+    async function searchReconcileMatches(entryId) {
+      const phone = document.getElementById(`reconcilePhone-${entryId}`).value.trim();
+      const resultsDiv = document.getElementById(`reconcileResults-${entryId}`);
+      if (!phone) {
+        showToast('❌ Enter a phone number');
+        return;
+      }
+      resultsDiv.innerHTML = 'Searching...';
+      try {
+        const [invRes, ordRes] = await Promise.all([
+          fetch(`${API}/api/invoices/unsettled?phone=${encodeURIComponent(phone)}`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+          fetch(`${API}/api/orders/admin/uninvoiced?phone=${encodeURIComponent(phone)}`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+        ]);
+        const invData = await invRes.json();
+        const ordData = await ordRes.json();
+
+        let html = '';
+        if (invRes.ok && invData.invoices && invData.invoices.length) {
+          html += '<div style="font-size:12px; font-weight:600; margin-bottom:6px;">Existing unsettled invoices:</div>';
+          html += invData.invoices.map(inv => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f0f0f0;">
+              <span style="font-size:13px;">${escapeHtml(inv.invoiceNumber)} — Owed ₹${inv.remainingAmount ?? inv.totalAmount}</span>
+              <button type="button" onclick="linkReconcileEntry('${entryId}', '${inv._id}')" class="admin-filter-btn" style="white-space:nowrap;">Link Here</button>
+            </div>
+          `).join('');
+        } else {
+          html += '<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">No existing unsettled invoices for this number.</div>';
+        }
+
+        if (ordRes.ok && ordData.data && ordData.data.length) {
+          html += '<div style="font-size:12px; font-weight:600; margin:10px 0 6px 0;">Un-invoiced orders for this customer — select to create a new invoice:</div>';
+          html += ordData.data.map(o => `
+            <label style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:13px;">
+              <input type="checkbox" class="reconcile-order-check-${entryId}" value="${o._id}">
+              ${o.orderNumber || o._id} — ₹${o.pricing?.totalPrice || 0} (${new Date(o.dates?.orderDate).toLocaleDateString('en-IN')})
+            </label>
+          `).join('');
+          html += `<button type="button" onclick="createInvoiceAndLink('${entryId}', '${phone}')" class="btn-submit" style="width:auto; padding:8px 18px; margin-top:8px;">Create Invoice From Selected & Link</button>`;
+        } else if (!ordRes.ok) {
+          html += `<div style="font-size:12px; color:#c62828;">${ordData.message || "Could not look up this customer's orders"}</div>`;
+        }
+
+        resultsDiv.innerHTML = html;
+      } catch (err) {
+        resultsDiv.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function linkReconcileEntry(entryId, invoiceId) {
+      try {
+        const res = await fetch(`${API}/api/cash/${entryId}/reconcile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ action: 'link-invoice', invoiceId }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to link'}`);
+          return;
+        }
+        showToast('✅ Linked and settled');
+        loadReconciliationQueue();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function createInvoiceAndLink(entryId, phone) {
+      const checkboxes = document.querySelectorAll(`.reconcile-order-check-${entryId}:checked`);
+      const orderIds = [...checkboxes].map(cb => cb.value);
+      if (!orderIds.length) {
+        showToast('❌ Select at least one order');
+        return;
+      }
+      try {
+        const createRes = await fetch(`${API}/api/invoices`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ orderIds, phone }),
+        });
+        const createData = await createRes.json();
+        if (!createRes.ok) {
+          showToast(`❌ ${createData.message || createData.error || 'Failed to create invoice'}`);
+          return;
+        }
+        await linkReconcileEntry(entryId, createData.invoice._id);
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function tagEntryNonInvoice(entryId) {
+      const note = window.prompt('Short note — what is this collection for? (e.g. "Paytm cashback", "Refund of advance")');
+      if (!note || !note.trim()) return;
+      try {
+        const res = await fetch(`${API}/api/cash/${entryId}/reconcile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ action: 'non-invoice', nonInvoiceNote: note.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Failed to tag'}`);
+          return;
+        }
+        showToast('✅ Tagged as non-invoice');
+        loadReconciliationQueue();
       } catch (err) {
         showToast(`❌ ${err.message}`);
       }
@@ -4269,9 +4461,12 @@
       list.innerHTML = orders.map(o => `
         <div class="card" style="padding:14px;">
           <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-            <div>
-              <strong>${o.orderNumber || o._id}</strong> — ${o.customerId?.name || 'Unknown'} (${o.customerId?.phone || o.customerId?.email || ''})
-              <div style="font-size:12px; color:var(--text-muted);">${new Date(o.dates?.orderDate).toLocaleDateString('en-IN')} · ₹${o.pricing?.totalPrice || 0} · Payment: <strong>${o.paymentStatus || 'pending'}</strong></div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <input type="checkbox" ${selectedOrderIdsForInvoice.has(o._id) ? 'checked' : ''} onchange="toggleOrderSelection('${o._id}', '${o.customerId?._id || ''}', '${escapeHtml(o.customerId?.phone || '')}', ${o.pricing?.totalPrice || 0})" style="margin-top:4px;">
+              <div>
+                <strong>${o.orderNumber || o._id}</strong> — ${o.customerId?.name || 'Unknown'} (${o.customerId?.phone || o.customerId?.email || ''})
+                <div style="font-size:12px; color:var(--text-muted);">${new Date(o.dates?.orderDate).toLocaleDateString('en-IN')} · ₹${o.pricing?.totalPrice || 0} · Payment: <strong>${o.paymentStatus || 'pending'}</strong></div>
+              </div>
             </div>
             <div style="display:flex; gap:6px; align-items:flex-start; flex-wrap:wrap;">
               <select class="status-select" onchange="updateOrderAdmin('${o._id}', 'status', this.value)">
@@ -4285,6 +4480,75 @@
           </div>
         </div>
       `).join('');
+    }
+
+    function toggleOrderSelection(orderId, customerId, phone, amount) {
+      if (selectedOrderIdsForInvoice.has(orderId)) {
+        selectedOrderIdsForInvoice.delete(orderId);
+      } else {
+        selectedOrderIdsForInvoice.set(orderId, { customerId, phone, amount });
+      }
+      updateOrderInvoiceSelectionBar();
+    }
+
+    function clearOrderInvoiceSelection() {
+      selectedOrderIdsForInvoice.clear();
+      updateOrderInvoiceSelectionBar();
+      renderAdminOrders();
+    }
+
+    function updateOrderInvoiceSelectionBar() {
+      const bar = document.getElementById('orderInvoiceSelectionBar');
+      const count = selectedOrderIdsForInvoice.size;
+      if (count === 0) {
+        bar.style.display = 'none';
+        return;
+      }
+      const customerIds = new Set([...selectedOrderIdsForInvoice.values()].map(v => v.customerId));
+      const total = [...selectedOrderIdsForInvoice.values()].reduce((sum, v) => sum + (v.amount || 0), 0);
+      const label = document.getElementById('orderInvoiceSelectionCount');
+      if (customerIds.size > 1) {
+        label.innerHTML = `⚠️ ${count} order(s) selected from ${customerIds.size} different customers — an invoice can only cover orders from one customer`;
+      } else {
+        label.textContent = `${count} order(s) selected · ₹${total.toLocaleString('en-IN')} total`;
+      }
+      bar.style.display = 'flex';
+    }
+
+    async function generateInvoiceForSelectedOrders() {
+      const selections = [...selectedOrderIdsForInvoice.entries()];
+      if (!selections.length) return;
+      const customerIds = new Set(selections.map(([, v]) => v.customerId));
+      if (customerIds.size > 1) {
+        showToast('❌ Selected orders belong to different customers — an invoice can only cover one customer at a time');
+        return;
+      }
+      const orderIds = selections.map(([orderId]) => orderId);
+      let phone = selections[0][1].phone;
+      if (!phone) {
+        phone = window.prompt("This customer doesn't have a phone number on file yet. Enter it to generate the invoice:");
+        if (!phone || !phone.trim()) {
+          showToast('❌ Invoice needs a phone number — cancelled');
+          return;
+        }
+      }
+      try {
+        const res = await fetch(`${API}/api/invoices`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ orderIds, phone: phone.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(`❌ ${data.message || data.error || 'Failed to generate invoice'}`);
+          return;
+        }
+        showToast(`✅ Invoice generated covering ${orderIds.length} order(s)`);
+        clearOrderInvoiceSelection();
+        loadAdminOrders();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
     }
 
     async function generateInvoiceForOrder(orderId, existingPhone) {
@@ -5348,6 +5612,7 @@
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminOrdersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminCashTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminReconcileTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInventoryTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAppointmentsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInvoicesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
