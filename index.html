@@ -1430,11 +1430,12 @@
         <div id="adminReconcile" class="tab-content">
           <h3>🔄 Reconciliation</h3>
           <p style="color:#666; margin-bottom:16px; font-size:13px;">Every real customer inflow (cash payments/advances, Paytm QR collections) needs to be tagged eventually — linked to an invoice, or marked as a genuine non-invoice collection (refund, cashback, etc.). No rush — clear this whenever there's time, not at the moment of sale. Paytm-imported entries specifically can't be deleted, only reclassified here if something was tagged wrong.</p>
-          <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:14px;">
-            <input type="checkbox" id="reconcileShowClassified" onchange="loadReconciliationQueue()">
-            Also show already-classified entries (to change a mistagged one)
-          </label>
-          <div id="reconciliationQueueList">Loading...</div>
+
+          <h4 style="margin-bottom:8px;">⏳ Pending — Needs a Tag</h4>
+          <div id="reconciliationPendingList" style="margin-bottom:28px;">Loading...</div>
+
+          <h4 style="margin-bottom:8px;">✅ Already Classified — Tap to Change</h4>
+          <div id="reconciliationClassifiedList">Loading...</div>
         </div>
 
         <!-- ADMIN: INVENTORY MANAGEMENT -->
@@ -3921,50 +3922,60 @@
     // ============================================================
     let reconciliationEntries = [];
 
+    function renderReconcileEntryCard(e) {
+      const statusBadge = e.reconciliationStatus === 'linked-invoice'
+        ? '<span style="font-size:11px; font-weight:700; color:#2e7d32;">✅ LINKED TO INVOICE</span>'
+        : e.reconciliationStatus === 'non-invoice'
+        ? `<span style="font-size:11px; font-weight:700; color:#888;">🚫 NON-INVOICE — ${escapeHtml(e.nonInvoiceNote || '')}</span>`
+        : '<span style="font-size:11px; font-weight:700; color:#e08e00;">⏳ PENDING</span>';
+      return `
+        <div class="card" style="padding:14px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>₹${e.amount.toLocaleString('en-IN')}</strong> — ${e.category === 'paytm-qr' ? '📲 Paytm QR' : e.category === 'customer-advance' ? '💰 Advance' : '💵 Order Payment'}
+              <div style="font-size:12px; color:var(--text-muted);">${new Date(e.date).toLocaleDateString('en-IN')} · ${escapeHtml(e.customerName || 'No name')} ${e.customerPhone ? '· ' + escapeHtml(e.customerPhone) : '(no phone on this entry)'}</div>
+              <div style="margin-top:4px;">${statusBadge}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick="toggleReconcilePanel('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 ${e.reconciliationStatus === 'pending' ? 'Link to Invoice' : 'Change to Invoice'}</button>
+              <button type="button" onclick="tagEntryNonInvoice('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🚫 ${e.reconciliationStatus === 'pending' ? 'Non-Invoice' : 'Change to Non-Invoice'}</button>
+            </div>
+          </div>
+          <div id="reconcilePanel-${e._id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #eee;"></div>
+        </div>
+      `;
+    }
+
     async function loadReconciliationQueue() {
-      const list = document.getElementById('reconciliationQueueList');
-      const showClassified = document.getElementById('reconcileShowClassified')?.checked;
-      list.innerHTML = 'Loading...';
+      const pendingList = document.getElementById('reconciliationPendingList');
+      const classifiedList = document.getElementById('reconciliationClassifiedList');
+      pendingList.innerHTML = 'Loading...';
+      classifiedList.innerHTML = 'Loading...';
       try {
-        const url = `${API}/api/cash/unreconciled${showClassified ? '?includeClassified=true' : ''}`;
-        const res = await fetch(url, {
+        const res = await fetch(`${API}/api/cash/unreconciled?includeClassified=true`, {
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
-          list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load'}</p>`;
+          pendingList.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load'}</p>`;
+          classifiedList.innerHTML = '';
           return;
         }
         reconciliationEntries = data.entries;
-        if (!reconciliationEntries.length) {
-          list.innerHTML = '<p style="color:var(--text-muted);">Nothing waiting — everything is reconciled ✅</p>';
-          return;
-        }
-        list.innerHTML = reconciliationEntries.map(e => {
-          const statusBadge = e.reconciliationStatus === 'linked-invoice'
-            ? '<span style="font-size:11px; font-weight:700; color:#2e7d32;">✅ LINKED TO INVOICE</span>'
-            : e.reconciliationStatus === 'non-invoice'
-            ? `<span style="font-size:11px; font-weight:700; color:#888;">🚫 NON-INVOICE — ${escapeHtml(e.nonInvoiceNote || '')}</span>`
-            : '<span style="font-size:11px; font-weight:700; color:#e08e00;">⏳ PENDING</span>';
-          return `
-          <div class="card" style="padding:14px; margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-              <div>
-                <strong>₹${e.amount.toLocaleString('en-IN')}</strong> — ${e.category === 'paytm-qr' ? '📲 Paytm QR' : e.category === 'customer-advance' ? '💰 Advance' : '💵 Order Payment'}
-                <div style="font-size:12px; color:var(--text-muted);">${new Date(e.date).toLocaleDateString('en-IN')} · ${escapeHtml(e.customerName || 'No name')} ${e.customerPhone ? '· ' + escapeHtml(e.customerPhone) : '(no phone on this entry)'}</div>
-                <div style="margin-top:4px;">${statusBadge}</div>
-              </div>
-              <div style="display:flex; gap:6px;">
-                <button type="button" onclick="toggleReconcilePanel('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 ${e.reconciliationStatus === 'pending' ? 'Link to Invoice' : 'Change to Invoice'}</button>
-                <button type="button" onclick="tagEntryNonInvoice('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🚫 ${e.reconciliationStatus === 'pending' ? 'Non-Invoice' : 'Change to Non-Invoice'}</button>
-              </div>
-            </div>
-            <div id="reconcilePanel-${e._id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #eee;"></div>
-          </div>
-        `;
-        }).join('');
+
+        const pending = reconciliationEntries.filter(e => e.reconciliationStatus === 'pending');
+        const classified = reconciliationEntries.filter(e => e.reconciliationStatus !== 'pending');
+
+        pendingList.innerHTML = pending.length
+          ? pending.map(renderReconcileEntryCard).join('')
+          : '<p style="color:var(--text-muted); font-size:13px;">Nothing waiting ✅</p>';
+
+        classifiedList.innerHTML = classified.length
+          ? classified.map(renderReconcileEntryCard).join('')
+          : '<p style="color:var(--text-muted); font-size:13px;">Nothing classified yet.</p>';
       } catch (err) {
-        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+        pendingList.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+        classifiedList.innerHTML = '';
       }
     }
 
