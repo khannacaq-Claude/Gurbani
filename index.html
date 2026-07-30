@@ -1429,7 +1429,11 @@
         <!-- ADMIN: RECONCILIATION QUEUE -->
         <div id="adminReconcile" class="tab-content">
           <h3>🔄 Reconciliation</h3>
-          <p style="color:#666; margin-bottom:16px; font-size:13px;">Every real customer inflow (cash payments/advances, Paytm QR collections) needs to be tagged eventually — linked to an invoice, or marked as a genuine non-invoice collection (refund, cashback, etc.). No rush — clear this whenever there's time, not at the moment of sale.</p>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Every real customer inflow (cash payments/advances, Paytm QR collections) needs to be tagged eventually — linked to an invoice, or marked as a genuine non-invoice collection (refund, cashback, etc.). No rush — clear this whenever there's time, not at the moment of sale. Paytm-imported entries specifically can't be deleted, only reclassified here if something was tagged wrong.</p>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:14px;">
+            <input type="checkbox" id="reconcileShowClassified" onchange="loadReconciliationQueue()">
+            Also show already-classified entries (to change a mistagged one)
+          </label>
           <div id="reconciliationQueueList">Loading...</div>
         </div>
 
@@ -3919,9 +3923,11 @@
 
     async function loadReconciliationQueue() {
       const list = document.getElementById('reconciliationQueueList');
+      const showClassified = document.getElementById('reconcileShowClassified')?.checked;
       list.innerHTML = 'Loading...';
       try {
-        const res = await fetch(`${API}/api/cash/unreconciled`, {
+        const url = `${API}/api/cash/unreconciled${showClassified ? '?includeClassified=true' : ''}`;
+        const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
         const data = await res.json();
@@ -3934,21 +3940,29 @@
           list.innerHTML = '<p style="color:var(--text-muted);">Nothing waiting — everything is reconciled ✅</p>';
           return;
         }
-        list.innerHTML = reconciliationEntries.map(e => `
+        list.innerHTML = reconciliationEntries.map(e => {
+          const statusBadge = e.reconciliationStatus === 'linked-invoice'
+            ? '<span style="font-size:11px; font-weight:700; color:#2e7d32;">✅ LINKED TO INVOICE</span>'
+            : e.reconciliationStatus === 'non-invoice'
+            ? `<span style="font-size:11px; font-weight:700; color:#888;">🚫 NON-INVOICE — ${escapeHtml(e.nonInvoiceNote || '')}</span>`
+            : '<span style="font-size:11px; font-weight:700; color:#e08e00;">⏳ PENDING</span>';
+          return `
           <div class="card" style="padding:14px; margin-bottom:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <div>
                 <strong>₹${e.amount.toLocaleString('en-IN')}</strong> — ${e.category === 'paytm-qr' ? '📲 Paytm QR' : e.category === 'customer-advance' ? '💰 Advance' : '💵 Order Payment'}
                 <div style="font-size:12px; color:var(--text-muted);">${new Date(e.date).toLocaleDateString('en-IN')} · ${escapeHtml(e.customerName || 'No name')} ${e.customerPhone ? '· ' + escapeHtml(e.customerPhone) : '(no phone on this entry)'}</div>
+                <div style="margin-top:4px;">${statusBadge}</div>
               </div>
               <div style="display:flex; gap:6px;">
-                <button type="button" onclick="toggleReconcilePanel('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 Link to Invoice</button>
-                <button type="button" onclick="tagEntryNonInvoice('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🚫 Non-Invoice</button>
+                <button type="button" onclick="toggleReconcilePanel('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 ${e.reconciliationStatus === 'pending' ? 'Link to Invoice' : 'Change to Invoice'}</button>
+                <button type="button" onclick="tagEntryNonInvoice('${e._id}')" class="admin-filter-btn" style="white-space:nowrap;">🚫 ${e.reconciliationStatus === 'pending' ? 'Non-Invoice' : 'Change to Non-Invoice'}</button>
               </div>
             </div>
             <div id="reconcilePanel-${e._id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #eee;"></div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
@@ -4125,7 +4139,9 @@
                 <div style="font-size:11px; color:var(--text-muted);">${e.transactionId ? escapeHtml(e.transactionId) + ' · ' : ''}${time} · ${escapeHtml(e.recordedBy?.name || '')}</div>
               </div>
               <div style="font-weight:700; color:${color}; white-space:nowrap;">${sign}₹${e.amount.toLocaleString('en-IN')}</div>
-              <button type="button" onclick="deleteCashEntry('${e._id}', ${e.reconciliationStatus === 'linked-invoice'})" title="Delete (correction)" style="background:none; border:none; color:#c62828; cursor:pointer; font-size:14px; padding:2px 6px;">🗑️</button>
+              ${e.category === 'paytm-qr'
+                ? `<span title="Paytm-imported entries can't be deleted — reclassify from the Reconciliation tab instead" style="font-size:13px; color:var(--text-muted); padding:2px 6px;">🔒</span>`
+                : `<button type="button" onclick="deleteCashEntry('${e._id}', ${e.reconciliationStatus === 'linked-invoice'})" title="Delete (correction)" style="background:none; border:none; color:#c62828; cursor:pointer; font-size:14px; padding:2px 6px;">🗑️</button>`}
             </div>
           `;
         }).join('');
