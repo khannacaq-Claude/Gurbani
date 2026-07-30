@@ -1032,8 +1032,8 @@
         </div>
         <p style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 28px; letter-spacing: 0.3px;">✨ Always adding something new</p>
 
-        <h3 id="landingRateCardHeading" style="margin-top:36px; text-align:center;">💰 Starting Prices</h3>
-        <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">A quick idea before you sign in — full rate card and exact quotes inside.</p>
+        <h3 id="landingRateCardHeading" style="display:none; margin-top:36px; text-align:center;">💰 Starting Prices</h3>
+        <p id="landingRateCardSubtitle" style="display:none; text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">A quick idea before you sign in — full rate card and exact quotes inside.</p>
         <div id="landingRateCardTeaser" class="grid"></div>
       </div>
     </div>
@@ -1491,11 +1491,17 @@
           <div id="adminInvoicesList">Loading...</div>
         </div>
 
-        <!-- ADMIN: CUSTOMERS -->
+        <!-- ADMIN: CUSTOMERS & VISITORS -->
         <div id="adminCustomers" class="tab-content">
-          <h3>👥 Customers</h3>
+          <h3>👥 Customers & Visitors</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">A "Customer" is anyone who's actually generated revenue — a stitching order, a paid invoice. Everyone else who's just signed in is a "Visitor" until they do.</p>
           <input type="text" id="customerSearchInput" placeholder="Search by name, email or phone..." oninput="loadAdminCustomers()" style="margin-bottom: 16px;">
-          <div id="adminCustomersList">Loading...</div>
+
+          <h4 style="margin-bottom:8px;">🛍️ Customers — Have Generated Revenue</h4>
+          <div id="adminCustomersRevenueList" style="margin-bottom:24px;">Loading...</div>
+
+          <h4 style="margin-bottom:8px;">👀 Visitors — Signed In, No Purchase Yet</h4>
+          <div id="adminCustomersVisitorList">Loading...</div>
         </div>
 
         <!-- ADMIN: EMPLOYEES -->
@@ -2572,10 +2578,10 @@
           }
         });
         if (Object.keys(lowestByCategory).length === 0) {
-          document.getElementById('landingRateCardHeading').style.display = 'none';
-          document.getElementById('landingRateCardSubtitle').style.display = 'none';
-          return;
+          return; // stays hidden — nothing priced yet, nothing to advertise
         }
+        document.getElementById('landingRateCardHeading').style.display = 'block';
+        document.getElementById('landingRateCardSubtitle').style.display = 'block';
         container.innerHTML = Object.entries(lowestByCategory).map(([cat, price]) => `
           <div class="feature-box" onclick="promptSignIn('Rate Card')" style="text-align:center;">
             <h3 style="font-size:15px;">${escapeHtml(cat)}</h3>
@@ -4877,23 +4883,93 @@
     }
 
     // ---------- ADMIN: CUSTOMERS ----------
+    function renderCustomerCard(c) {
+      return `
+        <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>${escapeHtml(c.name)}</strong> ${c.isBlocked ? '<span style="font-size:11px; font-weight:700; color:#c62828;">🔒 BLOCKED</span>' : ''}
+            <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" onclick="toggleCustomerBlock('${c._id}', ${!c.isBlocked})" class="admin-filter-btn" style="white-space:nowrap;">${c.isBlocked ? '🔓 Unblock' : '🔒 Block'}</button>
+            <button type="button" onclick="deleteCustomerAccount('${c._id}', '${escapeHtml(c.name)}')" class="admin-filter-btn" style="white-space:nowrap; color:#c62828;">🗑️ Delete</button>
+          </div>
+        </div>
+      `;
+    }
+
     async function loadAdminCustomers() {
-      const list = document.getElementById('adminCustomersList');
-      list.innerHTML = 'Loading...';
+      const revenueList = document.getElementById('adminCustomersRevenueList');
+      const visitorList = document.getElementById('adminCustomersVisitorList');
+      revenueList.innerHTML = 'Loading...';
+      visitorList.innerHTML = 'Loading...';
       const q = document.getElementById('customerSearchInput')?.value || '';
       try {
         const res = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         const customers = data.data || data.customers || [];
-        if (customers.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No customers found.</p>'; return; }
-        list.innerHTML = customers.map(c => `
-          <div class="card" style="padding:12px 14px;">
-            <strong>${escapeHtml(c.name)}</strong>
-            <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
-          </div>
-        `).join('');
+        if (customers.length === 0) {
+          revenueList.innerHTML = '<p style="color:var(--text-muted);">No customers found.</p>';
+          visitorList.innerHTML = '';
+          return;
+        }
+        const revenueCustomers = customers.filter(c => c.hasRevenue);
+        const visitors = customers.filter(c => !c.hasRevenue);
+
+        revenueList.innerHTML = revenueCustomers.length
+          ? revenueCustomers.map(renderCustomerCard).join('')
+          : '<p style="color:var(--text-muted); font-size:13px;">No converted customers yet.</p>';
+
+        visitorList.innerHTML = visitors.length
+          ? visitors.map(renderCustomerCard).join('')
+          : '<p style="color:var(--text-muted); font-size:13px;">No visitors waiting — everyone here has purchased something.</p>';
       } catch (err) {
-        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+        revenueList.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+        visitorList.innerHTML = '';
+      }
+    }
+
+    async function toggleCustomerBlock(userId, newBlockedState) {
+      const message = newBlockedState
+        ? "Block this customer? They won't be able to sign in anymore, but their orders/invoices stay intact."
+        : 'Unblock this customer so they can sign in again?';
+      const confirmed = await showConfirm(message);
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`${API}/api/admin/customers/${userId}/block`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ isBlocked: newBlockedState }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.message || 'Failed to update'}`);
+          return;
+        }
+        showToast(`✅ ${data.message}`);
+        loadAdminCustomers();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function deleteCustomerAccount(userId, name) {
+      const confirmed = await showConfirm(`Delete ${name}'s account permanently? This only works if they have zero orders/invoices/appointments/designs — otherwise it'll be refused and you should Block instead.`);
+      if (!confirmed) return;
+      try {
+        const res = await fetch(`${API}/api/admin/customers/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.message || 'Failed to delete'}`);
+          return;
+        }
+        showToast(`✅ ${data.message}`);
+        loadAdminCustomers();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
       }
     }
 
