@@ -4122,7 +4122,7 @@
               <div style="flex:1; min-width:0;">
                 <div style="font-weight:600; font-size:13px;">${escapeHtml(catLabel)}${e.note ? ' — ' + escapeHtml(e.note) : ''}</div>
                 ${e.customerPhone ? `<div style="font-size:11px; color:var(--vivid-deep);">👤 ${escapeHtml(e.customerName || 'No name')} · ${escapeHtml(e.customerPhone)}</div>` : ''}
-                <div style="font-size:11px; color:var(--text-muted);">${time} · ${escapeHtml(e.recordedBy?.name || '')}</div>
+                <div style="font-size:11px; color:var(--text-muted);">${e.transactionId ? escapeHtml(e.transactionId) + ' · ' : ''}${time} · ${escapeHtml(e.recordedBy?.name || '')}</div>
               </div>
               <div style="font-weight:700; color:${color}; white-space:nowrap;">${sign}₹${e.amount.toLocaleString('en-IN')}</div>
               <button type="button" onclick="deleteCashEntry('${e._id}')" title="Delete (correction)" style="background:none; border:none; color:#c62828; cursor:pointer; font-size:14px; padding:2px 6px;">🗑️</button>
@@ -4412,7 +4412,7 @@
         const catLabel = CASH_CATEGORIES[quickCashType].find(c => c.value === quickCashCategory)?.label || quickCashCategory;
         const sign = quickCashType === 'in' ? '+' : '−';
         const recent = document.getElementById('quickCashRecent');
-        recent.innerHTML = `<div style="padding:8px 0; border-top:1px solid rgba(255,255,255,0.15);">✅ ${sign}₹${amount.toLocaleString('en-IN')} — ${escapeHtml(catLabel)}</div>` + recent.innerHTML;
+        recent.innerHTML = `<div style="padding:8px 0; border-top:1px solid rgba(255,255,255,0.15);">✅ ${sign}₹${amount.toLocaleString('en-IN')} — ${escapeHtml(catLabel)}<br><span style="font-size:11px; opacity:0.7;">${escapeHtml(data.entry?.transactionId || '')}</span></div>` + recent.innerHTML;
         document.getElementById('quickCashAmount').value = '';
         document.getElementById('quickCashNote').value = '';
         document.getElementById('quickCashCustomerName').value = '';
