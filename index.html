@@ -3148,6 +3148,21 @@
       }
     }
 
+    // Shown when a design image fails to load. Older designs were saved with
+    // temporary Replicate URLs that expired after about an hour, so those
+    // images are permanently gone. Rather than leaving the browser's broken
+    // image icon, show a clear message and let the customer regenerate.
+    function handleDesignImageError(imgEl, idx) {
+      const container = imgEl.parentElement;
+      if (!container) return;
+      container.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:140px; background:var(--sand); border-radius:8px; padding:16px; text-align:center;">
+          <div style="font-size:12px; color:var(--text-muted);">🖼️ This preview is no longer available</div>
+          <button onclick="generateConceptImage(${idx})" style="padding:8px 16px; border-radius:6px; border:1px solid var(--vivid); background:white; color:var(--ink); font-size:12px; font-weight:600; cursor:pointer;">Generate it again</button>
+          <div style="font-size:10.5px; color:#999;">The design details below are unchanged.</div>
+        </div>`;
+    }
+
     async function generateConceptImage(idx) {
       const imgContainer = document.getElementById(`designImage_${idx}`);
       const btn = document.getElementById(`genBtn_${idx}`);
@@ -3233,7 +3248,10 @@
       concepts.forEach((concept, idx) => {
         let imageHtml;
         if (concept.imageUrl) {
-          imageHtml = `<img src="${concept.imageUrl}" alt="${escapeHtml(concept.title) || 'Design ' + (idx + 1)}">`;
+          // onerror catches designs generated before images were stored
+          // permanently - those old Replicate URLs have since expired, and
+          // without this the browser shows its default broken-image icon.
+          imageHtml = `<img src="${concept.imageUrl}" alt="${escapeHtml(concept.title) || 'Design ' + (idx + 1)}" onerror="handleDesignImageError(this, ${idx})">`;
         } else if (idx === 0) {
           // Design 1's image is always generated upfront — a missing image here is a genuine failure
           imageHtml = '<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px;">⚠️ Image preview unavailable this time<br><span style="font-size: 11px;">The design description below is still accurate.</span></div>';
