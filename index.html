@@ -1075,6 +1075,7 @@
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
+          <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
           <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
           <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
           <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
@@ -1353,6 +1354,17 @@
             </div>
           </div>
           <div id="adminOrdersList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: PENDING APPROVAL QUEUE, grouped by scarce inventory item -->
+        <div id="pendingApproval" class="tab-content">
+          <h3>⏳ Pending Approval</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">
+            Orders customers have placed via AI Design Studio, waiting on you. Grouped by fabric/lace/lining
+            so you can see when more than one order is drawing from the same limited stock — items with the
+            least remaining show first.
+          </p>
+          <div id="pendingApprovalList">Loading...</div>
         </div>
 
         <!-- ADMIN: DAILY CASH REGISTER (replaces Sonia's handwritten register) -->
@@ -2522,6 +2534,7 @@
       adminTabBtn: { icon: 'shield-check', label: 'Admin: Requests' },
       profitTabBtn: { icon: 'trending-up', label: 'Profit Dashboard' },
       adminOrdersTabBtn: { icon: 'package', label: 'Manage Orders' },
+      pendingApprovalTabBtn: { icon: 'hourglass', label: 'Pending Approval' },
       adminCashTabBtn: { icon: 'banknote', label: 'Cash Register' },
       adminReconcileTabBtn: { icon: 'refresh-cw', label: 'Reconciliation' },
       adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
@@ -4502,6 +4515,106 @@
       }
     }
 
+    async function loadPendingApprovals() {
+      const list = document.getElementById('pendingApprovalList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/orders/admin/pending-grouped`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'OK') {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.message || 'Failed to load pending approvals'}</p>`;
+          return;
+        }
+        renderPendingApprovals(data.groups || [], data.ungroupedOrders || []);
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function renderPendingApprovals(groups, ungroupedOrders) {
+      const list = document.getElementById('pendingApprovalList');
+      if (groups.length === 0 && ungroupedOrders.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);">Nothing waiting on you right now.</p>';
+        return;
+      }
+
+      const orderRow = (o) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 0; border-top:1px solid #eee;">
+          <div>
+            <strong>${o.orderNumber}</strong> — ${escapeHtml(o.customerName)} (${escapeHtml(o.customerPhone)})
+            <div style="font-size:12px; color:var(--text-muted);">
+              ${o.quantityNeeded ? `Needs ${o.quantityNeeded}m · ` : ''}₹${o.totalPrice} · ${new Date(o.orderDate).toLocaleDateString('en-IN')}
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn-submit" style="width:auto; padding:6px 14px; background:#2e7d32;" onclick="approvePendingOrder('${o.orderId}')">✅ Approve</button>
+            <button type="button" style="padding:6px 14px; background:white; border:1px solid #c62828; color:#c62828; border-radius:6px; cursor:pointer;" onclick="rejectPendingOrder('${o.orderId}')">✖ Reject</button>
+          </div>
+        </div>`;
+
+      const groupCards = groups.map(g => `
+        <div class="card" style="padding:14px; margin-bottom:12px; ${g.currentAvailable <= 0 ? 'border:1px solid #c62828;' : ''}">
+          <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${escapeHtml(g.itemName)}</strong> ${g.itemColor ? `(${escapeHtml(g.itemColor)})` : ''}
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-muted); margin-left:6px;">${g.category}</span>
+            </div>
+            <div style="font-size:13px; ${g.currentAvailable <= 0 ? 'color:#c62828; font-weight:600;' : 'color:var(--text-muted);'}">
+              ${g.currentAvailable}m available · ${g.currentReserved}m reserved
+              ${g.orders.length > 1 ? ` · ⚠️ ${g.orders.length} orders competing for this` : ''}
+            </div>
+          </div>
+          ${g.orders.map(orderRow).join('')}
+        </div>`).join('');
+
+      const ungroupedCard = ungroupedOrders.length === 0 ? '' : `
+        <div class="card" style="padding:14px;">
+          <strong>Other pending orders</strong>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Customer-supplied materials, thread, or accessories only — nothing to reserve.</div>
+          ${ungroupedOrders.map(orderRow).join('')}
+        </div>`;
+
+      list.innerHTML = groupCards + ungroupedCard;
+    }
+
+    async function approvePendingOrder(orderId) {
+      if (!confirm('Approve this order? Stock will be permanently deducted and it moves to production.')) return;
+      try {
+        const res = await fetch(`${API}/api/orders/${orderId}/approve`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'SUCCESS') {
+          showToast(`❌ ${data.message || 'Could not approve order'}`);
+          return;
+        }
+        showToast('✅ Order approved');
+        loadPendingApprovals();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function rejectPendingOrder(orderId) {
+      if (!confirm('Reject this order? Any reserved stock will be restored and made available to other customers.')) return;
+      try {
+        const res = await fetch(`${API}/api/orders/${orderId}/cancel`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'SUCCESS') {
+          showToast(`❌ ${data.message || 'Could not reject order'}`);
+          return;
+        }
+        showToast('✅ Order rejected, stock restored');
+        loadPendingApprovals();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function loadAdminOrders() {
       const list = document.getElementById('adminOrdersList');
       list.innerHTML = 'Loading...';
@@ -5756,6 +5869,7 @@
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminOrdersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('pendingApprovalTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminCashTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminReconcileTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInventoryTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
