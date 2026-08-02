@@ -1076,6 +1076,7 @@
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
           <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
+          <button class="tab-btn" id="stockShortfallsTabBtn" onclick="switchTab(event, 'stockShortfalls'); loadStockShortfalls();" style="display: none;">⚠️ Stock Shortfalls</button>
           <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
           <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
           <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
@@ -1365,6 +1366,20 @@
             least remaining show first.
           </p>
           <div id="pendingApprovalList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: STOCK SHORTFALL TRAIL - failed order attempts due to insufficient stock -->
+        <div id="stockShortfalls" class="tab-content">
+          <h3>⚠️ Stock Shortfalls</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">
+            Times a customer's order got rejected because there wasn't enough fabric/lace/lining.
+            Nothing here is automatic — review and follow up with the customer yourself, then mark it done.
+          </p>
+          <div style="display: flex; gap: 8px; margin: 0 0 16px 0;">
+            <button type="button" class="admin-filter-btn active" onclick="filterStockShortfalls(false, event)">Needs Follow-up</button>
+            <button type="button" class="admin-filter-btn" onclick="filterStockShortfalls(true, event)">Include Followed-up</button>
+          </div>
+          <div id="stockShortfallsList">Loading...</div>
         </div>
 
         <!-- ADMIN: DAILY CASH REGISTER (replaces Sonia's handwritten register) -->
@@ -2535,6 +2550,7 @@
       profitTabBtn: { icon: 'trending-up', label: 'Profit Dashboard' },
       adminOrdersTabBtn: { icon: 'package', label: 'Manage Orders' },
       pendingApprovalTabBtn: { icon: 'hourglass', label: 'Pending Approval' },
+      stockShortfallsTabBtn: { icon: 'alert-triangle', label: 'Stock Shortfalls' },
       adminCashTabBtn: { icon: 'banknote', label: 'Cash Register' },
       adminReconcileTabBtn: { icon: 'refresh-cw', label: 'Reconciliation' },
       adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
@@ -4615,6 +4631,75 @@
       }
     }
 
+    let currentShortfallsIncludeResolved = false;
+
+    async function loadStockShortfalls() {
+      const list = document.getElementById('stockShortfallsList');
+      list.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/orders/admin/stock-shortfalls?includeResolved=${currentShortfallsIncludeResolved}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'OK') {
+          list.innerHTML = `<p style="color:#c62828;">❌ ${data.message || 'Failed to load stock shortfalls'}</p>`;
+          return;
+        }
+        renderStockShortfalls(data.data || []);
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function filterStockShortfalls(includeResolved, event) {
+      currentShortfallsIncludeResolved = includeResolved;
+      document.querySelectorAll('#stockShortfalls .admin-filter-btn').forEach(b => b.classList.remove('active'));
+      if (event) event.target.classList.add('active');
+      loadStockShortfalls();
+    }
+
+    function renderStockShortfalls(shortfalls) {
+      const list = document.getElementById('stockShortfallsList');
+      if (shortfalls.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);">Nothing here right now.</p>';
+        return;
+      }
+      list.innerHTML = shortfalls.map(s => `
+        <div class="card" style="padding:14px; margin-bottom:10px; ${s.followedUp ? 'opacity:0.6;' : ''}">
+          <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${escapeHtml(s.customerId?.name || 'Unknown')}</strong> (${escapeHtml(s.customerId?.phone || '')})
+              <div style="font-size:12px; color:var(--text-muted);">${new Date(s.createdAt).toLocaleString('en-IN')}</div>
+              <div style="font-size:13px; margin-top:6px;">
+                ${s.shortages.map(sh => `Wanted <strong>${sh.needed}m</strong> of "${escapeHtml(sh.itemName)}" (${sh.category}) — only ${sh.available}m was available`).join('<br>')}
+              </div>
+              ${s.followedUp ? `<div style="font-size:12px; color:#2e7d32; margin-top:6px;">✅ Followed up ${new Date(s.followedUpAt).toLocaleDateString('en-IN')}${s.followUpNote ? ': ' + escapeHtml(s.followUpNote) : ''}</div>` : ''}
+            </div>
+            ${s.followedUp ? '' : `<button type="button" class="btn-submit" style="width:auto; padding:6px 14px; height:fit-content;" onclick="resolveShortfall('${s._id}')">Mark Followed Up</button>`}
+          </div>
+        </div>`).join('');
+    }
+
+    async function resolveShortfall(id) {
+      const note = prompt('Optional note about how this was resolved (e.g. "sourced more fabric" or "customer chose a different fabric"):') || '';
+      try {
+        const res = await fetch(`${API}/api/orders/admin/stock-shortfalls/${id}/resolve`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'SUCCESS') {
+          showToast(`❌ ${data.message || 'Could not update'}`);
+          return;
+        }
+        showToast('✅ Marked as followed up');
+        loadStockShortfalls();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function loadAdminOrders() {
       const list = document.getElementById('adminOrdersList');
       list.innerHTML = 'Loading...';
@@ -5870,6 +5955,7 @@
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminOrdersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('pendingApprovalTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('stockShortfallsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminCashTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminReconcileTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInventoryTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
