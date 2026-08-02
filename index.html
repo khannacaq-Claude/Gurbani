@@ -5035,6 +5035,8 @@
       }
     }
 
+    const INVENTORY_UNIT_LABELS = { fabrics: 'meters', laces: 'meters', linings: 'meters', buttons: 'pieces', threads: 'spools' };
+
     function renderInventoryList() {
       const list = document.getElementById('inventoryList');
       if (currentInventoryItems.length === 0) {
@@ -5048,11 +5050,39 @@
             <div style="font-size:12px; color:var(--text-muted);">₹${item.price || 0} · Available: ${item.inventory?.available ?? item.available ?? 0}</div>
           </div>
           <div style="display:flex; gap:6px;">
+            <button type="button" class="admin-filter-btn" style="color:#2e7d32;" onclick="addStockToItem('${item._id}', '${escapeHtml(item.name)}')">+ Stock</button>
             <button type="button" class="admin-filter-btn" onclick="editInventoryItem('${item._id}')">Edit</button>
             <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="deleteInventoryItem('${item._id}')">Delete</button>
           </div>
         </div>
       `).join('');
+    }
+
+    async function addStockToItem(id, name) {
+      const unit = INVENTORY_UNIT_LABELS[currentInventoryCategory] || 'units';
+      const qty = prompt(`How many ${unit} of "${name}" just arrived?`);
+      if (!qty) return;
+      const quantity = Number(qty);
+      if (!quantity || quantity <= 0) {
+        showToast('❌ Enter a positive number');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/inventory/${INVENTORY_ENDPOINTS[currentInventoryCategory]}/${id}/add-stock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ quantity }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Could not add stock'}`);
+          return;
+        }
+        showToast(`✅ ${data.message}`);
+        loadInventoryTab(currentInventoryCategory);
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
     }
 
     function editInventoryItem(id) {
