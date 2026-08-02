@@ -1002,6 +1002,27 @@
     <div class="header-right">
       <div class="user-welcome" id="userWelcome"></div>
       <div id="signinArea"></div>
+      <div id="emailAuthToggle" style="text-align:center; margin-top:6px;">
+        <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--vivid);">Or sign in with email</a>
+      </div>
+      <div id="emailAuthPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px;">
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <button type="button" id="emailAuthTabSignIn" class="admin-filter-btn active" style="flex:1;" onclick="switchEmailAuthMode('signin')">Sign In</button>
+          <button type="button" id="emailAuthTabSignUp" class="admin-filter-btn" style="flex:1;" onclick="switchEmailAuthMode('signup')">Sign Up</button>
+        </div>
+        <input type="text" id="emailAuthName" placeholder="Name" style="display:none; margin-bottom:8px;">
+        <input type="email" id="emailAuthEmail" placeholder="Email" style="margin-bottom:8px;">
+        <input type="password" id="emailAuthPassword" placeholder="Password" style="margin-bottom:8px;">
+        <button type="button" class="btn-submit" style="width:100%;" onclick="submitEmailAuth()">Continue</button>
+        <div style="text-align:center; margin-top:8px;">
+          <a href="#" onclick="showForgotPasswordPrompt(event)" style="font-size:12px; color:var(--text-muted);">Forgot password?</a>
+        </div>
+      </div>
+      <div id="resetPasswordPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px;">
+        <p style="font-size:13px; margin-bottom:10px;">Set a new password.</p>
+        <input type="password" id="resetPasswordNew" placeholder="New password (min. 6 characters)" style="margin-bottom:8px;">
+        <button type="button" class="btn-submit" style="width:100%;" onclick="submitNewPassword()">Set Password</button>
+      </div>
       <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
     </div>
   </header>
@@ -1543,6 +1564,17 @@
         <div id="adminCustomers" class="tab-content">
           <h3>👥 Customers & Visitors</h3>
           <p style="color:#666; margin-bottom:16px; font-size:13px;">A "Customer" is anyone who's actually generated revenue — a stitching order, a paid invoice. Everyone else who's just signed in is a "Visitor" until they do.</p>
+
+          <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-bottom:16px;" onclick="toggleCreateCustomerForm()">➕ Create Customer Manually</button>
+          <div id="createCustomerForm" class="card" style="display:none; padding:16px; margin-bottom:20px; max-width:420px;">
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">For walk-ins who aren't comfortable signing in with Google themselves. Phone is required; email is optional.</p>
+            <input type="text" id="newCustomerName" placeholder="Name *" style="margin-bottom:8px;">
+            <input type="tel" id="newCustomerPhone" placeholder="Phone *" style="margin-bottom:8px;">
+            <input type="email" id="newCustomerEmail" placeholder="Email (optional)" style="margin-bottom:12px;">
+            <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="submitCreateCustomer()">Create</button>
+            <button type="button" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer; margin-left:8px;" onclick="toggleCreateCustomerForm()">Cancel</button>
+          </div>
+
           <input type="text" id="customerSearchInput" placeholder="Search by name, email or phone..." oninput="loadAdminCustomers()" style="margin-bottom: 16px;">
 
           <h4 style="margin-bottom:8px;">🛍️ Customers — Have Generated Revenue</h4>
@@ -3566,6 +3598,115 @@
       }
     }
 
+    let emailAuthMode = 'signin';
+
+    function toggleEmailAuthPanel(event) {
+      if (event) event.preventDefault();
+      const panel = document.getElementById('emailAuthPanel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function switchEmailAuthMode(mode) {
+      emailAuthMode = mode;
+      document.getElementById('emailAuthTabSignIn').classList.toggle('active', mode === 'signin');
+      document.getElementById('emailAuthTabSignUp').classList.toggle('active', mode === 'signup');
+      document.getElementById('emailAuthName').style.display = mode === 'signup' ? 'block' : 'none';
+    }
+
+    async function submitEmailAuth() {
+      const name = document.getElementById('emailAuthName').value.trim();
+      const email = document.getElementById('emailAuthEmail').value.trim();
+      const password = document.getElementById('emailAuthPassword').value;
+      if (!email || !password) {
+        showToast('❌ Email and password are required');
+        return;
+      }
+      if (emailAuthMode === 'signup' && !name) {
+        showToast('❌ Name is required to sign up');
+        return;
+      }
+      const endpoint = emailAuthMode === 'signup' ? '/api/auth/signup' : '/api/auth/signin';
+      const body = emailAuthMode === 'signup' ? { name, email, password } : { email, password };
+      try {
+        const res = await fetch(`${API}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Sign-in failed'}`);
+          return;
+        }
+        // Same success sequence as Google sign-in — same global state, same UI refresh.
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem('authToken', authToken);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        updateUI();
+        if (data.user.role !== 'admin') {
+          setTimeout(() => switchTab(null, 'design'), 500);
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function showForgotPasswordPrompt(event) {
+      if (event) event.preventDefault();
+      const email = prompt('Enter the email on your account — a reset link will be sent if it has a password set:');
+      if (!email) return;
+      try {
+        const res = await fetch(`${API}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        });
+        const data = await res.json();
+        showToast(data.message || (res.ok ? '✅ Check your email' : '❌ Something went wrong'));
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    let pendingResetToken = null;
+
+    function checkForResetToken() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('resetToken');
+      if (token) {
+        pendingResetToken = token;
+        document.getElementById('resetPasswordPanel').style.display = 'block';
+      }
+    }
+
+    async function submitNewPassword() {
+      const newPassword = document.getElementById('resetPasswordNew').value;
+      if (!newPassword || newPassword.length < 6) {
+        showToast('❌ Password must be at least 6 characters');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: pendingResetToken, newPassword }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Could not reset password'}`);
+          return;
+        }
+        showToast('✅ Password updated — sign in with your new password');
+        document.getElementById('resetPasswordPanel').style.display = 'none';
+        // Clean the token out of the URL so a page refresh doesn't try to reuse it
+        window.history.replaceState({}, '', window.location.pathname);
+        toggleEmailAuthPanel();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     function handleResponse(response) {
       setStatus('designStatus', 'Processing sign-in...', 'info');
       
@@ -5135,6 +5276,45 @@
       `;
     }
 
+    function toggleCreateCustomerForm() {
+      const form = document.getElementById('createCustomerForm');
+      const isHidden = form.style.display === 'none';
+      form.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        document.getElementById('newCustomerName').value = '';
+        document.getElementById('newCustomerPhone').value = '';
+        document.getElementById('newCustomerEmail').value = '';
+        document.getElementById('newCustomerName').focus();
+      }
+    }
+
+    async function submitCreateCustomer() {
+      const name = document.getElementById('newCustomerName').value.trim();
+      const phone = document.getElementById('newCustomerPhone').value.trim();
+      const email = document.getElementById('newCustomerEmail').value.trim();
+      if (!name || !phone) {
+        showToast('❌ Name and phone are required');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/auth/admin/create-customer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ name, phone, email }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Could not create customer'}`);
+          return;
+        }
+        showToast(data.alreadyExisted ? `ℹ️ ${data.message}` : `✅ ${data.message}`);
+        toggleCreateCustomerForm();
+        loadAdminCustomers();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function loadAdminCustomers() {
       const revenueList = document.getElementById('adminCustomersRevenueList');
       const visitorList = document.getElementById('adminCustomersVisitorList');
@@ -6016,6 +6196,7 @@
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       loadLandingRateCardTeaser();
+      checkForResetToken();
       const savedToken = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('currentUser');
       
