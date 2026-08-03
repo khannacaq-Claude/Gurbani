@@ -1093,6 +1093,7 @@
           <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
           <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
           <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
+          <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">👗 Shop Suits</button>
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
@@ -1336,6 +1337,13 @@
           <p style="color:#666; margin-bottom:16px; font-size:13px;">Indicative starting prices — your final quote depends on fabric, design complexity, and any customization. Ask Sonia for an exact quote.</p>
           <div id="rateCardAdminControls" style="display:none; margin-bottom:20px;"></div>
           <div id="rateCardList">Loading...</div>
+        </div>
+
+        <!-- CUSTOMER: SHOP UNSTITCHED SUITS - direct purchase, no stitching, no design concept -->
+        <div id="shopSuits" class="tab-content">
+          <h3>👗 Shop Unstitched Suits</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Buy a ready suit set as-is — no design consultation, no stitching. Want it custom-stitched instead? Use AI Design Studio and mention it there.</p>
+          <div id="shopSuitsList">Loading...</div>
         </div>
 
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
@@ -3967,6 +3975,54 @@
     // needed to change a price.
     // ============================================================
     let rateCardEditingId = null;
+
+    async function loadShopSuits() {
+      const list = document.getElementById('shopSuitsList');
+      list.innerHTML = 'Loading...';
+      if (!authToken) {
+        list.innerHTML = '<p style="color:var(--text-muted);">Sign in to see what\'s available right now.</p>';
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/inventory/unstitched-suits`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const suits = (data.unstitchedSuits || []).filter(s => (s.inventory?.available ?? 0) > 0);
+        if (suits.length === 0) {
+          list.innerHTML = '<p style="color:var(--text-muted);">Nothing in stock right now — check back soon, or ask about custom stitching in AI Design Studio.</p>';
+          return;
+        }
+        list.innerHTML = `<div class="grid">${suits.map(s => `
+          <div class="card" style="padding:14px;">
+            ${s.images && s.images[0] ? `<img src="${s.images[0]}" style="width:100%; border-radius:8px; margin-bottom:10px; aspect-ratio:1; object-fit:cover;">` : ''}
+            <strong>${escapeHtml(s.name)}</strong> ${s.color ? '· ' + escapeHtml(s.color) : ''}
+            <div style="font-size:13px; color:var(--text-muted); margin:6px 0;">₹${s.price}</div>
+            <button type="button" class="btn-submit" style="width:100%;" onclick="buySuitDirect('${s._id}', '${escapeHtml(s.name).replace(/'/g, "\\'")}', ${s.price})">Buy as-is — no stitching</button>
+          </div>
+        `).join('')}</div>`;
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function buySuitDirect(itemId, name, price) {
+      if (!(await showConfirm(`Buy "${name}" for ₹${price}, as-is with no stitching? This will need Sonia's approval before it's confirmed.`))) return;
+      try {
+        const res = await fetch(`${API}/api/orders/buy-direct`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ itemType: 'unstitchedSuit', itemId, quantity: 1 }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Could not place order'}`);
+          return;
+        }
+        showToast(`✅ ${data.message}`);
+        loadShopSuits();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
 
     async function loadRateCardTab() {
       const list = document.getElementById('rateCardList');
