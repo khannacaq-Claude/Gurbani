@@ -1516,6 +1516,7 @@
             <button type="button" class="admin-filter-btn" data-inv="buttons" onclick="loadInventoryTab('buttons', event)">Buttons</button>
             <button type="button" class="admin-filter-btn" data-inv="threads" onclick="loadInventoryTab('threads', event)">Threads</button>
             <button type="button" class="admin-filter-btn" data-inv="linings" onclick="loadInventoryTab('linings', event)">Linings</button>
+            <button type="button" class="admin-filter-btn" data-inv="unstitched-suits" onclick="loadInventoryTab('unstitched-suits', event)">Unstitched Suits</button>
           </div>
           <div class="card" style="padding: 20px; margin-bottom: 16px;">
             <h4 id="invFormTitle" style="margin-bottom: 12px;">Add Fabric</h4>
@@ -1741,8 +1742,8 @@
           </div>
 
           <div class="card" style="padding:20px; margin-top:20px;">
-            <h4 style="margin-bottom:8px;">🧵 Import Inventory (Fabric/Lace/Button/Thread/Lining)</h4>
-            <p style="font-size:12px; color:#888; margin-bottom:12px;">Columns: <code>itemType</code> (fabric/lace/button/thread/lining, required), <code>code</code> (required, unique), <code>name</code> (required), <code>color</code>, <code>price</code> (required), <code>quantity</code>, <code>category</code>, <code>imageFilename</code> (matches a photo filename you select below)</p>
+            <h4 style="margin-bottom:8px;">🧵 Import Inventory (Fabric/Lace/Button/Thread/Lining/Unstitched Suit)</h4>
+            <p style="font-size:12px; color:#888; margin-bottom:12px;">Columns: <code>itemType</code> (fabric/lace/button/thread/lining/unstitchedSuit, required), <code>code</code> (required, unique), <code>name</code> (required), <code>color</code>, <code>price</code> (required), <code>quantity</code>, <code>category</code>, <code>imageFilename</code> (matches a photo filename you select below)</p>
             <button type="button" onclick="downloadImportTemplate('inventory')" style="margin-bottom:12px; padding:6px 14px; background:white; border:1px solid #ccc; border-radius:4px; font-size:12px; cursor:pointer;">⬇️ Download Template</button>
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div>
@@ -2077,6 +2078,7 @@
       lining: { endpoint: 'linings', qtyField: 'totalMeters' },
       button: { endpoint: 'buttons', qtyField: 'totalPieces' },
       thread: { endpoint: 'threads', qtyField: 'totalSpools' },
+      unstitchedSuit: { endpoint: 'unstitched-suits', qtyField: 'totalSets' },
     };
 
     async function uploadInventoryImportFile() {
@@ -2232,6 +2234,7 @@
       lining: { endpoint: 'linings', qtyField: 'totalMeters', prefix: 'LIN', label: '🧵 Lining' },
       button: { endpoint: 'buttons', qtyField: 'totalPieces', prefix: 'BTN', label: '🔘 Button' },
       thread: { endpoint: 'threads', qtyField: 'totalSpools', prefix: 'THR', label: '🧶 Thread' },
+      unstitchedSuit: { endpoint: 'unstitched-suits', qtyField: 'totalSets', prefix: 'SUT', label: '👗 Unstitched Suit' },
     };
 
     function billHandleDragOver(e) { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--vivid)'; }
@@ -5012,7 +5015,11 @@
     }
 
     // ---------- ADMIN: INVENTORY MANAGEMENT ----------
-    const INVENTORY_ENDPOINTS = { fabrics: 'fabrics', laces: 'laces', buttons: 'buttons', threads: 'threads', linings: 'linings' };
+    const INVENTORY_ENDPOINTS = { fabrics: 'fabrics', laces: 'laces', buttons: 'buttons', threads: 'threads', linings: 'linings', 'unstitched-suits': 'unstitched-suits' };
+    // Each controller returns its list under a different key (e.g. {laces:[...]}
+    // vs {buttons:[...]}) - this maps category to the ACTUAL key so the right
+    // items get picked up, rather than guessing with a generic fallback.
+    const INVENTORY_RESPONSE_KEY = { fabrics: 'fabrics', laces: 'laces', buttons: 'buttons', threads: 'threads', linings: 'linings', 'unstitched-suits': 'unstitchedSuits' };
     let currentInventoryCategory = 'fabrics';
     let currentInventoryItems = [];
 
@@ -5028,14 +5035,14 @@
       try {
         const res = await fetch(`${API}/api/inventory/${INVENTORY_ENDPOINTS[category]}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
-        currentInventoryItems = data.data || data.fabrics || data.items || [];
+        currentInventoryItems = data[INVENTORY_RESPONSE_KEY[category]] || [];
         renderInventoryList();
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
     }
 
-    const INVENTORY_UNIT_LABELS = { fabrics: 'meters', laces: 'meters', linings: 'meters', buttons: 'pieces', threads: 'spools' };
+    const INVENTORY_UNIT_LABELS = { fabrics: 'meters', laces: 'meters', linings: 'meters', buttons: 'pieces', threads: 'spools', 'unstitched-suits': 'sets' };
 
     function renderInventoryList() {
       const list = document.getElementById('inventoryList');
