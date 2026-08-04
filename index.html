@@ -1173,7 +1173,7 @@
           </div>
 
           <div id="onBehalfOfBlock" class="card" style="display:none; padding:14px; margin-bottom:16px; border:1px solid var(--vivid);">
-            <label style="font-size:12px; font-weight:600;">Who is this design for? (walk-in customer, not signed in themselves)</label>
+            <label style="font-size:12px; font-weight:600;">Already know who this is for? (optional — you can also just explore freely and attach a customer later when you finalize an order)</label>
             <input type="tel" id="onBehalfOfPhone" placeholder="Search by phone" style="margin-bottom:4px;" oninput="lookupOnBehalfOfCustomer()">
             <div id="onBehalfOfResult" style="font-size:12px; min-height:18px;"></div>
           </div>
@@ -1960,6 +1960,30 @@
         showToast('Please enter a valid number of hours.');
         return;
       }
+
+      // If this design came from Sonia exploring on her own (rather than a
+      // customer's own "Ask Quote"), the backend will require a real
+      // customer to be named here - it silently ignores this otherwise, so
+      // it's safe to always ask rather than trying to detect which case
+      // this is on the frontend.
+      let finalizeForCustomerId = null;
+      const phone = prompt('If this design was just an exploration (not from a customer\'s own "Ask Quote"), enter the customer\'s phone to finalize it for them. Leave blank if not needed.');
+      if (phone && phone.trim()) {
+        try {
+          const lookupRes = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(phone.trim())}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+          const lookupData = await lookupRes.json();
+          const match = (lookupData.data || lookupData.customers || []).find(c => c.phone === phone.trim());
+          if (!match) {
+            showToast('❌ No customer found with that phone — create them in the Customers tab first, then try again.');
+            return;
+          }
+          finalizeForCustomerId = match._id;
+        } catch (err) {
+          showToast(`❌ Customer lookup failed: ${err.message}`);
+          return;
+        }
+      }
+
       try {
         const res = await fetch(`${API}/api/designs/${designId}/create-order`, {
           method: 'POST',
@@ -1967,7 +1991,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ conceptIndex: quotedConceptIndex, stitchingHours: hours }),
+          body: JSON.stringify({ conceptIndex: quotedConceptIndex, stitchingHours: hours, finalizeForCustomerId }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
@@ -3186,15 +3210,6 @@
       e.preventDefault();
       if (!authToken) {
         showToast('Please sign in first');
-        return;
-      }
-
-      // Admin MUST pick which customer this is for - otherwise it would
-      // silently attribute the design to Sonia's own account instead of the
-      // real walk-in customer, which is exactly the bug this whole feature
-      // exists to avoid.
-      if (currentUser?.role === 'admin' && !onBehalfOfSelectedCustomer) {
-        showToast('❌ Search for and confirm which customer this design is for, above, before generating');
         return;
       }
 
