@@ -1172,6 +1172,12 @@
             </div>
           </div>
 
+          <div id="onBehalfOfBlock" class="card" style="display:none; padding:14px; margin-bottom:16px; border:1px solid var(--vivid);">
+            <label style="font-size:12px; font-weight:600;">Who is this design for? (walk-in customer, not signed in themselves)</label>
+            <input type="tel" id="onBehalfOfPhone" placeholder="Search by phone" style="margin-bottom:4px;" oninput="lookupOnBehalfOfCustomer()">
+            <div id="onBehalfOfResult" style="font-size:12px; min-height:18px;"></div>
+          </div>
+
           <div id="designStatus" class="status" role="status" aria-live="polite"></div>
           
           <div class="budget-info" id="budgetInfo" style="display: none;">
@@ -3183,6 +3189,15 @@
         return;
       }
 
+      // Admin MUST pick which customer this is for - otherwise it would
+      // silently attribute the design to Sonia's own account instead of the
+      // real walk-in customer, which is exactly the bug this whole feature
+      // exists to avoid.
+      if (currentUser?.role === 'admin' && !onBehalfOfSelectedCustomer) {
+        showToast('❌ Search for and confirm which customer this design is for, above, before generating');
+        return;
+      }
+
       const consented = document.getElementById('photoConsentCheckbox').checked;
       if (!consented) {
         showToast('Please check the consent checkbox (above the photo upload section) before generating designs — this covers how your description and any photos are processed by our AI partners.');
@@ -3250,6 +3265,12 @@
           photos: uploadedPhotos || null,
           measurements: (currentUser?.measurements && Object.keys(currentUser.measurements).some((k) => currentUser.measurements[k])) ? currentUser.measurements : null
         };
+        // Admin generating this for a walk-in who isn't signed in themselves -
+        // only sent if an admin actually picked a customer above; a regular
+        // customer's own payload never has this field.
+        if (currentUser?.role === 'admin' && onBehalfOfSelectedCustomer) {
+          payload.onBehalfOfCustomerId = onBehalfOfSelectedCustomer._id;
+        }
 
         const response = await fetch(`${API}/api/designs`, {
           method: 'POST',
@@ -5149,6 +5170,28 @@
       document.getElementById('manualOrderTotal').textContent = total.toFixed(2);
     }
 
+    let onBehalfOfSelectedCustomer = null;
+
+    async function lookupOnBehalfOfCustomer() {
+      const phone = document.getElementById('onBehalfOfPhone').value.trim();
+      const resultDiv = document.getElementById('onBehalfOfResult');
+      onBehalfOfSelectedCustomer = null;
+      if (phone.length < 10) { resultDiv.innerHTML = ''; return; }
+      try {
+        const res = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(phone)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const match = (data.data || data.customers || []).find(c => c.phone === phone);
+        if (match) {
+          onBehalfOfSelectedCustomer = match;
+          resultDiv.innerHTML = `<span style="color:#2e7d32;">✅ Designing for ${escapeHtml(match.name)}</span>`;
+        } else {
+          resultDiv.innerHTML = `<span style="color:#c62828;">Not found — create them in the Customers tab first</span>`;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `<span style="color:#c62828;">Search failed: ${err.message}</span>`;
+      }
+    }
+
     async function lookupManualOrderCustomer() {
       const phone = document.getElementById('manualOrderPhone').value.trim();
       const resultDiv = document.getElementById('manualOrderCustomerResult');
@@ -6565,19 +6608,22 @@
           document.getElementById('adminImportTabBtn').style.display = 'none';
         }
 
-        // Admin dashboard is purely admin-only — the customer-facing tabs
-        // (Overview/AI Design/My Profile/Appointments/My Designs) never show
-        // for admin accounts. Sonia/Sanjeev test the customer side via their
-        // own personal-email customer logins instead.
+        // Customer-facing tabs (Overview/AI Design/My Profile/Appointments/
+        // My Designs) are now visible to admin accounts too - not every
+        // walk-in customer can or wants to sign in themselves, so Sonia
+        // needs to be able to use AI Design Studio on their behalf. Designs
+        // created this way get correctly attributed to the REAL customer
+        // (via the on-behalf-of selector), never to Sonia's own account -
+        // see createDesign in designController.js.
         const customerOnlyTabIds = ['overviewTabBtn', 'designTabBtn', 'profileTabBtn', 'appointmentsTabBtn', 'myDesignsTabBtn'];
+        customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'inline-block');
+        document.getElementById('onBehalfOfBlock').style.display = currentUser.role === 'admin' ? 'block' : 'none';
         if (currentUser.role === 'admin') {
-          customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'none');
-          // Land admins on their own home tab instead of the now-hidden Overview
+          // Still land admins on their own home tab by default - the
+          // customer tabs are available, just not where they start.
           switchTab(null, 'admin');
           loadAdminRequests();
           maybeOpenQuickCash();
-        } else {
-          customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'inline-block');
         }
         checkProfileNudge();
       } else {
