@@ -1369,6 +1369,27 @@
         <!-- ADMIN: MANAGE ORDERS -->
         <div id="adminOrders" class="tab-content">
           <h3>📦 Manage Orders</h3>
+          <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-bottom:16px;" onclick="toggleManualOrderForm()">➕ Create Manual Order (no AI Design Studio)</button>
+          <div id="manualOrderForm" class="card" style="display:none; padding:16px; margin-bottom:20px; max-width:600px;">
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">For a walk-in where you've shown fabric/accessories in person and they've agreed. Customer must already exist — use "Create Customer Manually" in the Customers tab first if needed.</p>
+
+            <label style="font-size:12px; font-weight:600;">Customer phone</label>
+            <input type="tel" id="manualOrderPhone" placeholder="Search by phone" style="margin-bottom:4px;" oninput="lookupManualOrderCustomer()">
+            <div id="manualOrderCustomerResult" style="font-size:12px; margin-bottom:12px; min-height:18px;"></div>
+
+            <div id="manualOrderMaterials"></div>
+
+            <label style="font-size:12px; font-weight:600; margin-top:8px; display:block;">Stitching charge agreed (₹)</label>
+            <input type="number" id="manualOrderStitchingCharge" placeholder="0" style="margin-bottom:8px;">
+
+            <label style="font-size:12px; font-weight:600;">Notes</label>
+            <textarea id="manualOrderNotes" placeholder="What was agreed, any details worth remembering" style="margin-bottom:12px; min-height:60px;"></textarea>
+
+            <div style="font-size:14px; font-weight:700; margin-bottom:12px;">Total: ₹<span id="manualOrderTotal">0</span></div>
+
+            <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="submitManualOrder()">Create Order</button>
+            <button type="button" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer; margin-left:8px;" onclick="toggleManualOrderForm()">Cancel</button>
+          </div>
           <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
             <button type="button" class="admin-filter-btn active" onclick="filterAdminOrders('all', event)">All</button>
             <button type="button" class="admin-filter-btn" onclick="filterAdminOrders('pending', event)">Pending</button>
@@ -4895,6 +4916,145 @@
         }
         showToast('✅ Marked as followed up');
         loadStockShortfalls();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    const MANUAL_ORDER_CATEGORIES = {
+      fabric: { label: 'Fabric', endpoint: 'fabrics', respKey: 'fabrics', depletable: true },
+      lace: { label: 'Lace', endpoint: 'laces', respKey: 'laces', depletable: true },
+      buttons: { label: 'Buttons/Accessories', endpoint: 'buttons', respKey: 'buttons', depletable: false },
+      thread: { label: 'Thread', endpoint: 'threads', respKey: 'threads', depletable: false },
+      lining: { label: 'Lining', endpoint: 'linings', respKey: 'linings', depletable: true },
+      unstitchedSuit: { label: 'Unstitched Suit', endpoint: 'unstitched-suits', respKey: 'unstitchedSuits', depletable: true },
+    };
+    let manualOrderItemCache = {};   // cat -> array of items, fetched once when form opens
+    let manualOrderSelectedCustomer = null;
+
+    async function toggleManualOrderForm() {
+      const form = document.getElementById('manualOrderForm');
+      const isHidden = form.style.display === 'none';
+      form.style.display = isHidden ? 'block' : 'none';
+      if (!isHidden) return;
+
+      // Reset
+      document.getElementById('manualOrderPhone').value = '';
+      document.getElementById('manualOrderCustomerResult').innerHTML = '';
+      document.getElementById('manualOrderStitchingCharge').value = '';
+      document.getElementById('manualOrderNotes').value = '';
+      manualOrderSelectedCustomer = null;
+
+      // Fetch every category's item list once, up front
+      const matDiv = document.getElementById('manualOrderMaterials');
+      matDiv.innerHTML = 'Loading materials...';
+      manualOrderItemCache = {};
+      await Promise.all(Object.entries(MANUAL_ORDER_CATEGORIES).map(async ([cat, cfg]) => {
+        try {
+          const res = await fetch(`${API}/api/inventory/${cfg.endpoint}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+          const data = await res.json();
+          manualOrderItemCache[cat] = data[cfg.respKey] || [];
+        } catch (e) {
+          manualOrderItemCache[cat] = [];
+        }
+      }));
+
+      matDiv.innerHTML = Object.entries(MANUAL_ORDER_CATEGORIES).map(([cat, cfg]) => `
+        <div style="border-top:1px solid #eee; padding:10px 0;">
+          <label style="font-size:12px; font-weight:600;">${cfg.label}</label>
+          <select id="manualOrderSource_${cat}" onchange="onManualOrderSourceChange('${cat}')" style="margin-bottom:6px;">
+            <option value="none">Not used in this order</option>
+            <option value="customer">Customer's own — no charge</option>
+            <option value="inventory">From our stock</option>
+          </select>
+          <div id="manualOrderItemRow_${cat}" style="display:none; gap:8px;">
+            <select id="manualOrderItem_${cat}" onchange="updateManualOrderTotal()" style="flex:2;">
+              <option value="">Select item...</option>
+              ${(manualOrderItemCache[cat] || []).map(item => `<option value="${item._id}" data-price="${item.price}">${escapeHtml(item.name)}${item.color ? ' - ' + escapeHtml(item.color) : ''} (₹${item.price}${cfg.depletable ? ', ' + (item.inventory?.available ?? 0) + ' available' : ''})</option>`).join('')}
+            </select>
+            <input type="number" id="manualOrderQty_${cat}" placeholder="Qty" value="1" min="1" style="flex:1;" oninput="updateManualOrderTotal()">
+          </div>
+        </div>
+      `).join('');
+      updateManualOrderTotal();
+    }
+
+    function onManualOrderSourceChange(cat) {
+      const source = document.getElementById(`manualOrderSource_${cat}`).value;
+      document.getElementById(`manualOrderItemRow_${cat}`).style.display = source === 'inventory' ? 'flex' : 'none';
+      updateManualOrderTotal();
+    }
+
+    function updateManualOrderTotal() {
+      let total = Number(document.getElementById('manualOrderStitchingCharge').value) || 0;
+      for (const cat of Object.keys(MANUAL_ORDER_CATEGORIES)) {
+        const sourceEl = document.getElementById(`manualOrderSource_${cat}`);
+        if (!sourceEl) continue;
+        if (sourceEl.value === 'inventory') {
+          const itemSelect = document.getElementById(`manualOrderItem_${cat}`);
+          const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+          const price = selectedOption ? Number(selectedOption.dataset.price || 0) : 0;
+          const qty = Number(document.getElementById(`manualOrderQty_${cat}`).value) || 0;
+          total += price * qty;
+        }
+      }
+      document.getElementById('manualOrderTotal').textContent = total.toFixed(2);
+    }
+
+    async function lookupManualOrderCustomer() {
+      const phone = document.getElementById('manualOrderPhone').value.trim();
+      const resultDiv = document.getElementById('manualOrderCustomerResult');
+      manualOrderSelectedCustomer = null;
+      if (phone.length < 10) { resultDiv.innerHTML = ''; return; }
+      try {
+        const res = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(phone)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const match = (data.data || data.customers || []).find(c => c.phone === phone);
+        if (match) {
+          manualOrderSelectedCustomer = match;
+          resultDiv.innerHTML = `<span style="color:#2e7d32;">✅ ${escapeHtml(match.name)}</span>`;
+        } else {
+          resultDiv.innerHTML = `<span style="color:#c62828;">Not found — create them in the Customers tab first</span>`;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `<span style="color:#c62828;">Search failed: ${err.message}</span>`;
+      }
+    }
+
+    async function submitManualOrder() {
+      if (!manualOrderSelectedCustomer) {
+        showToast('❌ Search for and confirm a customer by phone first');
+        return;
+      }
+      const materials = {};
+      for (const cat of Object.keys(MANUAL_ORDER_CATEGORIES)) {
+        const source = document.getElementById(`manualOrderSource_${cat}`).value;
+        if (source === 'none') continue;
+        if (source === 'customer') { materials[cat] = { source: 'customer' }; continue; }
+        if (source === 'inventory') {
+          const itemId = document.getElementById(`manualOrderItem_${cat}`).value;
+          const qty = Number(document.getElementById(`manualOrderQty_${cat}`).value) || 1;
+          if (!itemId) continue;
+          materials[cat] = { source: 'inventory', itemId, quantity: qty };
+        }
+      }
+      const stitchingCharge = Number(document.getElementById('manualOrderStitchingCharge').value) || 0;
+      const notes = document.getElementById('manualOrderNotes').value.trim();
+
+      try {
+        const res = await fetch(`${API}/api/orders/create-manual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ customerId: manualOrderSelectedCustomer._id, materials, stitchingCharge, notes }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(`❌ ${data.error || 'Could not create order'}${data.shortages ? ': ' + data.shortages.join('; ') : ''}`);
+          return;
+        }
+        showToast(`✅ ${data.message}`);
+        toggleManualOrderForm();
+        loadAdminOrders();
       } catch (err) {
         showToast(`❌ ${err.message}`);
       }
