@@ -2812,8 +2812,20 @@
       el.className = 'status show ' + type;
     }
 
+    let shopSuitsNudgeShown = false; // only nudge once per visit, not every tab click
+
     function switchTab(event, tabName) {
       if (event) event.preventDefault();
+      // Leaving Shop Suits with nothing added to cart - nudge toward AI Design Studio.
+      // Checked BEFORE the active class is removed, so we know what they're leaving.
+      const leavingShopSuits = document.getElementById('shopSuits')?.classList.contains('active');
+      if (leavingShopSuits && tabName !== 'shopSuits' && !shopSuitsNudgeShown) {
+        const cart = (typeof shopSuitsCart !== 'undefined') ? shopSuitsCart : {};
+        if (Object.keys(cart).length === 0) {
+          shopSuitsNudgeShown = true;
+          showToast('✨ Didn\'t find the right ready set? Try AI Design Studio — describe what you want and we\'ll design it with you.', 6000);
+        }
+      }
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
       document.getElementById(tabName).classList.add('active');
@@ -3997,9 +4009,15 @@
     // ============================================================
     let rateCardEditingId = null;
 
+    let shopSuitsCatalog = [];  // full available-suits list, cached after load
+    let shopSuitsCart = {};     // itemId -> { name, price } for checked suits
+    let shopSuitsChoices = {};  // itemId -> 'none' | 'stitch-no-ai' | 'stitch-with-ai'
+
     async function loadShopSuits() {
       const list = document.getElementById('shopSuitsList');
       list.innerHTML = 'Loading...';
+      shopSuitsCart = {};
+      shopSuitsChoices = {};
       if (!authToken) {
         list.innerHTML = '<p style="color:var(--text-muted);">Sign in to see what\'s available right now.</p>';
         return;
@@ -4007,42 +4025,103 @@
       try {
         const res = await fetch(`${API}/api/inventory/unstitched-suits`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
-        const suits = (data.unstitchedSuits || []).filter(s => (s.inventory?.available ?? 0) > 0);
-        if (suits.length === 0) {
-          list.innerHTML = '<p style="color:var(--text-muted);">Nothing in stock right now — check back soon, or ask about custom stitching in AI Design Studio.</p>';
-          return;
-        }
-        list.innerHTML = `<div class="grid">${suits.map(s => `
-          <div class="card" style="padding:14px;">
-            ${s.images && s.images[0] ? `<img src="${s.images[0]}" style="width:100%; border-radius:8px; margin-bottom:10px; aspect-ratio:1; object-fit:cover;">` : ''}
-            <strong>${escapeHtml(s.name)}</strong> ${s.color ? '· ' + escapeHtml(s.color) : ''}
-            <div style="font-size:13px; color:var(--text-muted); margin:6px 0;">₹${s.price}</div>
-            <button type="button" class="btn-submit" style="width:100%;" onclick="buySuitDirect('${s._id}', '${escapeHtml(s.name).replace(/'/g, "\\'")}', ${s.price})">Buy as-is — no stitching</button>
-          </div>
-        `).join('')}</div>`;
+        shopSuitsCatalog = (data.unstitchedSuits || []).filter(s => (s.inventory?.available ?? 0) > 0);
+        renderShopSuitsStep1();
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
     }
 
-    async function buySuitDirect(itemId, name, price) {
-      if (!(await showConfirm(`Buy "${name}" for ₹${price}, as-is with no stitching? This will need Sonia's approval before it's confirmed.`))) return;
-      try {
-        const res = await fetch(`${API}/api/orders/buy-direct`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ itemType: 'unstitchedSuit', itemId, quantity: 1 }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          showToast(`❌ ${data.error || 'Could not place order'}`);
-          return;
-        }
-        showToast(`✅ ${data.message}`);
-        loadShopSuits();
-      } catch (err) {
-        showToast(`❌ ${err.message}`);
+    function renderShopSuitsStep1() {
+      const list = document.getElementById('shopSuitsList');
+      if (shopSuitsCatalog.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);">Nothing in stock right now — check back soon, or ask about custom stitching in AI Design Studio.</p>';
+        return;
       }
+      list.innerHTML = `
+        <div class="grid">${shopSuitsCatalog.map(s => `
+          <div class="card" style="padding:14px;">
+            ${s.images && s.images[0] ? `<img src="${s.images[0]}" style="width:100%; border-radius:8px; margin-bottom:10px; aspect-ratio:1; object-fit:cover;">` : ''}
+            <strong>${escapeHtml(s.name)}</strong> ${s.color ? '· ' + escapeHtml(s.color) : ''}
+            <div style="font-size:13px; color:var(--text-muted); margin:6px 0;">₹${s.price}</div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+              <input type="checkbox" onchange="toggleShopSuitCartItem('${s._id}', '${escapeHtml(s.name).replace(/'/g, "\\'")}', ${s.price}, this.checked)">
+              Select
+            </label>
+          </div>
+        `).join('')}</div>
+        <div id="shopSuitsContinueBar" style="display:none; position:sticky; bottom:0; background:var(--cream); border-top:1px solid #eee; padding:12px 0; margin-top:16px;">
+          <button type="button" class="btn-submit" style="width:auto; padding:10px 24px;" onclick="renderShopSuitsStep2()">
+            Continue with <span id="shopSuitsCartCount">0</span> suit(s)
+          </button>
+        </div>`;
+    }
+
+    function toggleShopSuitCartItem(id, name, price, checked) {
+      if (checked) { shopSuitsCart[id] = { name, price }; }
+      else { delete shopSuitsCart[id]; }
+      const count = Object.keys(shopSuitsCart).length;
+      document.getElementById('shopSuitsContinueBar').style.display = count > 0 ? 'block' : 'none';
+      document.getElementById('shopSuitsCartCount').textContent = count;
+    }
+
+    function renderShopSuitsStep2() {
+      const list = document.getElementById('shopSuitsList');
+      const items = Object.entries(shopSuitsCart);
+      list.innerHTML = `
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">For each suit, choose separately — some might just be a straight buy, others you may want stitched.</p>
+        ${items.map(([id, item]) => {
+          if (!shopSuitsChoices[id]) shopSuitsChoices[id] = 'none';
+          return `
+          <div class="card" style="padding:14px; margin-bottom:10px;">
+            <strong>${escapeHtml(item.name)}</strong> — ₹${item.price}
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px; font-size:13px;">
+              <label style="cursor:pointer;"><input type="radio" name="stitch_${id}" value="none" checked onchange="shopSuitsChoices['${id}']='none'"> Buy as-is — no stitching</label>
+              <label style="cursor:pointer;"><input type="radio" name="stitch_${id}" value="stitch-no-ai" onchange="shopSuitsChoices['${id}']='stitch-no-ai'"> Stitch it — no AI, Sonia will follow up on pricing</label>
+              <label style="cursor:pointer;"><input type="radio" name="stitch_${id}" value="stitch-with-ai" onchange="shopSuitsChoices['${id}']='stitch-with-ai'"> Stitch it — with AI Design Studio (free this season)</label>
+            </div>
+          </div>`;
+        }).join('')}
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn-submit" style="width:auto; padding:10px 24px;" onclick="checkoutShopSuits()">Checkout</button>
+          <button type="button" style="padding:10px 18px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;" onclick="renderShopSuitsStep1()">Back</button>
+        </div>`;
+    }
+
+    async function checkoutShopSuits() {
+      const items = Object.entries(shopSuitsCart);
+      const list = document.getElementById('shopSuitsList');
+      list.innerHTML = 'Placing your order(s)...';
+
+      const results = [];
+      for (const [itemId] of items) {
+        try {
+          const res = await fetch(`${API}/api/orders/buy-direct`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            body: JSON.stringify({ itemType: 'unstitchedSuit', itemId, quantity: 1, stitchingChoice: shopSuitsChoices[itemId] || 'none' }),
+          });
+          const data = await res.json();
+          results.push({ name: shopSuitsCart[itemId].name, ok: res.ok && data.success, message: data.message || data.error });
+        } catch (err) {
+          results.push({ name: shopSuitsCart[itemId].name, ok: false, message: err.message });
+        }
+      }
+
+      const anyStitching = Object.values(shopSuitsChoices).some(c => c !== 'none');
+      list.innerHTML = `
+        <div class="card" style="padding:16px;">
+          <h4 style="margin-bottom:10px;">Order summary</h4>
+          ${results.map(r => `<div style="font-size:13px; margin-bottom:6px;">${r.ok ? '✅' : '❌'} <strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.message)}</div>`).join('')}
+          ${anyStitching ? '<p style="font-size:12px; color:var(--text-muted); margin-top:10px;">For any suit you asked to be stitched, Sonia will follow up directly to confirm next steps.</p>' : ''}
+          <div style="margin-top:16px; padding-top:12px; border-top:1px solid #eee;">
+            <a href="#" onclick="switchTab(event, 'design')" style="color:var(--vivid); font-weight:600; font-size:13px;">✨ Want something fully custom instead? Try AI Design Studio →</a>
+          </div>
+        </div>`;
+
+      shopSuitsCart = {};
+      shopSuitsChoices = {};
+      shopSuitsNudgeShown = true; // they just completed checkout - no need for the abandon-cart nudge too
     }
 
     async function loadRateCardTab() {
