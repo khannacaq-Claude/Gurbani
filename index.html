@@ -1060,6 +1060,11 @@
             <p>See every design you've created and its status</p>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Sign in to view</p>
           </div>
+          <div class="feature-box" onclick="promptSignIn('Marketplace')">
+            <h3>🛍️ Marketplace</h3>
+            <p>Buy fabric, lace, lining & unstitched suits as-is — no stitching required</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Sign in to shop</p>
+          </div>
         </div>
         <p style="text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 28px; letter-spacing: 0.3px;">✨ Always adding something new</p>
 
@@ -1093,7 +1098,7 @@
           <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
           <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
           <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
-          <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">👗 Shop Suits</button>
+          <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">🛍️ Marketplace</button>
           <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
           <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
           <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
@@ -1339,10 +1344,19 @@
           <div id="rateCardList">Loading...</div>
         </div>
 
-        <!-- CUSTOMER: SHOP UNSTITCHED SUITS - direct purchase, no stitching, no design concept -->
+        <!-- CUSTOMER: MARKETPLACE - direct purchase, no stitching, no design concept.
+             Grows over time as more categories/products get added (bedsheets,
+             towels, shawls etc. planned) - built generic from the start. -->
         <div id="shopSuits" class="tab-content">
-          <h3>👗 Shop Unstitched Suits</h3>
-          <p style="color:#666; margin-bottom:16px; font-size:13px;">Buy a ready suit set as-is — no design consultation, no stitching. Want it custom-stitched instead? Use AI Design Studio and mention it there.</p>
+          <h3>🛍️ Marketplace</h3>
+          <p style="color:#666; margin-bottom:12px; font-size:13px;">Buy ready fabric, lace, lining & unstitched suits as-is — no design consultation, no stitching. Want something custom-stitched instead? Use AI Design Studio.</p>
+          <div id="marketplaceCategoryFilter" style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+            <button type="button" class="admin-filter-btn active" onclick="filterMarketplaceCategory('all', event)">All</button>
+            <button type="button" class="admin-filter-btn" onclick="filterMarketplaceCategory('fabric', event)">Fabric</button>
+            <button type="button" class="admin-filter-btn" onclick="filterMarketplaceCategory('lace', event)">Lace</button>
+            <button type="button" class="admin-filter-btn" onclick="filterMarketplaceCategory('lining', event)">Lining</button>
+            <button type="button" class="admin-filter-btn" onclick="filterMarketplaceCategory('unstitchedSuit', event)">Unstitched Suits</button>
+          </div>
           <div id="shopSuitsList">Loading...</div>
         </div>
 
@@ -2767,7 +2781,6 @@
     // Shared list — used for BOTH the "What's Coming" teaser cards and the
     // feedback form's "which would you use?" checkboxes, so they always match.
     const UPCOMING_FEATURES = [
-      { key: 'fabric-marketplace', icon: '🧵', title: 'Fabric Marketplace', desc: 'Browse & buy fabric online, shipped to your door' },
       { key: 'monthly-plans', icon: '💳', title: 'Monthly Design Plans', desc: 'More designs + bigger discounts every month' },
       { key: 'birthday-perks', icon: '🎂', title: 'Birthday Perks', desc: 'Automatic discount during your birthday month' },
       { key: 'instant-booking', icon: '📅', title: 'Instant Appointment Booking', desc: 'Pick your own time slot, no back-and-forth' },
@@ -4009,9 +4022,21 @@
     // ============================================================
     let rateCardEditingId = null;
 
-    let shopSuitsCatalog = [];  // full available-suits list, cached after load
-    let shopSuitsCart = {};     // itemId -> { name, price } for checked suits
-    let shopSuitsChoices = {};  // itemId -> 'none' | 'stitch-no-ai' | 'stitch-with-ai'
+    // Categories sold as-is through the Marketplace. Fabric/Lace/Lining are
+    // metered (customer picks how many meters); UnstitchedSuit is always a
+    // whole set (qty fixed at 1, no input shown). Add future categories
+    // (bedsheets, towels, shawls) here as their own entry when built -
+    // everything below already loops generically over this map.
+    const MARKETPLACE_CATEGORIES = {
+      fabric: { endpoint: 'fabrics', respKey: 'fabrics', unit: 'meters', metered: true },
+      lace: { endpoint: 'laces', respKey: 'laces', unit: 'meters', metered: true },
+      lining: { endpoint: 'linings', respKey: 'linings', unit: 'meters', metered: true },
+      unstitchedSuit: { endpoint: 'unstitched-suits', respKey: 'unstitchedSuits', unit: 'set', metered: false },
+    };
+    let shopSuitsCatalog = [];         // full available items across all categories, cached after load
+    let currentMarketplaceFilter = 'all';
+    let shopSuitsCart = {};            // itemId -> { name, price, category, quantity, unit }
+    let shopSuitsChoices = {};         // itemId -> 'none' | 'stitch-no-ai' | 'stitch-with-ai'
 
     async function loadShopSuits() {
       const list = document.getElementById('shopSuitsList');
@@ -4023,58 +4048,97 @@
         return;
       }
       try {
-        const res = await fetch(`${API}/api/inventory/unstitched-suits`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-        const data = await res.json();
-        shopSuitsCatalog = (data.unstitchedSuits || []).filter(s => (s.inventory?.available ?? 0) > 0);
+        const results = await Promise.all(
+          Object.entries(MARKETPLACE_CATEGORIES).map(async ([cat, cfg]) => {
+            const res = await fetch(`${API}/api/inventory/${cfg.endpoint}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+            const data = await res.json();
+            return (data[cfg.respKey] || [])
+              .filter(item => (item.inventory?.available ?? 0) > 0)
+              .map(item => ({ ...item, _category: cat }));
+          })
+        );
+        shopSuitsCatalog = results.flat();
         renderShopSuitsStep1();
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
     }
 
+    function filterMarketplaceCategory(cat, event) {
+      currentMarketplaceFilter = cat;
+      document.querySelectorAll('#marketplaceCategoryFilter .admin-filter-btn').forEach(b => b.classList.remove('active'));
+      if (event) event.target.classList.add('active');
+      renderShopSuitsStep1();
+    }
+
     function renderShopSuitsStep1() {
       const list = document.getElementById('shopSuitsList');
-      if (shopSuitsCatalog.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-muted);">Nothing in stock right now — check back soon, or ask about custom stitching in AI Design Studio.</p>';
+      const items = currentMarketplaceFilter === 'all'
+        ? shopSuitsCatalog
+        : shopSuitsCatalog.filter(s => s._category === currentMarketplaceFilter);
+
+      if (items.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);">Nothing here right now — check back soon, or ask about custom stitching in AI Design Studio.</p>';
         return;
       }
       list.innerHTML = `
-        <div class="grid">${shopSuitsCatalog.map(s => `
+        <div class="grid">${items.map(s => {
+          const cfg = MARKETPLACE_CATEGORIES[s._category];
+          const safeName = escapeHtml(s.name).replace(/'/g, "\\'");
+          return `
           <div class="card" style="padding:14px;">
             ${s.images && s.images[0] ? `<img src="${s.images[0]}" style="width:100%; border-radius:8px; margin-bottom:10px; aspect-ratio:1; object-fit:cover;">` : ''}
-            <strong>${escapeHtml(s.name)}</strong> ${s.color ? '· ' + escapeHtml(s.color) : ''}
-            <div style="font-size:13px; color:var(--text-muted); margin:6px 0;">₹${s.price}</div>
-            <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
-              <input type="checkbox" onchange="toggleShopSuitCartItem('${s._id}', '${escapeHtml(s.name).replace(/'/g, "\\'")}', ${s.price}, this.checked)">
-              Select
-            </label>
-          </div>
-        `).join('')}</div>
-        <div id="shopSuitsContinueBar" style="display:none; position:sticky; bottom:0; background:var(--cream); border-top:1px solid #eee; padding:12px 0; margin-top:16px;">
+            <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--vivid);">${cfg.metered ? s._category : 'Unstitched Suit'}</span>
+            <div><strong>${escapeHtml(s.name)}</strong> ${s.color ? '· ' + escapeHtml(s.color) : ''}</div>
+            <div style="font-size:13px; color:var(--text-muted); margin:6px 0;">₹${s.price}${cfg.metered ? '/meter' : ' per set'} · ${s.inventory?.available ?? 0} ${cfg.unit} available</div>
+            <div style="display:flex; align-items:center; gap:8px; font-size:13px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="chk_${s._id}" onchange="toggleShopSuitCartItem('${s._id}', '${safeName}', ${s.price}, '${s._category}', this.checked)">
+                Select
+              </label>
+              ${cfg.metered ? `<input type="number" id="qty_${s._id}" value="1" min="1" max="${s.inventory?.available ?? 1}" style="width:70px;" oninput="updateShopSuitCartQuantity('${s._id}')" placeholder="meters">` : ''}
+            </div>
+          </div>`;
+        }).join('')}</div>
+        <div id="shopSuitsContinueBar" style="display:${Object.keys(shopSuitsCart).length > 0 ? 'block' : 'none'}; position:sticky; bottom:0; background:var(--cream); border-top:1px solid #eee; padding:12px 0; margin-top:16px;">
           <button type="button" class="btn-submit" style="width:auto; padding:10px 24px;" onclick="renderShopSuitsStep2()">
-            Continue with <span id="shopSuitsCartCount">0</span> suit(s)
+            Continue with <span id="shopSuitsCartCount">${Object.keys(shopSuitsCart).length}</span> item(s)
           </button>
         </div>`;
     }
 
-    function toggleShopSuitCartItem(id, name, price, checked) {
-      if (checked) { shopSuitsCart[id] = { name, price }; }
-      else { delete shopSuitsCart[id]; }
+    function toggleShopSuitCartItem(id, name, price, category, checked) {
+      const cfg = MARKETPLACE_CATEGORIES[category];
+      if (checked) {
+        const qtyInput = document.getElementById(`qty_${id}`);
+        const quantity = cfg.metered ? (Number(qtyInput?.value) || 1) : 1;
+        shopSuitsCart[id] = { name, price, category, quantity, unit: cfg.unit };
+      } else {
+        delete shopSuitsCart[id];
+      }
       const count = Object.keys(shopSuitsCart).length;
-      document.getElementById('shopSuitsContinueBar').style.display = count > 0 ? 'block' : 'none';
-      document.getElementById('shopSuitsCartCount').textContent = count;
+      const bar = document.getElementById('shopSuitsContinueBar');
+      if (bar) bar.style.display = count > 0 ? 'block' : 'none';
+      const countEl = document.getElementById('shopSuitsCartCount');
+      if (countEl) countEl.textContent = count;
+    }
+
+    function updateShopSuitCartQuantity(id) {
+      if (!shopSuitsCart[id]) return; // not selected yet, nothing to update
+      const qtyInput = document.getElementById(`qty_${id}`);
+      shopSuitsCart[id].quantity = Number(qtyInput?.value) || 1;
     }
 
     function renderShopSuitsStep2() {
       const list = document.getElementById('shopSuitsList');
       const items = Object.entries(shopSuitsCart);
       list.innerHTML = `
-        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">For each suit, choose separately — some might just be a straight buy, others you may want stitched.</p>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">For each item, choose separately — some might just be a straight buy, others you may want stitched.</p>
         ${items.map(([id, item]) => {
           if (!shopSuitsChoices[id]) shopSuitsChoices[id] = 'none';
           return `
           <div class="card" style="padding:14px; margin-bottom:10px;">
-            <strong>${escapeHtml(item.name)}</strong> — ₹${item.price}
+            <strong>${escapeHtml(item.name)}</strong> — ${item.quantity} ${item.unit} × ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}
             <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px; font-size:13px;">
               <label style="cursor:pointer;"><input type="radio" name="stitch_${id}" value="none" checked onchange="shopSuitsChoices['${id}']='none'"> Buy as-is — no stitching</label>
               <label style="cursor:pointer;"><input type="radio" name="stitch_${id}" value="stitch-no-ai" onchange="shopSuitsChoices['${id}']='stitch-no-ai'"> Stitch it — no AI, Sonia will follow up on pricing</label>
@@ -4094,17 +4158,17 @@
       list.innerHTML = 'Placing your order(s)...';
 
       const results = [];
-      for (const [itemId] of items) {
+      for (const [itemId, item] of items) {
         try {
           const res = await fetch(`${API}/api/orders/buy-direct`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-            body: JSON.stringify({ itemType: 'unstitchedSuit', itemId, quantity: 1, stitchingChoice: shopSuitsChoices[itemId] || 'none' }),
+            body: JSON.stringify({ itemType: item.category, itemId, quantity: item.quantity, stitchingChoice: shopSuitsChoices[itemId] || 'none' }),
           });
           const data = await res.json();
-          results.push({ name: shopSuitsCart[itemId].name, ok: res.ok && data.success, message: data.message || data.error });
+          results.push({ name: item.name, ok: res.ok && data.success, message: data.message || data.error });
         } catch (err) {
-          results.push({ name: shopSuitsCart[itemId].name, ok: false, message: err.message });
+          results.push({ name: item.name, ok: false, message: err.message });
         }
       }
 
@@ -4113,7 +4177,7 @@
         <div class="card" style="padding:16px;">
           <h4 style="margin-bottom:10px;">Order summary</h4>
           ${results.map(r => `<div style="font-size:13px; margin-bottom:6px;">${r.ok ? '✅' : '❌'} <strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.message)}</div>`).join('')}
-          ${anyStitching ? '<p style="font-size:12px; color:var(--text-muted); margin-top:10px;">For any suit you asked to be stitched, Sonia will follow up directly to confirm next steps.</p>' : ''}
+          ${anyStitching ? '<p style="font-size:12px; color:var(--text-muted); margin-top:10px;">For anything you asked to be stitched, Sonia will follow up directly to confirm next steps.</p>' : ''}
           <div style="margin-top:16px; padding-top:12px; border-top:1px solid #eee;">
             <a href="#" onclick="switchTab(event, 'design')" style="color:var(--vivid); font-weight:600; font-size:13px;">✨ Want something fully custom instead? Try AI Design Studio →</a>
           </div>
