@@ -64,8 +64,8 @@
     :root {
       --ink: #141a29;
       --ink-soft: #1c2338;
-      --vivid: #C99A3D;
-      --vivid-deep: #A67B24;
+      --vivid: #CF0184;
+      --vivid-deep: #970063;
       --marigold: #F2A93B;
       --marigold-deep: #D68C1F;
       --cream: #FDF8F0;
@@ -86,13 +86,13 @@
 
     header {
       background:
-        radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.10), transparent 65%),
-        var(--ink);
+        radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.14), transparent 65%),
+        linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       color: white;
       padding: 64px 20px 56px 20px;
       text-align: center;
       position: relative;
-      border-bottom: 4px solid var(--vivid);
+      border-bottom: 4px solid var(--marigold);
     }
 
     .header-wordmark-final {
@@ -117,7 +117,7 @@
       top: -9px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--ink);
+      background: var(--vivid);
       color: var(--marigold);
       font-size: 11px;
       padding: 0 8px;
@@ -151,7 +151,7 @@
 
     button {
       background: var(--vivid);
-      color: var(--ink);
+      color: #FFFFFF;
       border: none;
       padding: 11px 22px;
       border-radius: 30px;
@@ -410,7 +410,7 @@
     }
 
     .tab-btn:hover { color: white; }
-    .tab-btn.active { color: var(--ink); background: var(--vivid); }
+    .tab-btn.active { color: #FFFFFF; background: var(--vivid); }
     .tab-icon {
       width: 15px;
       height: 15px;
@@ -6499,7 +6499,7 @@
             else { showToast('❌ Payment made but verification failed — contact Sonia with your payment ID.'); }
           },
           prefill: { name: currentUser?.name || '', email: currentUser?.email || '', contact: currentUser?.phone || '' },
-          theme: { color: '#C99A3D' },
+          theme: { color: '#CF0184' },
         };
         const rzp = new Razorpay(options);
         rzp.open();
