@@ -205,7 +205,9 @@
     .hero-headline::after { content: none; }
     .hero-headline .accent { color: var(--vivid); }
     .trust-badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       background: var(--ink);
       color: var(--marigold);
       font-size: 12px;
@@ -216,6 +218,88 @@
       border-radius: 30px;
       margin-bottom: 20px;
     }
+    .trust-badge .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #5FD98A;
+      position: relative;
+      flex: none;
+    }
+    .trust-badge .live-dot::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid #5FD98A;
+      animation: trustPing 1.8s ease-out infinite;
+    }
+    @keyframes trustPing {
+      0% { transform: scale(0.6); opacity: 0.9; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Stitched underline under the hero accent phrase */
+    .hero-headline .accent { position: relative; display: inline-block; }
+    .hero-headline .accent svg {
+      position: absolute;
+      left: 0;
+      bottom: -6px;
+      width: 100%;
+      height: 10px;
+      overflow: visible;
+    }
+    .hero-headline .accent svg path {
+      fill: none;
+      stroke: var(--vivid);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-dasharray: 5 6;
+      stroke-dashoffset: 300;
+      animation: sewUnderline 1.4s 0.4s ease-out forwards;
+    }
+    @keyframes sewUnderline { to { stroke-dashoffset: 0; } }
+
+    /* Staggered entrance for the feature tiles */
+    .feature-box {
+      opacity: 0;
+      animation: featureRise 0.5s ease-out forwards;
+    }
+    .feature-box:nth-child(1) { animation-delay: 0.05s; }
+    .feature-box:nth-child(2) { animation-delay: 0.12s; }
+    .feature-box:nth-child(3) { animation-delay: 0.19s; }
+    .feature-box:nth-child(4) { animation-delay: 0.26s; }
+    .feature-box:nth-child(5) { animation-delay: 0.33s; }
+    @keyframes featureRise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Coming Soon sections (gallery / testimonials) — same badge language as Rate Card teaser */
+    .coming-soon-section { margin-top: 40px; text-align: center; }
+    .coming-soon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .coming-soon-tile {
+      background: var(--sand);
+      border-radius: 6px;
+      border-left: 5px solid var(--vivid);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .coming-soon-tile .cs-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--marigold); color: var(--ink);
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 10px;
+    }
+    .coming-soon-tile .cs-icon { font-size: 26px; margin-bottom: 8px; opacity: 0.8; }
+    .coming-soon-tile h4 { font-size: 14px; margin-bottom: 6px; color: var(--ink); }
+    .coming-soon-tile p { font-size: 12px; color: var(--text-muted); margin: 0; }
     .version-badge {
       display: inline-block;
       margin: -10px 0 20px 10px;
@@ -1031,10 +1115,12 @@
     <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
       <div class="card">
-        <div class="trust-badge">✨ AI-Powered Custom Design Studio</div>
+        <div class="trust-badge"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
         <span class="version-badge" id="versionBadge"></span>
         <div class="hero-eyebrow">Finally, a boutique built around your vision...</div>
-        <h2 class="hero-headline" style="text-transform: none;">Your Vision. <span class="accent">Designed With You.</span></h2>
+        <h2 class="hero-headline" style="text-transform: none;">Your Vision. <span class="accent">Designed With You.
+          <svg viewBox="0 0 260 10" preserveAspectRatio="none"><path d="M2 6 Q 24 1, 46 6 T 90 6 T 134 6 T 178 6 T 222 6 T 258 6"/></svg>
+        </span></h2>
         <p>Custom stitched outfits powered by AI design ideas + personalized photo-based styling</p>
         <p>Sign in with Google to create designs, upload multiple reference photos, and get personalized AI styling feedback!</p>
         
@@ -1080,6 +1166,28 @@
           </p>
           <div id="instagramWidgetContainer" style="min-height: 420px; max-width: 900px; margin: 0 auto;">
             <script src="https://cdn.lightwidget.com/widgets/lightwidget.js"></script><iframe src="https://cdn.lightwidget.com/widgets/059de719fcc5514baf2b4a4391497ef7.html" scrolling="no" allowtransparency="true" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;"></iframe>
+          </div>
+        </div>
+
+        <!-- DESIGN GALLERY — coming soon, waiting on inventory photo shoot -->
+        <div class="coming-soon-section">
+          <h3>🖼️ Designs Gallery</h3>
+          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">Real designs from real orders — coming as soon as our new collection is photographed.</p>
+          <div class="coming-soon-grid">
+            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">👗</div><h4>Bridal Lehengas</h4><p>See finished pieces styled on real customers</p></div>
+            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">🥻</div><h4>Anarkalis &amp; Suits</h4><p>From first sketch to final fitting</p></div>
+            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">✨</div><h4>AI-Assisted Designs</h4><p>Concepts turned into stitched reality</p></div>
+          </div>
+        </div>
+
+        <!-- TESTIMONIALS — coming soon, waiting on real customer reviews -->
+        <div class="coming-soon-section">
+          <h3>💬 What Customers Say</h3>
+          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">We're just getting started collecting reviews — check back soon.</p>
+          <div class="coming-soon-grid">
+            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">⭐</div><h4>Customer Stories</h4><p>Real experiences from real families</p></div>
+            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">📝</div><h4>Written Reviews</h4><p>Honest feedback on fit, fabric &amp; service</p></div>
+            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">🤝</div><h4>Google Reviews</h4><p>Linked here once we have enough to show</p></div>
           </div>
         </div>
       </div>
