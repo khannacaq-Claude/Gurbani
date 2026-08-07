@@ -314,6 +314,56 @@
       100% { transform: scale(2.2); opacity: 0; }
     }
 
+    /* Instagram section — animated "live" chrome around the third-party embed */
+    .insta-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #E1306C;
+      background: rgba(225,48,108,0.08);
+      border: 1px solid rgba(225,48,108,0.25);
+      border-radius: 999px;
+      padding: 4px 10px 4px 8px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .insta-live-badge .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #E1306C; position: relative; flex: none;
+    }
+    .insta-live-badge .live-dot::after {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 1px solid #E1306C; animation: trustPing 1.8s ease-out infinite;
+    }
+
+    .insta-frame {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: 16px;
+      padding: 3px;
+      background: linear-gradient(120deg, #F58529, #DD2A7B, #8134AF, #515BD4, #F58529);
+      background-size: 300% 300%;
+      animation: instaGlow 6s ease infinite;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .insta-frame.in-view { opacity: 1; transform: translateY(0); }
+    .insta-frame-inner {
+      background: var(--cream-card);
+      border-radius: 13px;
+      overflow: hidden;
+      min-height: 420px;
+    }
+    @keyframes instaGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     /* Stitched underline under the hero accent phrase */
     .hero-headline .accent { position: relative; display: inline-block; }
     .hero-headline .accent svg {
@@ -1429,12 +1479,16 @@
 
         <!-- INSTAGRAM GALLERY -->
         <div id="instagramSection" style="margin-top: 36px; text-align:center;">
-          <h3>📷 Latest From Instagram</h3>
+          <h3>📷 Latest From Instagram<span class="insta-live-badge"><span class="live-dot"></span>LIVE</span></h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 16px;">
             Follow <a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--vivid); font-weight:600;">@gurbanifashion</a> for our newest stitches & fabric drops
           </p>
-          <div id="instagramWidgetContainer" style="min-height: 420px; max-width: 900px; margin: 0 auto;">
-            <script src="https://cdn.lightwidget.com/widgets/lightwidget.js"></script><iframe src="https://cdn.lightwidget.com/widgets/059de719fcc5514baf2b4a4391497ef7.html" scrolling="no" allowtransparency="true" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;"></iframe>
+          <div class="insta-frame" id="instaFrame">
+            <div class="insta-frame-inner">
+              <div id="instagramWidgetContainer" style="min-height: 420px;">
+                <script src="https://cdn.lightwidget.com/widgets/lightwidget.js"></script><iframe src="https://cdn.lightwidget.com/widgets/059de719fcc5514baf2b4a4391497ef7.html" scrolling="no" allowtransparency="true" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;"></iframe>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3236,6 +3290,21 @@
         t.classList.toggle('active', t.dataset.lens === String(n));
       });
     }
+
+    // Reveal the Instagram frame with a fade/slide-in once it scrolls into view
+    (function() {
+      const frame = document.getElementById('instaFrame');
+      if (!frame || !('IntersectionObserver' in window)) { if (frame) frame.classList.add('in-view'); return; }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            frame.classList.add('in-view');
+            io.disconnect();
+          }
+        });
+      }, { threshold: 0.15 });
+      io.observe(frame);
+    })();
 
     function setStatus(elementId, msg, type) {
       const el = document.getElementById(elementId);
