@@ -130,10 +130,36 @@
       color: var(--marigold);
       letter-spacing: 0.5px;
     }
+    header p.header-tagline {
+      font-family: var(--font-body);
+      font-style: normal;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: 0.6px;
+      color: #FFFFFF;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.28);
+      margin: 16px 0 0 0;
+    }
+
+    /* Desktop: fill the left/right dead space beside the logo instead of stacking more rows */
+    .header-flank {
+      position: absolute;
+      top: 52%;
+      transform: translateY(-50%);
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.92);
+      line-height: 2.3;
+      max-width: 200px;
+    }
+    .header-flank-left { left: 36px; text-align: left; }
+    .header-flank-right { right: 36px; text-align: right; }
+    .header-flank span { display: block; }
 
     .header-highlights {
+      display: none;
       margin-top: 22px;
-      display: flex;
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
@@ -144,6 +170,10 @@
       color: rgba(255,255,255,0.92);
     }
     .header-highlights .hh-dot { color: var(--marigold); opacity: 0.7; }
+    @media (max-width: 1080px) {
+      .header-flank { display: none; }
+      .header-highlights { display: flex; }
+    }
     @media (max-width: 640px) {
       .header-highlights { font-size: 11px; gap: 7px; }
     }
@@ -1108,6 +1138,7 @@
       .header-wordmark-final { max-width: 300px; width: 88%; }
       header .flourish { width: 150px; }
       header p { font-size: 13px; }
+      header p.header-tagline { font-size: 15px; }
 
       /* header-right (theme picker, sign in/out) overlaps the wordmark
          when absolutely positioned on a narrow screen — drop it back
@@ -1198,9 +1229,17 @@
   </div>
 
   <header>
+    <div class="header-flank header-flank-left">
+      <span>✨ AI-Powered Designs</span>
+      <span>🧵 Custom Stitched</span>
+    </div>
+    <div class="header-flank header-flank-right">
+      <span>📍 Faridabad, NCR</span>
+      <span>🚚 Pan-India Delivery</span>
+    </div>
     <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
     <hr class="flourish">
-    <p>Your Vision. Your Fit. Stitched to Perfection.</p>
+    <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
     <p style="margin-top: -8px;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--marigold); text-decoration: none; font-weight: 600; font-size: 0.85em;">📷 Follow us @gurbanifashion</a></p>
     <div class="header-highlights">
       <span>✨ AI-Powered Designs</span>
