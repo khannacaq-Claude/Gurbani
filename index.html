@@ -89,103 +89,76 @@
         radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.14), transparent 65%),
         linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       color: white;
-      padding: 64px 20px 56px 20px;
-      text-align: center;
+      padding: 18px 24px 14px 24px;
+      text-align: left;
       position: relative;
       border-bottom: 4px solid var(--marigold);
     }
 
-    .header-wordmark-final {
-      display: block;
-      max-width: 520px;
-      width: 82%;
-      height: auto;
+    .header-topbar {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      flex-wrap: wrap;
+      max-width: 1400px;
       margin: 0 auto;
     }
-    header .flourish {
-      width: 220px;
-      height: 10px;
-      margin: 18px auto 10px auto;
-      border: none;
-      border-top: 1px solid var(--marigold);
-      opacity: 0.7;
-      position: relative;
+
+    .header-wordmark-final {
+      display: block;
+      width: 210px;
+      max-width: 210px;
+      height: auto;
+      flex: none;
     }
-    header .flourish::after {
-      content: "\2726";
-      position: absolute;
-      top: -9px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--vivid);
-      color: var(--marigold);
-      font-size: 11px;
-      padding: 0 8px;
-    }
-    header p {
-      font-family: var(--font-accent);
-      font-style: italic;
-      font-size: 16px;
-      margin: 14px 0 0 0;
-      color: var(--marigold);
-      letter-spacing: 0.5px;
-    }
+
+    .header-mid { flex: 1 1 300px; min-width: 220px; }
+
     header p.header-tagline {
       font-family: var(--font-body);
       font-style: normal;
       font-weight: 800;
-      font-size: 20px;
-      letter-spacing: 0.6px;
+      font-size: 16px;
+      letter-spacing: 0.4px;
       color: #FFFFFF;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.28);
-      margin: 16px 0 0 0;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      margin: 0;
     }
 
-    /* Desktop: fill the left/right dead space beside the logo instead of stacking more rows */
-    .header-flank {
-      position: absolute;
-      top: 52%;
-      transform: translateY(-50%);
-      font-size: 12.5px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      color: rgba(255,255,255,0.92);
-      line-height: 2.3;
-      max-width: 200px;
-    }
-    .header-flank-left { left: 36px; text-align: left; }
-    .header-flank-right { right: 36px; text-align: right; }
-    .header-flank span { display: block; }
-
-    .header-highlights {
-      display: none;
-      margin-top: 22px;
-      justify-content: center;
-      align-items: center;
+    .header-products {
+      margin: 6px 0 0 0;
+      display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      font-size: 12.5px;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: var(--marigold);
+    }
+    .header-products .hp-dot { color: rgba(255,255,255,0.5); font-weight: 400; }
+
+    .header-mini {
+      margin: 5px 0 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 10.5px;
       font-weight: 600;
-      letter-spacing: 0.3px;
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,0.85);
     }
-    .header-highlights .hh-dot { color: var(--marigold); opacity: 0.7; }
-    @media (max-width: 1080px) {
-      .header-flank { display: none; }
-      .header-highlights { display: flex; }
-    }
-    @media (max-width: 640px) {
-      .header-highlights { font-size: 11px; gap: 7px; }
-    }
+    .header-mini .hm-dot { color: var(--marigold); opacity: 0.6; }
 
     .header-right {
-      position: absolute;
-      top: 24px;
-      right: 24px;
+      flex: none;
+      margin-left: auto;
       display: flex;
-      gap: 10px;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      text-align: right;
     }
+
+    .header-follow a { color: var(--marigold); text-decoration: none; font-weight: 600; font-size: 11px; }
 
     .user-welcome {
       color: white;
@@ -1134,21 +1107,14 @@
        phones, so this is not an afterthought.
        ============================================================ */
     @media (max-width: 640px) {
-      header { padding: 18px 14px 16px 14px; }
-      .header-wordmark-final { max-width: 300px; width: 88%; }
-      header .flourish { width: 150px; }
-      header p { font-size: 13px; }
-      header p.header-tagline { font-size: 15px; }
+      header { padding: 16px 14px 14px 14px; }
+      .header-topbar { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+      .header-wordmark-final { width: 170px; max-width: 170px; }
+      .header-mid { text-align: center; }
+      .header-products, .header-mini { justify-content: center; }
+      header p.header-tagline { font-size: 14px; }
+      .header-right { align-items: center; text-align: center; margin-left: 0; }
 
-      /* header-right (theme picker, sign in/out) overlaps the wordmark
-         when absolutely positioned on a narrow screen — drop it back
-         into normal flow, centered below the tagline instead. */
-      .header-right {
-        position: static;
-        justify-content: center;
-        margin-top: 14px;
-        flex-wrap: wrap;
-      }
       main { padding: 0 12px; margin: 20px auto; }
       .card { padding: 20px 16px; }
 
@@ -1183,7 +1149,7 @@
     }
 
     @media (max-width: 400px) {
-      .header-wordmark-final { max-width: 240px; }
+      .header-wordmark-final { width: 140px; max-width: 140px; }
       .hero-headline { font-size: 22px; }
     }
   </style>
@@ -1229,52 +1195,52 @@
   </div>
 
   <header>
-    <div class="header-flank header-flank-left">
-      <span>✨ AI-Powered Designs</span>
-      <span>🧵 Custom Stitched</span>
-    </div>
-    <div class="header-flank header-flank-right">
-      <span>📍 Faridabad, NCR</span>
-      <span>🚚 Pan-India Delivery</span>
-    </div>
-    <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
-    <hr class="flourish">
-    <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
-    <p style="margin-top: -8px;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--marigold); text-decoration: none; font-weight: 600; font-size: 0.85em;">📷 Follow us @gurbanifashion</a></p>
-    <div class="header-highlights">
-      <span>✨ AI-Powered Designs</span>
-      <span class="hh-dot">•</span>
-      <span>🧵 Custom Stitched</span>
-      <span class="hh-dot">•</span>
-      <span>📍 Faridabad, NCR</span>
-      <span class="hh-dot">•</span>
-      <span>🚚 Pan-India Delivery</span>
-    </div>
-    <div class="header-right">
-      <div class="user-welcome" id="userWelcome"></div>
-      <div id="signinArea"></div>
-      <div id="emailAuthToggle" style="text-align:center; margin-top:6px;">
-        <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--marigold);">Or sign in with email</a>
-      </div>
-      <div id="emailAuthPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px;">
-        <div style="display:flex; gap:8px; margin-bottom:10px;">
-          <button type="button" id="emailAuthTabSignIn" class="admin-filter-btn active" style="flex:1;" onclick="switchEmailAuthMode('signin')">Sign In</button>
-          <button type="button" id="emailAuthTabSignUp" class="admin-filter-btn" style="flex:1;" onclick="switchEmailAuthMode('signup')">Sign Up</button>
+    <div class="header-topbar">
+      <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
+      <div class="header-mid">
+        <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
+        <div class="header-products">
+          <span>Bridal Lehenga</span><span class="hp-dot">•</span>
+          <span>Anarkali</span><span class="hp-dot">•</span>
+          <span>Kurti</span><span class="hp-dot">•</span>
+          <span>Western Wear</span><span class="hp-dot">•</span>
+          <span>Ethnic Wear</span><span class="hp-dot">•</span>
+          <span>Gowns</span>
         </div>
-        <input type="text" id="emailAuthName" placeholder="Name" style="display:none; margin-bottom:8px;">
-        <input type="email" id="emailAuthEmail" placeholder="Email" style="margin-bottom:8px;">
-        <input type="password" id="emailAuthPassword" placeholder="Password" style="margin-bottom:8px;">
-        <button type="button" class="btn-submit" style="width:100%;" onclick="submitEmailAuth()">Continue</button>
-        <div style="text-align:center; margin-top:8px;">
-          <a href="#" onclick="showForgotPasswordPrompt(event)" style="font-size:12px; color:var(--text-muted);">Forgot password?</a>
+        <div class="header-mini">
+          <span>✨ AI-Powered Designs</span><span class="hm-dot">•</span>
+          <span>🧵 Custom Stitched</span><span class="hm-dot">•</span>
+          <span>📍 Faridabad, NCR</span><span class="hm-dot">•</span>
+          <span>🚚 Pan-India Delivery</span>
         </div>
       </div>
-      <div id="resetPasswordPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px;">
-        <p style="font-size:13px; margin-bottom:10px;">Set a new password.</p>
-        <input type="password" id="resetPasswordNew" placeholder="New password (min. 6 characters)" style="margin-bottom:8px;">
-        <button type="button" class="btn-submit" style="width:100%;" onclick="submitNewPassword()">Set Password</button>
+      <div class="header-right">
+        <div class="user-welcome" id="userWelcome"></div>
+        <div id="signinArea"></div>
+        <div id="emailAuthToggle" style="text-align:right; margin-top:2px;">
+          <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--marigold);">Or sign in with email</a>
+        </div>
+        <div id="emailAuthPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px; text-align:left;">
+          <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <button type="button" id="emailAuthTabSignIn" class="admin-filter-btn active" style="flex:1;" onclick="switchEmailAuthMode('signin')">Sign In</button>
+            <button type="button" id="emailAuthTabSignUp" class="admin-filter-btn" style="flex:1;" onclick="switchEmailAuthMode('signup')">Sign Up</button>
+          </div>
+          <input type="text" id="emailAuthName" placeholder="Name" style="display:none; margin-bottom:8px;">
+          <input type="email" id="emailAuthEmail" placeholder="Email" style="margin-bottom:8px;">
+          <input type="password" id="emailAuthPassword" placeholder="Password" style="margin-bottom:8px;">
+          <button type="button" class="btn-submit" style="width:100%;" onclick="submitEmailAuth()">Continue</button>
+          <div style="text-align:center; margin-top:8px;">
+            <a href="#" onclick="showForgotPasswordPrompt(event)" style="font-size:12px; color:var(--text-muted);">Forgot password?</a>
+          </div>
+        </div>
+        <div id="resetPasswordPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px; text-align:left;">
+          <p style="font-size:13px; margin-bottom:10px;">Set a new password.</p>
+          <input type="password" id="resetPasswordNew" placeholder="New password (min. 6 characters)" style="margin-bottom:8px;">
+          <button type="button" class="btn-submit" style="width:100%;" onclick="submitNewPassword()">Set Password</button>
+        </div>
+        <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
+        <p class="header-follow" style="margin:4px 0 0 0;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener">📷 @gurbanifashion</a></p>
       </div>
-      <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
     </div>
   </header>
 
