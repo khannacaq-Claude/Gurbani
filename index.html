@@ -131,6 +131,23 @@
       letter-spacing: 0.5px;
     }
 
+    .header-highlights {
+      margin-top: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.92);
+    }
+    .header-highlights .hh-dot { color: var(--marigold); opacity: 0.7; }
+    @media (max-width: 640px) {
+      .header-highlights { font-size: 11px; gap: 7px; }
+    }
+
     .header-right {
       position: absolute;
       top: 24px;
@@ -300,6 +317,108 @@
     .coming-soon-tile .cs-icon { font-size: 26px; margin-bottom: 8px; opacity: 0.8; }
     .coming-soon-tile h4 { font-size: 14px; margin-bottom: 6px; color: var(--ink); }
     .coming-soon-tile p { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+    /* Experience Lenses — interactive expand-on-click showcase */
+    .lens-section { margin-top: 44px; }
+    .lens-row {
+      display: flex;
+      gap: 10px;
+      min-height: 460px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .lens-tile {
+      flex: 0.9;
+      position: relative;
+      border-radius: 14px;
+      padding: 22px 18px;
+      cursor: pointer;
+      color: white;
+      overflow: hidden;
+      transition: flex 0.55s cubic-bezier(.22,1,.36,1);
+      display: flex;
+      flex-direction: column;
+    }
+    .lens-tile.active { flex: 5; cursor: default; }
+    .lens-1 { background: linear-gradient(160deg, var(--vivid), var(--vivid-deep)); }
+    .lens-2 { background: linear-gradient(160deg, var(--marigold), var(--marigold-deep)); }
+    .lens-3 { background: linear-gradient(160deg, #7A1257, #4A0A35); }
+    .lens-4 { background: linear-gradient(160deg, #E8698F, #B84268); }
+    .lens-num { font-size: 12px; opacity: 0.75; font-weight: 700; letter-spacing: 0.5px; }
+    .lens-collapsed-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) rotate(180deg);
+      writing-mode: vertical-rl;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.25s ease;
+    }
+    .lens-tile.active .lens-collapsed-label { opacity: 0; pointer-events: none; }
+    .lens-content {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.4s ease 0.15s;
+    }
+    .lens-tile.active .lens-content { opacity: 1; max-height: none; overflow: visible; }
+    .lens-content h4 { font-family: var(--font-display); font-size: 20px; margin: 6px 0 10px; }
+    .lens-content p { font-size: 13px; line-height: 1.6; opacity: 0.95; max-width: 480px; margin-bottom: 14px; }
+    .lens-content button {
+      background: white; color: var(--ink); font-size: 12.5px;
+      padding: 10px 18px; margin-bottom: 20px;
+    }
+    .lens-content button:hover { background: #f0f0f0; transform: translateY(-1px); }
+
+    .lens-window {
+      background: white; border-radius: 10px; overflow: hidden;
+      max-width: 420px; box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+    .lens-window-bar { display:flex; align-items:center; gap:6px; padding:9px 12px; background:#F5F5F5; border-bottom:1px solid #E5E5E5; }
+    .lens-window-bar .dot { width:9px; height:9px; border-radius:50%; }
+    .lens-window-bar .dot.r { background:#FF5F57; }
+    .lens-window-bar .dot.y { background:#FEBC2E; }
+    .lens-window-bar .dot.g { background:#28C840; }
+    .lens-window-title { font-size:10px; letter-spacing:0.06em; color:#888; margin-left:6px; text-transform:uppercase; }
+    .lens-window-body { padding: 16px; color: var(--text-ink); }
+    .lens-window-note { font-size: 10.5px; color: var(--text-muted); font-style: italic; margin-top: 10px; }
+
+    .concept-row { display:flex; gap:8px; }
+    .concept-swatch {
+      flex:1; height:70px; border-radius:8px; display:flex; align-items:flex-end;
+      padding:6px; font-size:10px; font-weight:700; color:white;
+      background: linear-gradient(135deg, var(--c1), var(--c2));
+    }
+
+    .match-row { display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:9px; }
+    .match-row span:first-child { width: 100px; flex:none; }
+    .match-track { flex:1; height:6px; background:#EEE; border-radius:4px; overflow:hidden; }
+    .match-fill { height:100%; background: linear-gradient(90deg, var(--marigold), var(--vivid)); border-radius:4px; }
+    .match-pct { width:36px; text-align:right; font-weight:600; flex:none; }
+
+    .journey-step { font-size:12.5px; padding:7px 0; color: var(--text-muted); border-bottom:1px solid #F0F0F0; }
+    .journey-step:last-child { border-bottom:none; }
+    .journey-step.done { color: #2e7d32; font-weight:600; }
+    .journey-step.active { color: var(--vivid); font-weight:700; }
+
+    .cat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .cat-chip { background:var(--sand); border-radius:8px; padding:10px; font-size:12px; font-weight:600; text-align:center; color:var(--ink); }
+
+    @media (max-width: 820px) {
+      .lens-row { flex-direction: column; min-height: 0; }
+      .lens-tile { flex: none !important; min-height: 64px; }
+      .lens-tile.active { min-height: 480px; }
+      .lens-collapsed-label { writing-mode: horizontal-tb; transform: none; position: static; text-align:center; }
+      .lens-tile.active .lens-collapsed-label { display:none; }
+      .lens-tile:not(.active) { display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; }
+      .concept-row { flex-wrap: wrap; }
+    }
     .version-badge {
       display: inline-block;
       margin: -10px 0 20px 10px;
@@ -1082,12 +1201,21 @@
     <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
     <hr class="flourish">
     <p>Your Vision. Your Fit. Stitched to Perfection.</p>
-    <p style="margin-top: -8px;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--vivid); text-decoration: none; font-weight: 600; font-size: 0.85em;">📷 Follow us @gurbanifashion</a></p>
+    <p style="margin-top: -8px;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--marigold); text-decoration: none; font-weight: 600; font-size: 0.85em;">📷 Follow us @gurbanifashion</a></p>
+    <div class="header-highlights">
+      <span>✨ AI-Powered Designs</span>
+      <span class="hh-dot">•</span>
+      <span>🧵 Custom Stitched</span>
+      <span class="hh-dot">•</span>
+      <span>📍 Faridabad, NCR</span>
+      <span class="hh-dot">•</span>
+      <span>🚚 Pan-India Delivery</span>
+    </div>
     <div class="header-right">
       <div class="user-welcome" id="userWelcome"></div>
       <div id="signinArea"></div>
       <div id="emailAuthToggle" style="text-align:center; margin-top:6px;">
-        <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--vivid);">Or sign in with email</a>
+        <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--marigold);">Or sign in with email</a>
       </div>
       <div id="emailAuthPanel" class="card" style="display:none; padding:16px; margin-top:8px; max-width:300px;">
         <div style="display:flex; gap:8px; margin-bottom:10px;">
@@ -1123,7 +1251,98 @@
         </span></h2>
         <p>Custom stitched outfits powered by AI design ideas + personalized photo-based styling</p>
         <p>Sign in with Google to create designs, upload multiple reference photos, and get personalized AI styling feedback!</p>
-        
+
+        <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
+        <div class="lens-section">
+          <h3 style="text-align:center;">✨ Explore the Studio</h3>
+          <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:20px;">Tap any panel to see how it works</p>
+          <div class="lens-row" id="lensRow">
+
+            <div class="lens-tile lens-1 active" data-lens="1" onclick="expandLens(1)">
+              <span class="lens-num">01</span>
+              <span class="lens-collapsed-label">AI Design Studio</span>
+              <div class="lens-content">
+                <h4>🎨 AI Design Studio</h4>
+                <p>Describe your vision in your own words, or upload a reference photo — get 3 AI-generated design concepts back, personalized with your own selfies, fabrics and accessories.</p>
+                <button onclick="event.stopPropagation(); promptSignIn('AI Design Studio')">✨ Start designing →</button>
+                <div class="lens-window">
+                  <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title">CONCEPT STUDIO · PREVIEW</span></div>
+                  <div class="lens-window-body">
+                    <div class="concept-row">
+                      <div class="concept-swatch" style="--c1:#F2A93B;--c2:#CF0184;">Concept 1</div>
+                      <div class="concept-swatch" style="--c1:#CF0184;--c2:#6B0F4D;">Concept 2</div>
+                      <div class="concept-swatch" style="--c1:#E8698F;--c2:#F2A93B;">Concept 3</div>
+                    </div>
+                    <p class="lens-window-note">Illustrative preview — real concepts are generated from your own description &amp; photos</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lens-tile lens-2" data-lens="2" onclick="expandLens(2)">
+              <span class="lens-num">02</span>
+              <span class="lens-collapsed-label">Fabric Match</span>
+              <div class="lens-content">
+                <h4>🧵 Fabric &amp; Inventory Match</h4>
+                <p>Our AI checks your chosen design against our actual in-store fabric, lace and lining stock — so you know instantly what's ready to stitch versus what needs sourcing.</p>
+                <button onclick="event.stopPropagation(); promptSignIn('AI Design Studio')">🔍 See a match example →</button>
+                <div class="lens-window">
+                  <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title">MATCH PREVIEW · EXAMPLE</span></div>
+                  <div class="lens-window-body">
+                    <div class="match-row"><span>Zari Organza</span><div class="match-track"><div class="match-fill" style="width:94%;"></div></div><span class="match-pct">94%</span></div>
+                    <div class="match-row"><span>Rose Gold Lace</span><div class="match-track"><div class="match-fill" style="width:88%;"></div></div><span class="match-pct">88%</span></div>
+                    <div class="match-row"><span>Mint Georgette</span><div class="match-track"><div class="match-fill" style="width:76%;"></div></div><span class="match-pct">76%</span></div>
+                    <p class="lens-window-note">Example only — actual matches depend on live stock</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lens-tile lens-3" data-lens="3" onclick="expandLens(3)">
+              <span class="lens-num">03</span>
+              <span class="lens-collapsed-label">Your Journey</span>
+              <div class="lens-content">
+                <h4>📅 Your Order &amp; Fitting Journey</h4>
+                <p>Track every step from first concept to final fitting, and book styling consultations with Sonia whenever you need a second opinion.</p>
+                <button onclick="event.stopPropagation(); promptSignIn('Appointments')">📅 Book or track →</button>
+                <div class="lens-window">
+                  <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title">JOURNEY TRACKER · EXAMPLE</span></div>
+                  <div class="lens-window-body">
+                    <div class="journey-step done">✓ Design concept created</div>
+                    <div class="journey-step done">✓ Fabric matched</div>
+                    <div class="journey-step active">● Stitching in progress</div>
+                    <div class="journey-step">○ Fitting scheduled</div>
+                    <div class="journey-step">○ Ready for pickup</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lens-tile lens-4" data-lens="4" onclick="expandLens(4)">
+              <span class="lens-num">04</span>
+              <span class="lens-collapsed-label">Marketplace</span>
+              <div class="lens-content">
+                <h4>🛍️ Marketplace</h4>
+                <p>Prefer to buy as-is? Shop fabric, lace, lining and ready unstitched suits directly — no stitching required, no design wait.</p>
+                <button onclick="event.stopPropagation(); promptSignIn('Marketplace')">🛍️ Browse Marketplace →</button>
+                <div class="lens-window">
+                  <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title">CATALOG · CATEGORIES</span></div>
+                  <div class="lens-window-body">
+                    <div class="cat-grid">
+                      <div class="cat-chip">🧵 Fabric</div>
+                      <div class="cat-chip">🎀 Lace</div>
+                      <div class="cat-chip">📏 Lining</div>
+                      <div class="cat-chip">👗 Unstitched Suits</div>
+                    </div>
+                    <p class="lens-window-note">Sold per meter (fabric/lace/lining) or per set (suits)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <div class="grid">
           <div class="feature-box" onclick="promptSignIn('AI Design Studio')">
             <h3>🎨 AI Design Studio</h3>
@@ -2960,6 +3179,12 @@
 
     function promptSignIn(feature) {
       showToast(`Sign in first to access ${feature}`);
+    }
+
+    function expandLens(n) {
+      document.querySelectorAll('.lens-tile').forEach(t => {
+        t.classList.toggle('active', t.dataset.lens === String(n));
+      });
     }
 
     function setStatus(elementId, msg, type) {
