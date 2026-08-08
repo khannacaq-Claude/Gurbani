@@ -5255,9 +5255,23 @@
           return;
         }
         renderRateCardList(data.items, isAdmin);
+        populateRcCategoryList(data.items);
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
+    }
+
+    // Fills the Category datalist with every existing category so the admin
+    // gets autocomplete suggestions while typing — cuts down on accidental
+    // duplicates like "Lehenga" vs "Lehnga" without forcing a strict
+    // dropdown (a genuinely new category can still just be typed).
+    function populateRcCategoryList(items) {
+      const datalist = document.getElementById('rcCategoryList');
+      if (!datalist) return;
+      const seen = new Set();
+      const categories = [];
+      items.forEach(i => { if (!seen.has(i.category)) { seen.add(i.category); categories.push(i.category); } });
+      datalist.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">`).join('');
     }
 
     function renderRateCardList(items, isAdmin) {
@@ -5303,7 +5317,7 @@
         <div class="card" style="padding:18px 20px;">
           <h4 id="rateCardFormTitle" style="margin-bottom:12px;">➕ Add a Rate</h4>
           <div class="grid-2" style="margin-bottom:10px;">
-            <div class="form-group" style="margin:0;"><label>Category</label><input type="text" id="rcCategory" placeholder="e.g. Lehenga"></div>
+            <div class="form-group" style="margin:0;"><label>Category</label><input type="text" id="rcCategory" list="rcCategoryList" placeholder="e.g. Lehenga — start typing to see existing categories" autocomplete="off"><datalist id="rcCategoryList"></datalist></div>
             <div class="form-group" style="margin:0;"><label>Item</label><input type="text" id="rcItem" placeholder="e.g. Bridal / heavy embroidery"></div>
           </div>
           <div class="grid-2" style="margin-bottom:10px;">
