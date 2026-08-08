@@ -2087,26 +2087,44 @@
             </div>
           </div>
 
-          <div class="grid" style="margin-top: 30px;">
-            <div class="feature-box" onclick="switchTab(null, 'design')">
-              <h3>🎨 Create Design</h3>
-              <p>Get 3 AI concepts + upload multiple reference photos</p>
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Start designing</p>
-            </div>
-            <div class="feature-box" onclick="switchTab(null, 'appointments'); loadMyAppointments();">
-              <h3>📅 Book Appointment</h3>
-              <p>Schedule a consultation with Sonia</p>
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Book now</p>
-            </div>
-            <div class="feature-box" onclick="switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
-              <h3>📦 My Designs</h3>
-              <p>See every design you've generated and its status</p>
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 View designs</p>
-            </div>
-            <div class="feature-box" onclick="switchTab(null, 'shopSuits'); loadShopSuits();">
-              <h3>🛍️ Marketplace</h3>
-              <p>Buy fabric, lace, lining & unstitched suits as-is — no stitching required</p>
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">👆 Start shopping</p>
+          <div class="lens-section" style="margin-top: 30px;">
+            <div class="lens-row" id="overviewLensRow">
+              <div class="lens-tile lens-1 active" data-lens="0" onclick="expandOverviewLens(0)">
+                <span class="lens-num">🎨</span>
+                <span class="lens-collapsed-label">Create Design</span>
+                <div class="lens-content">
+                  <h4>🎨 Create Design</h4>
+                  <p>Describe what you want or upload a reference photo — get 3 AI concepts back, personalized with your own selfies, fabric and accessories.</p>
+                  <button onclick="event.stopPropagation(); switchTab(null, 'design')">✨ Start designing →</button>
+                </div>
+              </div>
+              <div class="lens-tile lens-2" data-lens="1" onclick="expandOverviewLens(1)">
+                <span class="lens-num">📅</span>
+                <span class="lens-collapsed-label">Book Appointment</span>
+                <div class="lens-content">
+                  <h4>📅 Book Appointment</h4>
+                  <p>Want to talk it through in person, or need a fitting? Schedule a consultation with Sonia at a time that works for you.</p>
+                  <button onclick="event.stopPropagation(); switchTab(null, 'appointments'); loadMyAppointments();">📅 Book now →</button>
+                </div>
+              </div>
+              <div class="lens-tile lens-3" data-lens="2" onclick="expandOverviewLens(2)">
+                <span class="lens-num">📦</span>
+                <span class="lens-collapsed-label">My Designs</span>
+                <div class="lens-content">
+                  <h4>📦 My Designs</h4>
+                  <p>Every design you've generated, its current status, and where your orders stand — from first concept to final fitting.</p>
+                  <button onclick="event.stopPropagation(); switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 View designs →</button>
+                </div>
+              </div>
+              <div class="lens-tile lens-4" data-lens="3" onclick="expandOverviewLens(3)">
+                <span class="lens-num">🛍️</span>
+                <span class="lens-collapsed-label">Marketplace</span>
+                <div class="lens-content">
+                  <h4>🛍️ Marketplace</h4>
+                  <p>Prefer to buy as-is? Shop fabric, lace, lining and ready unstitched suits directly — no stitching, no waiting on a design.</p>
+                  <button onclick="event.stopPropagation(); switchTab(null, 'shopSuits'); loadShopSuits();">🛍️ Start shopping →</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2120,11 +2138,11 @@
           <h3>✨ AI Design Studio + Multi-Photo Personalization</h3>
           <p>Describe your dream outfit and upload multiple reference photos (selfies, fabrics, laces, accessories) for comprehensive personalized feedback!</p>
 
-          <div style="background:linear-gradient(135deg, var(--ink), var(--ink-soft)); color:white; border-radius:10px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="background:linear-gradient(135deg, var(--vivid), var(--vivid-deep)); color:white; border-radius:10px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
             <span style="font-size:22px;">🎁</span>
             <div style="flex:1; min-width:200px;">
               <div style="font-weight:700; color:var(--marigold); font-size:14px;">Free for now, for our early customers</div>
-              <div style="font-size:12px; color:rgba(255,255,255,0.85); margin-top:2px;">AI Design Studio will become a paid feature soon — enjoy unlimited designs while it's on the house!</div>
+              <div style="font-size:12px; color:rgba(255,255,255,0.9); margin-top:2px;">AI Design Studio will become a paid feature soon — enjoy unlimited designs while it's on the house!</div>
             </div>
           </div>
 
@@ -4014,7 +4032,16 @@
     }
 
     function expandLens(n) {
-      document.querySelectorAll('.lens-tile').forEach(t => {
+      document.querySelectorAll('#lensRow .lens-tile').forEach(t => {
+        t.classList.toggle('active', t.dataset.lens === String(n));
+      });
+    }
+
+    // Scoped to its own row — reusing the same .lens-tile class as the
+    // landing page's Experience Lenses, but must not cross-affect that
+    // row's active state (they coexist in the DOM even when hidden).
+    function expandOverviewLens(n) {
+      document.querySelectorAll('#overviewLensRow .lens-tile').forEach(t => {
         t.classList.toggle('active', t.dataset.lens === String(n));
       });
     }
