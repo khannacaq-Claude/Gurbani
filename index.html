@@ -923,7 +923,7 @@
       align-items: flex-start;
       gap: 0;
       margin-bottom: 20px;
-      background: var(--ink);
+      background: linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       border-radius: 6px;
       padding: 10px 6px 6px;
     }
@@ -941,14 +941,14 @@
       font-weight: 700;
       letter-spacing: 0.09em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.6);
       padding: 0 4px 3px;
     }
     .tab-group-row { display: flex; flex-wrap: wrap; gap: 2px; }
 
     .tab-btn {
       background: transparent;
-      color: #BBB;
+      color: rgba(255,255,255,0.8);
       padding: 12px 18px;
       border: none;
       border-radius: 4px;
@@ -961,7 +961,7 @@
     }
 
     .tab-btn:hover { color: white; }
-    .tab-btn.active { color: #FFFFFF; background: var(--vivid); }
+    .tab-btn.active { color: var(--vivid); background: #FFFFFF; }
     .tab-icon {
       width: 15px;
       height: 15px;
@@ -981,7 +981,7 @@
       font-weight: 600;
       transition: all 0.2s ease;
     }
-    .admin-filter-btn.active { background: var(--ink); color: var(--marigold); border-color: var(--ink); }
+    .admin-filter-btn.active { background: var(--vivid); color: #FFFFFF; border-color: var(--vivid); }
     .admin-filter-btn:hover { opacity: 0.85; }
 
     .tab-content { display: none; }
@@ -1326,9 +1326,9 @@
     }
 
     .photo-type-btn.active {
-      background: var(--ink);
-      color: var(--marigold);
-      border-color: var(--ink);
+      background: var(--vivid);
+      color: #FFFFFF;
+      border-color: var(--vivid);
     }
 
     .photo-upload-area {
@@ -1438,7 +1438,7 @@
       padding: 0 16px;
     }
     .toast {
-      background: var(--ink);
+      background: linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       color: var(--cream);
       padding: 14px 20px;
       border-radius: 10px;
@@ -2226,6 +2226,9 @@
                   <span style="flex: 1 1 auto; min-width: 0;">
                     I consent to Gurbani Fashion using my uploaded photos to generate AI design previews (processed via Anthropic Claude and Replicate AI services). Selfies are used only for personalized style suggestions and are never used to generate design images.
                     <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">Read full Privacy Notice</a>.
+                    <br><br>
+                    मैं सहमति देता/देती हूं कि गुरबानी फैशन मेरी अपलोड की गई तस्वीरों का उपयोग AI डिज़ाइन प्रीव्यू बनाने के लिए करे (Anthropic Claude और Replicate AI सेवाओं के माध्यम से प्रोसेस किया गया)। सेल्फी का उपयोग केवल व्यक्तिगत स्टाइल सुझावों के लिए किया जाता है और इनका उपयोग कभी भी डिज़ाइन इमेज बनाने के लिए नहीं किया जाता।
+                    <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">पूरी गोपनीयता सूचना पढ़ें</a>।
                   </span>
                 </label>
               </div>
@@ -3665,7 +3668,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '9.0';
+    const APP_VERSION = '9.3';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
