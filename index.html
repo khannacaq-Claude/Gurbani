@@ -617,13 +617,32 @@
 
     .tabs {
       display: flex;
-      gap: 2px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0;
       margin-bottom: 20px;
       background: var(--ink);
       border-radius: 6px;
-      padding: 6px;
-      flex-wrap: wrap;
+      padding: 10px 6px 6px;
     }
+    .tab-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 0 14px 6px 0;
+      margin-right: 14px;
+      border-right: 1px solid rgba(255,255,255,0.09);
+    }
+    .tab-group:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+    .tab-group-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      padding: 0 4px 3px;
+    }
+    .tab-group-row { display: flex; flex-wrap: wrap; gap: 2px; }
 
     .tab-btn {
       background: transparent;
@@ -1231,18 +1250,11 @@
 
       h2 { font-size: 21px; }
 
-      /* tab bar: horizontal scroll instead of wrapping into a wall of
-         buttons that eats the whole screen */
-      .tabs {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        justify-content: flex-start;
-      }
-      .tabs::-webkit-scrollbar { display: none; }
+      /* tab bar: grouped rows wrap naturally rather than one giant
+         horizontal scroll — labels help even on a small screen */
+      .tab-group { padding-right: 10px; margin-right: 10px; }
+      .tab-group-label { font-size: 9px; }
       .tab-btn {
-        flex: 0 0 auto;
         white-space: nowrap;
         padding: 12px 14px;
         min-height: 44px;
@@ -1396,14 +1408,14 @@
                 <p>Describe your vision in your own words, or upload a reference photo — get 3 AI-generated design concepts back, personalized with your own selfies, fabrics and accessories.</p>
                 <button onclick="event.stopPropagation(); promptSignIn('AI Design Studio')">✨ Start designing →</button>
                 <div class="lens-window">
-                  <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title">CONCEPT STUDIO · PREVIEW</span></div>
+                  <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title" id="featuredConceptTitle">CONCEPT STUDIO · PREVIEW</span></div>
                   <div class="lens-window-body">
-                    <div class="concept-row">
+                    <div class="concept-row" id="featuredConceptRow">
                       <div class="concept-swatch" style="--c1:#F2A93B;--c2:#CF0184;">Concept 1</div>
                       <div class="concept-swatch" style="--c1:#CF0184;--c2:#6B0F4D;">Concept 2</div>
                       <div class="concept-swatch" style="--c1:#E8698F;--c2:#F2A93B;">Concept 3</div>
                     </div>
-                    <p class="lens-window-note">Illustrative preview — real concepts are generated from your own description &amp; photos</p>
+                    <p class="lens-window-note" id="featuredConceptNote">Illustrative preview — real concepts are generated from your own description &amp; photos</p>
                   </div>
                 </div>
               </div>
@@ -1523,28 +1535,58 @@
         <p>Choose what you'd like to do today:</p>
 
         <div class="tabs">
-          <button class="tab-btn active" id="overviewTabBtn" onclick="switchTab(event, 'overview')">📊 Overview</button>
-          <button class="tab-btn" id="designTabBtn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
-          <button class="tab-btn" id="profileTabBtn" onclick="switchTab(event, 'profile'); loadProfileTab();">👤 My Profile</button>
-          <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
-          <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
-          <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
-          <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">🛍️ Marketplace</button>
-          <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Admin: Requests</button>
-          <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
-          <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
-          <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
-          <button class="tab-btn" id="stockShortfallsTabBtn" onclick="switchTab(event, 'stockShortfalls'); loadStockShortfalls();" style="display: none;">⚠️ Stock Shortfalls</button>
-          <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
-          <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
-          <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
-          <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
-          <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
-          <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
-          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
-          <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
-          <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
-          <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
+          <div class="tab-group">
+            <div class="tab-group-label">My Account</div>
+            <div class="tab-group-row">
+              <button class="tab-btn active" id="overviewTabBtn" onclick="switchTab(event, 'overview')">📊 Overview</button>
+              <button class="tab-btn" id="designTabBtn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
+              <button class="tab-btn" id="profileTabBtn" onclick="switchTab(event, 'profile'); loadProfileTab();">👤 My Profile</button>
+              <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
+              <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
+              <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
+              <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">🛍️ Marketplace</button>
+            </div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-label">Sales &amp; Orders</div>
+            <div class="tab-group-row">
+              <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Requests</button>
+              <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
+              <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
+              <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
+            </div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-label">Finance</div>
+            <div class="tab-group-row">
+              <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
+              <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
+              <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
+              <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
+            </div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-label">Inventory</div>
+            <div class="tab-group-row">
+              <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
+              <button class="tab-btn" id="stockShortfallsTabBtn" onclick="switchTab(event, 'stockShortfalls'); loadStockShortfalls();" style="display: none;">⚠️ Stock Shortfalls</button>
+              <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
+            </div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-label">People</div>
+            <div class="tab-group-row">
+              <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
+              <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
+              <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
+            </div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-label">Help</div>
+            <div class="tab-group-row">
+              <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
+            </div>
+          </div>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -2376,6 +2418,35 @@
       }
     }
 
+    async function toggleFeaturedDesign(designId, conceptIndex, btnEl) {
+      if (btnEl) btnEl.disabled = true;
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/toggle-featured`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showToast(data.featured ? '🌟 Featured on the homepage showcase' : '☆ Removed from homepage showcase');
+          loadAdminRequests();
+          return;
+        }
+
+        if (res.status === 403 && data.needsConsent) {
+          showToast('⚠️ This customer hasn\'t opted in yet — they can enable it themselves from their "My Designs" tab. Nothing you can do here until they do.');
+          return;
+        }
+
+        showToast('❌ ' + (data.error || 'Failed to update'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        if (btnEl) btnEl.disabled = false;
+      }
+    }
+
     function filterAdminRequests(status, event) {
       currentAdminFilter = status;
       document.querySelectorAll('.admin-filter-btn').forEach(b => b.classList.remove('active'));
@@ -2384,7 +2455,9 @@
     }
 
     async function markAsOrdered(designId, quotedConceptIndex) {
-      const hoursInput = prompt('Estimated stitching hours for this order? (used to compute pricing — a 10% AI Design Studio discount is applied to stitching automatically)');
+      const ownershipConsentConfirmed = confirm('Does the customer agree that ownership of this design transfers to Gurbani Fashion (we may reuse/restitch it for others)?\n\nOK = Yes, they get the AI Design Studio stitching discount.\nCancel = No, they keep ownership — order still goes through, just at full stitching rate with no discount.');
+
+      const hoursInput = prompt('Estimated stitching hours for this order?' + (ownershipConsentConfirmed ? ' (a 10% AI Design Studio discount will be applied automatically)' : ' (full rate — no discount, since the customer is keeping design ownership)'));
       if (hoursInput === null) return; // cancelled
       const hours = Number(hoursInput);
       if (isNaN(hours) || hours <= 0) {
@@ -2422,7 +2495,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ conceptIndex: quotedConceptIndex, stitchingHours: hours, finalizeForCustomerId }),
+          body: JSON.stringify({ conceptIndex: quotedConceptIndex, stitchingHours: hours, finalizeForCustomerId, ownershipConsentConfirmed }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
@@ -2992,9 +3065,18 @@
 
       list.innerHTML = filtered.map(d => {
         const customer = d.userId || {};
+        const hasConsent = !!d.showcaseConsent?.granted;
+        const consentTag = hasConsent
+          ? `<span title="Consent logged: ${escapeHtml(d.showcaseConsent.note || '')}" style="font-size:10px; color:#2e7d32; margin-left:2px;">✓ consent</span>`
+          : '';
         const conceptsHtml = (d.aiConcepts || []).map((c, i) => {
           const isSelected = d.quotedConceptIndex === i;
-          return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'};">${isSelected ? '⭐ ' : ''}${c.title} (₹${c.priceMin}-${c.priceMax})</div>`;
+          const isFeatured = d.featured && (d.featuredConceptIndex ?? 0) === i;
+          return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:7px;">
+            <span>${isSelected ? '⭐ ' : ''}${escapeHtml(c.title)} (₹${c.priceMin}-${c.priceMax})</span>
+            <button onclick="toggleFeaturedDesign('${d._id}', ${i}, this)" title="${isFeatured ? 'Remove from homepage showcase' : 'Feature on homepage — visible to everyone'}" style="background:none; border:none; cursor:pointer; font-size:15px; padding:0; line-height:1; color:${isFeatured ? '#F2A93B' : '#ccc'};">${isFeatured ? '🌟' : '☆'}</button>
+            ${isFeatured ? consentTag : ''}
+          </div>`;
         }).join('');
 
         const waPhone = (customer.phone || '').replace(/[^0-9]/g, '');
@@ -3027,7 +3109,7 @@
           </div>`;
 
         return `
-          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); ${d.businessReuseAllowed === false ? 'border-left:4px solid #c62828;' : ''}">
             <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
               <div>
                 <div style="font-weight:bold; font-size:15px;">${escapeHtml(customer.name) || 'Unknown'}</div>
@@ -3035,6 +3117,7 @@
               </div>
               <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${d.status}</span>
             </div>
+            ${d.businessReuseAllowed === false ? `<div style="margin-top:8px; font-size:11px; font-weight:700; color:#c62828;">🔒 Customer kept design ownership — do not reuse or restitch this design for anyone else</div>` : ''}
             <div style="margin:10px 0; font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
             <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">${conceptsHtml}</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
@@ -3290,6 +3373,36 @@
         t.classList.toggle('active', t.dataset.lens === String(n));
       });
     }
+
+    // Swap the illustrative concept swatches for real admin-featured designs,
+    // if any exist yet. Fails silently and keeps the illustrative fallback —
+    // this must never break the landing page for anyone.
+    (async function loadFeaturedDesigns() {
+      try {
+        const res = await fetch(`${API}/api/designs/featured`);
+        const data = await res.json();
+        if (!res.ok || !data.designs || data.designs.length === 0) return;
+
+        const row = document.getElementById('featuredConceptRow');
+        if (!row) return;
+        const swatches = row.querySelectorAll('.concept-swatch');
+        data.designs.slice(0, 3).forEach((item, i) => {
+          const el = swatches[i];
+          if (!el) return;
+          el.style.backgroundImage = `url('${item.imageUrl}')`;
+          el.style.backgroundSize = 'cover';
+          el.style.backgroundPosition = 'center';
+          el.textContent = '';
+        });
+
+        const titleEl = document.getElementById('featuredConceptTitle');
+        if (titleEl) titleEl.textContent = 'REAL DESIGNS · FROM OUR CUSTOMERS';
+        const noteEl = document.getElementById('featuredConceptNote');
+        if (noteEl) noteEl.textContent = 'Real designs from Gurbani Fashion customers, shared with permission';
+      } catch (err) {
+        // no-op — illustrative placeholders stay as-is
+      }
+    })();
 
     // Reveal the Instagram frame with a fade/slide-in once it scrolls into view
     (function() {
@@ -6904,17 +7017,48 @@
         const statusLabels = { generated: 'Generated', quoted: 'Quote Requested', ordered: 'Ordered ✅', completed: 'Completed', archived: 'Archived' };
         const statusColors = { generated: '#1565c0', quoted: '#e65100', ordered: '#2e7d32', completed: '#2e7d32', archived: '#999' };
 
-        list.innerHTML = myDesignsCache.map((d, i) => `
-          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); cursor:pointer;" onclick="viewPastDesign(${i})">
-            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
-              <div style="font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
-              <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${statusLabels[d.status] || d.status}</span>
+        list.innerHTML = myDesignsCache.map((d, i) => {
+          const consentOn = !!d.showcaseConsent?.granted;
+          return `
+          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+            <div style="cursor:pointer;" onclick="viewPastDesign(${i})">
+              <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
+                <div style="font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
+                <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${statusLabels[d.status] || d.status}</span>
+              </div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">${new Date(d.createdAt).toLocaleString('en-IN')} · Tap to view designs again</div>
             </div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">${new Date(d.createdAt).toLocaleString('en-IN')} · Tap to view designs again</div>
+            <label style="display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px dashed #e0d8d0; font-size:12.5px; color:#444; cursor:pointer;">
+              <input type="checkbox" ${consentOn ? 'checked' : ''} onchange="toggleMyShowcaseConsent('${d._id}', this.checked)" style="width:auto;">
+              ✨ Show this design on our homepage${d.featured ? ' <span style="color:#2e7d32; font-weight:600;">(currently featured)</span>' : ''}
+            </label>
           </div>
-        `).join('');
+        `;
+        }).join('');
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function toggleMyShowcaseConsent(designId, checked) {
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/my-consent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ granted: checked }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const d = myDesignsCache.find(x => x._id === designId);
+          if (d) { d.showcaseConsent = data.showcaseConsent; if (!checked) d.featured = false; }
+          showToast(checked ? '✨ Thank you! We may feature this design on our homepage.' : 'Understood — this design won\'t be shown publicly.');
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to update'));
+          loadMyDesigns();
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+        loadMyDesigns();
       }
     }
 
@@ -7297,6 +7441,9 @@
         <p><strong>Anthropic (Claude AI)</strong> — processes text and photos to generate design concepts and style analysis.<br>
         <strong>Replicate</strong> — processes design descriptions and reference photos (excluding selfies) to generate preview images.<br>
         We do not sell your data to advertisers or unrelated third parties.</p>
+
+        <h3>Who Owns the Generated Designs</h3>
+        <p>Replicate's <a href="https://replicate.com/terms" target="_blank" rel="noopener">Terms of Service</a> and Black Forest Labs' terms for the FLUX model we use both confirm that neither of them claims any ownership over the images generated through our AI Design Studio — those rights pass to us. We keep a dated record of the exact terms in effect when we rely on them, in case it's ever needed to settle a question about a design's ownership. As between us and you, see our <a href="/terms-of-service.html">Terms of Service</a> for how that's handled.</p>
 
         <h3>Your Rights</h3>
         <p>You can request a copy of your data, request correction, or request deletion at any time by contacting us at <strong>9899810977</strong> or <strong>khannacaq@gmail.com</strong>. We'll respond within 7 business days.</p>
