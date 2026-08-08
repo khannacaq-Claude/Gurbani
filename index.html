@@ -412,22 +412,29 @@
       margin-top: 18px;
     }
     .coming-soon-tile {
-      background: var(--sand);
-      border-radius: 6px;
-      border-left: 5px solid var(--vivid);
-      padding: 20px;
+      border-radius: 14px;
+      padding: 22px 18px;
       position: relative;
       overflow: hidden;
+      color: white;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
+    .coming-soon-tile:hover { transform: translateY(-4px); box-shadow: 0 14px 28px -12px rgba(0,0,0,0.35); }
+    .coming-soon-grid .coming-soon-tile:nth-child(3n+1) { background: linear-gradient(160deg, var(--vivid), var(--vivid-deep)); }
+    .coming-soon-grid .coming-soon-tile:nth-child(3n+2) { background: linear-gradient(160deg, var(--marigold), var(--marigold-deep)); }
+    .coming-soon-grid .coming-soon-tile:nth-child(3n+3) { background: linear-gradient(160deg, #7A1257, #4A0A35); }
+    .coming-soon-grid.cs-alt .coming-soon-tile:nth-child(3n+1) { background: linear-gradient(160deg, #E8698F, #B84268); }
+    .coming-soon-grid.cs-alt .coming-soon-tile:nth-child(3n+2) { background: linear-gradient(160deg, #3E6B8A, #254A63); }
+    .coming-soon-grid.cs-alt .coming-soon-tile:nth-child(3n+3) { background: linear-gradient(160deg, #5B8A5A, #3A5F39); }
     .coming-soon-tile .cs-badge {
       position: absolute; top: 10px; right: 10px;
       background: var(--marigold); color: var(--ink);
       font-size: 9px; font-weight: 700; text-transform: uppercase;
       padding: 3px 8px; border-radius: 10px;
     }
-    .coming-soon-tile .cs-icon { font-size: 26px; margin-bottom: 8px; opacity: 0.8; }
-    .coming-soon-tile h4 { font-size: 14px; margin-bottom: 6px; color: var(--ink); }
-    .coming-soon-tile p { font-size: 12px; color: var(--text-muted); margin: 0; }
+    .coming-soon-tile .cs-icon { font-size: 26px; margin-bottom: 8px; opacity: 0.95; }
+    .coming-soon-tile h4 { font-size: 14px; margin-bottom: 6px; color: #FFFFFF; }
+    .coming-soon-tile p { font-size: 12px; color: rgba(255,255,255,0.88); margin: 0; }
 
     /* Experience Lenses — interactive expand-on-click showcase */
     .lens-section { margin-top: 44px; }
@@ -500,6 +507,65 @@
     .lens-window-body { padding: 16px; color: var(--text-ink); }
     .lens-window-note { font-size: 10.5px; color: var(--text-muted); font-style: italic; margin-top: 10px; }
 
+    /* Rate Card panels — same expand-on-click language as the lenses, but
+       category count is dynamic (from the real rate card), so colors cycle
+       through a palette instead of fixed lens-1..4 classes. */
+    .rc-section { margin-top: 44px; }
+    .rc-panel-row {
+      display: flex;
+      gap: 10px;
+      min-height: 360px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .rc-panel {
+      flex: 0.7;
+      position: relative;
+      border-radius: 14px;
+      padding: 20px 16px;
+      cursor: pointer;
+      color: white;
+      overflow: hidden;
+      transition: flex 0.5s cubic-bezier(.22,1,.36,1);
+      display: flex;
+      flex-direction: column;
+    }
+    .rc-panel.active { flex: 4; cursor: default; }
+    .rc-panel-label {
+      writing-mode: vertical-rl;
+      transform: translateX(-50%) rotate(180deg);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.25s ease;
+    }
+    .rc-panel.active .rc-panel-label { opacity: 0; pointer-events: none; }
+    .rc-panel-content { opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.35s ease 0.1s; }
+    .rc-panel.active .rc-panel-content { opacity: 1; max-height: none; overflow: visible; }
+    .rc-panel-content h4 { font-family: var(--font-display); font-size: 19px; margin: 4px 0 12px; color: #FFFFFF; }
+    .rc-item-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.18); gap: 12px;
+    }
+    .rc-item-row:last-child { border-bottom: none; }
+    .rc-item-name { font-size: 13px; color: rgba(255,255,255,0.95); }
+    .rc-item-name .rc-unit { font-size: 10.5px; color: rgba(255,255,255,0.65); display: block; }
+    .rc-item-price { font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap; }
+    .rc-item-price.rc-soon { font-weight: 600; font-size: 11.5px; color: rgba(255,255,255,0.7); font-style: italic; }
+    @media (max-width: 820px) {
+      .rc-panel-row { flex-direction: column; min-height: 0; }
+      .rc-panel { flex: none !important; min-height: 60px; }
+      .rc-panel.active { min-height: 320px; }
+      .rc-panel-label { writing-mode: horizontal-tb; transform: none; position: static; text-align: center; }
+      .rc-panel.active .rc-panel-label { display: none; }
+      .rc-panel:not(.active) { flex-direction: row; align-items: center; justify-content: center; padding: 14px; }
+    }
+
     .concept-row { display:flex; gap:8px; }
     .concept-swatch {
       flex:1; height:70px; border-radius:8px; display:flex; align-items:flex-end;
@@ -520,6 +586,82 @@
 
     .cat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .cat-chip { background:var(--sand); border-radius:8px; padding:10px; font-size:12px; font-weight:600; text-align:center; color:var(--ink); }
+
+    /* Shop by Occasion chips */
+    .occasion-section { margin-top: 40px; text-align: center; }
+    .occasion-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 18px; }
+    .occasion-chip {
+      background: white;
+      border: 2px solid var(--vivid);
+      color: var(--vivid);
+      border-radius: 30px;
+      padding: 12px 22px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-body);
+    }
+    .occasion-chip:hover { background: var(--vivid); color: white; transform: translateY(-2px); }
+
+    /* Couture Process — 4-step journey */
+    .process-section { margin-top: 48px; }
+    .process-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 26px; }
+    .process-step { text-align: left; position: relative; padding-top: 8px; }
+    .process-step-num {
+      font-family: var(--font-display); font-size: 34px; font-weight: 600;
+      color: var(--vivid); opacity: 0.28; line-height: 1; margin-bottom: 6px;
+    }
+    .process-step h4 { font-size: 15px; margin-bottom: 6px; color: var(--ink); }
+    .process-step p { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+    .process-cta { text-align: center; margin-top: 30px; }
+    @media (max-width: 820px) {
+      .process-steps { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 520px) {
+      .process-steps { grid-template-columns: 1fr; }
+    }
+
+    /* Our Story */
+    .story-section {
+      margin-top: 48px;
+      background: linear-gradient(160deg, var(--vivid), var(--vivid-deep));
+      color: white;
+      border-radius: 16px;
+      padding: 38px 32px;
+      text-align: center;
+    }
+    .story-section h3 { color: white; font-size: 24px; }
+    .story-section h3::after { display: none; }
+    .story-section p { color: rgba(255,255,255,0.92); font-size: 14px; line-height: 1.75; max-width: 640px; margin: 14px auto 0; }
+    .story-section .story-signoff { margin-top: 18px; font-family: var(--font-accent); font-style: italic; font-size: 17px; color: var(--marigold); }
+
+    /* FAQ accordion */
+    .faq-section { margin-top: 48px; max-width: 720px; margin-left: auto; margin-right: auto; }
+    .faq-item { border-bottom: 1px solid #e0d8d0; }
+    .faq-question {
+      width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+      padding: 16px 4px; font-size: 14px; font-weight: 700; color: var(--ink);
+      display: flex; justify-content: space-between; align-items: center; font-family: var(--font-body);
+    }
+    .faq-question:hover { background: none; color: var(--vivid); }
+    .faq-chevron { transition: transform 0.25s ease; color: var(--vivid); font-size: 13px; flex: none; margin-left: 10px; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .faq-item.open .faq-answer { max-height: 300px; }
+    .faq-answer p { font-size: 13px; color: var(--text-muted); line-height: 1.7; padding: 0 4px 16px; margin: 0; }
+
+    /* Newsletter / WhatsApp updates signup */
+    .subscribe-section {
+      margin-top: 48px; background: var(--sand); border-radius: 16px;
+      padding: 32px 28px; text-align: center;
+    }
+    .subscribe-form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+    .subscribe-form input {
+      max-width: 260px; padding: 12px 16px; border-radius: 30px; border: 1px solid #C9B8AE;
+      font-family: var(--font-body); font-size: 13px;
+    }
+    .subscribe-form button { flex: none; }
 
     @media (max-width: 820px) {
       .lens-row { flex-direction: column; min-height: 0; }
@@ -1392,7 +1534,7 @@
           <svg viewBox="0 0 260 10" preserveAspectRatio="none"><path d="M2 6 Q 24 1, 46 6 T 90 6 T 134 6 T 178 6 T 222 6 T 258 6"/></svg>
         </span></h2>
         <p>From AI-generated design concepts to expert stitching and a final fitting — the whole journey, handled under one roof.</p>
-        <p>Sign in with Google to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
+        <p>Sign in to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
 
         <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
         <div class="lens-section">
@@ -1485,9 +1627,54 @@
           </div>
         </div>
 
-        <h3 id="landingRateCardHeading" style="display:none; margin-top:36px; text-align:center;">💰 Starting Prices</h3>
-        <p id="landingRateCardSubtitle" style="display:none; text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">A quick idea before you sign in — full rate card and exact quotes inside.</p>
-        <div id="landingRateCardTeaser" class="grid"></div>
+        <!-- SHOP BY OCCASION -->
+        <div class="occasion-section">
+          <h3>What's the Occasion?</h3>
+          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">Tap one to jump straight into designing for it</p>
+          <div class="occasion-row">
+            <button class="occasion-chip" onclick="startDesignForOccasion('wedding')">👰 Bridal</button>
+            <button class="occasion-chip" onclick="startDesignForOccasion('festival')">🎉 Festival &amp; Celebration</button>
+            <button class="occasion-chip" onclick="startDesignForOccasion('party')">🥂 Party &amp; Reception</button>
+            <button class="occasion-chip" onclick="startDesignForOccasion('casual')">👗 Casual &amp; Everyday</button>
+          </div>
+        </div>
+
+        <!-- THE PROCESS -->
+        <div class="process-section">
+          <h3 style="text-align:center;">✂️ How It Works</h3>
+          <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">From first idea to final fitting</p>
+          <div class="process-steps">
+            <div class="process-step">
+              <div class="process-step-num">01</div>
+              <h4>Consultation</h4>
+              <p>Tell us your vision in your own words, or upload reference photos. Our AI Design Studio turns it into concepts in minutes — or book a one-on-one with Sonia if you'd rather talk it through.</p>
+            </div>
+            <div class="process-step">
+              <div class="process-step-num">02</div>
+              <h4>Measurements</h4>
+              <p>We take detailed measurements in-store, or you can share them if you've had them taken before. Every piece is cut to fit you — never a standard size.</p>
+            </div>
+            <div class="process-step">
+              <div class="process-step-num">03</div>
+              <h4>Design &amp; Fabric Match</h4>
+              <p>Your chosen concept is checked against our real in-store fabric, lace and lining stock, so you know instantly what's ready to stitch.</p>
+            </div>
+            <div class="process-step">
+              <div class="process-step-num">04</div>
+              <h4>Stitching &amp; Delivery</h4>
+              <p>Our tailors bring the design to life. Track progress in My Designs, come in for a fitting, and take home a piece made just for you.</p>
+            </div>
+          </div>
+          <div class="process-cta">
+            <button onclick="promptSignIn('Appointments')">📅 Book a Consultation</button>
+          </div>
+        </div>
+
+        <div class="rc-section">
+          <h3 id="landingRateCardHeading" style="text-align:center;">💰 Rate Card</h3>
+          <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">Tap a category to see every item — sign in for exact quotes.</p>
+          <div class="rc-panel-row" id="rcPanelRow"></div>
+        </div>
 
         <!-- INSTAGRAM GALLERY -->
         <div id="instagramSection" style="margin-top: 36px; text-align:center;">
@@ -1519,10 +1706,63 @@
         <div class="coming-soon-section">
           <h3>💬 What Customers Say</h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">We're just getting started collecting reviews — check back soon.</p>
-          <div class="coming-soon-grid">
+          <div class="coming-soon-grid cs-alt">
             <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">⭐</div><h4>Customer Stories</h4><p>Real experiences from real families</p></div>
             <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">📝</div><h4>Written Reviews</h4><p>Honest feedback on fit, fabric &amp; service</p></div>
             <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">🤝</div><h4>Google Reviews</h4><p>Linked here once we have enough to show</p></div>
+          </div>
+        </div>
+
+        <!-- OUR STORY -->
+        <div class="story-section">
+          <h3>Our Story</h3>
+          <p>Gurbani Fashion started as a small family boutique in Faridabad with one simple idea: your outfit should feel like it was made for exactly you — because it was. What began with a needle, thread, and a lot of care has grown into something a little unusual for a neighborhood boutique: an AI Design Studio that turns your own words and photos into real design concepts, still finished by hand by our own tailors.</p>
+          <p>We haven't changed why we started — helping people feel their best on the days that matter most. We've just found new ways to do it.</p>
+          <div class="story-signoff">— Team Gurbani Fashion</div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="faq-section">
+          <h3 style="text-align:center;">❓ Frequently Asked Questions</h3>
+          <div id="faqList">
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">How does AI Design Studio actually work?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>Describe what you want — in your own words or by uploading reference photos — and you'll get 3 AI-generated design concepts back, personalized with your own selfies, fabrics and accessories if you add them. From there you can request a quote and we'll take it to stitching.</p></div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">Do I need to visit the store?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>Not to get started — you can explore designs and request a quote entirely online. You'll need to visit (or share prior measurements) once you're ready to order, so we can get your fit exactly right.</p></div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">What if I don't like any of the 3 concepts?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>No obligation at all — generating concepts is free to explore. Describe your vision differently, try a new reference photo, or reach out to Sonia directly for a more hands-on consultation.</p></div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">Who owns the design once I order it?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>Your call. Agreeing that the design becomes ours to reuse gets you our AI Design Studio stitching discount. Prefer to keep it exclusively yours? That's fine too — your order goes ahead exactly the same, just at our standard full stitching rate.</p></div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">How long does stitching take?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>It depends on the complexity of the design and current order volume — we'll give you an estimated delivery date when you place your order.</p></div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">Can I just buy fabric or a ready suit, without stitching?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>Yes — our Marketplace has fabric, lace, lining and ready unstitched suits available to buy as-is, no stitching required.</p></div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">What payment methods do you accept?<span class="faq-chevron">▾</span></button>
+              <div class="faq-answer"><p>UPI, cards, and cash in-store, plus secure online checkout via Razorpay for orders placed through the app.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBSCRIBE -->
+        <div class="subscribe-section">
+          <h3>📲 Stay in the Loop</h3>
+          <p style="font-size:13px; color: var(--text-muted);">Get a WhatsApp or email nudge when we launch new collections or open new slots — no spam, unsubscribe anytime.</p>
+          <div class="subscribe-form">
+            <input type="tel" id="subscribeContact" placeholder="WhatsApp number or email">
+            <button onclick="submitSubscribe()">Notify Me</button>
           </div>
         </div>
       </div>
@@ -3239,36 +3479,70 @@
     // this before interpolating into a template that gets assigned to
     // .innerHTML. Numbers, dates, and admin-authored static UI strings
     // don't need it.
+    const RC_PANEL_COLORS = [
+      ['var(--vivid)', 'var(--vivid-deep)'],
+      ['var(--marigold)', 'var(--marigold-deep)'],
+      ['#7A1257', '#4A0A35'],
+      ['#E8698F', '#B84268'],
+      ['#3E6B8A', '#254A63'],
+      ['#5B8A5A', '#3A5F39'],
+    ];
+
     async function loadLandingRateCardTeaser() {
-      const container = document.getElementById('landingRateCardTeaser');
+      const container = document.getElementById('rcPanelRow');
       if (!container) return;
       try {
         const res = await fetch(`${API}/api/ratecard`);
         const data = await res.json();
         if (!res.ok || !data.success || !data.items.length) return;
 
-        const lowestByCategory = {};
+        // Group into categories, preserving the order categories first appear in
+        const categories = [];
+        const byCategory = {};
         data.items.forEach(i => {
-          if (i.priceFrom <= 0) return; // not priced yet — don't advertise ₹0 publicly
-          if (!lowestByCategory[i.category] || i.priceFrom < lowestByCategory[i.category]) {
-            lowestByCategory[i.category] = i.priceFrom;
+          if (!byCategory[i.category]) {
+            byCategory[i.category] = [];
+            categories.push(i.category);
           }
+          byCategory[i.category].push(i);
         });
-        if (Object.keys(lowestByCategory).length === 0) {
-          return; // stays hidden — nothing priced yet, nothing to advertise
-        }
-        document.getElementById('landingRateCardHeading').style.display = 'block';
-        document.getElementById('landingRateCardSubtitle').style.display = 'block';
-        container.innerHTML = Object.entries(lowestByCategory).map(([cat, price]) => `
-          <div class="feature-box" onclick="promptSignIn('Rate Card')" style="text-align:center;">
-            <h3 style="font-size:15px;">${escapeHtml(cat)}</h3>
-            <p style="font-size:13px; color:var(--vivid-deep); font-weight:700;">Starting ₹${price.toLocaleString('en-IN')}</p>
-          </div>
-        `).join('');
+
+        container.innerHTML = categories.map((cat, idx) => {
+          const items = byCategory[cat];
+          const [c1, c2] = RC_PANEL_COLORS[idx % RC_PANEL_COLORS.length];
+          const itemsHtml = items.map(i => {
+            const priced = i.priceFrom > 0;
+            const priceLabel = priced
+              ? `₹${i.priceFrom.toLocaleString('en-IN')}${i.priceTo ? '–₹' + i.priceTo.toLocaleString('en-IN') : ''}`
+              : 'Coming soon';
+            return `
+              <div class="rc-item-row">
+                <span class="rc-item-name">${escapeHtml(i.item)}${i.unit ? `<span class="rc-unit">${escapeHtml(i.unit)}</span>` : ''}</span>
+                <span class="rc-item-price${priced ? '' : ' rc-soon'}">${priceLabel}</span>
+              </div>`;
+          }).join('');
+          return `
+            <div class="rc-panel${idx === 0 ? ' active' : ''}" data-rc="${idx}" onclick="expandRcPanel(${idx})" style="background:linear-gradient(160deg, ${c1}, ${c2});">
+              <span class="rc-panel-label">${escapeHtml(cat)}</span>
+              <div class="rc-panel-content">
+                <h4>${escapeHtml(cat)}</h4>
+                ${itemsHtml}
+                <div style="margin-top:14px;">
+                  <button onclick="event.stopPropagation(); promptSignIn('Rate Card')" style="background:white; color:var(--ink); font-size:12px; padding:9px 16px;">Sign in for exact quotes →</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
       } catch (err) {
         // Silent fail — this is a nice-to-have teaser, not critical
         console.error('loadLandingRateCardTeaser error:', err);
       }
+    }
+
+    function expandRcPanel(idx) {
+      document.querySelectorAll('.rc-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.rc === String(idx));
+      });
     }
 
     function escapeHtml(value) {
@@ -3372,6 +3646,51 @@
       document.querySelectorAll('.lens-tile').forEach(t => {
         t.classList.toggle('active', t.dataset.lens === String(n));
       });
+    }
+
+    // "Shop by Occasion" chips — jump straight into AI Design Studio with
+    // the occasion pre-filled, if signed in; otherwise remember the choice
+    // and apply it once sign-in completes (see updateUI).
+    function startDesignForOccasion(value) {
+      if (authToken && currentUser && currentUser._id) {
+        switchTab(null, 'design');
+        const occ = document.getElementById('occasion');
+        if (occ) occ.value = value;
+        document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.pendingOccasion = value;
+        showToast('✨ Sign in above and we\'ll take you straight to designing this look');
+        document.querySelector('.header-right')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('#faqList .faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+
+    async function submitSubscribe() {
+      const val = document.getElementById('subscribeContact').value.trim();
+      if (!val) { showToast('Enter a WhatsApp number or email first.'); return; }
+      const isEmail = val.includes('@');
+      try {
+        const res = await fetch(`${API}/api/subscribers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(isEmail ? { email: val } : { phone: val }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ You\'re on the list!');
+          document.getElementById('subscribeContact').value = '';
+        } else {
+          showToast('❌ ' + (data.error || 'Something went wrong'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
     }
 
     // Swap the illustrative concept swatches for real admin-featured designs,
@@ -7242,6 +7561,16 @@
           maybeOpenQuickCash();
         }
         checkProfileNudge();
+
+        // If they clicked a "Shop by Occasion" chip before signing in,
+        // honor that now instead of dropping them on the default tab.
+        if (window.pendingOccasion) {
+          const occValue = window.pendingOccasion;
+          window.pendingOccasion = null;
+          switchTab(null, 'design');
+          const occ = document.getElementById('occasion');
+          if (occ) occ.value = occValue;
+        }
       } else {
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
