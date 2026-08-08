@@ -636,6 +636,31 @@
     .story-section p { color: rgba(255,255,255,0.92); font-size: 14px; line-height: 1.75; max-width: 640px; margin: 14px auto 0; }
     .story-section .story-signoff { margin-top: 18px; font-family: var(--font-accent); font-style: italic; font-size: 17px; color: var(--marigold); }
 
+    /* Visit Us */
+    .visit-section { margin-top: 48px; }
+    .visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 20px; align-items: stretch; }
+    .visit-info {
+      background: var(--sand); border-radius: 14px; padding: 26px 24px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .visit-info .visit-name { font-family: var(--font-display); font-size: 19px; color: var(--ink); margin-bottom: 6px; }
+    .visit-info .visit-address { font-size: 14px; color: var(--text-ink); line-height: 1.7; margin-bottom: 18px; }
+    .visit-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .visit-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--vivid); color: white; text-decoration: none;
+      padding: 11px 20px; border-radius: 30px; font-size: 13px; font-weight: 700;
+      font-family: var(--font-body); transition: all 0.2s ease;
+    }
+    .visit-btn:hover { background: var(--vivid-deep); transform: translateY(-1px); }
+    .visit-btn.visit-btn-outline { background: white; color: var(--vivid); border: 2px solid var(--vivid); padding: 9px 18px; }
+    .visit-map { border-radius: 14px; overflow: hidden; min-height: 220px; border: 1px solid #e0d8d0; }
+    .visit-map iframe { width: 100%; height: 100%; min-height: 220px; border: 0; display: block; }
+    @media (max-width: 780px) {
+      .visit-grid { grid-template-columns: 1fr; }
+      .visit-map { min-height: 260px; }
+    }
+
     /* FAQ accordion */
     .faq-section { margin-top: 48px; max-width: 720px; margin-left: auto; margin-right: auto; }
     .faq-item { border-bottom: 1px solid #e0d8d0; }
@@ -1719,6 +1744,25 @@
           <p>Gurbani Fashion started as a small family boutique in Faridabad with one simple idea: your outfit should feel like it was made for exactly you — because it was. What began with a needle, thread, and a lot of care has grown into something a little unusual for a neighborhood boutique: an AI Design Studio that turns your own words and photos into real design concepts, still finished by hand by our own tailors.</p>
           <p>We haven't changed why we started — helping people feel their best on the days that matter most. We've just found new ways to do it.</p>
           <div class="story-signoff">— Team Gurbani Fashion</div>
+        </div>
+
+        <!-- VISIT US -->
+        <div class="visit-section">
+          <h3 style="text-align:center;">📍 Visit Our Boutique</h3>
+          <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">Come see fabrics in person, get measured, or just say hello</p>
+          <div class="visit-grid">
+            <div class="visit-info">
+              <div class="visit-name">Gurbani Fashion Boutique</div>
+              <div class="visit-address">A-1915, Ground Floor, Greenfields Colony<br>Faridabad, Haryana 121001</div>
+              <div class="visit-btn-row">
+                <a href="tel:+919899810977" class="visit-btn">📞 Call Us</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121001" target="_blank" rel="noopener" class="visit-btn visit-btn-outline">🧭 Get Directions</a>
+              </div>
+            </div>
+            <div class="visit-map">
+              <iframe src="https://maps.google.com/maps?q=A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121001&output=embed" loading="lazy" title="Gurbani Fashion Boutique location"></iframe>
+            </div>
+          </div>
         </div>
 
         <!-- FAQ -->
