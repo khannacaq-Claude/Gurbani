@@ -2272,6 +2272,9 @@
             suggest better-fitted silhouettes in your AI designs. Covered by our
             <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">Privacy Notice</a>.
           </p>
+          <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; font-size: 12.5px; color: var(--ink);">
+            🔒 Your measurements are stored on your profile and are only ever visible to Master and Sonia — never to regular staff, and never shared outside Gurbani Fashion.
+          </div>
           <div id="profileStatus" class="status"></div>
           <form onsubmit="saveProfile(event)">
             <div class="form-group">
@@ -3668,7 +3671,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '9.3';
+    const APP_VERSION = '9.4';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -7892,6 +7895,13 @@
           notes: document.getElementById('measNotes').value,
         },
       };
+
+      const hasAnything = payload.phone || Object.values(payload.measurements).some(v => v && v.toString().trim());
+      if (!hasAnything) {
+        setStatus('profileStatus', 'Nothing to save yet — fill in your phone number or any measurement whenever you\'re ready.', 'info');
+        return;
+      }
+
       try {
         const res = await fetch(`${API}/api/auth/profile`, {
           method: 'PUT',
