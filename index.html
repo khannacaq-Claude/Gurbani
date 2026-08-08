@@ -137,17 +137,19 @@
       color: var(--marigold);
     }
     .header-products .hp-dot { color: rgba(255,255,255,0.5); font-weight: 400; }
-
-    .header-mini {
-      margin: 5px 0 0 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 10.5px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.85);
+    .header-products .hp-link { cursor: pointer; text-decoration: none; transition: color 0.15s ease; display: inline-flex; align-items: center; gap: 4px; }
+    .header-products .hp-link:hover { color: #FFFFFF; text-decoration: underline; }
+    .hp-new {
+      background: var(--vivid); color: #FFFFFF; font-size: 8.5px; font-weight: 800;
+      letter-spacing: 0.06em; padding: 1px 5px; border-radius: 8px; vertical-align: middle;
+      animation: hpNewPulse 1.6s ease-in-out infinite;
     }
+    @keyframes hpNewPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+    .header-mini { margin: 5px 0 0 0; display: flex; flex-wrap: wrap; gap: 6px; font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,0.85); }
     .header-mini .hm-dot { color: var(--marigold); opacity: 0.6; }
+    .header-mini .hm-link { cursor: pointer; transition: color 0.15s ease; }
+    .header-mini .hm-link:hover { color: #FFFFFF; text-decoration: underline; }
 
     .header-right {
       flex: none;
@@ -1495,10 +1497,10 @@
           <span>Gown</span>
         </div>
         <div class="header-mini">
-          <span>✨ AI-Powered Designs</span><span class="hm-dot">•</span>
-          <span>🧵 Custom Stitched</span><span class="hm-dot">•</span>
-          <span>📍 Faridabad, NCR</span><span class="hm-dot">•</span>
-          <span>🚚 Pan-India Delivery</span>
+          <span class="hm-link" onclick="scrollToSection('lensSection')">✨ AI-Powered Designs</span><span class="hm-dot">•</span>
+          <span class="hm-link" onclick="scrollToSection('processSection')">🧵 Custom Stitched</span><span class="hm-dot">•</span>
+          <span class="hm-link" onclick="scrollToSection('visitSection')">📍 Faridabad, NCR</span><span class="hm-dot">•</span>
+          <span class="hm-link" onclick="scrollToSection('faqSection')">🚚 Pan-India Delivery</span>
         </div>
       </div>
       <div class="header-right">
@@ -1562,7 +1564,7 @@
         <p>Sign in to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
 
         <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
-        <div class="lens-section">
+        <div class="lens-section" id="lensSection">
           <h3 style="text-align:center;">✨ Explore the Studio</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:20px;">Tap any panel to see how it works</p>
           <div class="lens-row" id="lensRow">
@@ -1665,7 +1667,7 @@
         </div>
 
         <!-- THE PROCESS -->
-        <div class="process-section">
+        <div class="process-section" id="processSection">
           <h3 style="text-align:center;">✂️ How It Works</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">From first idea to final fitting</p>
           <div class="process-steps">
@@ -1695,7 +1697,7 @@
           </div>
         </div>
 
-        <div class="rc-section">
+        <div class="rc-section" id="rcSection">
           <h3 id="landingRateCardHeading" style="text-align:center;">💰 Rate Card</h3>
           <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">Tap a category to see every item — sign in for exact quotes.</p>
           <div class="rc-panel-row" id="rcPanelRow"></div>
@@ -1747,7 +1749,7 @@
         </div>
 
         <!-- VISIT US -->
-        <div class="visit-section">
+        <div class="visit-section" id="visitSection">
           <h3 style="text-align:center;">📍 Visit Our Boutique</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">Come see fabrics in person, get measured, or just say hello</p>
           <div class="visit-grid">
@@ -1770,7 +1772,7 @@
         </div>
 
         <!-- FAQ -->
-        <div class="faq-section">
+        <div class="faq-section" id="faqSection">
           <h3 style="text-align:center;">❓ Frequently Asked Questions</h3>
           <div id="faqList">
             <div class="faq-item">
@@ -3543,6 +3545,11 @@
     // Header product-categories row — pulled from the real rate card so it's
     // always in sync with whatever admin has actually added, never a
     // hardcoded list that can drift out of date.
+    // A category counts as "NEW" for this many days after its first item
+    // was added — independent per category, based on that category's own
+    // earliest item, not affected by other categories being added.
+    const NEW_CATEGORY_WINDOW_DAYS = 35; // ~5 weeks, middle of the 4-6 week range
+
     async function loadHeaderProductCategories() {
       const row = document.getElementById('headerProductsRow');
       if (!row) return;
@@ -3551,19 +3558,54 @@
         const data = await res.json();
         if (!res.ok || !data.success || !data.items.length) return; // keep fallback list
 
-        const seen = new Set();
-        const categories = [];
+        const firstSeenByCategory = {};
+        const order = [];
         data.items.forEach(i => {
-          if (!seen.has(i.category)) { seen.add(i.category); categories.push(i.category); }
+          const created = i.createdAt ? new Date(i.createdAt) : null;
+          if (!(i.category in firstSeenByCategory)) {
+            firstSeenByCategory[i.category] = created;
+            order.push(i.category);
+          } else if (created && firstSeenByCategory[i.category] && created < firstSeenByCategory[i.category]) {
+            firstSeenByCategory[i.category] = created; // earliest item wins
+          }
         });
-        if (categories.length === 0) return;
+        if (order.length === 0) return;
 
-        row.innerHTML = categories.map((cat, idx) =>
-          `<span>${escapeHtml(cat)}</span>${idx < categories.length - 1 ? '<span class="hp-dot">•</span>' : ''}`
-        ).join('');
+        const now = Date.now();
+        row.innerHTML = order.map((cat, idx) => {
+          const firstSeen = firstSeenByCategory[cat];
+          const ageDays = firstSeen ? (now - firstSeen.getTime()) / 86400000 : Infinity;
+          const isNew = ageDays <= NEW_CATEGORY_WINDOW_DAYS;
+          const newBadge = isNew ? '<span class="hp-new">NEW</span>' : '';
+          return `<span class="hp-link" onclick="jumpToRateCardCategory('${escapeHtml(cat).replace(/'/g, "\\'")}')">${escapeHtml(cat)}${newBadge}</span>${idx < order.length - 1 ? '<span class="hp-dot">•</span>' : ''}`;
+        }).join('');
       } catch (err) {
         // Silent fail — fallback list stays, this is a nice-to-have sync
         console.error('loadHeaderProductCategories error:', err);
+      }
+    }
+
+    // Generic "jump to this landing-page section" helper for the header-mini
+    // links. Silently does nothing if the section isn't currently visible
+    // (e.g. a signed-in user viewing the dashboard instead of the landing
+    // page) rather than scrolling to a hidden element.
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el && el.offsetParent !== null) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // Clicking a header category jumps to the Rate Card section and expands
+    // that exact category's panel, if it's still rendered there.
+    function jumpToRateCardCategory(categoryName) {
+      const section = document.getElementById('rcSection');
+      if (!section || section.offsetParent === null) return; // not visible right now
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const panel = document.querySelector(`.rc-panel[data-category="${CSS.escape(categoryName)}"]`);
+      if (panel) {
+        const idx = panel.dataset.rc;
+        setTimeout(() => expandRcPanel(idx), 350); // after scroll settles
       }
     }
 
@@ -3601,7 +3643,7 @@
               </div>`;
           }).join('');
           return `
-            <div class="rc-panel${idx === 0 ? ' active' : ''}" data-rc="${idx}" onclick="expandRcPanel(${idx})" style="background:linear-gradient(160deg, ${c1}, ${c2});">
+            <div class="rc-panel${idx === 0 ? ' active' : ''}" data-rc="${idx}" data-category="${escapeHtml(cat)}" onclick="expandRcPanel(${idx})" style="background:linear-gradient(160deg, ${c1}, ${c2});">
               <span class="rc-panel-label">${escapeHtml(cat)}</span>
               <div class="rc-panel-content">
                 <h4>${escapeHtml(cat)}</h4>
