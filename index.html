@@ -1486,13 +1486,13 @@
       <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
       <div class="header-mid">
         <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
-        <div class="header-products">
-          <span>Bridal Lehenga</span><span class="hp-dot">•</span>
+        <div class="header-products" id="headerProductsRow">
+          <span>Blouse</span><span class="hp-dot">•</span>
+          <span>Kurti / Top</span><span class="hp-dot">•</span>
+          <span>Salwar Suit</span><span class="hp-dot">•</span>
           <span>Anarkali</span><span class="hp-dot">•</span>
-          <span>Kurti</span><span class="hp-dot">•</span>
-          <span>Western Wear</span><span class="hp-dot">•</span>
-          <span>Ethnic Wear</span><span class="hp-dot">•</span>
-          <span>Gowns</span>
+          <span>Lehenga</span><span class="hp-dot">•</span>
+          <span>Gown</span>
         </div>
         <div class="header-mini">
           <span>✨ AI-Powered Designs</span><span class="hm-dot">•</span>
@@ -3539,6 +3539,33 @@
       ['#3E6B8A', '#254A63'],
       ['#5B8A5A', '#3A5F39'],
     ];
+
+    // Header product-categories row — pulled from the real rate card so it's
+    // always in sync with whatever admin has actually added, never a
+    // hardcoded list that can drift out of date.
+    async function loadHeaderProductCategories() {
+      const row = document.getElementById('headerProductsRow');
+      if (!row) return;
+      try {
+        const res = await fetch(`${API}/api/ratecard`);
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.items.length) return; // keep fallback list
+
+        const seen = new Set();
+        const categories = [];
+        data.items.forEach(i => {
+          if (!seen.has(i.category)) { seen.add(i.category); categories.push(i.category); }
+        });
+        if (categories.length === 0) return;
+
+        row.innerHTML = categories.map((cat, idx) =>
+          `<span>${escapeHtml(cat)}</span>${idx < categories.length - 1 ? '<span class="hp-dot">•</span>' : ''}`
+        ).join('');
+      } catch (err) {
+        // Silent fail — fallback list stays, this is a nice-to-have sync
+        console.error('loadHeaderProductCategories error:', err);
+      }
+    }
 
     async function loadLandingRateCardTeaser() {
       const container = document.getElementById('rcPanelRow');
@@ -7640,6 +7667,7 @@
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       loadLandingRateCardTeaser();
+      loadHeaderProductCategories();
       checkForResetToken();
       const savedToken = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('currentUser');
