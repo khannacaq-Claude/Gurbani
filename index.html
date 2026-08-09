@@ -681,6 +681,17 @@
        meaningful threshold (see loadPublicStats), so nothing needs to be
        manually switched on later as the business grows. */
     .stats-section { margin-top: 44px; display: none; }
+
+    .promo-banner {
+      background: linear-gradient(135deg, var(--marigold), var(--marigold-deep));
+      border-radius: 12px; padding: 14px 20px; display: flex; align-items: center;
+      justify-content: center; gap: 10px; flex-wrap: wrap; text-align: center;
+    }
+    .promo-banner .promo-code {
+      background: white; color: var(--vivid); font-weight: 800; padding: 4px 12px;
+      border-radius: 20px; font-size: 13px; letter-spacing: 0.03em;
+    }
+    .promo-banner .promo-text { color: white; font-weight: 700; font-size: 13.5px; }
     .stats-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
     .stat-box {
       background: linear-gradient(160deg, var(--vivid), var(--vivid-deep));
@@ -1729,6 +1740,10 @@
       <div class="card">
         <div class="trust-badge"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
         <span class="version-badge" id="versionBadge"></span>
+
+        <!-- PROMO BANNER — self-gated, only shows if a public coupon is active -->
+        <div id="promoBannerSection" style="display:none; margin-bottom:16px;"></div>
+
         <div class="hero-eyebrow">Finally, a boutique built around your vision...</div>
         <h2 class="hero-headline" style="text-transform: none;">Your Vision. <span class="accent">Designed, Stitched, Fitted.
           <svg viewBox="0 0 260 10" preserveAspectRatio="none"><path d="M2 6 Q 24 1, 46 6 T 90 6 T 134 6 T 178 6 T 222 6 T 258 6"/></svg>
@@ -2080,6 +2095,7 @@
               <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
               <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
               <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
+              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons();" style="display: none;">🎟️ Coupons</button>
             </div>
           </div>
           <div class="tab-group">
@@ -2658,6 +2674,42 @@
         <div id="adminAppointments" class="tab-content">
           <h3>📅 Manage Appointments</h3>
           <div id="adminAppointmentsList">Loading...</div>
+        </div>
+
+        <!-- ADMIN: COUPONS -->
+        <div id="adminCoupons" class="tab-content">
+          <h3>🎟️ Coupons</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Public coupons show automatically on the homepage banner. Private ones only work if the customer already has the code — share via WhatsApp/Instagram, they type it in at checkout.</p>
+
+          <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-bottom:16px;" onclick="toggleCreateCouponForm()">➕ Create Coupon</button>
+          <div id="createCouponForm" class="card" style="display:none; padding:16px; margin-bottom:20px; max-width:480px;">
+            <div class="grid-2">
+              <div class="form-group"><label>Code</label><input type="text" id="couponCode" placeholder="e.g. WELCOME10" style="text-transform:uppercase;"></div>
+              <div class="form-group"><label>Description</label><input type="text" id="couponDescription" placeholder="e.g. Welcome offer"></div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Discount Type</label>
+                <select id="couponDiscountType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed Amount (₹)</option></select>
+              </div>
+              <div class="form-group"><label>Discount Value</label><input type="number" id="couponDiscountValue" placeholder="e.g. 10"></div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group"><label>Max Discount Cap (optional, ₹)</label><input type="number" id="couponMaxDiscount" placeholder="e.g. 500"></div>
+              <div class="form-group"><label>Min Order Amount (optional, ₹)</label><input type="number" id="couponMinOrder" placeholder="e.g. 1000"></div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group"><label>Usage Limit (optional)</label><input type="number" id="couponUsageLimit" placeholder="e.g. 50"></div>
+              <div class="form-group"><label>Expiry Date</label><input type="date" id="couponExpiryDate"></div>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer; font-size:13px;">
+              <input type="checkbox" id="couponIsPublic" style="width:auto;"> Show publicly on the homepage banner
+            </label>
+            <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="submitCreateCoupon()">Create</button>
+            <button type="button" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer; margin-left:8px;" onclick="toggleCreateCouponForm()">Cancel</button>
+          </div>
+
+          <div id="adminCouponsList">Loading...</div>
         </div>
 
         <!-- ADMIN: INVOICES -->
@@ -3784,7 +3836,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '11.0';
+    const APP_VERSION = '12.0';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -3831,6 +3883,7 @@
       adminReconcileTabBtn: { icon: 'refresh-cw', label: 'Reconciliation' },
       adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
       adminAppointmentsTabBtn: { icon: 'calendar-check', label: 'Manage Appointments' },
+      adminCouponsTabBtn: { icon: 'ticket', label: 'Coupons' },
       adminInvoicesTabBtn: { icon: 'receipt', label: 'Invoices' },
       adminCustomersTabBtn: { icon: 'users', label: 'Customers' },
       adminEmployeesTabBtn: { icon: 'user-cog', label: 'Employees & Payroll' },
@@ -3934,6 +3987,28 @@
     // Studio feature specifically, which backdated historical customers
     // wouldn't have used — it grows organically, not from backdating.
     const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50 };
+
+    async function loadPromoBanner() {
+      const section = document.getElementById('promoBannerSection');
+      if (!section) return;
+      try {
+        const res = await fetch(`${API}/api/coupons/public-active`);
+        const data = await res.json();
+        if (!res.ok || data.status !== 'OK' || !data.data || data.data.length === 0) return; // stays hidden
+
+        const c = data.data[0]; // show the most recent active public coupon
+        const discountText = c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`;
+        section.innerHTML = `
+          <div class="promo-banner">
+            <span class="promo-text">🎉 ${discountText}${c.description ? ' — ' + escapeHtml(c.description) : ''}</span>
+            <span class="promo-code">CODE: ${escapeHtml(c.code)}</span>
+          </div>
+        `;
+        section.style.display = 'block';
+      } catch (err) {
+        console.error('loadPromoBanner error:', err); // stays hidden — not critical
+      }
+    }
 
     async function loadPublicStats() {
       const section = document.getElementById('statsSection');
@@ -4134,24 +4209,49 @@
 
     // Shared list — used for BOTH the "What's Coming" teaser cards and the
     // feedback form's "which would you use?" checkboxes, so they always match.
+    // `desc` stays short for the feedback form/vote counts; `expanded` is the
+    // fuller "what to expect" copy used only in the bigger teaser panels.
     const UPCOMING_FEATURES = [
-      { key: 'monthly-plans', icon: '💳', title: 'Monthly Design Plans', desc: 'More designs + bigger discounts every month' },
-      { key: 'birthday-perks', icon: '🎂', title: 'Birthday Perks', desc: 'Automatic discount during your birthday month' },
-      { key: 'instant-booking', icon: '📅', title: 'Instant Appointment Booking', desc: 'Pick your own time slot, no back-and-forth' },
-      { key: 'order-progress', icon: '📦', title: 'Live Order Progress', desc: 'Photo/video updates while your outfit is being stitched' },
+      { key: 'monthly-plans', icon: '💳', title: 'Monthly Design Plans', desc: 'More designs + bigger discounts every month',
+        expanded: 'Subscribe once a month and get a set number of AI Design Studio generations included, plus bigger discounts on stitching than a one-off order. Ideal if you\'re planning multiple outfits over time — wedding season, or building out a whole festive wardrobe.' },
+      { key: 'birthday-perks', icon: '🎂', title: 'Birthday Perks', desc: 'Automatic discount during your birthday month',
+        expanded: 'Add your birthday to your profile and we\'ll automatically apply a special discount during your birthday month — no code to remember, no need to ask. Just our way of celebrating with you.' },
+      { key: 'instant-booking', icon: '📅', title: 'Instant Appointment Booking', desc: 'Pick your own time slot, no back-and-forth',
+        expanded: 'See Sonia\'s real availability and book your own slot instantly, instead of going back and forth over WhatsApp to find a time that works. Reschedule or cancel it yourself too, right from your account.' },
+      { key: 'order-progress', icon: '📦', title: 'Live Order Progress', desc: 'Photo/video updates while your outfit is being stitched',
+        expanded: 'Once your order\'s in stitching, get real photo and video updates as it comes together — the fabric being cut, the first stitches, the final fitting — instead of wondering how it\'s going until pickup day.' },
+    ];
+
+    const UPCOMING_PANEL_COLORS = [
+      ['var(--vivid)', 'var(--vivid-deep)'],
+      ['var(--marigold)', 'var(--marigold-deep)'],
+      ['#7A1257', '#4A0A35'],
+      ['#3E6B8A', '#254A63'],
     ];
 
     function renderUpcomingFeaturesTeaser() {
       const container = document.getElementById('upcomingFeaturesTeaser');
       if (!container) return;
-      container.innerHTML = UPCOMING_FEATURES.map(f => `
-        <div class="feature-box" style="cursor: default; position: relative;">
-          <span style="position:absolute; top:10px; right:10px; background: var(--marigold); color: var(--ink); font-size:9px; font-weight:700; text-transform:uppercase; padding:3px 8px; border-radius:10px;">Coming Soon</span>
-          <h3>${f.icon} ${f.title}</h3>
-          <p>${f.desc}</p>
-        </div>
-      `).join('');
+      container.innerHTML = `<div class="occ-panel-row" id="upcomingPanelRow">` +
+        UPCOMING_FEATURES.map((f, idx) => {
+          const [c1, c2] = UPCOMING_PANEL_COLORS[idx % UPCOMING_PANEL_COLORS.length];
+          return `
+            <div class="occ-panel${idx === 0 ? ' active' : ''}" data-upcoming="${idx}" onclick="expandUpcomingPanel(${idx})" style="background:linear-gradient(160deg, ${c1}, ${c2});">
+              <span class="occ-panel-label">${escapeHtml(f.title)}</span>
+              <div class="occ-panel-content">
+                <h4>${f.icon} ${escapeHtml(f.title)} <span style="font-size:10px; font-weight:700; text-transform:uppercase; background:rgba(255,255,255,0.25); padding:3px 9px; border-radius:10px; vertical-align:middle; margin-left:8px;">Coming Soon</span></h4>
+                <p style="font-size:13px; line-height:1.6; color:rgba(255,255,255,0.95); margin:0;">${f.expanded}</p>
+              </div>
+            </div>`;
+        }).join('') + `</div>`;
     }
+
+    function expandUpcomingPanel(n) {
+      document.querySelectorAll('#upcomingPanelRow .occ-panel').forEach(t => {
+        t.classList.toggle('active', t.dataset.upcoming === String(n));
+      });
+    }
+
     let currentUser = null;
     let authToken = null;
     let googleInitialized = false;
@@ -5735,10 +5835,41 @@
             </div>
           </div>`;
         }).join('')}
+        <div class="card" style="padding:14px; margin-bottom:10px;">
+          <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Have a coupon code?</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="shopSuitsCouponCode" placeholder="Enter code" style="flex:1; text-transform:uppercase;">
+            <button type="button" onclick="previewShopSuitsCoupon()" style="width:auto; padding:8px 16px; background:white; border:1px solid var(--vivid); color:var(--vivid); border-radius:6px; cursor:pointer; font-weight:700;">Apply</button>
+          </div>
+          <div id="shopSuitsCouponPreview" style="font-size:12px; margin-top:6px;"></div>
+        </div>
         <div style="display:flex; gap:10px; margin-top:16px;">
           <button type="button" class="btn-submit" style="width:auto; padding:10px 24px;" onclick="checkoutShopSuits()">Checkout</button>
           <button type="button" style="padding:10px 18px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;" onclick="renderShopSuitsStep1()">Back</button>
         </div>`;
+    }
+
+    async function previewShopSuitsCoupon() {
+      const code = document.getElementById('shopSuitsCouponCode').value.trim();
+      const preview = document.getElementById('shopSuitsCouponPreview');
+      if (!code) { preview.innerHTML = ''; return; }
+      const cartTotal = Object.values(shopSuitsCart).reduce((sum, item) => sum + item.quantity * item.price, 0);
+      preview.innerHTML = 'Checking...';
+      try {
+        const res = await fetch(`${API}/api/coupons/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ code, orderAmount: cartTotal }),
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'OK') {
+          preview.innerHTML = `<span style="color:#2e7d32; font-weight:700;">✅ ${data.data.discountAmount > 0 ? '₹' + data.data.discountAmount + ' off applied at checkout' : 'Valid code'}</span>`;
+        } else {
+          preview.innerHTML = `<span style="color:#c62828;">❌ ${escapeHtml(data.message || 'Invalid code')}</span>`;
+        }
+      } catch (err) {
+        preview.innerHTML = `<span style="color:#c62828;">❌ ${escapeHtml(err.message)}</span>`;
+      }
     }
 
     async function checkoutShopSuits() {
@@ -5746,16 +5877,22 @@
       const list = document.getElementById('shopSuitsList');
       list.innerHTML = 'Placing your order(s)...';
 
+      const couponCode = document.getElementById('shopSuitsCouponCode')?.value.trim();
       const results = [];
-      for (const [itemId, item] of items) {
+      let couponFeedback = null;
+      for (let i = 0; i < items.length; i++) {
+        const [itemId, item] = items[i];
         try {
+          const body = { itemType: item.category, itemId, quantity: item.quantity, stitchingChoice: shopSuitsChoices[itemId] || 'none' };
+          if (couponCode && i === 0) body.couponCode = couponCode; // only the first item — see backend for why
           const res = await fetch(`${API}/api/orders/buy-direct`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-            body: JSON.stringify({ itemType: item.category, itemId, quantity: item.quantity, stitchingChoice: shopSuitsChoices[itemId] || 'none' }),
+            body: JSON.stringify(body),
           });
           const data = await res.json();
           results.push({ name: item.name, ok: res.ok && data.success, message: data.message || data.error });
+          if (i === 0 && data.coupon) couponFeedback = data.coupon;
         } catch (err) {
           results.push({ name: item.name, ok: false, message: err.message });
         }
@@ -5765,6 +5902,7 @@
       list.innerHTML = `
         <div class="card" style="padding:16px;">
           <h4 style="margin-bottom:10px;">Order summary</h4>
+          ${couponFeedback ? `<div style="background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:8px 12px; margin-bottom:10px; font-size:12.5px;">🎉 Coupon <strong>${escapeHtml(couponFeedback.code)}</strong> applied — ₹${couponFeedback.discountAmount} off</div>` : ''}
           ${results.map(r => `<div style="font-size:13px; margin-bottom:6px;">${r.ok ? '✅' : '❌'} <strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.message)}</div>`).join('')}
           ${anyStitching ? '<p style="font-size:12px; color:var(--text-muted); margin-top:10px;">For anything you asked to be stitched, Sonia will follow up directly to confirm next steps.</p>' : ''}
           <div style="margin-top:16px; padding-top:12px; border-top:1px solid #eee;">
@@ -7337,6 +7475,129 @@
       }
     }
 
+    // ---------- Admin: Coupons ----------
+    function toggleCreateCouponForm() {
+      const form = document.getElementById('createCouponForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitCreateCoupon() {
+      const code = document.getElementById('couponCode').value.trim();
+      const discountValue = document.getElementById('couponDiscountValue').value;
+      const expiryDate = document.getElementById('couponExpiryDate').value;
+      if (!code || !discountValue || !expiryDate) {
+        showToast('❌ Code, discount value, and expiry date are required');
+        return;
+      }
+      const payload = {
+        code,
+        description: document.getElementById('couponDescription').value.trim(),
+        discountType: document.getElementById('couponDiscountType').value,
+        discountValue: Number(discountValue),
+        maxDiscountAmount: document.getElementById('couponMaxDiscount').value ? Number(document.getElementById('couponMaxDiscount').value) : undefined,
+        minOrderAmount: document.getElementById('couponMinOrder').value ? Number(document.getElementById('couponMinOrder').value) : 0,
+        usageLimit: document.getElementById('couponUsageLimit').value ? Number(document.getElementById('couponUsageLimit').value) : undefined,
+        expiryDate,
+        isPublic: document.getElementById('couponIsPublic').checked,
+      };
+      try {
+        const res = await fetch(`${API}/api/coupons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'OK') {
+          showToast('✅ Coupon created');
+          toggleCreateCouponForm();
+          document.getElementById('couponCode').value = '';
+          document.getElementById('couponDescription').value = '';
+          document.getElementById('couponDiscountValue').value = '';
+          document.getElementById('couponMaxDiscount').value = '';
+          document.getElementById('couponMinOrder').value = '';
+          document.getElementById('couponUsageLimit').value = '';
+          document.getElementById('couponExpiryDate').value = '';
+          document.getElementById('couponIsPublic').checked = false;
+          loadAdminCoupons();
+        } else {
+          showToast('❌ ' + (data.message || 'Failed to create coupon'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function loadAdminCoupons() {
+      const list = document.getElementById('adminCouponsList');
+      try {
+        const res = await fetch(`${API}/api/coupons`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const coupons = data.data || [];
+        if (coupons.length === 0) {
+          list.innerHTML = '<p style="color:var(--text-muted);">No coupons yet.</p>';
+          return;
+        }
+        list.innerHTML = coupons.map(c => {
+          const expired = new Date(c.expiryDate) < new Date();
+          const usedUp = c.usageLimit && c.usageCount >= c.usageLimit;
+          const statusLabel = !c.isActive ? 'Disabled' : expired ? 'Expired' : usedUp ? 'Used up' : 'Active';
+          const statusColor = statusLabel === 'Active' ? '#2e7d32' : '#c62828';
+          return `
+            <div class="card" style="padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+              <div>
+                <strong style="font-size:15px;">${escapeHtml(c.code)}</strong>
+                <span style="font-size:11px; font-weight:700; color:${statusColor}; margin-left:8px;">${statusLabel}</span>
+                ${c.isPublic ? '<span style="font-size:11px; color:var(--vivid); margin-left:6px;">🌐 Public</span>' : '<span style="font-size:11px; color:var(--text-muted); margin-left:6px;">🔒 Private</span>'}
+                <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">${escapeHtml(c.description || '')}</div>
+                <div style="font-size:12.5px; margin-top:4px;">
+                  ${c.discountType === 'percentage' ? c.discountValue + '% off' : '₹' + c.discountValue + ' off'}
+                  ${c.maxDiscountAmount ? ` (max ₹${c.maxDiscountAmount})` : ''}
+                  ${c.minOrderAmount ? ` · min order ₹${c.minOrderAmount}` : ''}
+                  · used ${c.usageCount}${c.usageLimit ? '/' + c.usageLimit : ''} · expires ${new Date(c.expiryDate).toLocaleDateString('en-IN')}
+                </div>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button type="button" onclick="toggleCouponActive('${c._id}', ${!c.isActive})" class="admin-filter-btn">${c.isActive ? 'Disable' : 'Enable'}</button>
+                <button type="button" onclick="deleteCoupon('${c._id}', '${escapeHtml(c.code)}')" class="admin-filter-btn" style="color:#c62828;">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function toggleCouponActive(id, newActive) {
+      try {
+        const res = await fetch(`${API}/api/coupons/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ isActive: newActive }),
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'OK') { showToast('✅ Updated'); loadAdminCoupons(); }
+        else showToast('❌ ' + (data.message || 'Failed to update'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function deleteCoupon(id, code) {
+      if (!(await showConfirm(`Delete coupon "${code}"? This can't be undone.`))) return;
+      try {
+        const res = await fetch(`${API}/api/coupons/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'OK') { showToast('✅ Deleted'); loadAdminCoupons(); }
+        else showToast('❌ ' + (data.message || 'Failed to delete'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
     function toggleCreateCustomerForm() {
       const form = document.getElementById('createCustomerForm');
       const isHidden = form.style.display === 'none';
@@ -8498,6 +8759,7 @@
         document.getElementById('adminReconcileTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInventoryTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAppointmentsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminCouponsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminInvoicesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminCustomersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminEmployeesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
@@ -8568,6 +8830,7 @@
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
+      loadPromoBanner();
       loadPublicStats();
       checkForResetToken();
       const savedToken = localStorage.getItem('authToken');
