@@ -677,6 +677,19 @@
 
     /* Shop by Occasion — accordion panels, same visual language as the
        Experience Lenses and Rate Card panels for a consistent feel */
+    /* Stat box — hidden by default, only shown once real numbers cross a
+       meaningful threshold (see loadPublicStats), so nothing needs to be
+       manually switched on later as the business grows. */
+    .stats-section { margin-top: 44px; display: none; }
+    .stats-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+    .stat-box {
+      background: linear-gradient(160deg, var(--vivid), var(--vivid-deep));
+      color: white; border-radius: 14px; padding: 18px 26px; text-align: center;
+      min-width: 140px;
+    }
+    .stat-box .stat-num { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--marigold); }
+    .stat-box .stat-label { font-size: 11.5px; font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+
     .occasion-section { margin-top: 48px; }
     .occ-panel-row {
       display: flex;
@@ -1529,6 +1542,7 @@
     }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 
     /* ============================================================
@@ -1565,7 +1579,7 @@
       /* touch-friendly minimum tap targets */
       button, .admin-filter-btn, .btn-submit { min-height: 44px; }
 
-      .grid-2, .grid-4 { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 
       .feature-box { padding: 16px; }
     }
@@ -1588,6 +1602,24 @@
       <div class="confirm-actions">
         <button type="button" class="confirm-cancel" id="confirmCancelBtn">Cancel</button>
         <button type="button" id="confirmOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WALK-IN ACCOUNT LINK — offered once, right after a brand new sign-up,
+       in case this person already has measurements/order history sitting
+       under a walk-in account Sonia created in-store before they ever used
+       the app themselves. -->
+  <div id="walkinLinkOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,10,20,0.6); z-index:3000; align-items:center; justify-content:center; padding:20px;">
+    <div class="card" style="max-width:400px; width:100%; padding:26px; text-align:center;">
+      <h4 style="margin-bottom:10px;">👋 Have you visited our store before?</h4>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">If Sonia's already taken your measurements in person, enter the phone number you gave her and we'll bring that over to this account.</p>
+      <input type="tel" id="walkinLinkPhone" placeholder="e.g. 9899810977 or +1 415 555 2671" style="margin-bottom:10px;">
+      <input type="tel" id="walkinLinkPhoneConfirm" placeholder="Confirm phone number" style="margin-bottom:6px;">
+      <p style="font-size:11px; color:var(--text-muted); margin-bottom:14px;">We'll only ever contact you about your order on this number — please make sure it's correct.</p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button type="button" onclick="submitWalkinLink()" class="btn-submit" style="width:auto; padding:10px 22px;">Link My Visit</button>
+        <button type="button" onclick="skipWalkinLink()" style="background:white; border:1px solid #ccc; border-radius:6px; padding:10px 22px; cursor:pointer;">This is my first time</button>
       </div>
     </div>
   </div>
@@ -1703,6 +1735,12 @@
         </span></h2>
         <p>From your first idea to the final fitting — design, fabric matching, stitching, all handled by us, start to finish.</p>
         <p>Sign in to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
+
+        <!-- STATS — self-gated, only shows once numbers are meaningful -->
+        <div class="stats-section" id="statsSection">
+          <h3 style="text-align:center;">📊 By the Numbers</h3>
+          <div class="stats-row" id="statsRow"></div>
+        </div>
 
         <!-- SHOP BY OCCASION -->
         <div class="occasion-section" id="occasionSection">
@@ -2215,6 +2253,13 @@
               </select>
             </div>
 
+            <div class="form-group" id="designFamilyProfileGroup" style="display:none;">
+              <label>📏 Whose measurements should we fit this to?</label>
+              <select id="designFamilyProfileSelect">
+                <option value="">Don't use measurements for this design</option>
+              </select>
+            </div>
+
             <!-- MULTI-PHOTO UPLOAD -->
             <div class="form-group">
               <label>📸 Upload Reference Photos (All Optional!)</label>
@@ -2268,53 +2313,62 @@
         <div id="profile" class="tab-content">
           <h3>👤 My Profile</h3>
           <p style="color: #666; margin-bottom: 20px;">
-            Adding your measurements is completely optional — it just helps us
+            Adding measurements is completely optional — it just helps us
             suggest better-fitted silhouettes in your AI designs. Covered by our
             <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">Privacy Notice</a>.
           </p>
           <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; font-size: 12.5px; color: var(--ink);">
-            🔒 Your measurements are stored securely in your profile, protected by an extra password inside our admin system — regular staff never see them there. When it's actually time to cut and stitch your garment, Sonia shares them with our tailoring team so your piece fits right; they're never used or shared for anything else.
+            🔒 Measurements are stored securely, protected by an extra password inside our admin system — regular staff never see them there. When it's actually time to cut and stitch, Sonia shares them with our tailoring team so the piece fits right; they're never used or shared for anything else.
           </div>
           <div id="profileStatus" class="status"></div>
           <form onsubmit="saveProfile(event)">
             <div class="form-group">
               <label>📱 Phone Number</label>
-              <input type="tel" id="profilePhone" placeholder="e.g. 9899810977">
-            </div>
-            <h4 style="margin: 20px 0 10px 0; color: var(--vivid);">📏 Measurements (all optional, in inches)</h4>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">🔒 Extra protected — your measurements sit behind an additional password inside our admin system, separate from regular staff access.</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px;">
-              <div class="form-group">
-                <label>Bust</label>
-                <input type="number" id="measBust" step="0.1" placeholder="e.g. 36">
-              </div>
-              <div class="form-group">
-                <label>Waist</label>
-                <input type="number" id="measWaist" step="0.1" placeholder="e.g. 30">
-              </div>
-              <div class="form-group">
-                <label>Hip</label>
-                <input type="number" id="measHip" step="0.1" placeholder="e.g. 38">
-              </div>
-              <div class="form-group">
-                <label>Shoulder</label>
-                <input type="number" id="measShoulder" step="0.1" placeholder="e.g. 14">
-              </div>
-              <div class="form-group">
-                <label>Arm Length</label>
-                <input type="number" id="measArmLength" step="0.1" placeholder="e.g. 22">
-              </div>
-              <div class="form-group">
-                <label>Length (full)</label>
-                <input type="number" id="measLength" step="0.1" placeholder="e.g. 40">
-              </div>
+              <input type="tel" id="profilePhone" placeholder="e.g. 9899810977 or +1 415 555 2671">
             </div>
             <div class="form-group">
-              <label>Notes (optional)</label>
-              <textarea id="measNotes" placeholder="e.g. prefer looser fit around the waist"></textarea>
+              <label>Confirm Phone Number</label>
+              <input type="tel" id="profilePhoneConfirm" placeholder="Re-type your phone number">
+              <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">We'll only ever contact you about your order on this number — please make sure it's correct.</p>
             </div>
             <button type="submit" class="btn-submit">💾 Save Profile</button>
           </form>
+
+          <h4 style="margin: 28px 0 6px 0; color: var(--vivid);">📏 Family Members &amp; Measurements</h4>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Sharing this account with family? Keep a separate measurement profile for each person — e.g. yourself, your mother, your daughter — so nobody's numbers get overwritten by someone else's.</p>
+          <div id="familyProfilesList" style="margin-bottom: 14px;"></div>
+          <button type="button" onclick="openFamilyProfileForm()" class="admin-filter-btn" style="margin-bottom: 20px;">➕ Add Family Member</button>
+
+          <div id="familyProfileForm" class="card" style="display:none; padding: 20px; margin-bottom: 20px;">
+            <h4 id="familyProfileFormTitle" style="margin-bottom: 14px;">Add Family Member</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 14px;">
+              <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="fpName" placeholder="e.g. Priya, Mother, Self">
+              </div>
+              <div class="form-group">
+                <label>Relationship (optional)</label>
+                <input type="text" id="fpRelationship" placeholder="e.g. Daughter, Mother">
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Measurements (all optional, in inches)</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px;">
+              <div class="form-group"><label>Bust</label><input type="number" id="fpBust" step="0.1" placeholder="e.g. 36"></div>
+              <div class="form-group"><label>Waist</label><input type="number" id="fpWaist" step="0.1" placeholder="e.g. 30"></div>
+              <div class="form-group"><label>Hip</label><input type="number" id="fpHip" step="0.1" placeholder="e.g. 38"></div>
+              <div class="form-group"><label>Shoulder</label><input type="number" id="fpShoulder" step="0.1" placeholder="e.g. 14"></div>
+              <div class="form-group"><label>Arm Length</label><input type="number" id="fpArmLength" step="0.1" placeholder="e.g. 22"></div>
+              <div class="form-group"><label>Length (full)</label><input type="number" id="fpLength" step="0.1" placeholder="e.g. 40"></div>
+            </div>
+            <div class="form-group">
+              <label>Notes (optional)</label>
+              <textarea id="fpNotes" placeholder="e.g. prefer looser fit around the waist"></textarea>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button type="button" onclick="saveFamilyProfile()" class="btn-submit" style="width:auto; padding:10px 24px;">💾 Save</button>
+              <button type="button" onclick="closeFamilyProfileForm()" style="background:white; border:1px solid #ccc; border-radius:6px; padding:10px 24px; cursor:pointer;">Cancel</button>
+            </div>
+          </div>
         </div>
 
         <!-- APPOINTMENTS TAB -->
@@ -2634,6 +2688,8 @@
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">For walk-ins who aren't comfortable signing in with Google themselves. Phone is required; email is optional.</p>
             <input type="text" id="newCustomerName" placeholder="Name *" style="margin-bottom:8px;">
             <input type="tel" id="newCustomerPhone" placeholder="Phone *" style="margin-bottom:8px;">
+            <input type="tel" id="newCustomerPhoneConfirm" placeholder="Confirm Phone *" style="margin-bottom:4px;">
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Double-check this with the customer before saving — it's how we'll contact them about their order.</p>
             <input type="email" id="newCustomerEmail" placeholder="Email (optional)" style="margin-bottom:12px;">
             <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="submitCreateCustomer()">Create</button>
             <button type="button" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer; margin-left:8px;" onclick="toggleCreateCustomerForm()">Cancel</button>
@@ -2772,6 +2828,47 @@
                 <button type="submit" class="btn-submit" style="margin-top:10px;">Save Record</button>
               </form>
             </div>
+
+            <div class="card" style="padding: 20px; margin-bottom: 16px;">
+              <h4 style="margin-bottom: 6px;">Update a Customer's Profile Measurements</h4>
+              <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Took measurements in person? Save them directly to that customer's account — this is what actually feeds AI Design Studio and shows up in their own My Profile tab, unlike the garment log above. Each customer can have several family-member profiles (e.g. Self, Mother, Daughter) sharing one account.</p>
+              <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <input type="text" id="profMeasSearchInput" placeholder="Search customer by name or phone..." style="flex:1;">
+                <button type="button" onclick="searchCustomerForMeasurements()" class="btn-submit" style="width:auto; padding:8px 18px; white-space:nowrap;">Find</button>
+              </div>
+              <div id="profMeasSearchResults"></div>
+
+              <div id="profMeasProfilesList" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid #e0d8d0;">
+                <p style="font-weight:700; margin-bottom:10px;" id="profMeasCustomerLabel"></p>
+                <div id="profMeasProfilesCards" style="margin-bottom:10px;"></div>
+                <button type="button" onclick="openAdminFamilyProfileForm()" class="admin-filter-btn">➕ Add Family Member</button>
+              </div>
+
+              <div id="profMeasEditForm" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid #e0d8d0;">
+                <p style="font-weight:700; margin-bottom:10px;" id="profMeasEditFormTitle"></p>
+                <div class="grid-2">
+                  <div class="form-group"><label>Phone</label><input id="profMeasPhone"></div>
+                  <div class="form-group"><label>Name</label><input id="profMeasName" placeholder="e.g. Self, Mother, Priya"></div>
+                </div>
+                <div class="form-group"><label>Confirm Phone (only if changing it)</label><input id="profMeasPhoneConfirm" placeholder="Re-type if updating the phone number"></div>
+                <div class="form-group"><label>Relationship (optional)</label><input id="profMeasRelationship" placeholder="e.g. Daughter, Mother"></div>
+                <h5 style="margin: 10px 0 8px 0;">Measurements (inches)</h5>
+                <div class="grid-3">
+                  <div class="form-group"><label>Bust</label><input id="profMeasBust" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Waist</label><input id="profMeasWaist" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Hip</label><input id="profMeasHip" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Shoulder</label><input id="profMeasShoulder" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Arm Length</label><input id="profMeasArmLength" type="number" step="0.25"></div>
+                  <div class="form-group"><label>Length (full)</label><input id="profMeasLength" type="number" step="0.25"></div>
+                </div>
+                <div class="form-group" style="margin-top:10px;"><label>Notes</label><textarea id="profMeasNotes" rows="2"></textarea></div>
+                <div style="display:flex; gap:10px;">
+                  <button type="button" onclick="saveCustomerProfileMeasurements()" class="btn-submit" style="width:auto; padding:10px 24px;">💾 Save</button>
+                  <button type="button" onclick="closeAdminFamilyProfileForm()" style="background:white; border:1px solid #ccc; border-radius:6px; padding:10px 24px; cursor:pointer;">Cancel</button>
+                </div>
+              </div>
+            </div>
+
             <input type="text" id="measSearchInput" placeholder="Search by name or phone..." oninput="loadMeasurements()" style="margin-bottom: 16px;">
             <div id="measurementsList">Loading...</div>
           </div>
@@ -3671,7 +3768,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '9.5';
+    const APP_VERSION = '10.6';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -3810,6 +3907,49 @@
       } catch (err) {
         console.error('fetchRateCardItems error:', err);
         return null;
+      }
+    }
+
+    // Meaningful-activity thresholds — deliberately set ABOVE your current
+    // real numbers (40+ existing customers), so backdating historical
+    // orders doesn't just instantly trigger this the moment it's entered —
+    // it should reflect genuine growth past where things stand today.
+    // designsGenerated stays lower since it's tied to the newer AI Design
+    // Studio feature specifically, which backdated historical customers
+    // wouldn't have used — it grows organically, not from backdating.
+    const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50 };
+
+    async function loadPublicStats() {
+      const section = document.getElementById('statsSection');
+      const row = document.getElementById('statsRow');
+      if (!section || !row) return;
+      try {
+        const res = await fetch(`${API}/api/stats/public`);
+        const data = await res.json();
+        if (!res.ok || !data.success) return; // stays hidden on any failure
+
+        const s = data.stats;
+        // Each stat is checked against its OWN threshold individually —
+        // a stat that isn't meaningful yet never renders, even if another
+        // stat qualifies. Prevents a small number sitting awkwardly next
+        // to a big backdated one.
+        const items = [
+          { num: s.designsGenerated, label: 'Designs Created', threshold: STATS_THRESHOLDS.designsGenerated },
+          { num: s.ordersCompleted, label: 'Orders Delivered', threshold: STATS_THRESHOLDS.ordersCompleted },
+          { num: s.customersServed, label: 'Customers Served', threshold: STATS_THRESHOLDS.customersServed },
+        ].filter(i => i.num >= i.threshold);
+
+        if (items.length === 0) return; // nothing meaningful yet — stays hidden
+
+        row.innerHTML = items.map(i => `
+          <div class="stat-box">
+            <div class="stat-num">${i.num.toLocaleString('en-IN')}+</div>
+            <div class="stat-label">${i.label}</div>
+          </div>
+        `).join('');
+        section.style.display = 'block';
+      } catch (err) {
+        console.error('loadPublicStats error:', err); // stays hidden — not critical
       }
     }
 
@@ -4161,6 +4301,28 @@
 
     let shopSuitsNudgeShown = false; // only nudge once per visit, not every tab click
 
+    function populateDesignFamilyProfileSelect() {
+      const group = document.getElementById('designFamilyProfileGroup');
+      const select = document.getElementById('designFamilyProfileSelect');
+      if (!group || !select) return;
+      const profiles = currentUser?.familyProfiles || [];
+      if (profiles.length === 0) {
+        group.style.display = 'none';
+        return;
+      }
+      group.style.display = 'block';
+      const previousValue = select.value;
+      select.innerHTML = '<option value="">Don\'t use measurements for this design</option>' +
+        profiles.map(p => `<option value="${p._id}">${escapeHtml(p.name)}${p.relationship ? ' (' + escapeHtml(p.relationship) + ')' : ''}</option>`).join('');
+      // Keep whatever was selected if it's still valid; otherwise default to
+      // the only profile if there's exactly one, for a smoother single-user flow.
+      if (profiles.some(p => p._id === previousValue)) {
+        select.value = previousValue;
+      } else if (profiles.length === 1) {
+        select.value = profiles[0]._id;
+      }
+    }
+
     function switchTab(event, tabName) {
       if (event) event.preventDefault();
       // Leaving Shop Suits with nothing added to cart - nudge toward AI Design Studio.
@@ -4179,6 +4341,7 @@
       const activeBtn = document.querySelector(`button[onclick*="${tabName}"]`);
       activeBtn?.classList.add('active');
       activeBtn?.setAttribute('aria-selected', 'true');
+      if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
     }
 
     // Wires up proper ARIA tab semantics (role="tablist"/"tab"/"tabpanel",
@@ -4573,11 +4736,13 @@
       document.getElementById('generateBtn').disabled = true;
 
       try {
+        const selectedProfileId = document.getElementById('designFamilyProfileSelect')?.value;
+        const selectedProfile = selectedProfileId ? (currentUser?.familyProfiles || []).find(p => p._id === selectedProfileId) : null;
         const payload = { 
           description, 
           occasion,
           photos: uploadedPhotos || null,
-          measurements: (currentUser?.measurements && Object.keys(currentUser.measurements).some((k) => currentUser.measurements[k])) ? currentUser.measurements : null
+          measurements: (selectedProfile?.measurements && Object.keys(selectedProfile.measurements).some((k) => selectedProfile.measurements[k])) ? selectedProfile.measurements : null
         };
         // Admin generating this for a walk-in who isn't signed in themselves -
         // only sent if an admin actually picked a customer above; a regular
@@ -5052,6 +5217,7 @@
         localStorage.setItem('authToken', authToken);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         updateUI();
+        if (data.isNewAccount) offerWalkinAccountLink();
         if (data.user.role !== 'admin') {
           setTimeout(() => switchTab(null, 'design'), 500);
         }
@@ -5141,6 +5307,7 @@
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
           setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
           updateUI();
+          if (data.isNewAccount) offerWalkinAccountLink();
           if (data.user.role !== 'admin') {
             setTimeout(() => switchTab(null, 'design'), 500);
           }
@@ -5149,6 +5316,61 @@
         }
       })
       .catch(e => setStatus('designStatus', '❌ ' + e.message, 'error'));
+    }
+
+    // ---------- Walk-in account linking ----------
+    function offerWalkinAccountLink() {
+      document.getElementById('walkinLinkPhone').value = '';
+      document.getElementById('walkinLinkPhoneConfirm').value = '';
+      document.getElementById('walkinLinkOverlay').style.display = 'flex';
+    }
+
+    function skipWalkinLink() {
+      document.getElementById('walkinLinkOverlay').style.display = 'none';
+    }
+
+    // Shared double-entry phone check. If allowEmptyConfirm is true and the
+    // confirm field is blank, treat it as "not changing the number" and
+    // allow through — used where the phone field is pre-filled with an
+    // existing value the admin might not actually be touching.
+    function phoneConfirmOk(primary, confirm, statusElId, allowEmptyConfirm) {
+      if (allowEmptyConfirm && !confirm) return true;
+      if (!confirm) {
+        const msg = 'Please re-type the phone number in the confirm field.';
+        if (statusElId) setStatus(statusElId, msg, 'info'); else showToast('❌ ' + msg);
+        return false;
+      }
+      if (primary !== confirm) {
+        const msg = '❌ Phone numbers don\'t match — please check and try again.';
+        if (statusElId) setStatus(statusElId, msg, 'error'); else showToast(msg);
+        return false;
+      }
+      return true;
+    }
+
+    async function submitWalkinLink() {
+      const phone = document.getElementById('walkinLinkPhone').value.trim();
+      const confirmPhone = document.getElementById('walkinLinkPhoneConfirm').value.trim();
+      if (!phone) { showToast('Enter the phone number you gave in-store, or tap "This is my first time".'); return; }
+      if (!phoneConfirmOk(phone, confirmPhone, null, false)) return;
+      try {
+        const res = await fetch(`${API}/api/auth/link-walkin-account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ phone }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentUser = { ...currentUser, ...data.user };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          showToast(data.merged ? data.message : '✅ Phone number saved — no past visit found under that number.');
+          document.getElementById('walkinLinkOverlay').style.display = 'none';
+        } else {
+          showToast('❌ ' + (data.error || 'Could not link that number'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
     }
 
     async function handleSignOut() {
@@ -7066,6 +7288,7 @@
       if (isHidden) {
         document.getElementById('newCustomerName').value = '';
         document.getElementById('newCustomerPhone').value = '';
+        document.getElementById('newCustomerPhoneConfirm').value = '';
         document.getElementById('newCustomerEmail').value = '';
         document.getElementById('newCustomerName').focus();
       }
@@ -7074,11 +7297,13 @@
     async function submitCreateCustomer() {
       const name = document.getElementById('newCustomerName').value.trim();
       const phone = document.getElementById('newCustomerPhone').value.trim();
+      const confirmPhone = document.getElementById('newCustomerPhoneConfirm').value.trim();
       const email = document.getElementById('newCustomerEmail').value.trim();
       if (!name || !phone) {
         showToast('❌ Name and phone are required');
         return;
       }
+      if (!phoneConfirmOk(phone, confirmPhone, null, false)) return;
       try {
         const res = await fetch(`${API}/api/auth/admin/create-customer`, {
           method: 'POST',
@@ -7556,6 +7781,163 @@
       }
     }
 
+    // ---------- ADMIN: update a customer's actual profile measurements ----------
+    let profMeasSelectedCustomer = null;
+    let profMeasEditingProfileId = null;
+
+    async function searchCustomerForMeasurements() {
+      const q = document.getElementById('profMeasSearchInput').value.trim();
+      const results = document.getElementById('profMeasSearchResults');
+      document.getElementById('profMeasProfilesList').style.display = 'none';
+      document.getElementById('profMeasEditForm').style.display = 'none';
+      profMeasSelectedCustomer = null;
+      if (!q) { results.innerHTML = ''; return; }
+      results.innerHTML = 'Searching...';
+      try {
+        const res = await fetch(`${API}/api/admin/customers?search=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const customers = data.data || data.customers || [];
+        if (customers.length === 0) {
+          results.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No customers found.</p>';
+          return;
+        }
+        results.innerHTML = customers.map(c => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px solid #e0d8d0; border-radius:6px; margin-bottom:6px; cursor:pointer;" onclick='selectCustomerForMeasurements(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+            <span>${escapeHtml(c.name)} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</span>
+            <span style="color:var(--vivid); font-size:12px; font-weight:700;">Select →</span>
+          </div>
+        `).join('');
+      } catch (err) {
+        results.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    function selectCustomerForMeasurements(c) {
+      profMeasSelectedCustomer = c;
+      document.getElementById('profMeasSearchResults').innerHTML = '';
+      document.getElementById('profMeasCustomerLabel').textContent = `${c.name}${c.phone ? ' · ' + c.phone : ''}`;
+      document.getElementById('profMeasEditForm').style.display = 'none';
+      renderAdminFamilyProfileCards();
+      document.getElementById('profMeasProfilesList').style.display = 'block';
+    }
+
+    function renderAdminFamilyProfileCards() {
+      const container = document.getElementById('profMeasProfilesCards');
+      const profiles = profMeasSelectedCustomer?.familyProfiles || [];
+      if (profiles.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No family members added yet.</p>';
+        return;
+      }
+      container.innerHTML = profiles.map(p => {
+        const m = p.measurements || {};
+        const parts = ['bust', 'waist', 'hip', 'shoulder', 'armLength', 'length']
+          .filter(k => m[k]).map(k => `${k === 'armLength' ? 'Arm' : k === 'length' ? 'Length' : k[0].toUpperCase()+k.slice(1)} ${m[k]}"`).join(' · ');
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px solid #e0d8d0; border-radius:6px; margin-bottom:6px;">
+            <div>
+              <strong>${escapeHtml(p.name)}</strong>${p.relationship ? ` <span style="color:var(--text-muted); font-size:12px;">(${escapeHtml(p.relationship)})</span>` : ''}
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${parts || 'No measurements yet'}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick='openAdminFamilyProfileForm(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="admin-filter-btn">✏️ Edit</button>
+              <button type="button" onclick="deleteAdminFamilyProfile('${p._id}', '${escapeHtml(p.name)}')" class="admin-filter-btn" style="color:#c62828;">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openAdminFamilyProfileForm(profile) {
+      if (!profMeasSelectedCustomer) { showToast('❌ Select a customer first'); return; }
+      profMeasEditingProfileId = profile ? profile._id : null;
+      document.getElementById('profMeasEditFormTitle').textContent = profile ? `Editing ${profile.name}` : `Add family member for ${profMeasSelectedCustomer.name}`;
+      document.getElementById('profMeasPhone').value = profMeasSelectedCustomer.phone || '';
+      document.getElementById('profMeasPhoneConfirm').value = '';
+      document.getElementById('profMeasName').value = profile?.name || '';
+      document.getElementById('profMeasRelationship').value = profile?.relationship || '';
+      const m = profile?.measurements || {};
+      document.getElementById('profMeasBust').value = m.bust ?? '';
+      document.getElementById('profMeasWaist').value = m.waist ?? '';
+      document.getElementById('profMeasHip').value = m.hip ?? '';
+      document.getElementById('profMeasShoulder').value = m.shoulder ?? '';
+      document.getElementById('profMeasArmLength').value = m.armLength ?? '';
+      document.getElementById('profMeasLength').value = m.length ?? '';
+      document.getElementById('profMeasNotes').value = m.notes || '';
+      document.getElementById('profMeasEditForm').style.display = 'block';
+    }
+
+    function closeAdminFamilyProfileForm() {
+      profMeasEditingProfileId = null;
+      document.getElementById('profMeasEditForm').style.display = 'none';
+    }
+
+    async function saveCustomerProfileMeasurements() {
+      if (!profMeasSelectedCustomer) { showToast('❌ Select a customer first'); return; }
+      const name = document.getElementById('profMeasName').value.trim();
+      if (!profMeasEditingProfileId && !name) {
+        showToast('❌ A name is required (e.g. "Self", "Mother", "Priya")');
+        return;
+      }
+      const phone = document.getElementById('profMeasPhone').value.trim();
+      const confirmPhone = document.getElementById('profMeasPhoneConfirm').value.trim();
+      const phoneChanged = phone !== (profMeasSelectedCustomer.phone || '');
+      if (phoneChanged && !phoneConfirmOk(phone, confirmPhone, null, false)) return;
+      const payload = {
+        phone,
+        profileId: profMeasEditingProfileId || undefined,
+        name: name || undefined,
+        relationship: document.getElementById('profMeasRelationship').value.trim(),
+        measurements: {
+          bust: document.getElementById('profMeasBust').value,
+          waist: document.getElementById('profMeasWaist').value,
+          hip: document.getElementById('profMeasHip').value,
+          shoulder: document.getElementById('profMeasShoulder').value,
+          armLength: document.getElementById('profMeasArmLength').value,
+          length: document.getElementById('profMeasLength').value,
+          notes: document.getElementById('profMeasNotes').value.trim(),
+        },
+      };
+      try {
+        const res = await fetch(`${API}/api/auth/admin/customers/${profMeasSelectedCustomer._id}/measurements`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`✅ Saved to ${profMeasSelectedCustomer.name}'s profile`);
+          profMeasSelectedCustomer = data.user;
+          closeAdminFamilyProfileForm();
+          renderAdminFamilyProfileCards();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to save'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function deleteAdminFamilyProfile(profileId, name) {
+      if (!profMeasSelectedCustomer) return;
+      if (!(await showConfirm(`Remove ${name}'s measurement profile? This can't be undone.`))) return;
+      try {
+        const res = await fetch(`${API}/api/auth/admin/customers/${profMeasSelectedCustomer._id}/family-members/${profileId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Removed');
+          profMeasSelectedCustomer = data.user;
+          renderAdminFamilyProfileCards();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to remove'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
     async function submitMeasurementForm(event) {
       event.preventDefault();
       const body = {
@@ -7849,7 +8231,9 @@
       }
 
       const dismissed = localStorage.getItem('profileNudgeDismissed') === 'true';
-      const hasMeasurements = currentUser?.measurements && Object.keys(currentUser.measurements).some((k) => currentUser.measurements[k]);
+      const hasMeasurements = (currentUser?.familyProfiles || []).some(p =>
+        p.measurements && Object.keys(p.measurements).some(k => p.measurements[k])
+      );
       document.getElementById('profileNudgeBanner').style.display = (!dismissed && !hasMeasurements) ? 'flex' : 'none';
     }
 
@@ -7867,14 +8251,9 @@
         if (res.ok && data.success) {
           const user = data.user;
           document.getElementById('profilePhone').value = user.phone || '';
-          const m = user.measurements || {};
-          document.getElementById('measBust').value = m.bust || '';
-          document.getElementById('measWaist').value = m.waist || '';
-          document.getElementById('measHip').value = m.hip || '';
-          document.getElementById('measShoulder').value = m.shoulder || '';
-          document.getElementById('measArmLength').value = m.armLength || '';
-          document.getElementById('measLength').value = m.length || '';
-          document.getElementById('measNotes').value = m.notes || '';
+          currentUser = { ...currentUser, ...user };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          renderFamilyProfilesList();
         }
       } catch (err) {
         console.error('Failed to load profile:', err);
@@ -7883,37 +8262,26 @@
 
     async function saveProfile(event) {
       event.preventDefault();
-      const payload = {
-        phone: document.getElementById('profilePhone').value.trim(),
-        measurements: {
-          bust: document.getElementById('measBust').value,
-          waist: document.getElementById('measWaist').value,
-          hip: document.getElementById('measHip').value,
-          shoulder: document.getElementById('measShoulder').value,
-          armLength: document.getElementById('measArmLength').value,
-          length: document.getElementById('measLength').value,
-          notes: document.getElementById('measNotes').value,
-        },
-      };
-
-      const hasAnything = payload.phone || Object.values(payload.measurements).some(v => v && v.toString().trim());
-      if (!hasAnything) {
-        setStatus('profileStatus', 'Nothing to save yet — fill in your phone number or any measurement whenever you\'re ready.', 'info');
+      const phone = document.getElementById('profilePhone').value.trim();
+      const confirmPhone = document.getElementById('profilePhoneConfirm').value.trim();
+      if (!phone) {
+        setStatus('profileStatus', 'Nothing to save yet — fill in your phone number whenever you\'re ready.', 'info');
         return;
       }
-
+      const phoneChanged = phone !== (currentUser?.phone || '');
+      if (phoneChanged && !phoneConfirmOk(phone, confirmPhone, 'profileStatus', false)) return;
       try {
-        const res = await fetch(`${API}/api/auth/profile`, {
-          method: 'PUT',
+        const res = await fetch(`${API}/api/auth/link-walkin-account`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ phone }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          setStatus('profileStatus', '✅ Profile saved! Your future designs will factor in your measurements.', 'success');
+          setStatus('profileStatus', data.merged ? data.message : '✅ Profile saved!', 'success');
           currentUser = { ...currentUser, ...data.user };
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
           dismissProfileNudge();
@@ -7922,6 +8290,119 @@
         }
       } catch (err) {
         setStatus('profileStatus', '❌ ' + err.message, 'error');
+      }
+    }
+
+    // ---------- Family profiles (customer self-service) ----------
+    let editingFamilyProfileId = null;
+
+    function renderFamilyProfilesList() {
+      const list = document.getElementById('familyProfilesList');
+      if (!list) return;
+      const profiles = currentUser?.familyProfiles || [];
+      if (profiles.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No family members added yet.</p>';
+        return;
+      }
+      list.innerHTML = profiles.map(p => {
+        const m = p.measurements || {};
+        const parts = ['bust', 'waist', 'hip', 'shoulder', 'armLength', 'length']
+          .filter(k => m[k]).map(k => `${k === 'armLength' ? 'Arm' : k === 'length' ? 'Length' : k[0].toUpperCase()+k.slice(1)} ${m[k]}"`).join(' · ');
+        return `
+          <div class="card" style="padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong>${escapeHtml(p.name)}</strong>${p.relationship ? ` <span style="color:var(--text-muted); font-size:12px;">(${escapeHtml(p.relationship)})</span>` : ''}
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${parts || 'No measurements added yet'}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick='openFamilyProfileForm(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="admin-filter-btn">✏️ Edit</button>
+              <button type="button" onclick="deleteFamilyProfile('${p._id}', '${escapeHtml(p.name)}')" class="admin-filter-btn" style="color:#c62828;">🗑️ Remove</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openFamilyProfileForm(profile) {
+      editingFamilyProfileId = profile ? profile._id : null;
+      document.getElementById('familyProfileFormTitle').textContent = profile ? `Edit ${profile.name}` : 'Add Family Member';
+      document.getElementById('fpName').value = profile?.name || '';
+      document.getElementById('fpRelationship').value = profile?.relationship || '';
+      const m = profile?.measurements || {};
+      document.getElementById('fpBust').value = m.bust ?? '';
+      document.getElementById('fpWaist').value = m.waist ?? '';
+      document.getElementById('fpHip').value = m.hip ?? '';
+      document.getElementById('fpShoulder').value = m.shoulder ?? '';
+      document.getElementById('fpArmLength').value = m.armLength ?? '';
+      document.getElementById('fpLength').value = m.length ?? '';
+      document.getElementById('fpNotes').value = m.notes || '';
+      document.getElementById('familyProfileForm').style.display = 'block';
+    }
+
+    function closeFamilyProfileForm() {
+      editingFamilyProfileId = null;
+      document.getElementById('familyProfileForm').style.display = 'none';
+    }
+
+    async function saveFamilyProfile() {
+      const name = document.getElementById('fpName').value.trim();
+      if (!editingFamilyProfileId && !name) {
+        showToast('❌ A name is required (e.g. "Self", "Mother", "Priya")');
+        return;
+      }
+      const payload = {
+        profileId: editingFamilyProfileId || undefined,
+        name: name || undefined,
+        relationship: document.getElementById('fpRelationship').value.trim(),
+        measurements: {
+          bust: document.getElementById('fpBust').value,
+          waist: document.getElementById('fpWaist').value,
+          hip: document.getElementById('fpHip').value,
+          shoulder: document.getElementById('fpShoulder').value,
+          armLength: document.getElementById('fpArmLength').value,
+          length: document.getElementById('fpLength').value,
+          notes: document.getElementById('fpNotes').value.trim(),
+        },
+      };
+      try {
+        const res = await fetch(`${API}/api/auth/profile/family-members`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Saved');
+          currentUser = { ...currentUser, ...data.user };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          renderFamilyProfilesList();
+          closeFamilyProfileForm();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to save'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function deleteFamilyProfile(profileId, name) {
+      if (!(await showConfirm(`Remove ${name}'s measurement profile? This can't be undone.`))) return;
+      try {
+        const res = await fetch(`${API}/api/auth/profile/family-members/${profileId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Removed');
+          currentUser = { ...currentUser, ...data.user };
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          renderFamilyProfilesList();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to remove'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
       }
     }
 
@@ -8031,6 +8512,7 @@
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
+      loadPublicStats();
       checkForResetToken();
       const savedToken = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('currentUser');
