@@ -2695,6 +2695,22 @@
             <button type="button" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer; margin-left:8px;" onclick="toggleCreateCustomerForm()">Cancel</button>
           </div>
 
+          <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-bottom:16px; margin-left:10px;" onclick="toggleCsvImportForm()">📄 Bulk Import from CSV</button>
+          <div id="csvImportForm" class="card" style="display:none; padding:16px; margin-bottom:20px; max-width:520px;">
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">For backdating historical customers/orders in bulk. Upload a .csv or .xlsx file.</p>
+            <p style="font-size:11.5px; color:var(--ink); margin-bottom:4px;"><strong>Customers file columns:</strong> name, phone, email (optional), address (optional)</p>
+            <p style="font-size:11.5px; color:var(--ink); margin-bottom:12px;"><strong>Orders file columns:</strong> customerPhone (or customerEmail), customerName, totalPrice, designDescription, status (pending/in-progress/ready/delivered/cancelled), paymentStatus (unpaid/partial/paid), orderDate, deliveryDate, notes</p>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+              <select id="csvImportType" style="width:auto;">
+                <option value="customers">Customers file</option>
+                <option value="orders">Orders file</option>
+              </select>
+              <input type="file" id="csvImportFile" accept=".csv,.xlsx,.xls">
+              <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="submitCsvImport()">Upload &amp; Import</button>
+            </div>
+            <div id="csvImportResult"></div>
+          </div>
+
           <input type="text" id="customerSearchInput" placeholder="Search by name, email or phone..." oninput="loadAdminCustomers()" style="margin-bottom: 16px;">
 
           <h4 style="margin-bottom:8px;">🛍️ Customers — Have Generated Revenue</h4>
@@ -3768,7 +3784,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '10.6';
+    const APP_VERSION = '11.0';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -7279,6 +7295,46 @@
           </div>
         </div>
       `;
+    }
+
+    function toggleCsvImportForm() {
+      const form = document.getElementById('csvImportForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      document.getElementById('csvImportResult').innerHTML = '';
+    }
+
+    async function submitCsvImport() {
+      const type = document.getElementById('csvImportType').value;
+      const fileInput = document.getElementById('csvImportFile');
+      const resultDiv = document.getElementById('csvImportResult');
+      if (!fileInput.files[0]) { showToast('❌ Choose a file first'); return; }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      resultDiv.innerHTML = 'Importing...';
+
+      try {
+        const res = await fetch(`${API}/api/import/${type}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }, // no Content-Type — browser sets multipart boundary
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const s = data.summary;
+          let html = `<p style="color:#2e7d32; font-weight:700;">✅ Imported ${s.imported} of ${s.totalRows} rows (${s.skipped} skipped)</p>`;
+          if (s.errors && s.errors.length > 0) {
+            html += '<p style="font-size:12px; color:#c62828; margin-top:6px;">Issues:</p><ul style="font-size:11.5px; color:#c62828;">' +
+              s.errors.map(e => `<li>Row ${e.row}: ${escapeHtml(e.reason)}</li>`).join('') + '</ul>';
+          }
+          resultDiv.innerHTML = html;
+          loadAdminCustomers();
+        } else {
+          resultDiv.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Import failed'}</p>`;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
     }
 
     function toggleCreateCustomerForm() {
