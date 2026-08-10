@@ -1569,6 +1569,12 @@
       header p.header-tagline { font-size: 14px; }
       .header-right { align-items: center; text-align: center; margin-left: 0; }
 
+      /* LightWidget's Instagram embed reflows to a taller layout on narrow
+         screens than desktop needs — the fixed 420px min-height combined
+         with overflow:hidden was silently clipping the bottom row of
+         photos on mobile. Give it real room to actually render. */
+      .insta-frame-inner { min-height: 900px; }
+
       main { padding: 0 12px; margin: 20px auto; }
       .card { padding: 20px 16px; }
 
@@ -3888,7 +3894,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '13.5';
+    const APP_VERSION = '13.6';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
