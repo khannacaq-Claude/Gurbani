@@ -34,7 +34,7 @@
       "streetAddress": "A-1915, Ground Floor, Greenfields Colony",
       "addressLocality": "Faridabad",
       "addressRegion": "Haryana",
-      "postalCode": "121001",
+      "postalCode": "121010",
       "addressCountry": "IN"
     },
     "description": "Custom stitching boutique offering lehengas, anarkalis, kurtis, gowns and blouses, with an AI design studio for previewing custom outfit concepts."
@@ -1829,7 +1829,7 @@
               <div class="lens-content">
                 <h4>🎨 AI Design Studio</h4>
                 <p>Tell us what you want in your own words, or send a reference photo — get 3 AI-made design ideas back, matched to your selfies, fabric and accessories.</p>
-                <p style="font-size:11.5px; color:var(--marigold); font-weight:600;">✨ Free for now — and even once it's a paid feature, the design fee is refunded once you get it stitched.</p>
+                <p id="lensPromoMessage" style="font-size:11.5px; color:var(--marigold); font-weight:600;">✨ Free to explore right now — and even once AI Design Studio becomes a paid feature, the design fee is refunded the moment you get that design stitched. You only ever really pay for the garment.</p>
                 <button onclick="event.stopPropagation(); promptSignIn('AI Design Studio')">✨ Start designing →</button>
                 <div class="lens-window">
                   <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title" id="featuredConceptTitle">CONCEPT STUDIO · PREVIEW</span></div>
@@ -1998,18 +1998,18 @@
           <div class="visit-grid">
             <div class="visit-info">
               <div class="visit-name">Gurbani Fashion Boutique</div>
-              <div class="visit-address">A-1915, Ground Floor, Greenfields Colony<br>Faridabad, Haryana 121001</div>
+              <div class="visit-address">A-1915, Ground Floor, Greenfields Colony<br>Faridabad, Haryana 121010</div>
               <div class="visit-btn-row">
                 <a href="tel:+919899810977" class="visit-btn">📞 Call Us</a>
                 <a href="mailto:admin@gurbanifashion.com" class="visit-btn visit-btn-outline">✉️ Email Us</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121001" target="_blank" rel="noopener" class="visit-btn visit-btn-outline">🧭 Get Directions</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121010" target="_blank" rel="noopener" class="visit-btn visit-btn-outline">🧭 Get Directions</a>
               </div>
               <div style="margin-top:14px;">
                 <a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--vivid); text-decoration: none; font-weight: 700; font-size: 13px;">📷 @gurbanifashion</a>
               </div>
             </div>
             <div class="visit-map">
-              <iframe src="https://maps.google.com/maps?q=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121001&output=embed" loading="lazy" title="Gurbani Fashion Boutique location"></iframe>
+              <iframe src="https://maps.google.com/maps?q=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121010&output=embed" loading="lazy" title="Gurbani Fashion Boutique location"></iframe>
             </div>
           </div>
         </div>
@@ -2095,7 +2095,7 @@
               <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
               <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
               <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
-              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons();" style="display: none;">🎟️ Coupons</button>
+              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing();" style="display: none;">🎟️ Coupons</button>
             </div>
           </div>
           <div class="tab-group">
@@ -2200,8 +2200,8 @@
           <div style="background:linear-gradient(135deg, var(--vivid), var(--vivid-deep)); color:white; border-radius:10px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
             <span style="font-size:22px;">🎁</span>
             <div style="flex:1; min-width:200px;">
-              <div style="font-weight:700; color:var(--marigold); font-size:14px;">Free for now, for our early customers</div>
-              <div style="font-size:12px; color:rgba(255,255,255,0.9); margin-top:2px;">AI Design Studio will become a paid feature soon — enjoy unlimited designs while it's on the house! And even after that: if you go ahead and get your design stitched, the design fee is refunded — you only ever pay for what you actually get made.</div>
+              <div style="font-weight:700; color:var(--marigold); font-size:14px;">AI Design Studio</div>
+              <div id="dashboardPromoMessage" style="font-size:12px; color:rgba(255,255,255,0.9); margin-top:2px;">Free to explore right now — and even once AI Design Studio becomes a paid feature, the design fee is refunded the moment you get that design stitched. You only ever really pay for the garment.</div>
             </div>
           </div>
 
@@ -2214,9 +2214,9 @@
           <div id="designStatus" class="status" role="status" aria-live="polite"></div>
           
           <div class="budget-info" id="budgetInfo" style="display: none;">
-            <strong>💰 Trial Budget:</strong> <span id="spentAmount">₹0</span> / <span id="budgetLimit">₹200</span> used
-            <div style="margin-top: 8px; background: rgba(33,150,243,0.2); height: 8px; border-radius: 4px;">
-              <div id="budgetBar" style="background: #2196F3; height: 100%; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
+            <strong>✨ Free Design Requests:</strong> <span id="spentAmount">0</span> of <span id="budgetLimit">15</span> used <span style="opacity:0.8;">(<span id="requestsRemaining">15</span> left, ~3 ideas each)</span>
+            <div style="margin-top: 8px; background: rgba(207,1,132,0.15); height: 8px; border-radius: 4px;">
+              <div id="budgetBar" style="background: var(--vivid); height: 100%; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
             </div>
           </div>
 
@@ -2679,6 +2679,15 @@
         <!-- ADMIN: COUPONS -->
         <div id="adminCoupons" class="tab-content">
           <h3>🎟️ Coupons</h3>
+
+          <div class="card" style="padding:16px; margin-bottom:24px; max-width:600px;">
+            <h4 style="margin-bottom:6px;">📢 AI Design Studio Promo Message</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Shown on the dashboard, the landing page, and above every design result. Change this anytime — no code changes needed.</p>
+            <textarea id="promoMessageEdit" rows="3" style="width:100%;"></textarea>
+            <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-top:8px;" onclick="savePromoMessage()">💾 Save</button>
+            <span id="promoMessageStatus" style="font-size:12px; margin-left:10px;"></span>
+          </div>
+
           <p style="color:#666; margin-bottom:16px; font-size:13px;">Public coupons show automatically on the homepage banner. Private ones only work if the customer already has the code — share via WhatsApp/Instagram, they type it in at checkout.</p>
 
           <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-bottom:16px;" onclick="toggleCreateCouponForm()">➕ Create Coupon</button>
@@ -2704,6 +2713,9 @@
             </div>
             <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer; font-size:13px;">
               <input type="checkbox" id="couponIsPublic" style="width:auto;"> Show publicly on the homepage banner
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer; font-size:13px;">
+              <input type="checkbox" id="couponOneUsePerCustomer" style="width:auto;"> Limit to one use per customer (e.g. a welcome/first-order code)
             </label>
             <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="submitCreateCoupon()">Create</button>
             <button type="button" style="padding:8px 14px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer; margin-left:8px;" onclick="toggleCreateCouponForm()">Cancel</button>
@@ -3836,7 +3848,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '12.0';
+    const APP_VERSION = '12.5';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -3987,6 +3999,28 @@
     // Studio feature specifically, which backdated historical customers
     // wouldn't have used — it grows organically, not from backdating.
     const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50 };
+
+    // Admin-editable promo message — shown wherever AI Design Studio's free
+    // trial gets mentioned (dashboard banner, landing lens panel, design
+    // results). Fetched once on load; the fallback text matches the
+    // backend default so nothing looks broken before the first fetch lands.
+    let currentPromoMessage = "Free to explore right now — and even once AI Design Studio becomes a paid feature, the design fee is refunded the moment you get that design stitched. You only ever really pay for the garment.";
+
+    async function loadPromoMessage() {
+      try {
+        const res = await fetch(`${API}/api/settings/promo-message`);
+        const data = await res.json();
+        if (res.ok && data.success && data.message) {
+          currentPromoMessage = data.message;
+          const lensEl = document.getElementById('lensPromoMessage');
+          const dashEl = document.getElementById('dashboardPromoMessage');
+          if (lensEl) lensEl.textContent = '✨ ' + currentPromoMessage;
+          if (dashEl) dashEl.textContent = currentPromoMessage;
+        }
+      } catch (err) {
+        console.error('loadPromoMessage error:', err); // keeps the default text — never breaks the page
+      }
+    }
 
     async function loadPromoBanner() {
       const section = document.getElementById('promoBannerSection');
@@ -4974,7 +5008,7 @@
 
       html += `
         <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; color: var(--ink);">
-          🎁 <strong>Free to explore right now</strong> — and even once AI Design Studio becomes a paid feature, the design fee is refunded the moment you get that design stitched. You only ever really pay for the garment.
+          🎁 ${currentPromoMessage}
         </div>
       `;
 
@@ -5233,13 +5267,17 @@
 
     function updateBudget(trial) {
       if (!trial) return;
-      
+
+      const requestsUsed = trial.requestsUsed ?? Math.round(trial.spentAmount / 50);
+      const requestsTotal = trial.requestsTotal ?? Math.round(trial.cacLimit / 50);
+
       const info = document.getElementById('budgetInfo');
       info.style.display = 'block';
-      document.getElementById('spentAmount').textContent = '₹' + trial.spentAmount;
-      document.getElementById('budgetLimit').textContent = '₹' + trial.cacLimit;
-      
-      const percent = (trial.spentAmount / trial.cacLimit) * 100;
+      document.getElementById('spentAmount').textContent = requestsUsed;
+      document.getElementById('budgetLimit').textContent = requestsTotal;
+      document.getElementById('requestsRemaining').textContent = Math.max(requestsTotal - requestsUsed, 0);
+
+      const percent = (requestsUsed / requestsTotal) * 100;
       document.getElementById('budgetBar').style.width = Math.min(percent, 100) + '%';
     }
 
@@ -7476,6 +7514,38 @@
     }
 
     // ---------- Admin: Coupons ----------
+    async function loadPromoMessageForEditing() {
+      const textarea = document.getElementById('promoMessageEdit');
+      if (!textarea) return;
+      textarea.value = currentPromoMessage; // already fetched on page load, no need to re-fetch
+    }
+
+    async function savePromoMessage() {
+      const message = document.getElementById('promoMessageEdit').value.trim();
+      const status = document.getElementById('promoMessageStatus');
+      if (!message) { status.textContent = 'Message can\'t be empty'; status.style.color = '#c62828'; return; }
+      try {
+        const res = await fetch(`${API}/api/settings/promo-message`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ message }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          status.textContent = '✅ Saved — updated everywhere it appears';
+          status.style.color = '#2e7d32';
+          currentPromoMessage = message;
+          const dashEl = document.getElementById('dashboardPromoMessage');
+          if (dashEl) dashEl.textContent = currentPromoMessage;
+        } else {
+          status.textContent = '❌ ' + (data.error || 'Failed to save');
+          status.style.color = '#c62828';
+        }
+      } catch (err) {
+        status.textContent = '❌ ' + err.message;
+        status.style.color = '#c62828';
+      }
+    }
     function toggleCreateCouponForm() {
       const form = document.getElementById('createCouponForm');
       form.style.display = form.style.display === 'none' ? 'block' : 'none';
@@ -7499,6 +7569,7 @@
         usageLimit: document.getElementById('couponUsageLimit').value ? Number(document.getElementById('couponUsageLimit').value) : undefined,
         expiryDate,
         isPublic: document.getElementById('couponIsPublic').checked,
+        oneUsePerCustomer: document.getElementById('couponOneUsePerCustomer').checked,
       };
       try {
         const res = await fetch(`${API}/api/coupons`, {
@@ -7518,6 +7589,7 @@
           document.getElementById('couponUsageLimit').value = '';
           document.getElementById('couponExpiryDate').value = '';
           document.getElementById('couponIsPublic').checked = false;
+          document.getElementById('couponOneUsePerCustomer').checked = false;
           loadAdminCoupons();
         } else {
           showToast('❌ ' + (data.message || 'Failed to create coupon'));
@@ -7548,6 +7620,7 @@
                 <strong style="font-size:15px;">${escapeHtml(c.code)}</strong>
                 <span style="font-size:11px; font-weight:700; color:${statusColor}; margin-left:8px;">${statusLabel}</span>
                 ${c.isPublic ? '<span style="font-size:11px; color:var(--vivid); margin-left:6px;">🌐 Public</span>' : '<span style="font-size:11px; color:var(--text-muted); margin-left:6px;">🔒 Private</span>'}
+                ${c.oneUsePerCustomer ? '<span style="font-size:11px; color:var(--marigold-deep); margin-left:6px;">1️⃣ One per customer</span>' : ''}
                 <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">${escapeHtml(c.description || '')}</div>
                 <div style="font-size:12.5px; margin-top:4px;">
                   ${c.discountType === 'percentage' ? c.discountValue + '% off' : '₹' + c.discountValue + ' off'}
@@ -8831,6 +8904,7 @@
       initVoiceInput();
       initRateCardTeasers();
       loadPromoBanner();
+      loadPromoMessage();
       loadPublicStats();
       checkForResetToken();
       const savedToken = localStorage.getItem('authToken');
