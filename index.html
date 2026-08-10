@@ -1635,6 +1635,19 @@
     </div>
   </div>
 
+  <!-- FEATURED DESIGN LIGHTBOX — click any real customer design in the
+       "REAL DESIGNS · FROM OUR CUSTOMERS" panel to see it full-size. -->
+  <div id="featuredDesignLightbox" style="display:none; position:fixed; inset:0; background:rgba(20,10,20,0.85); z-index:3500; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeFeaturedDesignLightbox()">
+    <div style="max-width:480px; width:100%;">
+      <img id="lightboxImage" src="" alt="" style="width:100%; border-radius:12px; display:block;">
+      <div style="background:white; border-radius:0 0 12px 12px; padding:16px 18px; margin-top:-6px;">
+        <h4 id="lightboxTitle" style="margin-bottom:4px;"></h4>
+        <p id="lightboxOccasion" style="font-size:12px; color:var(--text-muted); margin:0;"></p>
+      </div>
+      <button type="button" onclick="closeFeaturedDesignLightbox()" style="display:block; margin:14px auto 0; background:white; border:none; border-radius:20px; padding:8px 22px; cursor:pointer; font-weight:700; color:var(--vivid);">Close</button>
+    </div>
+  </div>
+
   <!-- QUICK CASH ENTRY — reached by scanning the printed Inflow/Outflow QR
        codes, skips straight past the dashboard so Sonia never has to
        navigate tabs to log a single entry. -->
@@ -3875,7 +3888,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '13.2';
+    const APP_VERSION = '13.4';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4436,23 +4449,39 @@
         const row = document.getElementById('featuredConceptRow');
         if (!row) return;
         const swatches = row.querySelectorAll('.concept-swatch');
-        data.designs.slice(0, 3).forEach((item, i) => {
+        window.featuredDesignsData = data.designs.slice(0, 3);
+        window.featuredDesignsData.forEach((item, i) => {
           const el = swatches[i];
           if (!el) return;
           el.style.backgroundImage = `url('${item.imageUrl}')`;
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
+          el.style.cursor = 'pointer';
           el.textContent = '';
+          el.onclick = () => openFeaturedDesignLightbox(i);
         });
 
         const titleEl = document.getElementById('featuredConceptTitle');
         if (titleEl) titleEl.textContent = 'REAL DESIGNS · FROM OUR CUSTOMERS';
         const noteEl = document.getElementById('featuredConceptNote');
-        if (noteEl) noteEl.textContent = 'Real designs from Gurbani Fashion customers, shared with permission';
+        if (noteEl) noteEl.textContent = 'Individual favorites our customers chose to share, with permission — not necessarily 3 from the same request. Tap any to see it full-size.';
       } catch (err) {
         // no-op — illustrative placeholders stay as-is
       }
     })();
+
+    function openFeaturedDesignLightbox(index) {
+      const item = (window.featuredDesignsData || [])[index];
+      if (!item) return;
+      document.getElementById('lightboxImage').src = item.imageUrl;
+      document.getElementById('lightboxTitle').textContent = item.title || '';
+      document.getElementById('lightboxOccasion').textContent = item.occasion ? `Occasion: ${item.occasion}` : '';
+      document.getElementById('featuredDesignLightbox').style.display = 'flex';
+    }
+
+    function closeFeaturedDesignLightbox() {
+      document.getElementById('featuredDesignLightbox').style.display = 'none';
+    }
 
     // Reveal the Instagram frame with a fade/slide-in once it scrolls into view
     (function() {
