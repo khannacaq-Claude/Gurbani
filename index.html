@@ -2392,26 +2392,49 @@
           <h3>📅 Appointments</h3>
           <div class="card" style="padding: 20px; margin-bottom: 20px;">
             <h4 style="margin-bottom: 12px;">Book an Appointment</h4>
-            <form id="apptForm" onsubmit="submitAppointment(event)">
-              <div class="form-group">
-                <label>Type</label>
-                <select id="apptType" required>
-                  <option value="in-store">In-Store Visit (Free)</option>
-                  <option value="styling">Styling Consultation</option>
-                  <option value="video">Video Call Consultation</option>
-                  <option value="urgent">Urgent Appointment</option>
-                </select>
-              </div>
-              <div class="form-group"><label>Preferred Date</label><input type="date" id="apptDate" required></div>
-              <div class="form-group"><label>Preferred Time</label><input type="time" id="apptTime" required></div>
-              <div class="form-group"><label>Notes (optional)</label><textarea id="apptNotes" rows="2"></textarea></div>
-              <button type="submit" class="btn-submit">Book Appointment</button>
-            </form>
+            <div class="form-group">
+              <label>Type</label>
+              <select id="apptType" onchange="loadAppointmentAvailability()">
+                <option value="in-store-free">In-Store Visit (Free)</option>
+                <option value="styling-consultation">Styling Consultation</option>
+                <option value="video-call">Video Call Consultation</option>
+                <option value="urgent-appointment">Urgent Appointment</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Pick a Day</label>
+              <select id="apptDaySelect" onchange="renderApptTimeSlots()"><option>Loading availability...</option></select>
+            </div>
+            <div class="form-group">
+              <label>Pick a Time</label>
+              <div id="apptTimeSlots" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
+            <div class="form-group"><label>Notes (optional)</label><textarea id="apptNotes" rows="2"></textarea></div>
+            <button type="button" class="btn-submit" onclick="submitAppointment()">Book Appointment</button>
           </div>
           <h4 style="margin-bottom: 10px;">My Appointments</h4>
           <div id="myAppointmentsList">Loading...</div>
           <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 16px; margin-top: 20px;">
             <p style="margin-bottom: 0;">Prefer to just message? <a href="https://wa.me/919899810977?text=Hi%20Sonia!%20I'd%20like%20to%20book%20an%20appointment." target="_blank">Message Sonia on WhatsApp</a></p>
+          </div>
+        </div>
+
+        <!-- RESCHEDULE MODAL -->
+        <div id="rescheduleOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,10,20,0.6); z-index:3000; align-items:center; justify-content:center; padding:20px;">
+          <div class="card" style="max-width:420px; width:100%; padding:22px;">
+            <h4 style="margin-bottom:10px;">Reschedule Appointment</h4>
+            <div class="form-group">
+              <label>Pick a New Day</label>
+              <select id="rescheduleDaySelect" onchange="renderRescheduleTimeSlots()"><option>Loading availability...</option></select>
+            </div>
+            <div class="form-group">
+              <label>Pick a New Time</label>
+              <div id="rescheduleTimeSlots" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:14px;">
+              <button type="button" class="btn-submit" style="width:auto; padding:9px 20px;" onclick="submitReschedule()">Confirm New Time</button>
+              <button type="button" style="background:white; border:1px solid #ccc; border-radius:6px; padding:9px 20px; cursor:pointer;" onclick="closeRescheduleModal()">Cancel</button>
+            </div>
           </div>
         </div>
 
@@ -3848,7 +3871,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '12.7';
+    const APP_VERSION = '13.0';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4251,8 +4274,6 @@
         expanded: 'Subscribe once a month and get a set number of AI Design Studio generations included, plus bigger discounts on stitching than a one-off order. Ideal if you\'re planning multiple outfits over time — wedding season, or building out a whole festive wardrobe.' },
       { key: 'birthday-perks', icon: '🎂', title: 'Birthday Perks', desc: 'Automatic discount during your birthday month',
         expanded: 'Add your birthday to your profile and we\'ll automatically apply a special discount during your birthday month — no code to remember, no need to ask. Just our way of celebrating with you.' },
-      { key: 'instant-booking', icon: '📅', title: 'Instant Appointment Booking', desc: 'Pick your own time slot, no back-and-forth',
-        expanded: 'See Sonia\'s real availability and book your own slot instantly, instead of going back and forth over WhatsApp to find a time that works. Reschedule or cancel it yourself too, right from your account.' },
       { key: 'order-progress', icon: '📦', title: 'Live Order Progress', desc: 'Photo/video updates while your outfit is being stitched',
         expanded: 'Once your order\'s in stitching, get real photo and video updates as it comes together — the fabric being cut, the first stitches, the final fitting — instead of wondering how it\'s going until pickup day.' },
     ];
@@ -4493,6 +4514,7 @@
       activeBtn?.classList.add('active');
       activeBtn?.setAttribute('aria-selected', 'true');
       if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
+      if (tabName === 'appointments' && typeof loadAppointmentAvailability === 'function') loadAppointmentAvailability();
     }
 
     // Wires up proper ARIA tab semantics (role="tablist"/"tab"/"tabpanel",
@@ -7322,21 +7344,22 @@
     async function loadAdminAppointments() {
       const list = document.getElementById('adminAppointmentsList');
       list.innerHTML = 'Loading...';
+      const typeLabels = { 'in-store-free': 'In-Store Visit', 'styling-consultation': 'Styling Consultation', 'video-call': 'Video Call', 'urgent-appointment': 'Urgent Appointment' };
       try {
         const res = await fetch(`${API}/api/appointments/admin/all-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
-        const appts = data.data || data.appointments || [];
+        const appts = data.appointments || [];
         if (appts.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No appointments booked yet.</p>'; return; }
         list.innerHTML = appts.map(a => `
           <div class="card" style="padding:14px;">
             <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
               <div>
-                <strong>${escapeHtml(a.customerId?.name) || 'Customer'}</strong> — ${escapeHtml(a.type) || ''}
-                <div style="font-size:12px; color:var(--text-muted);">${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''} · ${escapeHtml(a.customerId?.phone) || ''}</div>
+                <strong>${escapeHtml(a.customerId?.name || 'Customer')}</strong> — ${typeLabels[a.appointmentType] || escapeHtml(a.appointmentType || '')}
+                <div style="font-size:12px; color:var(--text-muted);">${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''} · ${escapeHtml(a.customerId?.phone || '')}</div>
                 ${a.notes ? `<div style="font-size:12px; color:#666; margin-top:4px;">${escapeHtml(a.notes)}</div>` : ''}
               </div>
               <select class="status-select" onchange="updateAppointmentStatusAdmin('${a._id}', this.value)">
-                ${['requested','confirmed','completed','cancelled'].map(s => `<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}
+                ${['pending','confirmed','completed','cancelled','no-show','rescheduled'].map(s => `<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -8394,26 +8417,174 @@
       }
     }
 
+    // ---------- Appointment booking: real slot-picker ----------
+    let apptAvailability = []; // [{date, displayDate, slots:[{time, displayTime}]}]
+    let apptSelectedTime = null;
+    let rescheduleAvailability = [];
+    let rescheduleSelectedTime = null;
+    let rescheduleTargetId = null;
+
+    async function loadAppointmentAvailability() {
+      const daySelect = document.getElementById('apptDaySelect');
+      daySelect.innerHTML = '<option>Loading availability...</option>';
+      document.getElementById('apptTimeSlots').innerHTML = '';
+      apptSelectedTime = null;
+      try {
+        const res = await fetch(`${API}/api/appointments/availability`);
+        const data = await res.json();
+        apptAvailability = data.days || [];
+        if (apptAvailability.length === 0) {
+          daySelect.innerHTML = '<option>No slots open right now — try WhatsApp instead</option>';
+          return;
+        }
+        daySelect.innerHTML = apptAvailability.map((d, i) => `<option value="${i}">${d.displayDate}</option>`).join('');
+        renderApptTimeSlots();
+      } catch (err) {
+        daySelect.innerHTML = '<option>Failed to load availability</option>';
+      }
+    }
+
+    function renderApptTimeSlots() {
+      const dayIdx = document.getElementById('apptDaySelect').value;
+      const day = apptAvailability[dayIdx];
+      const container = document.getElementById('apptTimeSlots');
+      apptSelectedTime = null;
+      if (!day) { container.innerHTML = ''; return; }
+      container.innerHTML = day.slots.map(s => `
+        <button type="button" onclick="selectApptTime('${s.time}', this)" style="padding:6px 12px; border-radius:20px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-size:12px; font-weight:600;">${s.displayTime}</button>
+      `).join('');
+    }
+
+    function selectApptTime(time, btnEl) {
+      apptSelectedTime = time;
+      document.querySelectorAll('#apptTimeSlots button').forEach(b => { b.style.background = 'white'; b.style.color = 'var(--ink)'; });
+      btnEl.style.background = 'var(--vivid)';
+      btnEl.style.color = 'white';
+    }
+
+    async function submitAppointment() {
+      const dayIdx = document.getElementById('apptDaySelect').value;
+      const day = apptAvailability[dayIdx];
+      if (!day || !apptSelectedTime) { showToast('❌ Pick a day and time first'); return; }
+      const body = {
+        appointmentType: document.getElementById('apptType').value,
+        appointmentDate: day.date,
+        appointmentTime: apptSelectedTime,
+        notes: document.getElementById('apptNotes').value.trim(),
+      };
+      try {
+        const res = await fetch(`${API}/api/appointments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Appointment booked!');
+          document.getElementById('apptNotes').value = '';
+          loadAppointmentAvailability();
+          loadMyAppointments();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to book appointment'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
     async function loadMyAppointments() {
       const list = document.getElementById('myAppointmentsList');
       if (!list) return;
       list.innerHTML = 'Loading...';
+      const typeLabels = { 'in-store-free': 'In-Store Visit', 'styling-consultation': 'Styling Consultation', 'video-call': 'Video Call', 'urgent-appointment': 'Urgent Appointment' };
       try {
         const res = await fetch(`${API}/api/appointments/my-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
-        const appts = data.data || data.appointments || [];
+        const appts = data.appointments || [];
         if (appts.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No appointments booked yet.</p>'; return; }
         list.innerHTML = appts.map(a => `
           <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
-              <strong>${a.type}</strong> — ${a.date ? new Date(a.date).toLocaleDateString('en-IN') : ''} ${a.time || ''}
+              <strong>${typeLabels[a.appointmentType] || a.appointmentType}</strong> — ${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''}
               <div style="font-size:12px; color:var(--text-muted);">Status: ${a.status}</div>
             </div>
-            ${a.status !== 'cancelled' && a.status !== 'completed' ? `<button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="cancelMyAppointment('${a._id}')">Cancel</button>` : ''}
+            ${a.status === 'pending' || a.status === 'confirmed' ? `
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="admin-filter-btn" onclick="openRescheduleModal('${a._id}')">Reschedule</button>
+                <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="cancelMyAppointment('${a._id}')">Cancel</button>
+              </div>` : ''}
           </div>
         `).join('');
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function openRescheduleModal(appointmentId) {
+      rescheduleTargetId = appointmentId;
+      rescheduleSelectedTime = null;
+      document.getElementById('rescheduleOverlay').style.display = 'flex';
+      const daySelect = document.getElementById('rescheduleDaySelect');
+      daySelect.innerHTML = '<option>Loading availability...</option>';
+      document.getElementById('rescheduleTimeSlots').innerHTML = '';
+      try {
+        const res = await fetch(`${API}/api/appointments/availability`);
+        const data = await res.json();
+        rescheduleAvailability = data.days || [];
+        if (rescheduleAvailability.length === 0) {
+          daySelect.innerHTML = '<option>No slots open right now</option>';
+          return;
+        }
+        daySelect.innerHTML = rescheduleAvailability.map((d, i) => `<option value="${i}">${d.displayDate}</option>`).join('');
+        renderRescheduleTimeSlots();
+      } catch (err) {
+        daySelect.innerHTML = '<option>Failed to load availability</option>';
+      }
+    }
+
+    function closeRescheduleModal() {
+      document.getElementById('rescheduleOverlay').style.display = 'none';
+      rescheduleTargetId = null;
+    }
+
+    function renderRescheduleTimeSlots() {
+      const dayIdx = document.getElementById('rescheduleDaySelect').value;
+      const day = rescheduleAvailability[dayIdx];
+      const container = document.getElementById('rescheduleTimeSlots');
+      rescheduleSelectedTime = null;
+      if (!day) { container.innerHTML = ''; return; }
+      container.innerHTML = day.slots.map(s => `
+        <button type="button" onclick="selectRescheduleTime('${s.time}', this)" style="padding:6px 12px; border-radius:20px; border:1.5px solid #E5DCC8; background:white; cursor:pointer; font-size:12px; font-weight:600;">${s.displayTime}</button>
+      `).join('');
+    }
+
+    function selectRescheduleTime(time, btnEl) {
+      rescheduleSelectedTime = time;
+      document.querySelectorAll('#rescheduleTimeSlots button').forEach(b => { b.style.background = 'white'; b.style.color = 'var(--ink)'; });
+      btnEl.style.background = 'var(--vivid)';
+      btnEl.style.color = 'white';
+    }
+
+    async function submitReschedule() {
+      const dayIdx = document.getElementById('rescheduleDaySelect').value;
+      const day = rescheduleAvailability[dayIdx];
+      if (!day || !rescheduleSelectedTime || !rescheduleTargetId) { showToast('❌ Pick a day and time first'); return; }
+      try {
+        const res = await fetch(`${API}/api/appointments/${rescheduleTargetId}/reschedule`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ appointmentDate: day.date, appointmentTime: rescheduleSelectedTime }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Rescheduled!');
+          closeRescheduleModal();
+          loadMyAppointments();
+        } else {
+          showToast('❌ ' + (data.error || 'Failed to reschedule'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
       }
     }
 
