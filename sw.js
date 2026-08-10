@@ -4,7 +4,7 @@
 // any /api/* calls to your Railway backend — orders, designs, prices etc.
 // must always come fresh from the network, never from a stale cache.
 
-const CACHE_NAME = 'gurbani-shell-v2';
+const CACHE_NAME = 'gurbani-shell-v3';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -17,7 +17,18 @@ const SHELL_FILES = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES))
+    caches.open(CACHE_NAME).then((cache) =>
+      // Not cache.addAll(SHELL_FILES) — its internal fetches use the
+      // default cache mode too, so a stale HTTP-cache hit could get baked
+      // into the very first install. Fetch each file explicitly fresh instead.
+      Promise.all(
+        SHELL_FILES.map((file) =>
+          fetch(file, { cache: 'reload' }).then((response) => {
+            if (response && response.status === 200) return cache.put(file, response);
+          })
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
@@ -50,8 +61,15 @@ self.addEventListener('fetch', (event) => {
   // only fall back to the cache if the network fails (genuinely offline).
   // This is what actually delivers "works offline" without also trapping
   // users on stale content every time something is fixed/deployed.
+  //
+  // { cache: 'reload' } is deliberate and important here — a plain fetch()
+  // can still be silently satisfied by the BROWSER's own HTTP cache layer
+  // (separate from this service worker's Cache Storage), which defeats
+  // "network-first" without this ever showing up as an error. This forces
+  // an actual round-trip to the server every time, bypassing that layer.
+  const freshRequest = new Request(event.request, { cache: 'reload' });
   event.respondWith(
-    fetch(event.request)
+    fetch(freshRequest)
       .then((response) => {
         if (response && response.status === 200) {
           const clone = response.clone();
