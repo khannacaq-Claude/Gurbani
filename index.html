@@ -3808,8 +3808,12 @@
         const conceptsHtml = (d.aiConcepts || []).map((c, i) => {
           const isSelected = d.quotedConceptIndex === i;
           const isFeatured = d.featured && (d.featuredConceptIndex ?? 0) === i;
-          return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:7px;">
-            <span>${isSelected ? '⭐ ' : ''}${escapeHtml(c.title)} (₹${c.priceMin}-${c.priceMax})</span>
+          const thumb = c.imageUrl
+            ? `<a href="${c.imageUrl}" target="_blank" rel="noopener"><img src="${c.imageUrl}" alt="${escapeHtml(c.title)}" style="width:64px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;"></a>`
+            : `<div style="width:64px; height:64px; border-radius:6px; background:#eee; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; flex-shrink:0;">No image</div>`;
+          return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:8px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:10px;">
+            ${thumb}
+            <span style="flex:1;">${isSelected ? '⭐ ' : ''}${escapeHtml(c.title)} (₹${c.priceMin}-${c.priceMax})</span>
             <button onclick="toggleFeaturedDesign('${d._id}', ${i}, this)" title="${isFeatured ? 'Remove from homepage showcase' : 'Feature on homepage — visible to everyone'}" style="background:none; border:none; cursor:pointer; font-size:15px; padding:0; line-height:1; color:${isFeatured ? '#F2A93B' : '#ccc'};">${isFeatured ? '🌟' : '☆'}</button>
             ${isFeatured ? consentTag : ''}
           </div>`;
@@ -3871,7 +3875,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '13.0';
+    const APP_VERSION = '13.1';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
