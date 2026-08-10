@@ -3848,7 +3848,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '12.5';
+    const APP_VERSION = '12.7';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -3998,7 +3998,7 @@
     // designsGenerated stays lower since it's tied to the newer AI Design
     // Studio feature specifically, which backdated historical customers
     // wouldn't have used — it grows organically, not from backdating.
-    const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50 };
+    const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50, aiDesignOrders: 10 };
 
     // Admin-editable promo message — shown wherever AI Design Studio's free
     // trial gets mentioned (dashboard banner, landing lens panel, design
@@ -4059,16 +4059,17 @@
         // stat qualifies. Prevents a small number sitting awkwardly next
         // to a big backdated one.
         const items = [
-          { num: s.designsGenerated, label: 'Designs Created', threshold: STATS_THRESHOLDS.designsGenerated },
+          { num: s.designsGenerated, label: 'Design Requests', threshold: STATS_THRESHOLDS.designsGenerated },
           { num: s.ordersCompleted, label: 'Orders Delivered', threshold: STATS_THRESHOLDS.ordersCompleted },
           { num: s.customersServed, label: 'Customers Served', threshold: STATS_THRESHOLDS.customersServed },
+          { num: s.aiDesignOrders, label: 'Orders from AI Designs', threshold: STATS_THRESHOLDS.aiDesignOrders },
         ].filter(i => i.num >= i.threshold);
 
         if (items.length === 0) return; // nothing meaningful yet — stays hidden
 
         row.innerHTML = items.map(i => `
           <div class="stat-box">
-            <div class="stat-num">${i.num.toLocaleString('en-IN')}+</div>
+            <div class="stat-num">${i.num.toLocaleString('en-IN')}</div>
             <div class="stat-label">${i.label}</div>
           </div>
         `).join('');
