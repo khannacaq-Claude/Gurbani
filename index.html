@@ -2258,6 +2258,7 @@
               <select id="occasion">
                 <option value="">Choose occasion</option>
                 <optgroup label="Wedding Functions">
+                  <option value="wedding-general">Not sure yet — general Wedding Function</option>
                   <option value="wedding">Wedding / Bridal</option>
                   <option value="engagement">Engagement</option>
                   <option value="haldi">Haldi</option>
@@ -2266,6 +2267,7 @@
                   <option value="cocktail">Cocktail / After-party</option>
                 </optgroup>
                 <optgroup label="Festivals & Pooja">
+                  <option value="festival-general">Not sure yet — general Festival / Pooja</option>
                   <option value="diwali">Diwali / Festive Pooja</option>
                   <option value="navratri">Navratri / Garba</option>
                   <option value="karva-chauth">Karva Chauth</option>
@@ -2274,11 +2276,13 @@
                   <option value="festival">Festival / Celebration</option>
                 </optgroup>
                 <optgroup label="Everyday & Work">
+                  <option value="everyday-general">Not sure yet — general Everyday / Work</option>
                   <option value="casual">Casual / Daily Wear</option>
                   <option value="office">Office Wear</option>
                   <option value="date-night">Date Night</option>
                 </optgroup>
                 <optgroup label="Parties & Life Events">
+                  <option value="celebration-general">Not sure yet — general Party / Celebration</option>
                   <option value="party">Party / Formal Event</option>
                   <option value="vacation">Vacation / Resort Wear</option>
                   <option value="baby-shower">Baby Shower / Godh Bharai</option>
@@ -3894,7 +3898,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '13.6';
+    const APP_VERSION = '14.0';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -5013,6 +5017,10 @@
     async function generateConceptImage(idx) {
       const imgContainer = document.getElementById(`designImage_${idx}`);
       const btn = document.getElementById(`genBtn_${idx}`);
+      const titleInput = document.getElementById(`conceptTitle_${idx}`);
+      const descInput = document.getElementById(`conceptDesc_${idx}`);
+      const editedTitle = titleInput ? titleInput.value.trim() : '';
+      const editedDescription = descInput ? descInput.value.trim() : '';
       if (btn) {
         btn.disabled = true;
         btn.style.opacity = '0.6';
@@ -5025,12 +5033,19 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ conceptIndex: idx }),
+          body: JSON.stringify({ conceptIndex: idx, editedTitle, editedDescription }),
         });
         const data = await res.json();
         if (res.ok && data.success && data.concept?.imageUrl) {
-          if (currentConcepts[idx]) currentConcepts[idx].imageUrl = data.concept.imageUrl;
-          if (imgContainer) imgContainer.innerHTML = `<img src="${data.concept.imageUrl}" alt="${escapeHtml(currentConcepts[idx]?.title) || 'Design ' + (idx + 1)}">`;
+          if (currentConcepts[idx]) currentConcepts[idx] = data.concept;
+          if (imgContainer) imgContainer.innerHTML = `<img src="${data.concept.imageUrl}" alt="${escapeHtml(data.concept.title) || 'Design ' + (idx + 1)}">`;
+          // Swap the editable fields for plain static text now that the
+          // image reflects whatever text was last edited — no more reason
+          // to keep editing something that's already been generated.
+          if (titleInput) titleInput.outerHTML = `<div class="design-title">Design ${idx + 1}: ${escapeHtml(data.concept.title)}</div>`;
+          if (descInput) descInput.outerHTML = `<div class="design-desc">${escapeHtml(data.concept.description)}</div>`;
+          const hint = document.getElementById(`conceptEditHint_${idx}`);
+          if (hint) hint.remove();
         } else {
           showToast('❌ ' + (data.error || 'Failed to generate this design — please try again'));
           if (btn) {
@@ -5107,29 +5122,37 @@
       
       concepts.forEach((concept, idx) => {
         let imageHtml;
+        const notYetGenerated = !concept.imageUrl;
         if (concept.imageUrl) {
           // onerror catches designs generated before images were stored
           // permanently - those old Replicate URLs have since expired, and
           // without this the browser shows its default broken-image icon.
           imageHtml = `<img src="${concept.imageUrl}" alt="${escapeHtml(concept.title) || 'Design ' + (idx + 1)}" onerror="handleDesignImageError(this, ${idx})">`;
-        } else if (idx === 0) {
-          // Design 1's image is always generated upfront — a missing image here is a genuine failure
-          imageHtml = '<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px;">⚠️ Image preview unavailable this time<br><span style="font-size: 11px;">The design description below is still accurate.</span></div>';
         } else {
-          // Designs 2 & 3 are generated on-demand only — this is the normal
-          // not-yet-requested state, not a failure, so show a clear CTA instead.
+          // Every concept is generated on-demand only, giving a chance to
+          // edit Claude's text FIRST — a wording tweak before generating
+          // costs nothing, versus generating an image from text that gets
+          // immediately edited and regenerated on Replicate's dime.
           imageHtml = `
             <button id="genBtn_${idx}" onclick="generateConceptImage(${idx})" style="width:100%; height:100%; min-height:140px; background:var(--sand); border:1px dashed #cbb; border-radius:8px; cursor:pointer; font-size:13px; color:var(--ink); font-weight:600; padding:16px;">
               🎨 Generate Design ${idx + 1}<br><span style="font-weight:normal; font-size:11px; color:#888;">See this concept as an image</span>
             </button>`;
         }
 
+        const titleHtml = notYetGenerated
+          ? `<input type="text" id="conceptTitle_${idx}" value="${escapeHtml(concept.title)}" style="width:100%; font-weight:700; font-family:var(--font-display); font-style:italic; border:1px solid #e0d8d0; border-radius:5px; padding:6px 8px; margin-bottom:6px;">`
+          : `<div class="design-title">Design ${idx + 1}: ${escapeHtml(concept.title)}</div>`;
+        const descHtml = notYetGenerated
+          ? `<textarea id="conceptDesc_${idx}" rows="2" style="width:100%; font-size:13px; border:1px solid #e0d8d0; border-radius:5px; padding:6px 8px; margin-bottom:6px;">${escapeHtml(concept.description)}</textarea>
+             <p id="conceptEditHint_${idx}" style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">✏️ Not quite right? Edit the text above before generating the image — it's free to tweak, only the image costs anything.</p>`
+          : `<div class="design-desc">${escapeHtml(concept.description)}</div>`;
+
         html += `
           <div class="design-card" style="animation: cardReveal 0.4s ease both; animation-delay: ${idx * 0.12}s;">
             <div class="design-image" id="designImage_${idx}">${imageHtml}</div>
             <div class="design-info">
-              <div class="design-title">Design ${idx + 1}: ${escapeHtml(concept.title)}</div>
-              <div class="design-desc">${escapeHtml(concept.description)}</div>
+              ${titleHtml}
+              ${descHtml}
               <div class="design-pricing">
                 📅 Delivery: ${concept.deliveryDays || 14} days
                 <br><span style="font-size:11px; opacity:0.85;">Pricing shared by Sonia when you ask for a quote</span>
@@ -7416,14 +7439,29 @@
     }
 
     async function updateAppointmentStatusAdmin(id, status) {
+      let cancellationReason = '';
+      if (status === 'cancelled') {
+        cancellationReason = prompt('Reason for cancelling? (Sent to the customer via WhatsApp, if configured. Leave blank if none.)') || '';
+      }
       try {
         const res = await fetch(`${API}/api/appointments/${id}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({ status, cancellationReason }),
         });
-        if (res.ok) { showToast('✅ Appointment status updated'); loadAdminAppointments(); }
-        else { const data = await res.json(); showToast('❌ ' + data.message || 'Failed to update'); }
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (data.notification?.sent) {
+            showToast('✅ Status updated — customer notified via WhatsApp');
+          } else if (data.notification && !data.notification.sent) {
+            showToast('✅ Status updated — WhatsApp notification not sent (' + (data.notification.reason === 'not_configured' ? 'WhatsApp not set up yet' : data.notification.reason) + ')');
+          } else {
+            showToast('✅ Appointment status updated');
+          }
+          loadAdminAppointments();
+        } else {
+          showToast('❌ ' + (data.error || data.message || 'Failed to update'));
+        }
       } catch (err) {
         showToast('❌ ' + err.message);
       }
