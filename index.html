@@ -1767,6 +1767,7 @@
         <h2 class="hero-headline" style="text-transform: none;">Your Vision. <span class="accent">Designed, Stitched, Fitted.
           <svg viewBox="0 0 260 10" preserveAspectRatio="none"><path d="M2 6 Q 24 1, 46 6 T 90 6 T 134 6 T 178 6 T 222 6 T 258 6"/></svg>
         </span></h2>
+        <p style="font-size:15px; font-weight:700; color:var(--marigold);">🎨 Describe the outfit you want → get instant AI-generated design ideas → have it custom stitched. All in one place.</p>
         <p>From your first idea to the final fitting — design, fabric matching, stitching, all handled by us, start to finish.</p>
         <p>Sign in to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
 
@@ -1774,66 +1775,6 @@
         <div class="stats-section" id="statsSection">
           <h3 style="text-align:center;">📊 By the Numbers</h3>
           <div class="stats-row" id="statsRow"></div>
-        </div>
-
-        <!-- SHOP BY OCCASION -->
-        <div class="occasion-section" id="occasionSection">
-          <h3 style="text-align:center;">What's the Occasion?</h3>
-          <p style="text-align:center; font-size:12px; color: var(--text-muted); margin-bottom:4px;">Tap a category, then pick your exact occasion</p>
-          <div class="occ-panel-row" id="occPanelRow">
-            <div class="occ-panel active" data-occ="0" onclick="expandOccPanel(0)" style="background:linear-gradient(160deg, var(--vivid), var(--vivid-deep));">
-              <span class="occ-panel-label">Wedding Functions</span>
-              <div class="occ-panel-content">
-                <h4>👰 Wedding Functions</h4>
-                <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('wedding')">Wedding / Bridal</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('engagement')">Engagement</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('haldi')">Haldi</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('sangeet')">Sangeet / Mehendi</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('reception')">Reception</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('cocktail')">Cocktail / After-party</button>
-                </div>
-              </div>
-            </div>
-            <div class="occ-panel" data-occ="1" onclick="expandOccPanel(1)" style="background:linear-gradient(160deg, var(--marigold), var(--marigold-deep));">
-              <span class="occ-panel-label">Festivals &amp; Pooja</span>
-              <div class="occ-panel-content">
-                <h4>🪔 Festivals &amp; Pooja</h4>
-                <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('diwali')">Diwali / Festive Pooja</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('navratri')">Navratri / Garba</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('karva-chauth')">Karva Chauth</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('eid')">Eid</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('durga-puja')">Durga Puja</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('festival')">Festival / Celebration</button>
-                </div>
-              </div>
-            </div>
-            <div class="occ-panel" data-occ="2" onclick="expandOccPanel(2)" style="background:linear-gradient(160deg, #3E6B8A, #254A63);">
-              <span class="occ-panel-label">Everyday &amp; Work</span>
-              <div class="occ-panel-content">
-                <h4>👗 Everyday &amp; Work</h4>
-                <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('casual')">Casual / Daily Wear</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('office')">Office Wear</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('date-night')">Date Night</button>
-                </div>
-              </div>
-            </div>
-            <div class="occ-panel" data-occ="3" onclick="expandOccPanel(3)" style="background:linear-gradient(160deg, #7A1257, #4A0A35);">
-              <span class="occ-panel-label">Parties &amp; Life Events</span>
-              <div class="occ-panel-content">
-                <h4>🎉 Parties &amp; Life Events</h4>
-                <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('party')">Party / Formal Event</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('vacation')">Vacation / Resort Wear</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('baby-shower')">Baby Shower / Godh Bharai</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('birthday')">Birthday</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('farewell')">Farewell / Graduation</button>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
@@ -1925,6 +1866,66 @@
               </div>
             </div>
 
+          </div>
+        </div>
+
+        <!-- SHOP BY OCCASION -->
+        <div class="occasion-section" id="occasionSection">
+          <h3 style="text-align:center;">What's the Occasion?</h3>
+          <p style="text-align:center; font-size:12px; color: var(--text-muted); margin-bottom:4px;">Tap a category, then pick your exact occasion</p>
+          <div class="occ-panel-row" id="occPanelRow">
+            <div class="occ-panel active" data-occ="0" onclick="expandOccPanel(0)" style="background:linear-gradient(160deg, var(--vivid), var(--vivid-deep));">
+              <span class="occ-panel-label">Wedding Functions</span>
+              <div class="occ-panel-content">
+                <h4>👰 Wedding Functions</h4>
+                <div class="occ-sub-row">
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('wedding')">Wedding / Bridal</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('engagement')">Engagement</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('haldi')">Haldi</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('sangeet')">Sangeet / Mehendi</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('reception')">Reception</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('cocktail')">Cocktail / After-party</button>
+                </div>
+              </div>
+            </div>
+            <div class="occ-panel" data-occ="1" onclick="expandOccPanel(1)" style="background:linear-gradient(160deg, var(--marigold), var(--marigold-deep));">
+              <span class="occ-panel-label">Festivals &amp; Pooja</span>
+              <div class="occ-panel-content">
+                <h4>🪔 Festivals &amp; Pooja</h4>
+                <div class="occ-sub-row">
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('diwali')">Diwali / Festive Pooja</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('navratri')">Navratri / Garba</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('karva-chauth')">Karva Chauth</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('eid')">Eid</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('durga-puja')">Durga Puja</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('festival')">Festival / Celebration</button>
+                </div>
+              </div>
+            </div>
+            <div class="occ-panel" data-occ="2" onclick="expandOccPanel(2)" style="background:linear-gradient(160deg, #3E6B8A, #254A63);">
+              <span class="occ-panel-label">Everyday &amp; Work</span>
+              <div class="occ-panel-content">
+                <h4>👗 Everyday &amp; Work</h4>
+                <div class="occ-sub-row">
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('casual')">Casual / Daily Wear</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('office')">Office Wear</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('date-night')">Date Night</button>
+                </div>
+              </div>
+            </div>
+            <div class="occ-panel" data-occ="3" onclick="expandOccPanel(3)" style="background:linear-gradient(160deg, #7A1257, #4A0A35);">
+              <span class="occ-panel-label">Parties &amp; Life Events</span>
+              <div class="occ-panel-content">
+                <h4>🎉 Parties &amp; Life Events</h4>
+                <div class="occ-sub-row">
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('party')">Party / Formal Event</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('vacation')">Vacation / Resort Wear</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('baby-shower')">Baby Shower / Godh Bharai</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('birthday')">Birthday</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('farewell')">Farewell / Graduation</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3898,7 +3899,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '14.0';
+    const APP_VERSION = '14.1';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
