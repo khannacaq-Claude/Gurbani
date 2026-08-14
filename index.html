@@ -45,7 +45,7 @@
   <link rel="shortcut icon" type="image/png" href="favicon-32.png?v=3">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#CF0184">
+  <meta name="theme-color" content="#DB3B99">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Gurbani Fashion">
@@ -65,8 +65,8 @@
     :root {
       --ink: #141a29;
       --ink-soft: #1c2338;
-      --vivid: #CF0184;
-      --vivid-deep: #970063;
+      --vivid: #DB3B99;
+      --vivid-deep: #A83D74;
       --marigold: #F2A93B;
       --marigold-deep: #D68C1F;
       --cream: #FDF8F0;
@@ -329,7 +329,7 @@
     button:hover { background: var(--vivid-deep); transform: translateY(-1px); }
 
     main {
-      max-width: 1200px;
+      max-width: 1440px;
       margin: 40px auto;
       padding: 0 20px;
     }
@@ -1795,8 +1795,8 @@
                   <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title" id="featuredConceptTitle">CONCEPT STUDIO · PREVIEW</span></div>
                   <div class="lens-window-body">
                     <div class="concept-row" id="featuredConceptRow">
-                      <div class="concept-swatch" style="--c1:#F2A93B;--c2:#CF0184;">Concept 1</div>
-                      <div class="concept-swatch" style="--c1:#CF0184;--c2:#6B0F4D;">Concept 2</div>
+                      <div class="concept-swatch" style="--c1:#F2A93B;--c2:#DB3B99;">Concept 1</div>
+                      <div class="concept-swatch" style="--c1:#DB3B99;--c2:#6B0F4D;">Concept 2</div>
                       <div class="concept-swatch" style="--c1:#E8698F;--c2:#F2A93B;">Concept 3</div>
                     </div>
                     <p class="lens-window-note" id="featuredConceptNote">Illustrative preview — real concepts are generated from your own description &amp; photos</p>
@@ -3899,7 +3899,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '14.1';
+    const APP_VERSION = '14.2';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -8744,7 +8744,7 @@
             else { showToast('❌ Payment made but verification failed — contact Sonia with your payment ID.'); }
           },
           prefill: { name: currentUser?.name || '', email: currentUser?.email || '', contact: currentUser?.phone || '' },
-          theme: { color: '#CF0184' },
+          theme: { color: '#DB3B99' },
         };
         const rzp = new Razorpay(options);
         rzp.open();
