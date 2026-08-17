@@ -4027,7 +4027,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '15.4';
+    const APP_VERSION = '15.5';
     const APP_VERSION_DATE = '2026-08-17';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4220,19 +4220,52 @@
       fireworkBurst: '<svg viewBox="0 0 90 90"><g stroke="#F2A93B" stroke-width="3"><line x1="45" y1="40" x2="45" y2="10"/><line x1="45" y1="40" x2="66" y2="19"/><line x1="45" y1="40" x2="75" y2="40"/><line x1="45" y1="40" x2="66" y2="61"/><line x1="45" y1="40" x2="45" y2="70"/><line x1="45" y1="40" x2="24" y2="61"/><line x1="45" y1="40" x2="15" y2="40"/><line x1="45" y1="40" x2="24" y2="19"/></g><circle cx="45" cy="10" r="3" fill="#FAD796"/><circle cx="75" cy="40" r="3" fill="#FAD796"/><circle cx="45" cy="70" r="3" fill="#FAD796"/><circle cx="15" cy="40" r="3" fill="#FAD796"/></svg>',
     };
 
+    let bannerRotationPool = [];
+    let bannerRotationTimer = null;
+    let bannerRotationLastIndex = -1;
+
+    function renderRotationBannerImage() {
+      const section = document.getElementById('festivalBannerSection');
+      if (!section || bannerRotationPool.length === 0) return;
+
+      // Pick randomly, but avoid repeating the same one twice in a row
+      // when there's more than one option — otherwise "random" can look
+      // broken (same image showing on consecutive rotations by chance).
+      let idx = Math.floor(Math.random() * bannerRotationPool.length);
+      if (bannerRotationPool.length > 1 && idx === bannerRotationLastIndex) {
+        idx = (idx + 1) % bannerRotationPool.length;
+      }
+      bannerRotationLastIndex = idx;
+      const banner = bannerRotationPool[idx];
+
+      section.innerHTML = `<img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" style="width:100%; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18);">`;
+      section.style.display = 'block';
+
+      if (bannerRotationPool.length > 1) {
+        // "Random reasonable gap" — 8 to 14 seconds, different each time
+        // rather than a fixed metronome interval.
+        const nextGapMs = 8000 + Math.random() * 6000;
+        clearTimeout(bannerRotationTimer);
+        bannerRotationTimer = setTimeout(renderRotationBannerImage, nextGapMs);
+      }
+    }
+
     async function loadFestivalBanner() {
       const section = document.getElementById('festivalBannerSection');
       if (!section) return;
+      clearTimeout(bannerRotationTimer); // avoid stacking timers if this gets called more than once
 
-      // An admin-uploaded custom banner image always takes priority over
-      // the auto-generated CSS theme — that's the whole point of building
-      // it, since a curated real image looks far better than CSS shapes.
+      // Admin-uploaded custom banner images always take priority over the
+      // auto-generated CSS theme — that's the whole point of building it,
+      // since curated real images look far better than CSS shapes. If
+      // more than one is in the rotation pool, they cycle automatically.
       try {
         const uploadedRes = await fetch(`${API}/api/banner-images/active`);
         const uploadedData = await uploadedRes.json();
-        if (uploadedRes.ok && uploadedData.success && uploadedData.banner) {
-          section.innerHTML = `<img src="${uploadedData.banner.imageUrl}" alt="${escapeHtml(uploadedData.banner.label)}" style="width:100%; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18);">`;
-          section.style.display = 'block';
+        if (uploadedRes.ok && uploadedData.success && uploadedData.banners && uploadedData.banners.length > 0) {
+          bannerRotationPool = uploadedData.banners;
+          bannerRotationLastIndex = -1;
+          renderRotationBannerImage();
           return; // don't fall through to the auto festival theme below
         }
       } catch (err) {
@@ -8048,7 +8081,9 @@
             <img src="${b.imageUrl}" alt="${escapeHtml(b.label)}" style="width:100%; height:110px; object-fit:cover; display:block;">
             <div style="padding:8px;">
               <div style="font-size:11.5px; font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="editBannerImageLabel('${b._id}', '${escapeHtml(b.label)}')" title="Click to rename">✏️ ${escapeHtml(b.label)}</div>
-              ${b.active ? '<div style="font-size:11px; color:var(--vivid); font-weight:700; margin-bottom:6px;">🟢 Live now</div>' : `<button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="activateBannerImage('${b._id}')">Set Live</button>`}
+              ${b.active
+                ? `<div style="font-size:11px; color:var(--vivid); font-weight:700; margin-bottom:6px;">🎡 In rotation</div><button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="deactivateBannerImage('${b._id}')">Remove from Rotation</button>`
+                : `<button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="activateBannerImage('${b._id}')">➕ Add to Rotation</button>`}
               <button type="button" class="admin-filter-btn" style="width:100%; font-size:11px; color:#c62828;" onclick="deleteBannerImage('${b._id}', '${escapeHtml(b.label)}')">🗑️ Delete</button>
             </div>
           </div>
@@ -8065,8 +8100,22 @@
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
         const data = await res.json();
-        if (res.ok && data.success) { showToast('✅ Now live on the homepage'); loadBannerImagesGallery(); }
+        if (res.ok && data.success) { showToast('✅ Added to homepage rotation'); loadBannerImagesGallery(); }
         else showToast('❌ ' + (data.error || 'Failed to activate'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function deactivateBannerImage(id) {
+      try {
+        const res = await fetch(`${API}/api/banner-images/${id}/deactivate`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) { showToast('✅ Removed from rotation'); loadBannerImagesGallery(); }
+        else showToast('❌ ' + (data.error || 'Failed to remove'));
       } catch (err) {
         showToast('❌ ' + err.message);
       }
