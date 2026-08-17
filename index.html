@@ -698,6 +698,7 @@
       background: linear-gradient(120deg, var(--marigold-deep) 0%, var(--vivid) 55%, var(--vivid-deep) 100%);
       border-radius: 14px; padding: 18px 22px; text-align: center;
       box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      position: relative; overflow: hidden;
     }
     .festival-banner p {
       color: white; font-size: 14px; line-height: 1.6; margin: 0 0 12px; font-weight: 500;
@@ -706,6 +707,34 @@
     .festival-banner button {
       background: white; color: var(--vivid); border: none; border-radius: 24px;
       padding: 9px 22px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    /* Gentle twinkle, not a harsh strobe — deliberately slow and smooth
+       (opacity + scale only) to stay tasteful and avoid any photosensitivity
+       concern a rapid on/off flash could raise. */
+    .festival-decor {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-size: 22px; opacity: 0.55; animation: festivalTwinkle 2.6s ease-in-out infinite;
+      pointer-events: none; user-select: none;
+    }
+    .festival-decor.left-1 { left: 14px; animation-delay: 0s; }
+    .festival-decor.left-2 { left: 52px; top: 30%; animation-delay: 0.9s; font-size: 17px; }
+    .festival-decor.left-3 { left: 30px; top: 72%; animation-delay: 1.7s; font-size: 15px; }
+    .festival-decor.right-1 { right: 14px; animation-delay: 0.5s; }
+    .festival-decor.right-2 { right: 52px; top: 30%; animation-delay: 1.4s; font-size: 17px; }
+    .festival-decor.right-3 { right: 30px; top: 72%; animation-delay: 2.1s; font-size: 15px; }
+    @keyframes festivalTwinkle {
+      0%, 100% { opacity: 0.35; transform: translateY(-50%) scale(0.9); }
+      50% { opacity: 0.9; transform: translateY(-50%) scale(1.15); }
+    }
+    @media (max-width: 640px) {
+      .festival-decor.left-2, .festival-decor.left-3, .festival-decor.right-2, .festival-decor.right-3 { display: none; }
+      .festival-decor.left-1, .festival-decor.right-1 { top: 14px; transform: none; font-size: 16px; opacity: 0.4; }
+      .festival-decor.left-1 { left: 10px; }
+      .festival-decor.right-1 { right: 10px; }
+      @keyframes festivalTwinkle {
+        0%, 100% { opacity: 0.25; transform: scale(0.9); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+      }
     }
     .stats-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
     .stat-box {
@@ -3931,7 +3960,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '14.6';
+    const APP_VERSION = '14.7';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4115,6 +4144,12 @@
 
         section.innerHTML = `
           <div class="festival-banner">
+            <span class="festival-decor left-1">🪔</span>
+            <span class="festival-decor left-2">🌙</span>
+            <span class="festival-decor left-3">🎀</span>
+            <span class="festival-decor right-1">🎇</span>
+            <span class="festival-decor right-2">💃</span>
+            <span class="festival-decor right-3">✨</span>
             <p>${escapeHtml(data.message)}</p>
             <button onclick="promptSignIn('AI Design Studio')">🎨 Try it free →</button>
           </div>
