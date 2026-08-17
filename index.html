@@ -1699,7 +1699,7 @@
 
   <header>
     <div class="header-topbar">
-      <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final">
+      <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
       <div class="sonia-badge">
         <span class="sb-by">A BOUTIQUE<br>BY</span>
         <span class="sb-name">Sonia</span>
@@ -1763,6 +1763,7 @@
           </div>
         </div>
         <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
+        <a href="#" id="goHomeLink" onclick="goToLandingPage(event)" style="display:none; font-size:12px; color:var(--marigold); margin-top:6px;">🏠 Back to Home Page</a>
         <p class="header-follow" style="margin:4px 0 0 0;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener">📷 @gurbanifashion</a></p>
       </div>
     </div>
@@ -3930,7 +3931,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '14.5';
+    const APP_VERSION = '14.6';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4405,6 +4406,21 @@
     };
 
     function promptSignIn(feature) {
+      // Already signed in (e.g. arrived here via the new "Back to Home"
+      // link) — take them straight to the relevant tab instead of the
+      // confusing "sign in first" message, which would be actively wrong.
+      if (authToken) {
+        const tabMap = {
+          'AI Design Studio': 'design',
+          'Appointments': 'appointments',
+          'Marketplace': 'shopSuits',
+          'Rate Card': 'rateCard',
+        };
+        document.getElementById('dashboard').classList.add('show');
+        document.getElementById('landingPage').classList.add('hidden');
+        switchTab(null, tabMap[feature] || 'overview');
+        return;
+      }
       showToast(`Sign in first to access ${feature}`);
     }
 
@@ -5669,6 +5685,17 @@
       } catch (err) {
         showToast('❌ ' + err.message);
       }
+    }
+
+    // Lets a signed-in customer or admin see the landing page again without
+    // actually signing out — deliberately minimal, only toggles the two
+    // visibility classes, leaves authToken/currentUser/Sign Out button
+    // completely untouched unlike the real sign-out flow below.
+    function goToLandingPage(event) {
+      if (event) event.preventDefault();
+      document.getElementById('landingPage').classList.remove('hidden');
+      document.getElementById('dashboard').classList.remove('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function handleSignOut() {
@@ -9171,6 +9198,7 @@
           userWelcome.appendChild(emailLine);
         }
         signOutBtn.style.display = 'block';
+        document.getElementById('goHomeLink').style.display = 'inline-block';
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
@@ -9240,7 +9268,7 @@
         dashboard.classList.remove('show');
         userWelcome.classList.remove('show');
         signOutBtn.style.display = 'none';
-        
+        document.getElementById('goHomeLink').style.display = 'none';
         if (googleInitialized && typeof google !== 'undefined') {
           signinArea.innerHTML = '';
           google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
