@@ -567,6 +567,7 @@
       transition: opacity 0.25s ease;
     }
     .lens-tile.active .lens-collapsed-label { opacity: 0; pointer-events: none; }
+    .lens-tile.active .lens-num { opacity: 0; pointer-events: none; }
     .lens-content {
       opacity: 0;
       max-height: 0;
@@ -692,6 +693,20 @@
       border-radius: 20px; font-size: 13px; letter-spacing: 0.03em;
     }
     .promo-banner .promo-text { color: white; font-weight: 700; font-size: 13.5px; }
+
+    .festival-banner {
+      background: linear-gradient(120deg, var(--marigold-deep) 0%, var(--vivid) 55%, var(--vivid-deep) 100%);
+      border-radius: 14px; padding: 18px 22px; text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+    .festival-banner p {
+      color: white; font-size: 14px; line-height: 1.6; margin: 0 0 12px; font-weight: 500;
+      max-width: 560px; margin-left: auto; margin-right: auto;
+    }
+    .festival-banner button {
+      background: white; color: var(--vivid); border: none; border-radius: 24px;
+      padding: 9px 22px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
     .stats-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
     .stat-box {
       background: linear-gradient(160deg, var(--vivid), var(--vivid-deep));
@@ -1760,6 +1775,11 @@
         <div class="trust-badge"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
         <span class="version-badge" id="versionBadge"></span>
 
+        <!-- FESTIVAL BANNER — admin-editable seasonal awareness banner, off
+             by default until Sonia turns it on from the admin Coupons tab.
+             Not coupon-backed since it's an announcement, not a discount. -->
+        <div id="festivalBannerSection" style="display:none; margin-bottom:16px;"></div>
+
         <!-- PROMO BANNER — self-gated, only shows if a public coupon is active -->
         <div id="promoBannerSection" style="display:none; margin-bottom:16px;"></div>
 
@@ -2115,7 +2135,7 @@
               <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
               <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
               <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
-              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing();" style="display: none;">🎟️ Coupons</button>
+              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing();" style="display: none;">🎟️ Coupons</button>
             </div>
           </div>
           <div class="tab-group">
@@ -2733,6 +2753,17 @@
             <textarea id="promoMessageEdit" rows="3" style="width:100%;"></textarea>
             <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-top:8px;" onclick="savePromoMessage()">💾 Save</button>
             <span id="promoMessageStatus" style="font-size:12px; margin-left:10px;"></span>
+          </div>
+
+          <div class="card" style="padding:16px; margin-bottom:24px; max-width:600px;">
+            <h4 style="margin-bottom:6px;">🪔 Festival Season Banner</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">A seasonal awareness banner on the homepage — not tied to any discount, just encourages people to try AI Design Studio ahead of festivals. Off by default; turn it on when it's relevant, off again once the season passes.</p>
+            <textarea id="festivalBannerEdit" rows="3" style="width:100%; margin-bottom:8px;"></textarea>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; cursor:pointer; font-size:13px;">
+              <input type="checkbox" id="festivalBannerEnabledEdit" style="width:auto;"> Show this banner on the homepage right now
+            </label>
+            <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="saveFestivalBanner()">💾 Save</button>
+            <span id="festivalBannerStatus" style="font-size:12px; margin-left:10px;"></span>
           </div>
 
           <p style="color:#666; margin-bottom:16px; font-size:13px;">Public coupons show automatically on the homepage banner. Private ones only work if the customer already has the code — share via WhatsApp/Instagram, they type it in at checkout.</p>
@@ -3899,7 +3930,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '14.2';
+    const APP_VERSION = '14.4';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4070,6 +4101,26 @@
         }
       } catch (err) {
         console.error('loadPromoMessage error:', err); // keeps the default text — never breaks the page
+      }
+    }
+
+    async function loadFestivalBanner() {
+      const section = document.getElementById('festivalBannerSection');
+      if (!section) return;
+      try {
+        const res = await fetch(`${API}/api/settings/festival-banner`);
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.enabled || !data.message) return; // stays hidden unless Sonia has turned it on
+
+        section.innerHTML = `
+          <div class="festival-banner">
+            <p>${escapeHtml(data.message)}</p>
+            <button onclick="promptSignIn('AI Design Studio')">🎨 Try it free →</button>
+          </div>
+        `;
+        section.style.display = 'block';
+      } catch (err) {
+        console.error('loadFestivalBanner error:', err); // stays hidden — not critical
       }
     }
 
@@ -7629,6 +7680,48 @@
       textarea.value = currentPromoMessage; // already fetched on page load, no need to re-fetch
     }
 
+    async function loadFestivalBannerForEditing() {
+      const textarea = document.getElementById('festivalBannerEdit');
+      const checkbox = document.getElementById('festivalBannerEnabledEdit');
+      if (!textarea || !checkbox) return;
+      try {
+        const res = await fetch(`${API}/api/settings/festival-banner`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          textarea.value = data.message;
+          checkbox.checked = !!data.enabled;
+        }
+      } catch (err) {
+        console.error('loadFestivalBannerForEditing error:', err);
+      }
+    }
+
+    async function saveFestivalBanner() {
+      const message = document.getElementById('festivalBannerEdit').value.trim();
+      const enabled = document.getElementById('festivalBannerEnabledEdit').checked;
+      const status = document.getElementById('festivalBannerStatus');
+      if (!message) { status.textContent = 'Message can\'t be empty'; status.style.color = '#c62828'; return; }
+      try {
+        const res = await fetch(`${API}/api/settings/festival-banner`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ message, enabled }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          status.textContent = enabled ? '✅ Saved — now live on the homepage' : '✅ Saved — currently hidden';
+          status.style.color = '#2e7d32';
+          loadFestivalBanner(); // refresh the actual homepage banner if it's currently in the DOM
+        } else {
+          status.textContent = '❌ ' + (data.error || 'Failed to save');
+          status.style.color = '#c62828';
+        }
+      } catch (err) {
+        status.textContent = '❌ ' + err.message;
+        status.style.color = '#c62828';
+      }
+    }
+
     async function savePromoMessage() {
       const message = document.getElementById('promoMessageEdit').value.trim();
       const status = document.getElementById('promoMessageStatus');
@@ -9161,6 +9254,7 @@
       initVoiceInput();
       initRateCardTeasers();
       loadPromoBanner();
+      loadFestivalBanner();
       loadPromoMessage();
       loadPublicStats();
       checkForResetToken();
