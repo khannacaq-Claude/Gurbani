@@ -4027,7 +4027,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '15.7';
+    const APP_VERSION = '15.8';
     const APP_VERSION_DATE = '2026-08-17';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4619,17 +4619,32 @@
     }
 
     // Floating back-to-top + sign-in nudge — shows once scrolled past the
-    // hero, only while the landing page (signed-out view) is what's
-    // actually on screen. Throttled with requestAnimationFrame so the
-    // scroll listener stays cheap.
+    // hero, while the landing page is what's actually on screen. The
+    // sign-in button itself adapts to auth state: it used to assume
+    // "landing page visible" always meant "signed out", which stopped
+    // being true once signed-in users could visit the landing page via
+    // the Back to Home link — now it offers "Back to Dashboard" instead
+    // of a redundant sign-in prompt when someone's already signed in.
     let fnTicking = false;
     function updateFloatingNudge() {
       const nudge = document.getElementById('floatingNudge');
       if (!nudge) return;
       const landingPage = document.getElementById('landingPage');
-      const signedOut = !landingPage || !landingPage.classList.contains('hidden');
+      const onLandingPage = !landingPage || !landingPage.classList.contains('hidden');
       const scrolledEnough = window.scrollY > 480;
-      nudge.classList.toggle('show', signedOut && scrolledEnough);
+      nudge.classList.toggle('show', onLandingPage && scrolledEnough);
+
+      const signinBtn = document.getElementById('fnSigninBtn');
+      if (signinBtn) {
+        const label = signinBtn.querySelector('.fn-label');
+        if (authToken) {
+          if (label) label.textContent = 'Back to Dashboard';
+          signinBtn.firstChild.textContent = '📊 ';
+        } else {
+          if (label) label.textContent = 'Sign In & Start Designing';
+          signinBtn.firstChild.textContent = '✨ ';
+        }
+      }
       fnTicking = false;
     }
     window.addEventListener('scroll', () => {
@@ -4640,7 +4655,11 @@
     }, { passive: true });
 
     function handleFloatingNudgeClick() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (authToken) {
+        goToDashboard();
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     function expandLens(n) {
