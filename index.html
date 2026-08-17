@@ -2135,7 +2135,7 @@
               <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
               <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
               <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
-              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing();" style="display: none;">🎟️ Coupons</button>
+              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing();" style="display: none;">🎟️ Coupons &amp; Banners</button>
             </div>
           </div>
           <div class="tab-group">
@@ -2745,7 +2745,7 @@
 
         <!-- ADMIN: COUPONS -->
         <div id="adminCoupons" class="tab-content">
-          <h3>🎟️ Coupons</h3>
+          <h3>🎟️ Coupons &amp; Banners</h3>
 
           <div class="card" style="padding:16px; margin-bottom:24px; max-width:600px;">
             <h4 style="margin-bottom:6px;">📢 AI Design Studio Promo Message</h4>
@@ -3930,7 +3930,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '14.4';
+    const APP_VERSION = '14.5';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -3977,7 +3977,7 @@
       adminReconcileTabBtn: { icon: 'refresh-cw', label: 'Reconciliation' },
       adminInventoryTabBtn: { icon: 'layers', label: 'Inventory' },
       adminAppointmentsTabBtn: { icon: 'calendar-check', label: 'Manage Appointments' },
-      adminCouponsTabBtn: { icon: 'ticket', label: 'Coupons' },
+      adminCouponsTabBtn: { icon: 'ticket', label: 'Coupons & Banners' },
       adminInvoicesTabBtn: { icon: 'receipt', label: 'Invoices' },
       adminCustomersTabBtn: { icon: 'users', label: 'Customers' },
       adminEmployeesTabBtn: { icon: 'user-cog', label: 'Employees & Payroll' },
