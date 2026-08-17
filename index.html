@@ -2842,9 +2842,11 @@
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Upload your own banner images — generated externally (e.g. via Replicate's own site) with full creative control, or anything else. Pick which one is live on the homepage anytime. When none is active, the site falls back to the auto festival-theme banner above.</p>
             <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
               <div class="form-group" style="margin:0;"><label>Label (for your own reference)</label><input type="text" id="bannerImageLabel" placeholder="e.g. Diwali 2026 hero"></div>
-              <input type="file" id="bannerImageFile" accept="image/*" style="width:auto;">
+              <button type="button" onclick="document.getElementById('bannerImageFile').click()" style="padding:10px 18px; border-radius:8px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;">📎 Choose Image</button>
+              <input type="file" id="bannerImageFile" accept="image/*" onchange="document.getElementById('bannerImageFileName').textContent = this.files[0]?.name || 'No file chosen'">
               <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="uploadBannerImage()">⬆️ Upload</button>
             </div>
+            <span id="bannerImageFileName" style="font-size:12px; color:var(--text-muted); display:block; margin-top:-10px; margin-bottom:12px;">No file chosen</span>
             <span id="bannerImageUploadStatus" style="font-size:12px; display:block; margin-bottom:12px;"></span>
             <div id="bannerImagesGallery" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">Loading...</div>
           </div>
@@ -4013,7 +4015,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '15.2';
+    const APP_VERSION = '15.3';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
