@@ -131,6 +131,28 @@
       text-shadow: 0 1px 0 rgba(255,255,255,0.4);
     }
 
+    /* Plain-text stand-in for the circular "A Boutique by Sonia" badge —
+       the fixed-size circle is fine on desktop but just eats vertical
+       space on mobile now that the wordmark is a full-width text line. */
+    .header-boutique-text {
+      display: none;
+      width: 100%;
+      text-align: center;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .header-boutique-text .hbt-name {
+      font-family: var(--font-script);
+      font-weight: 700;
+      font-size: 22px;
+      color: #FFFFFF;
+      margin-left: 5px;
+    }
+
     /* "By Sonia" badge — same treatment as the flex board / print materials,
        for a consistent trust signal across every touchpoint */
     .sonia-badge {
@@ -1657,6 +1679,8 @@
          wordmark instead. */
       .header-wordmark-final { display: none; }
       .header-wordmark-text { display: block; font-size: clamp(36px, 12vw, 54px); margin-bottom: 4px; }
+      .sonia-badge { display: none; }
+      .header-boutique-text { display: block; margin-bottom: 6px; }
 
       /* header-mid was inheriting flex: 1 1 300px from the desktop row
          layout — under flex-direction:column that 300px basis becomes a
@@ -1808,6 +1832,7 @@
         <span class="sb-by">A BOUTIQUE<br>BY</span>
         <span class="sb-name">Sonia</span>
       </div>
+      <div class="header-boutique-text">A BOUTIQUE BY<span class="hbt-name">Sonia</span></div>
       <div class="header-mid">
         <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
         <div class="header-products" id="headerProductsRow">
