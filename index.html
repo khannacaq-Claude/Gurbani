@@ -120,8 +120,9 @@
        place of the pale-pink cursive logo image, which nearly disappears
        against the magenta header gradient at small sizes. Hidden by
        default; the mobile media query below turns it on. */
+    .header-wordmark-wrap { display: none; position: relative; width: 100%; }
     .header-wordmark-text {
-      display: none;
+      display: block;
       width: 100%;
       font-family: var(--font-script);
       font-weight: 700;
@@ -129,6 +130,17 @@
       text-align: center;
       line-height: 1;
       text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+    }
+    /* The gold hanger/ribbon flourish, cropped out of the original logo
+       artwork, reinstated as its own layer above the text wordmark. */
+    .header-wordmark-ribbon {
+      position: absolute;
+      top: -12px;
+      right: 14%;
+      width: 60px;
+      height: auto;
+      pointer-events: none;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
     }
 
     /* Plain-text stand-in for the circular "A Boutique by Sonia" badge —
@@ -217,11 +229,12 @@
       font-size: 11.5px;
       font-weight: 700;
       letter-spacing: 0.2px;
-      color: var(--marigold);
+      color: #FFFFFF;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
     .header-products .hp-dot { color: rgba(255,255,255,0.5); font-weight: 400; }
     .header-products .hp-link { cursor: pointer; text-decoration: none; transition: color 0.15s ease; display: inline-flex; align-items: center; gap: 4px; }
-    .header-products .hp-link:hover { color: #FFFFFF; text-decoration: underline; }
+    .header-products .hp-link:hover { color: var(--marigold); text-decoration: underline; }
     .hp-new {
       background: var(--vivid); color: #FFFFFF; font-size: 8.5px; font-weight: 800;
       letter-spacing: 0.06em; padding: 1px 5px; border-radius: 8px; vertical-align: middle;
@@ -1678,7 +1691,9 @@
          the magenta gradient — swap it for the dark, full-width text
          wordmark instead. */
       .header-wordmark-final { display: none; }
-      .header-wordmark-text { display: block; font-size: clamp(36px, 12vw, 54px); margin-bottom: 4px; }
+      .header-wordmark-wrap { display: block; }
+      .header-wordmark-text { font-size: clamp(36px, 12vw, 54px); margin-bottom: 4px; }
+      .header-wordmark-ribbon { top: -10px; width: clamp(44px, 13vw, 64px); }
       .sonia-badge { display: none; }
       .header-boutique-text { display: block; margin-bottom: 6px; }
 
@@ -1827,7 +1842,10 @@
   <header>
     <div class="header-topbar">
       <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
-      <div class="header-wordmark-text" onclick="goToLandingPage(event)" style="cursor:pointer;">Gurbani Fashion</div>
+      <div class="header-wordmark-wrap" onclick="goToLandingPage(event)" style="cursor:pointer;">
+        <div class="header-wordmark-text">Gurbani Fashion</div>
+        <img src="gurbani_ribbon_accent.png" alt="" class="header-wordmark-ribbon">
+      </div>
       <div class="sonia-badge">
         <span class="sb-by">A BOUTIQUE<br>BY</span>
         <span class="sb-name">Sonia</span>
@@ -4217,7 +4235,7 @@
     // A category counts as "NEW" for this many days after its first item
     // was added — independent per category, based on that category's own
     // earliest item, not affected by other categories being added.
-    const NEW_CATEGORY_WINDOW_DAYS = 35; // ~5 weeks, middle of the 4-6 week range
+    const NEW_CATEGORY_WINDOW_DAYS = 5;
     // Only categories first added ON OR AFTER this date are eligible for the
     // NEW badge — everything already in the rate card as of today is
     // exempt, even if it's technically within the window above. Bump this
