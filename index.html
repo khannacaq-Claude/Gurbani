@@ -1822,7 +1822,7 @@
           </div>
         </div>
         <button id="signOutBtn" style="display: none;">🚪 Sign Out</button>
-        <a href="#" id="goHomeLink" onclick="goToLandingPage(event)" style="display:none; font-size:12px; color:var(--marigold); margin-top:6px;">🏠 Back to Home Page</a>
+        <a href="#" id="goHomeLink" onclick="handleGoHomeLinkClick(event)" style="display:none; font-size:12px; color:var(--marigold); margin-top:6px;">🏠 Back to Home Page</a>
         <p class="header-follow" style="margin:4px 0 0 0;"><a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener">📷 @gurbanifashion</a></p>
       </div>
     </div>
@@ -4027,7 +4027,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '15.6';
+    const APP_VERSION = '15.7';
     const APP_VERSION_DATE = '2026-08-17';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4612,6 +4612,7 @@
         document.getElementById('dashboard').classList.add('show');
         document.getElementById('landingPage').classList.add('hidden');
         switchTab(null, tabMap[feature] || 'overview');
+        updateGoHomeLink();
         return;
       }
       showToast(`Sign in first to access ${feature}`);
@@ -5889,6 +5890,41 @@
       document.getElementById('landingPage').classList.remove('hidden');
       document.getElementById('dashboard').classList.remove('show');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      updateGoHomeLink();
+    }
+
+    // The reverse trip — back to whichever dashboard tab they were on
+    // (switchTab with no argument just re-shows the currently active one,
+    // it doesn't reset to Overview).
+    function goToDashboard(event) {
+      if (event) event.preventDefault();
+      document.getElementById('landingPage').classList.add('hidden');
+      document.getElementById('dashboard').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      updateGoHomeLink();
+    }
+
+    // One link, two states — showing "Back to Home" while on the dashboard
+    // and "Back to Dashboard" while on the landing page would both be
+    // wrong the other half of the time, so this keeps it always correct
+    // for whichever view is actually on screen right now.
+    function updateGoHomeLink() {
+      const link = document.getElementById('goHomeLink');
+      if (!link) return;
+      const onLandingPage = !document.getElementById('landingPage').classList.contains('hidden');
+      if (onLandingPage) {
+        link.textContent = '📊 Back to Dashboard';
+        link.onclick = goToDashboard;
+      } else {
+        link.textContent = '🏠 Back to Home Page';
+        link.onclick = goToLandingPage;
+      }
+    }
+
+    function handleGoHomeLinkClick(event) {
+      if (event) event.preventDefault();
+      const onLandingPage = !document.getElementById('landingPage').classList.contains('hidden');
+      if (onLandingPage) goToDashboard(); else goToLandingPage();
     }
 
     async function handleSignOut() {
@@ -9610,6 +9646,7 @@
         }
         signOutBtn.style.display = 'block';
         document.getElementById('goHomeLink').style.display = 'inline-block';
+        updateGoHomeLink();
         signinArea.innerHTML = '';
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
