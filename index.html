@@ -4027,7 +4027,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '15.5';
+    const APP_VERSION = '15.6';
     const APP_VERSION_DATE = '2026-08-17';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4238,7 +4238,10 @@
       bannerRotationLastIndex = idx;
       const banner = bannerRotationPool[idx];
 
-      section.innerHTML = `<img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" style="width:100%; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18);">`;
+      const destinationFeatureNames = { design: 'AI Design Studio', shopSuits: 'Marketplace', appointments: 'Appointments', rateCard: 'Rate Card' };
+      const featureName = destinationFeatureNames[banner.destination] || 'AI Design Studio';
+
+      section.innerHTML = `<img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="promptSignIn('${featureName}')" style="width:100%; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">`;
       section.style.display = 'block';
 
       if (bannerRotationPool.length > 1) {
@@ -8067,6 +8070,21 @@
       }
     }
 
+    async function updateBannerImageDestination(id, destination) {
+      try {
+        const res = await fetch(`${API}/api/banner-images/${id}/destination`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ destination }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) showToast('✅ Destination updated');
+        else showToast('❌ ' + (data.error || 'Failed to update destination'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
     async function loadBannerImagesGallery() {
       const gallery = document.getElementById('bannerImagesGallery');
       if (!gallery) return;
@@ -8081,6 +8099,12 @@
             <img src="${b.imageUrl}" alt="${escapeHtml(b.label)}" style="width:100%; height:110px; object-fit:cover; display:block;">
             <div style="padding:8px;">
               <div style="font-size:11.5px; font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="editBannerImageLabel('${b._id}', '${escapeHtml(b.label)}')" title="Click to rename">✏️ ${escapeHtml(b.label)}</div>
+              <select style="width:100%; font-size:11px; padding:4px; margin-bottom:6px; border-radius:5px; border:1px solid #e0d8d0;" onchange="updateBannerImageDestination('${b._id}', this.value)" title="Where clicking this image takes visitors">
+                <option value="design" ${(!b.destination || b.destination === 'design') ? 'selected' : ''}>Clicks go to: AI Design Studio</option>
+                <option value="shopSuits" ${b.destination === 'shopSuits' ? 'selected' : ''}>Clicks go to: Marketplace</option>
+                <option value="appointments" ${b.destination === 'appointments' ? 'selected' : ''}>Clicks go to: Appointments</option>
+                <option value="rateCard" ${b.destination === 'rateCard' ? 'selected' : ''}>Clicks go to: Rate Card</option>
+              </select>
               ${b.active
                 ? `<div style="font-size:11px; color:var(--vivid); font-weight:700; margin-bottom:6px;">🎡 In rotation</div><button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="deactivateBannerImage('${b._id}')">Remove from Rotation</button>`
                 : `<button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="activateBannerImage('${b._id}')">➕ Add to Rotation</button>`}
