@@ -116,6 +116,21 @@
 
     .header-mid { flex: 1 1 300px; min-width: 220px; }
 
+    /* Full-width, high-contrast text wordmark — shown only on mobile in
+       place of the pale-pink cursive logo image, which nearly disappears
+       against the magenta header gradient at small sizes. Hidden by
+       default; the mobile media query below turns it on. */
+    .header-wordmark-text {
+      display: none;
+      width: 100%;
+      font-family: var(--font-script);
+      font-weight: 700;
+      color: var(--ink);
+      text-align: center;
+      line-height: 1;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+    }
+
     /* "By Sonia" badge — same treatment as the flex board / print materials,
        for a consistent trust signal across every touchpoint */
     .sonia-badge {
@@ -1637,10 +1652,39 @@
     @media (max-width: 640px) {
       header { padding: 16px 14px 14px 14px; }
       .header-topbar { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
-      .header-wordmark-final { width: 190px; max-width: 190px; }
-      .header-mid { text-align: center; }
+      /* The pale cursive logo image is unreadable at mobile sizes against
+         the magenta gradient — swap it for the dark, full-width text
+         wordmark instead. */
+      .header-wordmark-final { display: none; }
+      .header-wordmark-text { display: block; font-size: clamp(36px, 12vw, 54px); margin-bottom: 4px; }
+
+      /* header-mid was inheriting flex: 1 1 300px from the desktop row
+         layout — under flex-direction:column that 300px basis becomes a
+         forced *minimum height*, which is what was leaving a large blank
+         gap below the category/mini-link rows before the sign-in button.
+         Reset it to size from actual content instead. */
+      .header-mid {
+        flex: 0 1 auto;
+        min-width: 0;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Categories stack top-to-bottom instead of wrapping left-to-right,
+         and the punchline moves below them (was above). */
+      .header-products {
+        order: 1;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+      }
+      .header-products .hp-dot { display: none; }
+      header p.header-tagline { order: 2; font-size: 14px; margin-top: 8px; }
+      .header-mini { order: 3; }
+
       .header-products, .header-mini { justify-content: center; }
-      header p.header-tagline { font-size: 14px; }
       .header-right { align-items: center; text-align: center; margin-left: 0; }
 
       /* LightWidget's Instagram embed reflows to a taller layout on narrow
@@ -1759,6 +1803,7 @@
   <header>
     <div class="header-topbar">
       <img src="gurbani_wordmark_final.png" alt="Gurbani Fashion" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
+      <div class="header-wordmark-text" onclick="goToLandingPage(event)" style="cursor:pointer;">Gurbani Fashion</div>
       <div class="sonia-badge">
         <span class="sb-by">A BOUTIQUE<br>BY</span>
         <span class="sb-name">Sonia</span>
