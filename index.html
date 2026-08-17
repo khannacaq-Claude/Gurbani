@@ -739,17 +739,18 @@
        concern a rapid on/off flash could raise. */
     .festival-decor {
       position: absolute; top: 50%; transform: translateY(-50%);
-      font-size: 38px; opacity: 0.75; animation: festivalTwinkle 2.6s ease-in-out infinite;
+      width: 38px; height: 38px; opacity: 0.75; animation: festivalTwinkle 2.6s ease-in-out infinite;
       pointer-events: none; user-select: none;
     }
-    .festival-decor.left-1 { left: 18px; top: 42%; animation-delay: 0s; font-size: 42px; }
-    .festival-decor.left-2 { left: 70px; top: 65%; animation-delay: 0.9s; font-size: 32px; }
-    .festival-decor.left-3 { left: 30px; top: 88%; animation-delay: 1.7s; font-size: 30px; }
-    .festival-decor.left-4 { left: 110px; top: 86%; animation-delay: 0.4s; font-size: 24px; }
-    .festival-decor.right-1 { right: 18px; top: 42%; animation-delay: 0.5s; font-size: 42px; }
-    .festival-decor.right-2 { right: 70px; top: 65%; animation-delay: 1.4s; font-size: 32px; }
-    .festival-decor.right-3 { right: 30px; top: 88%; animation-delay: 2.1s; font-size: 30px; }
-    .festival-decor.right-4 { right: 110px; top: 86%; animation-delay: 1.1s; font-size: 24px; }
+    .festival-decor svg { width: 100%; height: 100%; display: block; }
+    .festival-decor.left-1 { left: 18px; top: 42%; animation-delay: 0s; width: 42px; height: 42px; }
+    .festival-decor.left-2 { left: 70px; top: 65%; animation-delay: 0.9s; width: 32px; height: 32px; }
+    .festival-decor.left-3 { left: 30px; top: 88%; animation-delay: 1.7s; width: 30px; height: 30px; }
+    .festival-decor.left-4 { left: 110px; top: 86%; animation-delay: 0.4s; width: 24px; height: 24px; }
+    .festival-decor.right-1 { right: 18px; top: 42%; animation-delay: 0.5s; width: 42px; height: 42px; }
+    .festival-decor.right-2 { right: 70px; top: 65%; animation-delay: 1.4s; width: 32px; height: 32px; }
+    .festival-decor.right-3 { right: 30px; top: 88%; animation-delay: 2.1s; width: 30px; height: 30px; }
+    .festival-decor.right-4 { right: 110px; top: 86%; animation-delay: 1.1s; width: 24px; height: 24px; }
     @keyframes festivalTwinkle {
       0%, 100% { opacity: 0.55; transform: translateY(-50%) scale(0.92); }
       50% { opacity: 1; transform: translateY(-50%) scale(1.2); }
@@ -757,7 +758,7 @@
     @media (max-width: 640px) {
       .festival-decor.left-2, .festival-decor.left-3, .festival-decor.left-4,
       .festival-decor.right-2, .festival-decor.right-3, .festival-decor.right-4 { display: none; }
-      .festival-decor.left-1, .festival-decor.right-1 { top: 34px; transform: none; font-size: 24px; opacity: 0.65; }
+      .festival-decor.left-1, .festival-decor.right-1 { top: 34px; transform: none; width: 24px; height: 24px; opacity: 0.65; }
       .festival-decor.left-1 { left: 10px; }
       .festival-decor.right-1 { right: 10px; }
       @keyframes festivalTwinkle {
@@ -2194,7 +2195,7 @@
               <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
               <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
               <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
-              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing();" style="display: none;">🎟️ Coupons &amp; Banners</button>
+              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing(); loadBannerImagesGallery();" style="display: none;">🎟️ Coupons &amp; Banners</button>
             </div>
           </div>
           <div class="tab-group">
@@ -2834,6 +2835,18 @@
             </div>
             <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="saveFestivalBanner()">💾 Save</button>
             <span id="festivalBannerStatus" style="font-size:12px; margin-left:10px;"></span>
+          </div>
+
+          <div class="card" style="padding:16px; margin-bottom:24px; max-width:700px;">
+            <h4 style="margin-bottom:6px;">🖼️ Banner Images</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Upload your own banner images — generated externally (e.g. via Replicate's own site) with full creative control, or anything else. Pick which one is live on the homepage anytime. When none is active, the site falls back to the auto festival-theme banner above.</p>
+            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
+              <div class="form-group" style="margin:0;"><label>Label (for your own reference)</label><input type="text" id="bannerImageLabel" placeholder="e.g. Diwali 2026 hero"></div>
+              <input type="file" id="bannerImageFile" accept="image/*" style="width:auto;">
+              <button type="button" class="btn-submit" style="width:auto; padding:8px 18px;" onclick="uploadBannerImage()">⬆️ Upload</button>
+            </div>
+            <span id="bannerImageUploadStatus" style="font-size:12px; display:block; margin-bottom:12px;"></span>
+            <div id="bannerImagesGallery" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">Loading...</div>
           </div>
 
           <p style="color:#666; margin-bottom:16px; font-size:13px;">Public coupons show automatically on the homepage banner. Private ones only work if the customer already has the code — share via WhatsApp/Instagram, they type it in at checkout.</p>
@@ -4000,7 +4013,7 @@
        Rendered into the landing-page badge (#versionBadge) below.
        This is the ONLY place these should be edited.
        ============================================================ */
-    const APP_VERSION = '15.0';
+    const APP_VERSION = '15.2';
     const APP_VERSION_DATE = '2026-08-08';
     (function renderVersionBadge() {
       const el = document.getElementById('versionBadge');
@@ -4174,18 +4187,54 @@
       }
     }
 
+    // Hand-built SVG icon set for the festival banner — deliberately not
+    // relying on native emoji glyphs, since those render completely
+    // differently across Android/iOS/Windows. These render identically
+    // everywhere and match the brand's gold tone exactly. Each is a
+    // 0 0 90 90 viewBox so they drop in at any size via CSS.
+    const FESTIVAL_ICONS = {
+      diya: '<svg viewBox="0 0 90 90"><ellipse cx="45" cy="60" rx="30" ry="10" fill="#F2A93B"/><polygon points="45,20 38,50 52,50" fill="#FAD796"/></svg>',
+      sparkle: '<svg viewBox="0 0 90 90"><polygon points="45,15 52,38 75,45 52,52 45,75 38,52 15,45 38,38" fill="#F2A93B"/></svg>',
+      moon: '<svg viewBox="0 0 90 90"><path d="M45,15 A25,25 0 1,0 45,65 A18,18 0 1,1 45,15 Z" fill="#F2A93B"/></svg>',
+      bow: '<svg viewBox="0 0 90 90"><polygon points="45,45 15,27 15,63" fill="#F2A93B"/><polygon points="45,45 75,27 75,63" fill="#F2A93B"/><circle cx="45" cy="45" r="7" fill="#FAD796"/></svg>',
+      thread: '<svg viewBox="0 0 90 90"><circle cx="30" cy="40" r="15" fill="none" stroke="#F2A93B" stroke-width="5"/><circle cx="55" cy="40" r="15" fill="none" stroke="#F2A93B" stroke-width="5"/></svg>',
+      people: '<svg viewBox="0 0 90 90"><circle cx="22" cy="22" r="7" fill="#F2A93B"/><polygon points="10,65 35,65 30,32 15,32" fill="#F2A93B"/><circle cx="62" cy="22" r="7" fill="#FAD796"/><polygon points="50,65 75,65 70,32 55,32" fill="#FAD796"/></svg>',
+      danceSwirl: '<svg viewBox="0 0 90 90"><path d="M45,45 C45,25 65,25 65,42 C65,58 45,60 38,48 C32,38 42,30 50,35" fill="none" stroke="#F2A93B" stroke-width="6" stroke-linecap="round"/></svg>',
+      drum: '<svg viewBox="0 0 90 90"><ellipse cx="45" cy="22" rx="25" ry="8" fill="#F2A93B"/><rect x="20" y="22" width="50" height="33" fill="#F2A93B"/><ellipse cx="45" cy="55" rx="25" ry="8" fill="#FAD796"/></svg>',
+      confetti: '<svg viewBox="0 0 90 90"><circle cx="25" cy="20" r="4" fill="#F2A93B"/><rect x="55" y="15" width="8" height="4" fill="#FAD796" transform="rotate(30 59 17)"/><circle cx="65" cy="45" r="4" fill="#F2A93B"/><rect x="20" y="55" width="8" height="4" fill="#FAD796" transform="rotate(-20 24 57)"/><circle cx="45" cy="65" r="4" fill="#F2A93B"/><circle cx="70" cy="70" r="3" fill="#FAD796"/></svg>',
+      ring: '<svg viewBox="0 0 90 90"><circle cx="45" cy="52" r="25" fill="none" stroke="#F2A93B" stroke-width="6"/><polygon points="45,15 35,32 55,32" fill="#FAD796"/></svg>',
+      fireworkBurst: '<svg viewBox="0 0 90 90"><g stroke="#F2A93B" stroke-width="3"><line x1="45" y1="40" x2="45" y2="10"/><line x1="45" y1="40" x2="66" y2="19"/><line x1="45" y1="40" x2="75" y2="40"/><line x1="45" y1="40" x2="66" y2="61"/><line x1="45" y1="40" x2="45" y2="70"/><line x1="45" y1="40" x2="24" y2="61"/><line x1="45" y1="40" x2="15" y2="40"/><line x1="45" y1="40" x2="24" y2="19"/></g><circle cx="45" cy="10" r="3" fill="#FAD796"/><circle cx="75" cy="40" r="3" fill="#FAD796"/><circle cx="45" cy="70" r="3" fill="#FAD796"/><circle cx="15" cy="40" r="3" fill="#FAD796"/></svg>',
+    };
+
     async function loadFestivalBanner() {
       const section = document.getElementById('festivalBannerSection');
       if (!section) return;
+
+      // An admin-uploaded custom banner image always takes priority over
+      // the auto-generated CSS theme — that's the whole point of building
+      // it, since a curated real image looks far better than CSS shapes.
+      try {
+        const uploadedRes = await fetch(`${API}/api/banner-images/active`);
+        const uploadedData = await uploadedRes.json();
+        if (uploadedRes.ok && uploadedData.success && uploadedData.banner) {
+          section.innerHTML = `<img src="${uploadedData.banner.imageUrl}" alt="${escapeHtml(uploadedData.banner.label)}" style="width:100%; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18);">`;
+          section.style.display = 'block';
+          return; // don't fall through to the auto festival theme below
+        }
+      } catch (err) {
+        console.error('loadFestivalBanner (uploaded check) error:', err); // falls through to auto theme
+      }
+
       try {
         const res = await fetch(`${API}/api/settings/festival-banner`);
         const data = await res.json();
         if (!res.ok || !data.success || !data.enabled || !data.message) return; // stays hidden unless a theme is active (auto) or Sonia has turned it on (manual)
 
-        // Falls back to the Diwali-toned default emoji/gradient in manual
-        // mode, where the admin just supplies a message with no theme data.
-        const emojiLeft = data.emojiLeft || ['🪔', '🌙', '🎀', '🎊'];
-        const emojiRight = data.emojiRight || ['🎇', '💃', '✨', '🎉'];
+        // Falls back to the Diwali icon set in manual mode, where the
+        // admin just supplies a message with no theme data.
+        const emojiLeft = data.emojiLeft || ['diya', 'moon', 'bow', 'confetti'];
+        const emojiRight = data.emojiRight || ['fireworkBurst', 'danceSwirl', 'sparkle', 'confetti'];
+        const iconHtml = (key) => FESTIVAL_ICONS[key] || FESTIVAL_ICONS.sparkle;
         const gradient = data.gradient || 'linear-gradient(100deg, #7A123A 0%, #F2A93B 34%, #DB3B99 68%, #A83D74 100%)';
         // Reconstructing the full 3-layer value (not just background-image
         // alone) — otherwise this would silently wipe out the dot-texture
@@ -4201,14 +4250,14 @@
             <div class="festival-corner tr"></div>
             <div class="festival-corner bl"></div>
             <div class="festival-corner br"></div>
-            <span class="festival-decor left-1">${emojiLeft[0]}</span>
-            <span class="festival-decor left-2">${emojiLeft[1]}</span>
-            <span class="festival-decor left-3">${emojiLeft[2]}</span>
-            <span class="festival-decor left-4">${emojiLeft[3]}</span>
-            <span class="festival-decor right-1">${emojiRight[0]}</span>
-            <span class="festival-decor right-2">${emojiRight[1]}</span>
-            <span class="festival-decor right-3">${emojiRight[2]}</span>
-            <span class="festival-decor right-4">${emojiRight[3]}</span>
+            <span class="festival-decor left-1">${iconHtml(emojiLeft[0])}</span>
+            <span class="festival-decor left-2">${iconHtml(emojiLeft[1])}</span>
+            <span class="festival-decor left-3">${iconHtml(emojiLeft[2])}</span>
+            <span class="festival-decor left-4">${iconHtml(emojiLeft[3])}</span>
+            <span class="festival-decor right-1">${iconHtml(emojiRight[0])}</span>
+            <span class="festival-decor right-2">${iconHtml(emojiRight[1])}</span>
+            <span class="festival-decor right-3">${iconHtml(emojiRight[2])}</span>
+            <span class="festival-decor right-4">${iconHtml(emojiRight[3])}</span>
             <p>${escapeHtml(data.message)}</p>
             <button onclick="promptSignIn('AI Design Studio')">🎨 Try it free →</button>
           </div>
@@ -7850,6 +7899,98 @@
       } catch (err) {
         status.textContent = '❌ ' + err.message;
         status.style.color = '#c62828';
+      }
+    }
+
+    // ---------- Admin: Banner Images (upload/select/rotate) ----------
+    async function uploadBannerImage() {
+      const fileInput = document.getElementById('bannerImageFile');
+      const label = document.getElementById('bannerImageLabel').value.trim();
+      const status = document.getElementById('bannerImageUploadStatus');
+      const file = fileInput.files[0];
+      if (!file) { status.textContent = '❌ Choose an image first'; status.style.color = '#c62828'; return; }
+      if (!label) { status.textContent = '❌ Give it a label so you can tell them apart later'; status.style.color = '#c62828'; return; }
+
+      status.textContent = 'Uploading...'; status.style.color = '#666';
+      try {
+        const imageData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch(`${API}/api/banner-images`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ imageData, label }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          status.textContent = '✅ Uploaded';
+          status.style.color = '#2e7d32';
+          fileInput.value = '';
+          document.getElementById('bannerImageLabel').value = '';
+          loadBannerImagesGallery();
+        } else {
+          status.textContent = '❌ ' + (data.error || 'Upload failed');
+          status.style.color = '#c62828';
+        }
+      } catch (err) {
+        status.textContent = '❌ ' + err.message;
+        status.style.color = '#c62828';
+      }
+    }
+
+    async function loadBannerImagesGallery() {
+      const gallery = document.getElementById('bannerImagesGallery');
+      if (!gallery) return;
+      gallery.innerHTML = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/banner-images`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const banners = data.banners || [];
+        if (banners.length === 0) { gallery.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No banner images uploaded yet.</p>'; return; }
+        gallery.innerHTML = banners.map(b => `
+          <div style="border:2px solid ${b.active ? 'var(--vivid)' : '#e0d8d0'}; border-radius:8px; overflow:hidden; background:white;">
+            <img src="${b.imageUrl}" alt="${escapeHtml(b.label)}" style="width:100%; height:110px; object-fit:cover; display:block;">
+            <div style="padding:8px;">
+              <div style="font-size:11.5px; font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(b.label)}</div>
+              ${b.active ? '<div style="font-size:11px; color:var(--vivid); font-weight:700; margin-bottom:6px;">🟢 Live now</div>' : `<button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="activateBannerImage('${b._id}')">Set Live</button>`}
+              <button type="button" class="admin-filter-btn" style="width:100%; font-size:11px; color:#c62828;" onclick="deleteBannerImage('${b._id}', '${escapeHtml(b.label)}')">🗑️ Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        gallery.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function activateBannerImage(id) {
+      try {
+        const res = await fetch(`${API}/api/banner-images/${id}/activate`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) { showToast('✅ Now live on the homepage'); loadBannerImagesGallery(); }
+        else showToast('❌ ' + (data.error || 'Failed to activate'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      }
+    }
+
+    async function deleteBannerImage(id, label) {
+      if (!(await showConfirm(`Delete "${label}"? This can't be undone.`))) return;
+      try {
+        const res = await fetch(`${API}/api/banner-images/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) { showToast('✅ Deleted'); loadBannerImagesGallery(); }
+        else showToast('❌ ' + (data.error || 'Failed to delete'));
+      } catch (err) {
+        showToast('❌ ' + err.message);
       }
     }
 
