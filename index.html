@@ -1207,6 +1207,16 @@
     #signinArea {
       min-height: 40px;
     }
+    /* Belt-and-braces: whenever the body carries the signed-in state,
+       force these two elements closed regardless of any inline-style
+       timing race in the auth JS. This is what was leaving a tall blank
+       gap in the header on mobile when signinArea's Google button
+       reappeared without being re-hidden. */
+    body.signed-in #signinArea,
+    body.signed-in #emailAuthToggle {
+      display: none !important;
+      min-height: 0 !important;
+    }
 
     .budget-info {
       background: var(--sand);
@@ -9739,6 +9749,7 @@
         dashboard.classList.add('show');
         loadTabIcons();
         userWelcome.classList.add('show');
+        document.body.classList.add('signed-in');
         userWelcome.textContent = ''; // clear before rebuilding
         const nameLine = document.createElement('div');
         nameLine.textContent = `👋 ${currentUser.name}`;
@@ -9755,6 +9766,8 @@
         document.getElementById('goHomeLink').style.display = 'inline-block';
         updateGoHomeLink();
         signinArea.innerHTML = '';
+        signinArea.style.display = 'none'; // was still reserving its 40px min-height once empty
+        document.getElementById('emailAuthToggle').style.display = 'none'; // "sign in with email" makes no sense once already signed in
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
@@ -9822,6 +9835,7 @@
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
         userWelcome.classList.remove('show');
+        document.body.classList.remove('signed-in');
         signOutBtn.style.display = 'none';
         document.getElementById('goHomeLink').style.display = 'none';
         if (googleInitialized && typeof google !== 'undefined') {
