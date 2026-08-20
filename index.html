@@ -1768,13 +1768,11 @@
     @media (max-width: 640px) {
       header { padding: 16px 14px 14px 14px; }
       .header-topbar { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
-      /* The pale cursive logo image is unreadable at mobile sizes against
-         the magenta gradient — swap it for the dark, full-width text
-         wordmark instead. */
-      .header-wordmark-final { display: none; }
-      .header-wordmark-wrap { display: block; }
-      .header-wordmark-text { font-size: clamp(36px, 12vw, 54px); margin-bottom: 4px; }
-      .header-wordmark-ribbon { top: -18px; width: clamp(64px, 19vw, 104px); }
+      /* The new wordmark (Berkshire Swash, dark ink + ribbon baked in) is
+         high-contrast enough to use directly on mobile now — no longer
+         need the plain-text fallback the old pale cursive image required. */
+      .header-wordmark-final { display: block; width: 78vw; max-width: 300px; }
+      .header-wordmark-wrap { display: none; }
       .sonia-badge { display: none; }
       .header-boutique-text { display: block; margin-bottom: 6px; }
 
