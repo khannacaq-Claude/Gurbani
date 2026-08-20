@@ -92,6 +92,41 @@
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); }
 
+    /* Section jump-nav — sticks under the top of the viewport once you
+       scroll past the header, so any section is one tap away regardless
+       of how far down the page you are. Landing page only. */
+    .section-tabs {
+      position: sticky;
+      top: 0;
+      z-index: 400;
+      background: var(--ink);
+      display: flex;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    }
+    .section-tabs::-webkit-scrollbar { display: none; }
+    .section-tabs button {
+      flex: none;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.75);
+      font-family: var(--font-body);
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 12px 14px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .section-tabs button:hover { color: #fff; }
+    .section-tabs button.active { color: var(--marigold); border-bottom-color: var(--marigold); }
+    @media (max-width: 640px) {
+      .section-tabs button { font-size: 11.5px; padding: 11px 11px; }
+    }
+
     header {
       background:
         radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.14), transparent 65%),
@@ -2016,6 +2051,20 @@
   <main>
     <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
+      <nav class="section-tabs" id="sectionTabs">
+        <button type="button" data-target="statsSection" onclick="jumpToTab('statsSection', this)">📊 Stats</button>
+        <button type="button" data-target="lensSection" onclick="jumpToTab('lensSection', this)">✨ AI Design Studio</button>
+        <button type="button" data-target="occasionSection" onclick="jumpToTab('occasionSection', this)">🎉 Occasions</button>
+        <button type="button" data-target="processSection" onclick="jumpToTab('processSection', this)">✂️ How It Works</button>
+        <button type="button" data-target="rcSection" onclick="jumpToTab('rcSection', this)">💰 Rate Card</button>
+        <button type="button" data-target="instagramSection" onclick="jumpToTab('instagramSection', this)">📷 Instagram</button>
+        <button type="button" data-target="gallerySection" onclick="jumpToTab('gallerySection', this)">🖼️ Gallery</button>
+        <button type="button" data-target="testimonialsSection" onclick="jumpToTab('testimonialsSection', this)">💬 Reviews</button>
+        <button type="button" data-target="storySection" onclick="jumpToTab('storySection', this)">📖 Our Story</button>
+        <button type="button" data-target="visitSection" onclick="jumpToTab('visitSection', this)">📍 Visit Us</button>
+        <button type="button" data-target="faqSection" onclick="jumpToTab('faqSection', this)">❓ FAQ</button>
+        <button type="button" data-target="subscribeSection" onclick="jumpToTab('subscribeSection', this)">📲 Stay in Loop</button>
+      </nav>
       <div class="card">
         <div class="trust-badge"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
 
@@ -2249,7 +2298,7 @@
         </div>
 
         <!-- DESIGN GALLERY — coming soon, waiting on inventory photo shoot -->
-        <div class="coming-soon-section snap-section">
+        <div class="coming-soon-section snap-section" id="gallerySection">
           <h3>🖼️ Designs Gallery</h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">Real designs from real orders — coming as soon as our new collection is photographed.</p>
           <div class="coming-soon-grid">
@@ -2260,7 +2309,7 @@
         </div>
 
         <!-- TESTIMONIALS — coming soon, waiting on real customer reviews -->
-        <div class="coming-soon-section snap-section">
+        <div class="coming-soon-section snap-section" id="testimonialsSection">
           <h3>💬 What Customers Say</h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">We're just getting started collecting reviews — check back soon.</p>
           <div class="coming-soon-grid cs-alt">
@@ -2271,7 +2320,7 @@
         </div>
 
         <!-- OUR STORY -->
-        <div class="story-section snap-section">
+        <div class="story-section snap-section" id="storySection">
           <h3>Our Story</h3>
           <p>Gurbani Fashion started as a small family boutique in Faridabad with one simple idea: your outfit should feel like it was made for exactly you — because it was. What began with a needle, thread, and a lot of care has grown into something a little unusual for a neighborhood boutique: an AI Design Studio that turns your own words and photos into real design concepts, still finished by hand by our own tailors.</p>
           <p>We haven't changed why we started — helping people feel their best on the days that matter most. We've just found new ways to do it.</p>
@@ -2345,7 +2394,7 @@
         </div>
 
         <!-- SUBSCRIBE -->
-        <div class="subscribe-section snap-section">
+        <div class="subscribe-section snap-section" id="subscribeSection">
           <h3>📲 Stay in the Loop</h3>
           <p style="font-size:13px; color: var(--text-muted);">Get a WhatsApp or email nudge when we launch new collections or open new slots — no spam, unsubscribe anytime.</p>
           <div class="subscribe-form">
@@ -4605,6 +4654,34 @@
       if (el && el.offsetParent !== null) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    }
+
+    // ---------- Section jump-nav (sticky tab bar) ----------
+    function jumpToTab(id, btn) {
+      scrollToSection(id);
+      document.querySelectorAll('.section-tabs button').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    // Keep the tab bar in sync with whichever section is actually on
+    // screen as the person scrolls, not just on click.
+    function initSectionTabsObserver() {
+      const tabsBar = document.getElementById('sectionTabs');
+      if (!tabsBar) return;
+      const sectionIds = Array.from(tabsBar.querySelectorAll('button')).map(b => b.dataset.target);
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const btn = tabsBar.querySelector(`button[data-target="${entry.target.id}"]`);
+          if (!btn) return;
+          tabsBar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+      sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
     }
 
     // Clicking a header category jumps to the Rate Card section and expands
@@ -10056,6 +10133,7 @@
     }
 
     window.addEventListener('load', () => {
+      initSectionTabsObserver();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
