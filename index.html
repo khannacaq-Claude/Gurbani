@@ -4477,7 +4477,7 @@
       const destinationFeatureNames = { design: 'AI Design Studio', shopSuits: 'Marketplace', appointments: 'Appointments', rateCard: 'Rate Card' };
       const featureName = destinationFeatureNames[banner.destination] || 'AI Design Studio';
 
-      section.innerHTML = `<img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="promptSignIn('${featureName}')" style="width:100%; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">`;
+      section.innerHTML = `<img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="promptSignIn('${featureName}')" style="width:100%; max-height:min(56vh, 460px); object-fit:cover; border-radius:14px; display:block; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">`;
       section.style.display = 'block';
 
       if (bannerRotationPool.length > 1) {
