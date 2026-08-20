@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="snap-scroll">
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8EX47W6H8"></script>
@@ -83,6 +83,13 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; }
+    /* Section-by-section scroll on the landing page only (removed once
+       signed in / dashboard is showing — see toggles in JS). Using
+       "proximity" rather than "mandatory" so normal scrolling through
+       sections taller than one screen (FAQ, Rate Card) still works
+       smoothly instead of trapping the scroll mid-section. */
+    html.snap-scroll { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+    html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); }
 
     header {
@@ -287,6 +294,69 @@
       .fn-signin { padding: 13px 15px; }
     }
 
+    /* ---------- FAQ Chatbot ---------- */
+    .chatbot-fab {
+      position: fixed; bottom: 22px; left: 20px; z-index: 500;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--vivid); color: #fff; border: none;
+      font-size: 24px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 22px -6px rgba(207,1,132,0.55);
+      transition: all 0.2s ease;
+    }
+    .chatbot-fab:hover { background: var(--vivid-deep); transform: translateY(-2px); }
+    .chatbot-panel {
+      position: fixed; bottom: 90px; left: 20px; z-index: 600;
+      width: 350px; max-width: calc(100vw - 32px);
+      max-height: min(560px, 70vh);
+      background: #fff; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 16px 46px rgba(20,10,20,0.32);
+      display: none; flex-direction: column;
+      border: 1px solid #eee;
+    }
+    .chatbot-panel.open { display: flex; }
+    .chatbot-header {
+      background: var(--ink); color: #fff; padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between; flex: none;
+    }
+    .chatbot-header h4 { margin: 0; font-size: 14.5px; font-family: var(--font-body); }
+    .chatbot-close { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1; padding: 0; }
+    .chatbot-body {
+      flex: 1; overflow-y: auto; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      background: var(--sand, #FDF8F0);
+    }
+    .chatbot-bubble-bot {
+      background: #fff; border: 1px solid #eee; border-radius: 12px;
+      padding: 10px 14px; font-size: 12.5px; line-height: 1.5;
+      align-self: flex-start; max-width: 88%; color: var(--ink);
+    }
+    .chatbot-bubble-user {
+      background: var(--vivid); color: #fff; border-radius: 12px;
+      padding: 10px 14px; font-size: 12.5px; line-height: 1.4;
+      align-self: flex-end; max-width: 88%; font-weight: 600;
+    }
+    .chatbot-chip {
+      background: #fff; border: 1px solid #e0d8d0; border-radius: 20px;
+      padding: 9px 14px; font-size: 12px; text-align: left; cursor: pointer;
+      color: var(--ink); font-family: var(--font-body); transition: all 0.15s ease;
+    }
+    .chatbot-chip:hover { background: var(--sand, #f5ede3); border-color: var(--vivid); }
+    .chatbot-footer {
+      flex: none; padding: 10px 14px; border-top: 1px solid #eee;
+      display: flex; gap: 8px; background: #fff;
+    }
+    .chatbot-footer a {
+      flex: 1; text-align: center; font-size: 11.5px; font-weight: 700;
+      padding: 9px 8px; border-radius: 20px; text-decoration: none;
+    }
+    .chatbot-footer .cb-call { background: var(--sand, #f5ede3); color: var(--ink); }
+    .chatbot-footer .cb-wa { background: #25D366; color: #fff; }
+    @media (max-width: 500px) {
+      .chatbot-fab { bottom: 16px; left: 14px; width: 50px; height: 50px; font-size: 20px; }
+      .chatbot-panel { bottom: 78px; left: 14px; right: 14px; width: auto; }
+    }
+
     .header-right {
       flex: none;
       margin-left: auto;
@@ -420,20 +490,21 @@
     .trust-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       background: var(--ink);
       color: var(--marigold);
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 8px 18px;
-      border-radius: 30px;
-      margin-bottom: 20px;
+      letter-spacing: 0.6px;
+      padding: 13px 26px;
+      border-radius: 34px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 18px rgba(20, 26, 41, 0.28);
     }
     .trust-badge .live-dot {
-      width: 7px;
-      height: 7px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: #5FD98A;
       position: relative;
@@ -982,7 +1053,7 @@
     }
     .version-badge {
       display: inline-block;
-      margin: -10px 0 20px 10px;
+      margin-top: 6px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.3px;
@@ -1747,6 +1818,7 @@
 
       .hero-eyebrow { font-size: 14px; }
       .hero-headline { font-size: 26px; margin-bottom: 12px; }
+      .trust-badge { font-size: 13px; padding: 10px 18px; gap: 8px; }
 
       h2 { font-size: 21px; }
 
@@ -1779,6 +1851,23 @@
     <button type="button" class="fn-signin" id="fnSigninBtn" onclick="handleFloatingNudgeClick()">✨ <span class="fn-label">Sign In &amp; Start Designing</span></button>
     <button type="button" class="fn-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Back to top" aria-label="Back to top">↑</button>
   </div>
+
+  <!-- FAQ CHATBOT — simple fixed-answer bot, not a freeform AI. Answers are
+       pulled live from the #faqList accordion in the FAQ section below, so
+       there's exactly one place to update FAQ content and both stay in sync. -->
+  <button type="button" class="chatbot-fab" id="chatbotFab" onclick="toggleChatbot()" title="Questions? Chat with us" aria-label="Open help chat">💬</button>
+  <div class="chatbot-panel" id="chatbotPanel">
+    <div class="chatbot-header">
+      <h4>💬 Ask Gurbani Fashion</h4>
+      <button type="button" class="chatbot-close" onclick="toggleChatbot()" aria-label="Close chat">×</button>
+    </div>
+    <div class="chatbot-body" id="chatbotBody"></div>
+    <div class="chatbot-footer">
+      <a href="tel:+919899810977" class="cb-call">📞 Call Sonia</a>
+      <a href="https://wa.me/919899810977" target="_blank" rel="noopener" class="cb-wa">💬 WhatsApp</a>
+    </div>
+  </div>
+
   <div id="toastContainer" role="status" aria-live="polite"></div>
   <div id="confirmOverlay">
     <div class="confirm-box">
@@ -1803,7 +1892,7 @@
       <p style="font-size:11px; color:var(--text-muted); margin-bottom:14px;">We'll only ever contact you about your order on this number — please make sure it's correct.</p>
       <div style="display:flex; gap:10px; justify-content:center;">
         <button type="button" onclick="submitWalkinLink()" class="btn-submit" style="width:auto; padding:10px 22px;">Link My Visit</button>
-        <button type="button" onclick="skipWalkinLink()" style="background:white; border:1px solid #ccc; border-radius:6px; padding:10px 22px; cursor:pointer;">This is my first time</button>
+        <button type="button" onclick="skipWalkinLink()" id="walkinLinkSkipBtn" style="background:white; color:#333; border:1px solid #ccc; border-radius:6px; padding:10px 22px; cursor:pointer;">This is my first time</button>
       </div>
     </div>
   </div>
@@ -1931,7 +2020,6 @@
     <div class="landing-page" id="landingPage">
       <div class="card">
         <div class="trust-badge"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
-        <span class="version-badge" id="versionBadge"></span>
 
         <!-- FESTIVAL BANNER — admin-editable seasonal awareness banner, off
              by default until Sonia turns it on from the admin Coupons tab.
@@ -1950,13 +2038,13 @@
         <p>Sign in to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
 
         <!-- STATS — self-gated, only shows once numbers are meaningful -->
-        <div class="stats-section" id="statsSection">
+        <div class="stats-section snap-section" id="statsSection">
           <h3 style="text-align:center;">📊 By the Numbers</h3>
           <div class="stats-row" id="statsRow"></div>
         </div>
 
         <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
-        <div class="lens-section" id="lensSection">
+        <div class="lens-section snap-section" id="lensSection">
           <h3 style="text-align:center;">✨ Explore the Studio</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:20px;">Tap any panel to see how it works</p>
           <div class="lens-row" id="lensRow">
@@ -2048,7 +2136,7 @@
         </div>
 
         <!-- SHOP BY OCCASION -->
-        <div class="occasion-section" id="occasionSection">
+        <div class="occasion-section snap-section" id="occasionSection">
           <h3 style="text-align:center;">What's the Occasion?</h3>
           <p style="text-align:center; font-size:12px; color: var(--text-muted); margin-bottom:4px;">Tap a category, then pick your exact occasion</p>
           <div class="occ-panel-row" id="occPanelRow">
@@ -2108,7 +2196,7 @@
         </div>
 
         <!-- THE PROCESS -->
-        <div class="process-section" id="processSection">
+        <div class="process-section snap-section" id="processSection">
           <h3 style="text-align:center;">✂️ How It Works</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">From first idea to final fitting</p>
           <div class="process-steps">
@@ -2138,17 +2226,20 @@
           </div>
         </div>
 
-        <div class="rc-section" id="rcSection">
+        <div class="rc-section snap-section" id="rcSection">
           <h3 id="landingRateCardHeading" style="text-align:center;">💰 Rate Card</h3>
           <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">Tap a category to see every item — sign in for exact quotes.</p>
           <div class="rc-panel-row" id="rcPanelRow"></div>
         </div>
 
         <!-- INSTAGRAM GALLERY -->
-        <div id="instagramSection" style="margin-top: 48px; text-align:center;">
+        <div id="instagramSection" class="snap-section" style="margin-top: 48px; text-align:center;">
           <h3>📷 Latest From Instagram<span class="insta-live-badge"><span class="live-dot"></span>LIVE</span></h3>
-          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 16px;">
+          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 6px;">
             Follow <a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--vivid); font-weight:600;">@gurbanifashion</a> for our newest stitches & fabric drops
+          </p>
+          <p style="font-size:11.5px; color: var(--text-muted); margin-bottom: 16px; font-style: italic;">
+            💛 Every photo below is a real Gurbani Fashion customer in a real stitched outfit — not a model or stock photo.
           </p>
           <div class="insta-frame" id="instaFrame">
             <div class="insta-frame-inner">
@@ -2160,7 +2251,7 @@
         </div>
 
         <!-- DESIGN GALLERY — coming soon, waiting on inventory photo shoot -->
-        <div class="coming-soon-section">
+        <div class="coming-soon-section snap-section">
           <h3>🖼️ Designs Gallery</h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">Real designs from real orders — coming as soon as our new collection is photographed.</p>
           <div class="coming-soon-grid">
@@ -2171,7 +2262,7 @@
         </div>
 
         <!-- TESTIMONIALS — coming soon, waiting on real customer reviews -->
-        <div class="coming-soon-section">
+        <div class="coming-soon-section snap-section">
           <h3>💬 What Customers Say</h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">We're just getting started collecting reviews — check back soon.</p>
           <div class="coming-soon-grid cs-alt">
@@ -2182,7 +2273,7 @@
         </div>
 
         <!-- OUR STORY -->
-        <div class="story-section">
+        <div class="story-section snap-section">
           <h3>Our Story</h3>
           <p>Gurbani Fashion started as a small family boutique in Faridabad with one simple idea: your outfit should feel like it was made for exactly you — because it was. What began with a needle, thread, and a lot of care has grown into something a little unusual for a neighborhood boutique: an AI Design Studio that turns your own words and photos into real design concepts, still finished by hand by our own tailors.</p>
           <p>We haven't changed why we started — helping people feel their best on the days that matter most. We've just found new ways to do it.</p>
@@ -2190,7 +2281,7 @@
         </div>
 
         <!-- VISIT US -->
-        <div class="visit-section" id="visitSection">
+        <div class="visit-section snap-section" id="visitSection">
           <h3 style="text-align:center;">📍 Visit Our Boutique</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">Come see fabrics in person, get measured, or just say hello</p>
           <div class="visit-grid">
@@ -2213,7 +2304,7 @@
         </div>
 
         <!-- FAQ -->
-        <div class="faq-section" id="faqSection">
+        <div class="faq-section snap-section" id="faqSection">
           <h3 style="text-align:center;">❓ Frequently Asked Questions</h3>
           <div id="faqList">
             <div class="faq-item">
@@ -2256,7 +2347,7 @@
         </div>
 
         <!-- SUBSCRIBE -->
-        <div class="subscribe-section">
+        <div class="subscribe-section snap-section">
           <h3>📲 Stay in the Loop</h3>
           <p style="font-size:13px; color: var(--text-muted);">Get a WhatsApp or email nudge when we launch new collections or open new slots — no spam, unsubscribe anytime.</p>
           <div class="subscribe-form">
@@ -4804,6 +4895,87 @@
       if (!wasOpen) item.classList.add('open');
     }
 
+    // ---------- FAQ Chatbot ----------
+    // Fixed-answer bot, not a freeform AI — reads its Q&A straight out of
+    // the #faqList accordion so there's one source of truth for FAQ content.
+    let chatbotOpened = false;
+
+    function getChatbotFaqData() {
+      return Array.from(document.querySelectorAll('#faqList .faq-item')).map(item => {
+        const qBtn = item.querySelector('.faq-question');
+        // first text node holds the question; the chevron is a child span, skip it
+        const q = qBtn.childNodes[0].textContent.trim();
+        const a = item.querySelector('.faq-answer').innerHTML;
+        return { q, a };
+      });
+    }
+
+    function toggleChatbot() {
+      const panel = document.getElementById('chatbotPanel');
+      const opening = !panel.classList.contains('open');
+      panel.classList.toggle('open');
+      if (opening && !chatbotOpened) {
+        chatbotOpened = true;
+        renderChatbotGreeting();
+      }
+    }
+
+    function renderChatbotGreeting() {
+      const body = document.getElementById('chatbotBody');
+      body.innerHTML = '';
+      appendChatBubble('bot', "Hi! 👋 I can answer common questions instantly — pick one below, or scroll to the full FAQ section for more.");
+      renderChatbotMenu();
+    }
+
+    function renderChatbotMenu() {
+      const body = document.getElementById('chatbotBody');
+      const menuWrap = document.createElement('div');
+      menuWrap.style.cssText = 'display:flex; flex-direction:column; gap:8px;';
+      menuWrap.id = 'chatbotMenu';
+      const faqData = getChatbotFaqData();
+      faqData.forEach((item, idx) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chatbot-chip';
+        chip.textContent = item.q;
+        chip.onclick = () => answerChatbotQuestion(idx);
+        menuWrap.appendChild(chip);
+      });
+      body.appendChild(menuWrap);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function appendChatBubble(who, html) {
+      const body = document.getElementById('chatbotBody');
+      const bubble = document.createElement('div');
+      bubble.className = who === 'bot' ? 'chatbot-bubble-bot' : 'chatbot-bubble-user';
+      bubble.innerHTML = html;
+      body.appendChild(bubble);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function answerChatbotQuestion(idx) {
+      const faqData = getChatbotFaqData();
+      const item = faqData[idx];
+      if (!item) return;
+      // remove the current menu so the same chip list doesn't pile up
+      const oldMenu = document.getElementById('chatbotMenu');
+      if (oldMenu) oldMenu.remove();
+
+      appendChatBubble('user', item.q);
+      appendChatBubble('bot', item.a);
+
+      const body = document.getElementById('chatbotBody');
+      const backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'chatbot-chip';
+      backBtn.style.alignSelf = 'flex-start';
+      backBtn.textContent = '← Ask another question';
+      backBtn.onclick = () => { backBtn.remove(); renderChatbotMenu(); };
+      body.appendChild(backBtn);
+      body.scrollTop = body.scrollHeight;
+    }
+
     async function submitSubscribe() {
       const val = document.getElementById('subscribeContact').value.trim();
       if (!val) { showToast('Enter a WhatsApp number or email first.'); return; }
@@ -5757,6 +5929,10 @@
         showToast('Something went wrong — please generate the design again before requesting a quote.');
         return;
       }
+      maybeOfferWalkinLink(() => sendQuoteConfirmed(conceptIndex));
+    }
+
+    async function sendQuoteConfirmed(conceptIndex) {
       try {
         const response = await fetch(`${API}/api/designs/${currentDesignId}/quote`, {
           method: 'POST',
@@ -5842,7 +6018,7 @@
         localStorage.setItem('authToken', authToken);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         updateUI();
-        if (data.isNewAccount) offerWalkinAccountLink();
+        if (data.isNewAccount) offerWalkinAccountLink('signup');
         if (data.user.role !== 'admin') {
           setTimeout(() => switchTab(null, 'design'), 500);
         }
@@ -5932,7 +6108,7 @@
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
           setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
           updateUI();
-          if (data.isNewAccount) offerWalkinAccountLink();
+          if (data.isNewAccount) offerWalkinAccountLink('signup');
           if (data.user.role !== 'admin') {
             setTimeout(() => switchTab(null, 'design'), 500);
           }
@@ -5944,14 +6120,39 @@
     }
 
     // ---------- Walk-in account linking ----------
-    function offerWalkinAccountLink() {
+    // Offered once right after signup, AND re-offered every time the
+    // customer tries to actually place an order, for as long as no phone
+    // is linked to the account yet. Skipping is always allowed — this
+    // never blocks a purchase, it just keeps asking since linking it
+    // matters more once there's a real order to attach it to.
+    let pendingWalkinLinkCallback = null;
+
+    function offerWalkinAccountLink(context, proceedCallback) {
+      // Already linked - nothing to ask, just proceed straight through.
+      if (currentUser && currentUser.phone) {
+        if (proceedCallback) proceedCallback();
+        return;
+      }
       document.getElementById('walkinLinkPhone').value = '';
       document.getElementById('walkinLinkPhoneConfirm').value = '';
+      const skipBtn = document.getElementById('walkinLinkSkipBtn');
+      skipBtn.textContent = context === 'checkout' ? 'Skip for now' : 'This is my first time';
+      pendingWalkinLinkCallback = proceedCallback || null;
       document.getElementById('walkinLinkOverlay').style.display = 'flex';
+    }
+
+    // Gate to call before any "place order" action. Shows the prompt if
+    // needed and only calls through to the real action once the person
+    // has either linked a number or explicitly skipped.
+    function maybeOfferWalkinLink(proceedCallback) {
+      offerWalkinAccountLink('checkout', proceedCallback);
     }
 
     function skipWalkinLink() {
       document.getElementById('walkinLinkOverlay').style.display = 'none';
+      const cb = pendingWalkinLinkCallback;
+      pendingWalkinLinkCallback = null;
+      if (cb) cb();
     }
 
     // Shared double-entry phone check. If allowEmptyConfirm is true and the
@@ -5990,6 +6191,9 @@
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
           showToast(data.merged ? data.message : '✅ Phone number saved — no past visit found under that number.');
           document.getElementById('walkinLinkOverlay').style.display = 'none';
+          const cb = pendingWalkinLinkCallback;
+          pendingWalkinLinkCallback = null;
+          if (cb) cb();
         } else {
           showToast('❌ ' + (data.error || 'Could not link that number'));
         }
@@ -6027,8 +6231,9 @@
     // for whichever view is actually on screen right now.
     function updateGoHomeLink() {
       const link = document.getElementById('goHomeLink');
-      if (!link) return;
       const onLandingPage = !document.getElementById('landingPage').classList.contains('hidden');
+      document.documentElement.classList.toggle('snap-scroll', onLandingPage);
+      if (!link) return;
       if (onLandingPage) {
         link.textContent = '📊 Back to Dashboard';
         link.onclick = goToDashboard;
@@ -6428,6 +6633,10 @@
     }
 
     async function checkoutShopSuits() {
+      maybeOfferWalkinLink(() => checkoutShopSuitsConfirmed());
+    }
+
+    async function checkoutShopSuitsConfirmed() {
       const items = Object.entries(shopSuitsCart);
       const list = document.getElementById('shopSuitsList');
       list.innerHTML = 'Placing your order(s)...';
@@ -9747,6 +9956,7 @@
       if (authToken && currentUser && currentUser._id) {
         landingPage.classList.add('hidden');
         dashboard.classList.add('show');
+        document.documentElement.classList.remove('snap-scroll');
         loadTabIcons();
         userWelcome.classList.add('show');
         document.body.classList.add('signed-in');
@@ -9834,6 +10044,7 @@
       } else {
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
+        document.documentElement.classList.add('snap-scroll');
         userWelcome.classList.remove('show');
         document.body.classList.remove('signed-in');
         signOutBtn.style.display = 'none';
@@ -10012,6 +10223,8 @@
       <a href="/refund-cancellation-policy.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Refund & Cancellation Policy</a>
       <br style="margin-bottom:6px;">
       Gurbani Fashion Boutique &nbsp;·&nbsp; 9899810977
+      <br style="margin-bottom:6px;">
+      <span class="version-badge" id="versionBadge"></span>
     </footer>
 
     <!-- PRIVACY NOTICE MODAL -->
