@@ -104,10 +104,16 @@
       overflow-x: auto;
       white-space: nowrap;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      /* Visible on purpose — if tabs overflow (narrow window, browser
+         zoom), there needs to be an obvious way to reach the hidden
+         ones, especially for desktop/mouse users who can't swipe. */
+      scrollbar-width: thin;
+      scrollbar-color: var(--marigold) rgba(255,255,255,0.08);
       box-shadow: 0 4px 14px rgba(0,0,0,0.18);
     }
-    .section-tabs::-webkit-scrollbar { display: none; }
+    .section-tabs::-webkit-scrollbar { height: 6px; }
+    .section-tabs::-webkit-scrollbar-track { background: rgba(255,255,255,0.08); }
+    .section-tabs::-webkit-scrollbar-thumb { background: var(--marigold); border-radius: 3px; }
     .section-tabs button {
       flex: none;
       background: none;
@@ -2075,7 +2081,7 @@
         <!-- FESTIVAL BANNER — admin-editable seasonal awareness banner, off
              by default until Sonia turns it on from the admin Coupons tab.
              Not coupon-backed since it's an announcement, not a discount. -->
-        <div id="festivalBannerSection" style="display:none; margin-bottom:16px;"></div>
+        <div id="festivalBannerSection" style="display:none; margin-bottom:16px; text-align:center;"></div>
 
         <!-- PROMO BANNER — self-gated, only shows if a public coupon is active -->
         <div id="promoBannerSection" style="display:none; margin-bottom:16px;"></div>
@@ -4495,7 +4501,7 @@
         : '';
 
       section.innerHTML = `
-        <div style="position:relative;">
+        <div style="position:relative; display:inline-block; max-width:100%; margin:0 auto; text-align:center;">
           <img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="promptSignIn('${featureName}')" style="max-width:100%; max-height:min(56vh, 460px); width:auto; height:auto; display:block; margin:0 auto; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
           ${multi ? `<button type="button" onclick="event.stopPropagation(); prevBannerSlide()" aria-label="Previous ad" style="${arrowBtnStyle} left:10px;" onmouseover="this.style.background='rgba(20,10,20,0.6)'; this.style.opacity='1'; this.style.color='#fff'" onmouseout="this.style.background='rgba(20,10,20,0.16)'; this.style.opacity='0.55'; this.style.color='rgba(255,255,255,0.75)'">‹</button>` : ''}
           ${multi ? `<button type="button" onclick="event.stopPropagation(); nextBannerSlide()" aria-label="Next ad" style="${arrowBtnStyle} right:10px;" onmouseover="this.style.background='rgba(20,10,20,0.6)'; this.style.opacity='1'; this.style.color='#fff'" onmouseout="this.style.background='rgba(20,10,20,0.16)'; this.style.opacity='0.55'; this.style.color='rgba(255,255,255,0.75)'">›</button>` : ''}
