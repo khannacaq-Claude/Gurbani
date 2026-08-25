@@ -8293,12 +8293,15 @@
         const data = await res.json();
         const appts = data.appointments || [];
         if (appts.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No appointments booked yet.</p>'; return; }
-        list.innerHTML = appts.map(a => `
-          <div class="card" style="padding:14px;">
+        list.innerHTML = appts.map(a => {
+          const active = a.status === 'pending' || a.status === 'confirmed';
+          const expired = active && isAppointmentPast(a);
+          return `
+          <div class="card" style="padding:14px; ${expired ? 'opacity:0.6;' : ''}">
             <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
               <div>
                 <strong>${escapeHtml(a.customerId?.name || 'Customer')}</strong> — ${typeLabels[a.appointmentType] || escapeHtml(a.appointmentType || '')}
-                <div style="font-size:12px; color:var(--text-muted);">${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''} · ${escapeHtml(a.customerId?.phone || '')}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''} · ${escapeHtml(a.customerId?.phone || '')} ${expired ? '<strong style="color:#c62828;">· Past</strong>' : ''}</div>
                 ${a.notes ? `<div style="font-size:12px; color:#666; margin-top:4px;">${escapeHtml(a.notes)}</div>` : ''}
               </div>
               <select class="status-select" onchange="updateAppointmentStatusAdmin('${a._id}', this.value)">
@@ -8306,7 +8309,8 @@
               </select>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
@@ -9710,6 +9714,23 @@
       }
     }
 
+    function isAppointmentPast(a) {
+      if (!a.appointmentDate) return false;
+      // combine date + time so "today, but this morning's slot" still counts as past
+      const dt = new Date(a.appointmentDate);
+      if (a.appointmentTime) {
+        const m = a.appointmentTime.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+        if (m) {
+          let h = parseInt(m[1], 10);
+          const min = parseInt(m[2], 10);
+          if (m[3] && m[3].toUpperCase() === 'PM' && h < 12) h += 12;
+          if (m[3] && m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+          dt.setHours(h, min, 0, 0);
+        }
+      }
+      return dt.getTime() < Date.now();
+    }
+
     async function loadMyAppointments() {
       const list = document.getElementById('myAppointmentsList');
       if (!list) return;
@@ -9720,19 +9741,24 @@
         const data = await res.json();
         const appts = data.appointments || [];
         if (appts.length === 0) { list.innerHTML = '<p style="color:var(--text-muted);">No appointments booked yet.</p>'; return; }
-        list.innerHTML = appts.map(a => `
-          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        list.innerHTML = appts.map(a => {
+          const active = a.status === 'pending' || a.status === 'confirmed';
+          const expired = active && isAppointmentPast(a);
+          const statusLabel = expired ? 'Expired' : a.status;
+          return `
+          <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; ${expired ? 'opacity:0.65;' : ''}">
             <div>
               <strong>${typeLabels[a.appointmentType] || a.appointmentType}</strong> — ${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''}
-              <div style="font-size:12px; color:var(--text-muted);">Status: ${a.status}</div>
+              <div style="font-size:12px; color:var(--text-muted);">Status: ${statusLabel}</div>
             </div>
-            ${a.status === 'pending' || a.status === 'confirmed' ? `
+            ${active && !expired ? `
               <div style="display:flex; gap:6px;">
                 <button type="button" class="admin-filter-btn" onclick="openRescheduleModal('${a._id}')">Reschedule</button>
                 <button type="button" class="admin-filter-btn" style="color:#c62828;" onclick="cancelMyAppointment('${a._id}')">Cancel</button>
               </div>` : ''}
           </div>
-        `).join('');
+        `;
+        }).join('');
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
