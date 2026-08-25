@@ -1422,9 +1422,47 @@
        gap in the header on mobile when signinArea's Google button
        reappeared without being re-hidden. */
     body.signed-in #signinArea,
-    body.signed-in #emailAuthToggle {
+    body.signed-in #emailAuthToggle,
+    body.signed-in #signinTrigger {
       display: none !important;
       min-height: 0 !important;
+    }
+
+    .signin-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 4px;
+      justify-content: flex-end;
+    }
+    .signin-trigger:hover { color: var(--marigold); }
+    .signin-trigger-icon { font-size: 14px; }
+
+    .auth-modal-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .auth-modal-divider::before,
+    .auth-modal-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5e5e5;
+    }
+    .auth-modal-google {
+      display: flex;
+      justify-content: center;
+      min-height: 40px;
     }
 
     .budget-info {
@@ -2105,10 +2143,10 @@
       </div>
       <div class="header-right">
         <div class="user-welcome" id="userWelcome" onclick="openAccountFromHeader()" style="cursor:pointer;" title="View your account"></div>
-        <div id="signinArea"></div>
-        <div id="emailAuthToggle" style="text-align:right; margin-top:2px;">
-          <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--marigold);">Or sign in with email</a>
+        <div id="signinTrigger" class="signin-trigger" onclick="toggleEmailAuthPanel(event)">
+          <span class="signin-trigger-icon">👤</span> Sign In
         </div>
+        <div id="emailAuthToggle" style="display:none;"></div>
         <div id="emailAuthPanel" class="auth-modal-overlay" onclick="if(event.target===this) toggleEmailAuthPanel(event)">
           <div class="auth-modal-box">
             <button type="button" class="auth-modal-close" onclick="toggleEmailAuthPanel(event)">✕</button>
@@ -2128,6 +2166,8 @@
               <input type="password" id="emailAuthPassword" placeholder="Password">
             </div>
             <button type="button" class="btn-submit" onclick="submitEmailAuth()">Sign In</button>
+            <div class="auth-modal-divider"><span>or continue with</span></div>
+            <div id="signinArea" class="auth-modal-google"></div>
             <p class="auth-switch" id="emailAuthSwitchLine">Don't have an account? <a href="#" onclick="switchEmailAuthMode('signup'); return false;">Sign up</a></p>
           </div>
         </div>
@@ -10319,6 +10359,7 @@
         signinArea.innerHTML = '';
         signinArea.style.display = 'none'; // was still reserving its 40px min-height once empty
         document.getElementById('emailAuthToggle').style.display = 'none'; // "sign in with email" makes no sense once already signed in
+        document.getElementById('signinTrigger').style.display = 'none';
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
@@ -10394,6 +10435,7 @@
           signinArea.innerHTML = '';
           google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
         }
+        document.getElementById('signinTrigger').style.display = 'inline-flex';
       }
       if (typeof updateFloatingNudge === 'function') updateFloatingNudge();
     }
@@ -10422,19 +10464,22 @@
       }
 
       if (typeof google === 'undefined') {
-        setStatus('designStatus', '❌ Google SDK not loaded', 'error');
-        return;
+        // Don't let a failed/blocked Google script (ad-blocker, privacy
+        // extension, flaky network, Google outage) take down the entire
+        // header. Everything else — email sign-in, an already-logged-in
+        // user's name/sign-out — must still work regardless.
+        setStatus('designStatus', '❌ Google Sign-In unavailable right now — email sign-in still works below.', 'error');
+      } else {
+        google.accounts.id.initialize({
+          client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
+          callback: handleResponse,
+        });
+        googleInitialized = true;
       }
-      
-      google.accounts.id.initialize({
-        client_id: '302473342549-fnklqart0ehlu7oi1dtns94aquvvsj4c.apps.googleusercontent.com',
-        callback: handleResponse,
-      });
-      
-      googleInitialized = true;
+
       document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
       updateUI();
-      
+
       if (!authToken) {
         setStatus('designStatus', '✅ Ready to sign in', 'success');
       }
