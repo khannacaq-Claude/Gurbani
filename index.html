@@ -6340,20 +6340,20 @@
     }
 
     async function submitEmailAuth() {
-      const name = document.getElementById('emailAuthName').value.trim();
-      const email = document.getElementById('emailAuthEmail').value.trim();
-      const password = document.getElementById('emailAuthPassword').value;
-      if (!email || !password) {
-        showToast('❌ Email and password are required');
-        return;
-      }
-      if (emailAuthMode === 'signup' && !name) {
-        showToast('❌ Name is required to sign up');
-        return;
-      }
-      const endpoint = emailAuthMode === 'signup' ? '/api/auth/signup' : '/api/auth/signin';
-      const body = emailAuthMode === 'signup' ? { name, email, password } : { email, password };
       try {
+        const name = document.getElementById('emailAuthName').value.trim();
+        const email = document.getElementById('emailAuthEmail').value.trim();
+        const password = document.getElementById('emailAuthPassword').value;
+        if (!email || !password) {
+          showToast('❌ Email and password are required');
+          return;
+        }
+        if (emailAuthMode === 'signup' && !name) {
+          showToast('❌ Name is required to sign up');
+          return;
+        }
+        const endpoint = emailAuthMode === 'signup' ? '/api/auth/signup' : '/api/auth/signin';
+        const body = emailAuthMode === 'signup' ? { name, email, password } : { email, password };
         const res = await fetch(`${API}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -6376,7 +6376,12 @@
           setTimeout(() => switchTab(null, 'design'), 500);
         }
       } catch (err) {
-        showToast(`❌ ${err.message}`);
+        // Whatever the actual cause — a missing element, a network hiccup,
+        // anything unforeseen — this guarantees the person always sees
+        // *something* rather than a silent dead click, and the message
+        // itself becomes the next debugging clue if this fires again.
+        console.error('submitEmailAuth failed:', err);
+        showToast(`❌ Something went wrong: ${err.message}`);
       }
     }
 
