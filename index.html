@@ -1981,6 +1981,20 @@
       .header-products, .header-mini { justify-content: center; }
       .header-right { align-items: center; text-align: center; margin-left: 0; }
 
+      /* Signed-in mobile header: match the compact icon-only pattern
+         (avatar tap-target instead of a full name/email/actions dump
+         that used to push the entire dashboard below the fold). The
+         old standalone Sign Out / Back to Home / Instagram links are
+         hidden here too — all three now live inside the Account panel
+         itself, so there's nothing lost, just nothing duplicated. */
+      body.signed-in .user-welcome { display: flex; justify-content: center; }
+      body.signed-in .user-welcome-textcol { display: none; }
+      body.signed-in #signOutBtn,
+      body.signed-in .header-follow,
+      body.signed-in #goHomeLink {
+        display: none !important;
+      }
+
       /* LightWidget's Instagram embed reflows to a taller layout on narrow
          screens than desktop needs — the fixed 420px min-height combined
          with overflow:hidden was silently clipping the bottom row of
@@ -2865,6 +2879,10 @@
               <span>Appointments</span><span class="account-row-chevron">›</span>
             </a>
           </div>
+
+          <a href="#" class="account-row" onclick="event.preventDefault(); closeAccountPanel(); handleGoHomeLinkClick();">
+            <span>🏠 Back to Home Page</span><span class="account-row-chevron">›</span>
+          </a>
 
           <div id="personalDetailsSection" style="margin-top: 34px; padding-top: 24px; border-top: 1px solid #eee;">
             <h3>📏 Personal Details &amp; Measurements</h3>
@@ -10341,6 +10359,7 @@
         avatarCircle.style.cssText = 'flex:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.18); border:2px solid var(--marigold); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; font-family:var(--font-display);';
         avatarCircle.textContent = initials;
         const textCol = document.createElement('div');
+        textCol.className = 'user-welcome-textcol';
         const nameLine = document.createElement('div');
         nameLine.textContent = `👋 ${currentUser.name}`;
         textCol.appendChild(nameLine);
