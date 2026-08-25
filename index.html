@@ -6295,9 +6295,26 @@
 
     let emailAuthMode = 'signin';
 
+    function renderGoogleSigninButton() {
+      const signinArea = document.getElementById('signinArea');
+      if (!signinArea || !googleInitialized || typeof google === 'undefined') return;
+      signinArea.innerHTML = '';
+      try {
+        google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
+      } catch (err) {
+        console.error('Google renderButton failed:', err);
+      }
+    }
+
     function toggleEmailAuthPanel(event) {
       if (event) event.preventDefault();
-      document.getElementById('emailAuthPanel').classList.toggle('open');
+      const panel = document.getElementById('emailAuthPanel');
+      const opening = !panel.classList.contains('open');
+      panel.classList.toggle('open');
+      // Google's button render is unreliable into a display:none container
+      // (zero size at that moment), so re-render fresh every time the
+      // modal actually opens, when signinArea genuinely has visible space.
+      if (opening) renderGoogleSigninButton();
     }
 
     function switchEmailAuthMode(mode) {
@@ -10452,20 +10469,7 @@
         document.body.classList.remove('signed-in');
         signOutBtn.style.display = 'none';
         document.getElementById('goHomeLink').style.display = 'none';
-        if (googleInitialized && typeof google !== 'undefined') {
-          signinArea.innerHTML = '';
-          try {
-            google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
-          } catch (err) {
-            // The modal (and signinArea inside it) can be display:none at
-            // this point, and Google's SDK sometimes throws when rendering
-            // into a hidden/zero-size container. Swallow it — it re-renders
-            // fine once the modal actually opens — so a failure here can
-            // never take the rest of this function down with it (that was
-            // the actual cause of the Sign In trigger vanishing).
-            console.error('Google renderButton failed (likely hidden container):', err);
-          }
-        }
+        renderGoogleSigninButton();
         document.getElementById('signinTrigger').style.display = 'inline-flex';
       }
       if (typeof updateFloatingNudge === 'function') updateFloatingNudge();
