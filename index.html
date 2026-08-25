@@ -1442,6 +1442,15 @@
     .signin-trigger:hover { color: var(--marigold); }
     .signin-trigger-icon { font-size: 14px; }
 
+    .account-tap-hint {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: var(--marigold);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
     .auth-modal-divider {
       display: flex;
       align-items: center;
@@ -10375,6 +10384,13 @@
         const avatarCircle = document.createElement('div');
         avatarCircle.style.cssText = 'flex:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.18); border:2px solid var(--marigold); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; font-family:var(--font-display);';
         avatarCircle.textContent = initials;
+        const avatarWrap = document.createElement('div');
+        avatarWrap.style.cssText = 'display:flex; flex-direction:column; align-items:center; gap:3px;';
+        const hintLabel = document.createElement('div');
+        hintLabel.className = 'account-tap-hint';
+        hintLabel.textContent = 'My Account';
+        avatarWrap.appendChild(avatarCircle);
+        avatarWrap.appendChild(hintLabel);
         const textCol = document.createElement('div');
         textCol.className = 'user-welcome-textcol';
         const nameLine = document.createElement('div');
@@ -10389,7 +10405,7 @@
           textCol.appendChild(emailLine);
         }
         welcomeRow.appendChild(textCol);
-        welcomeRow.appendChild(avatarCircle);
+        welcomeRow.appendChild(avatarWrap);
         userWelcome.appendChild(welcomeRow);
         signOutBtn.style.display = 'block';
         document.getElementById('goHomeLink').style.display = 'inline-block';
