@@ -1249,6 +1249,65 @@
     .admin-filter-btn:hover { opacity: 0.85; }
 
     .tab-content { display: none; }
+
+    /* ---------- Account tab (redesigned) ---------- */
+    .account-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #eee;
+    }
+    .account-avatar {
+      flex: none;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--vivid);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid var(--marigold);
+    }
+    .account-header-info h3 { font-family: var(--font-body); }
+    .account-edit-link { font-size: 12px; color: var(--vivid); font-weight: 700; text-decoration: underline; }
+    .account-header-sub { font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0 0; }
+
+    .account-group { margin-bottom: 18px; }
+    .account-group-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+      color: var(--text-muted); text-transform: uppercase;
+      margin-bottom: 6px; padding: 0 2px;
+    }
+    .account-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 14px;
+      border-bottom: 1px dashed #eee;
+      text-decoration: none; color: var(--ink);
+      font-size: 14px; font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+    }
+    .account-row:last-child { border-bottom: none; }
+    .account-row:hover { background: var(--sand); }
+    .account-row-chevron { color: var(--text-muted); font-size: 18px; }
+    .account-row-soon { cursor: default; color: var(--text-muted); }
+    .account-row-soon:hover { background: none; }
+    .account-soon-badge {
+      font-size: 10.5px; font-weight: 700; color: var(--marigold);
+      background: var(--sand); padding: 3px 9px; border-radius: 10px;
+    }
+    .account-signout-btn {
+      width: 100%;
+      background: #fff; color: var(--vivid);
+      border: 1.5px solid var(--vivid); border-radius: 8px;
+      padding: 12px; font-size: 14px; font-weight: 700;
+      cursor: pointer; margin-top: 6px;
+    }
+    .account-signout-btn:hover { background: var(--sand); }
+
     .tab-content.active {
       display: block;
       animation: tabFadeIn 0.35s ease;
@@ -2680,20 +2739,81 @@
           <div id="designsContainer"></div>
         </div>
 
-        <!-- MY PROFILE TAB -->
+        <!-- ACCOUNT TAB (formerly "My Profile") -->
         <div id="profile" class="tab-content">
-          <h3>👤 My Profile</h3>
-          <p style="color: #666; margin-bottom: 20px;">
-            Adding measurements is completely optional — it just helps us
-            suggest better-fitted silhouettes in your AI designs. Covered by our
-            <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">Privacy Notice</a>.
-          </p>
-          <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; font-size: 12.5px; color: var(--ink);">
-            🔒 Measurements are stored securely, protected by an extra password inside our admin system — regular staff never see them there. When it's actually time to cut and stitch, Sonia shares them with our tailoring team so the piece fits right; they're never used or shared for anything else.
+          <div class="account-header">
+            <div class="account-avatar" id="accountAvatarInitials">?</div>
+            <div class="account-header-info">
+              <h3 id="accountHeaderName" style="margin:0;">Your Account</h3>
+              <a href="#" onclick="event.preventDefault(); scrollToPersonalDetails();" class="account-edit-link">Edit</a>
+              <p id="accountHeaderPhone" class="account-header-sub"></p>
+            </div>
           </div>
-          <div id="profileStatus" class="status"></div>
-          <form onsubmit="saveProfile(event)">
-            <div class="form-group">
+
+          <div class="account-group">
+            <div class="account-group-label">🔔 Notifications</div>
+            <div class="account-row account-row-soon">
+              <span>Notifications</span>
+              <span class="account-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+
+          <div class="account-group">
+            <div class="account-group-label">❤️ Wishlist</div>
+            <div class="account-row account-row-soon">
+              <span>Saved Designs</span>
+              <span class="account-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+
+          <div class="account-group">
+            <div class="account-group-label">📦 Orders</div>
+            <a href="#" class="account-row" onclick="event.preventDefault(); switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
+              <span>Order History</span><span class="account-row-chevron">›</span>
+            </a>
+            <div class="account-row account-row-soon">
+              <span>Return / Refund Tracker</span>
+              <span class="account-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+
+          <div class="account-group">
+            <div class="account-group-label">🏆 Loyalty</div>
+            <div class="account-row account-row-soon">
+              <span>Coupons</span>
+              <span class="account-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+
+          <div class="account-group">
+            <div class="account-group-label">👤 Account</div>
+            <a href="#" class="account-row" onclick="event.preventDefault(); scrollToPersonalDetails();">
+              <span>Personal Details</span><span class="account-row-chevron">›</span>
+            </a>
+            <div class="account-row account-row-soon">
+              <span>Saved Address</span>
+              <span class="account-soon-badge">Coming Soon</span>
+            </div>
+            <a href="#" class="account-row" onclick="event.preventDefault(); switchTab(null, 'appointments'); loadMyAppointments();">
+              <span>Appointments</span><span class="account-row-chevron">›</span>
+            </a>
+          </div>
+
+          <button type="button" class="account-signout-btn" onclick="handleSignOut()">🚪 Sign Out</button>
+
+          <div id="personalDetailsSection" style="margin-top: 34px; padding-top: 24px; border-top: 1px solid #eee;">
+            <h3>📏 Personal Details &amp; Measurements</h3>
+            <p style="color: #666; margin-bottom: 20px;">
+              Adding measurements is completely optional — it just helps us
+              suggest better-fitted silhouettes in your AI designs. Covered by our
+              <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">Privacy Notice</a>.
+            </p>
+            <div style="background: var(--sand); border-left: 4px solid var(--marigold); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; font-size: 12.5px; color: var(--ink);">
+              🔒 Measurements are stored securely, protected by an extra password inside our admin system — regular staff never see them there. When it's actually time to cut and stitch, Sonia shares them with our tailoring team so the piece fits right; they're never used or shared for anything else.
+            </div>
+            <div id="profileStatus" class="status"></div>
+            <form onsubmit="saveProfile(event)">
+              <div class="form-group">
               <label>📱 Phone Number</label>
               <input type="tel" id="profilePhone" placeholder="e.g. 9899810977 or +1 415 555 2671">
             </div>
@@ -2739,6 +2859,7 @@
               <button type="button" onclick="saveFamilyProfile()" class="btn-submit" style="width:auto; padding:10px 24px;">💾 Save</button>
               <button type="button" onclick="closeFamilyProfileForm()" style="background:white; border:1px solid #ccc; border-radius:6px; padding:10px 24px; cursor:pointer;">Cancel</button>
             </div>
+          </div>
           </div>
         </div>
 
@@ -9919,6 +10040,29 @@
       } catch (err) {
         console.error('Failed to load profile:', err);
       }
+      renderAccountHeader();
+    }
+
+    function renderAccountHeader() {
+      const name = (currentUser && currentUser.name) ? currentUser.name : 'Your Account';
+      const phone = currentUser && currentUser.phone;
+      const initials = name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join('') || '?';
+      const avatarEl = document.getElementById('accountAvatarInitials');
+      const nameEl = document.getElementById('accountHeaderName');
+      const phoneEl = document.getElementById('accountHeaderPhone');
+      if (avatarEl) avatarEl.textContent = initials;
+      if (nameEl) nameEl.textContent = name;
+      if (phoneEl) phoneEl.textContent = phone ? `📱 ${phone}` : 'No phone number on file yet';
+    }
+
+    function scrollToPersonalDetails() {
+      const el = document.getElementById('personalDetailsSection');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     async function saveProfile(event) {
