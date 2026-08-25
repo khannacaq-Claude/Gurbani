@@ -2070,7 +2070,7 @@
         </div>
       </div>
       <div class="header-right">
-        <div class="user-welcome" id="userWelcome"></div>
+        <div class="user-welcome" id="userWelcome" onclick="openAccountFromHeader()" style="cursor:pointer;" title="View your account"></div>
         <div id="signinArea"></div>
         <div id="emailAuthToggle" style="text-align:right; margin-top:2px;">
           <a href="#" onclick="toggleEmailAuthPanel(event)" style="font-size:12px; color:var(--marigold);">Or sign in with email</a>
@@ -2491,7 +2491,6 @@
             <div class="tab-group-row">
               <button class="tab-btn active" id="overviewTabBtn" onclick="switchTab(event, 'overview')">📊 Overview</button>
               <button class="tab-btn" id="designTabBtn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
-              <button class="tab-btn" id="profileTabBtn" onclick="switchTab(event, 'profile'); loadProfileTab();">👤 My Profile</button>
               <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
               <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
               <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
@@ -4434,7 +4433,6 @@
     const TAB_ICON_MAP = {
       overviewTabBtn: { icon: 'layout-dashboard', label: 'Overview' },
       designTabBtn: { icon: 'sparkles', label: 'AI Design' },
-      profileTabBtn: { icon: 'user', label: 'My Profile' },
       appointmentsTabBtn: { icon: 'calendar', label: 'Appointments' },
       myDesignsTabBtn: { icon: 'package', label: 'My Designs' },
       adminTabBtn: { icon: 'shield-check', label: 'Admin: Requests' },
@@ -10065,6 +10063,12 @@
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function openAccountFromHeader() {
+      if (currentUser && currentUser.role === 'admin') return; // admins use the admin tab set, not the customer Account view
+      switchTab(null, 'profile');
+      loadProfileTab();
+    }
+
     async function saveProfile(event) {
       event.preventDefault();
       const phone = document.getElementById('profilePhone').value.trim();
@@ -10226,17 +10230,28 @@
         userWelcome.classList.add('show');
         document.body.classList.add('signed-in');
         userWelcome.textContent = ''; // clear before rebuilding
+        const initials = (currentUser.name || '?')
+          .split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+        const welcomeRow = document.createElement('div');
+        welcomeRow.style.cssText = 'display:flex; align-items:center; gap:8px; justify-content:flex-end;';
+        const avatarCircle = document.createElement('div');
+        avatarCircle.style.cssText = 'flex:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.18); border:2px solid var(--marigold); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; font-family:var(--font-display);';
+        avatarCircle.textContent = initials;
+        const textCol = document.createElement('div');
         const nameLine = document.createElement('div');
         nameLine.textContent = `👋 ${currentUser.name}`;
-        userWelcome.appendChild(nameLine);
+        textCol.appendChild(nameLine);
         if (currentUser.email) {
           const emailLine = document.createElement('div');
           emailLine.style.fontSize = '11px';
           emailLine.style.opacity = '0.85';
           emailLine.style.fontWeight = 'normal';
           emailLine.textContent = currentUser.email;
-          userWelcome.appendChild(emailLine);
+          textCol.appendChild(emailLine);
         }
+        welcomeRow.appendChild(textCol);
+        welcomeRow.appendChild(avatarCircle);
+        userWelcome.appendChild(welcomeRow);
         signOutBtn.style.display = 'block';
         document.getElementById('goHomeLink').style.display = 'inline-block';
         updateGoHomeLink();
@@ -10285,7 +10300,7 @@
         // created this way get correctly attributed to the REAL customer
         // (via the on-behalf-of selector), never to Sonia's own account -
         // see createDesign in designController.js.
-        const customerOnlyTabIds = ['overviewTabBtn', 'designTabBtn', 'profileTabBtn', 'appointmentsTabBtn', 'myDesignsTabBtn'];
+        const customerOnlyTabIds = ['overviewTabBtn', 'designTabBtn', 'appointmentsTabBtn', 'myDesignsTabBtn'];
         customerOnlyTabIds.forEach(id => document.getElementById(id).style.display = 'inline-block');
         document.getElementById('onBehalfOfBlock').style.display = currentUser.role === 'admin' ? 'block' : 'none';
         if (currentUser.role === 'admin') {
