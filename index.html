@@ -6326,6 +6326,7 @@
         localStorage.setItem('authToken', authToken);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         updateUI();
+        document.getElementById('emailAuthPanel').classList.remove('open');
         if (data.isNewAccount) offerWalkinAccountLink('signup');
         if (data.user.role !== 'admin') {
           setTimeout(() => switchTab(null, 'design'), 500);
@@ -6416,6 +6417,7 @@
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
           setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
           updateUI();
+          document.getElementById('emailAuthPanel').classList.remove('open');
           if (data.isNewAccount) offerWalkinAccountLink('signup');
           if (data.user.role !== 'admin') {
             setTimeout(() => switchTab(null, 'design'), 500);
@@ -10433,7 +10435,17 @@
         document.getElementById('goHomeLink').style.display = 'none';
         if (googleInitialized && typeof google !== 'undefined') {
           signinArea.innerHTML = '';
-          google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
+          try {
+            google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
+          } catch (err) {
+            // The modal (and signinArea inside it) can be display:none at
+            // this point, and Google's SDK sometimes throws when rendering
+            // into a hidden/zero-size container. Swallow it — it re-renders
+            // fine once the modal actually opens — so a failure here can
+            // never take the rest of this function down with it (that was
+            // the actual cause of the Sign In trigger vanishing).
+            console.error('Google renderButton failed (likely hidden container):', err);
+          }
         }
         document.getElementById('signinTrigger').style.display = 'inline-flex';
       }
