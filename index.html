@@ -2758,14 +2758,6 @@
           </div>
 
           <div class="account-group">
-            <div class="account-group-label">❤️ Wishlist</div>
-            <div class="account-row account-row-soon">
-              <span>Saved Designs</span>
-              <span class="account-soon-badge">Coming Soon</span>
-            </div>
-          </div>
-
-          <div class="account-group">
             <div class="account-group-label">📦 Orders</div>
             <a href="#" class="account-row" onclick="event.preventDefault(); switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
               <span>Order History</span><span class="account-row-chevron">›</span>
@@ -8301,7 +8293,8 @@
             <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
               <div>
                 <strong>${escapeHtml(a.customerId?.name || 'Customer')}</strong> — ${typeLabels[a.appointmentType] || escapeHtml(a.appointmentType || '')}
-                <div style="font-size:12px; color:var(--text-muted);">${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''} · ${escapeHtml(a.customerId?.phone || '')} ${expired ? '<strong style="color:#c62828;">· Past</strong>' : ''}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${a.appointmentDate ? new Date(a.appointmentDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} ${a.appointmentTime || ''} · ${escapeHtml(a.customerId?.phone || '')}</div>
+                ${expired ? '<div style="font-size:12px; font-weight:700; color:#c62828; margin-top:2px;">Status: Expired</div>' : ''}
                 ${a.notes ? `<div style="font-size:12px; color:#666; margin-top:4px;">${escapeHtml(a.notes)}</div>` : ''}
               </div>
               <select class="status-select" onchange="updateAppointmentStatusAdmin('${a._id}', this.value)">
