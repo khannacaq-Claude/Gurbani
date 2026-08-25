@@ -1251,6 +1251,40 @@
     .tab-content { display: none; }
 
     /* ---------- Account tab (redesigned) ---------- */
+    /* ---------- Account panel (floating slide-in drawer, not a tab) ---------- */
+    .account-panel-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(20,10,20,0.45);
+      z-index: 900;
+    }
+    .account-panel-backdrop.open { display: block; }
+    .account-panel {
+      position: fixed;
+      top: 0; right: 0;
+      height: 100vh;
+      width: 380px;
+      max-width: 90vw;
+      background: #fff;
+      z-index: 901;
+      box-shadow: -8px 0 32px rgba(20,10,20,0.22);
+      padding: 26px 22px;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.28s ease;
+    }
+    .account-panel.open { transform: translateX(0); }
+    .account-panel-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; font-size: 24px;
+      color: var(--text-muted); cursor: pointer; line-height: 1;
+      width: 32px; height: 32px;
+    }
+    .account-panel-close:hover { color: var(--vivid); }
+    @media (max-width: 480px) {
+      .account-panel { width: 100vw; max-width: 100vw; padding: 22px 16px; }
+    }
+
     .account-header {
       display: flex;
       align-items: center;
@@ -2739,7 +2773,9 @@
         </div>
 
         <!-- ACCOUNT TAB (formerly "My Profile") -->
-        <div id="profile" class="tab-content">
+        <div id="accountPanelBackdrop" class="account-panel-backdrop" onclick="closeAccountPanel()"></div>
+        <div id="profile" class="account-panel">
+          <button type="button" class="account-panel-close" onclick="closeAccountPanel()" aria-label="Close account panel">×</button>
           <div class="account-header">
             <div class="account-avatar" id="accountAvatarInitials">?</div>
             <div class="account-header-info">
@@ -2759,7 +2795,7 @@
 
           <div class="account-group">
             <div class="account-group-label">📦 Orders</div>
-            <a href="#" class="account-row" onclick="event.preventDefault(); switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
+            <a href="#" class="account-row" onclick="event.preventDefault(); closeAccountPanel(); switchTab(null, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">
               <span>Order History</span><span class="account-row-chevron">›</span>
             </a>
             <div class="account-row account-row-soon">
@@ -2785,7 +2821,7 @@
               <span>Saved Address</span>
               <span class="account-soon-badge">Coming Soon</span>
             </div>
-            <a href="#" class="account-row" onclick="event.preventDefault(); switchTab(null, 'appointments'); loadMyAppointments();">
+            <a href="#" class="account-row" onclick="event.preventDefault(); closeAccountPanel(); switchTab(null, 'appointments'); loadMyAppointments();">
               <span>Appointments</span><span class="account-row-chevron">›</span>
             </a>
           </div>
@@ -10083,9 +10119,15 @@
     }
 
     function openAccountFromHeader() {
-      if (currentUser && currentUser.role === 'admin') return; // admins use the admin tab set, not the customer Account view
-      switchTab(null, 'profile');
+      if (currentUser && currentUser.role === 'admin') return; // admins use the admin tab set, not the customer Account panel
+      document.getElementById('profile').classList.add('open');
+      document.getElementById('accountPanelBackdrop').classList.add('open');
       loadProfileTab();
+    }
+
+    function closeAccountPanel() {
+      document.getElementById('profile').classList.remove('open');
+      document.getElementById('accountPanelBackdrop').classList.remove('open');
     }
 
     async function saveProfile(event) {
