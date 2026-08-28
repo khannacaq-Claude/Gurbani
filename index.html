@@ -1871,6 +1871,23 @@
       display: none;
     }
 
+    .crop-box {
+      position: absolute;
+      border: 2px solid var(--vivid);
+      box-sizing: border-box;
+      cursor: move;
+      background: rgba(219, 59, 153, 0.08);
+    }
+    .crop-handle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: var(--vivid);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      z-index: 2;
+    }
+
     .help-text {
       font-size: 12px;
       color: var(--text-muted);
@@ -2134,6 +2151,31 @@
       <div class="confirm-actions">
         <button type="button" class="confirm-cancel" id="confirmCancelBtn">Cancel</button>
         <button type="button" id="confirmOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHOTO CROP TOOL — a one-tap photo upload often catches background
+       clutter along with the actual reference item; this lets the person
+       trim that out before it's used for AI matching. Self-built (no
+       external cropper library) so it has no CDN dependency. -->
+  <div id="cropModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,10,20,0.6); z-index:3200; align-items:center; justify-content:center; padding:20px;">
+    <div class="card" style="max-width:460px; width:100%; padding:22px; text-align:center;">
+      <h4 style="margin-bottom:6px;">✂️ Crop Photo</h4>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Drag the corners to trim out background, then tap Apply.</p>
+      <div id="cropStage" style="position:relative; display:inline-block; max-width:100%; touch-action:none; background:#000;">
+        <img id="cropImage" style="display:block; max-width:100%; max-height:60vh; user-select:none; -webkit-user-drag:none;">
+        <div id="cropBox" class="crop-box"
+             onmousedown="cropPointerDown(event,'move')" ontouchstart="cropPointerDown(event,'move')">
+          <div class="crop-handle" style="top:-8px;left:-8px;cursor:nwse-resize;" onmousedown="cropPointerDown(event,'nw')" ontouchstart="cropPointerDown(event,'nw')"></div>
+          <div class="crop-handle" style="top:-8px;right:-8px;cursor:nesw-resize;" onmousedown="cropPointerDown(event,'ne')" ontouchstart="cropPointerDown(event,'ne')"></div>
+          <div class="crop-handle" style="bottom:-8px;left:-8px;cursor:nesw-resize;" onmousedown="cropPointerDown(event,'sw')" ontouchstart="cropPointerDown(event,'sw')"></div>
+          <div class="crop-handle" style="bottom:-8px;right:-8px;cursor:nwse-resize;" onmousedown="cropPointerDown(event,'se')" ontouchstart="cropPointerDown(event,'se')"></div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="button" class="btn-submit" style="flex:1;" onclick="applyCrop()">✅ Apply Crop</button>
+        <button type="button" onclick="closeCropModal()" style="flex:1; background:white; border:1px solid #ccc; border-radius:6px; padding:10px; cursor:pointer;">Cancel</button>
       </div>
     </div>
   </div>
@@ -5802,8 +5844,20 @@
               return function() { removePhoto(t, i); };
             })(type, idx);
 
+            const cropBtn = document.createElement('button');
+            cropBtn.type = 'button';
+            cropBtn.className = 'photo-item-remove';
+            cropBtn.style.right = '34px';
+            cropBtn.title = 'Crop out background';
+            cropBtn.setAttribute('aria-label', 'Crop this ' + (labels[type] || type) + ' photo');
+            cropBtn.innerHTML = '✂️';
+            cropBtn.onclick = (function(t, i) {
+              return function() { openCropModal(t, i); };
+            })(type, idx);
+
             item.appendChild(img);
             item.appendChild(label);
+            item.appendChild(cropBtn);
             item.appendChild(removeBtn);
             grid.appendChild(item);
             totalPhotos++;
@@ -5832,6 +5886,96 @@
       } else {
         gallery.style.display = 'none';
       }
+    }
+
+    // ---------- Photo crop tool ----------
+    let cropTarget = { type: null, idx: null };
+    let cropBoxState = { x: 0, y: 0, w: 0, h: 0 };
+    let cropDrag = null;
+
+    function openCropModal(type, idx) {
+      cropTarget = { type, idx };
+      const img = document.getElementById('cropImage');
+      img.onload = () => {
+        const w = img.clientWidth, h = img.clientHeight;
+        const bw = w * 0.8, bh = h * 0.8;
+        cropBoxState = { x: (w - bw) / 2, y: (h - bh) / 2, w: bw, h: bh };
+        renderCropBox();
+      };
+      img.src = uploadedPhotos[type][idx];
+      document.getElementById('cropModalOverlay').style.display = 'flex';
+    }
+
+    function closeCropModal() {
+      document.getElementById('cropModalOverlay').style.display = 'none';
+      cropDrag = null;
+    }
+
+    function renderCropBox() {
+      const box = document.getElementById('cropBox');
+      box.style.left = cropBoxState.x + 'px';
+      box.style.top = cropBoxState.y + 'px';
+      box.style.width = cropBoxState.w + 'px';
+      box.style.height = cropBoxState.h + 'px';
+    }
+
+    function cropPointerDown(e, mode) {
+      e.preventDefault();
+      e.stopPropagation();
+      const point = e.touches ? e.touches[0] : e;
+      cropDrag = { mode, startX: point.clientX, startY: point.clientY, startBox: Object.assign({}, cropBoxState) };
+    }
+
+    function cropPointerMove(e) {
+      if (!cropDrag) return;
+      const point = e.touches ? e.touches[0] : e;
+      const dx = point.clientX - cropDrag.startX;
+      const dy = point.clientY - cropDrag.startY;
+      const img = document.getElementById('cropImage');
+      const maxW = img.clientWidth, maxH = img.clientHeight;
+      const min = 30;
+      let { x, y, w, h } = cropDrag.startBox;
+
+      if (cropDrag.mode === 'move') {
+        x = Math.min(Math.max(0, x + dx), maxW - w);
+        y = Math.min(Math.max(0, y + dy), maxH - h);
+      } else {
+        if (cropDrag.mode.includes('n')) { const ny = Math.min(Math.max(0, y + dy), y + h - min); h += y - ny; y = ny; }
+        if (cropDrag.mode.includes('s')) { h = Math.min(Math.max(min, h + dy), maxH - y); }
+        if (cropDrag.mode.includes('w')) { const nx = Math.min(Math.max(0, x + dx), x + w - min); w += x - nx; x = nx; }
+        if (cropDrag.mode.includes('e')) { w = Math.min(Math.max(min, w + dx), maxW - x); }
+      }
+      cropBoxState = { x, y, w, h };
+      renderCropBox();
+    }
+
+    function cropPointerUp() { cropDrag = null; }
+
+    document.addEventListener('mousemove', cropPointerMove);
+    document.addEventListener('touchmove', function(e) { if (cropDrag) e.preventDefault(); cropPointerMove(e); }, { passive: false });
+    document.addEventListener('mouseup', cropPointerUp);
+    document.addEventListener('touchend', cropPointerUp);
+
+    function applyCrop() {
+      const img = document.getElementById('cropImage');
+      const scaleX = img.naturalWidth / img.clientWidth;
+      const scaleY = img.naturalHeight / img.clientHeight;
+      const sx = cropBoxState.x * scaleX;
+      const sy = cropBoxState.y * scaleY;
+      const sw = cropBoxState.w * scaleX;
+      const sh = cropBoxState.h * scaleY;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+      const cropped = canvas.toDataURL('image/jpeg', 0.85);
+
+      uploadedPhotos[cropTarget.type][cropTarget.idx] = cropped;
+      closeCropModal();
+      displayPhotoGallery();
+      setStatus('designStatus', '✂️ Photo cropped!', 'success');
     }
 
     function removePhoto(type, idx) {
@@ -6049,7 +6193,7 @@
         </div>`;
     }
 
-    async function generateConceptImage(idx) {
+    async function generateConceptImage(idx, isRetry) {
       const imgContainer = document.getElementById(`designImage_${idx}`);
       const btn = document.getElementById(`genBtn_${idx}`);
       const titleInput = document.getElementById(`conceptTitle_${idx}`);
@@ -6059,7 +6203,7 @@
       if (btn) {
         btn.disabled = true;
         btn.style.opacity = '0.6';
-        btn.innerHTML = '⏳ Generating... (~20-40s)';
+        btn.innerHTML = isRetry ? '⏳ Trying again... (~20-40s)' : '⏳ Generating... (~20-40s)';
       }
       try {
         const res = await fetch(`${API}/api/designs/${currentDesignId}/generate-concept-image`, {
@@ -6081,8 +6225,14 @@
           if (descInput) descInput.outerHTML = `<div class="design-desc">${escapeHtml(data.concept.description)}</div>`;
           const hint = document.getElementById(`conceptEditHint_${idx}`);
           if (hint) hint.remove();
+        } else if (!isRetry) {
+          // Image generation APIs are genuinely flaky sometimes (server
+          // load, a transient timeout) — one silent automatic retry
+          // clears most of these without the person having to notice or
+          // do anything themselves.
+          generateConceptImage(idx, true);
         } else {
-          showToast('❌ ' + (data.error || 'Failed to generate this design — please try again'));
+          showToast('❌ ' + (data.error || "This design didn't generate — happens occasionally with AI image generation. Try again, or try simplifying the description slightly."));
           if (btn) {
             btn.disabled = false;
             btn.style.opacity = '1';
@@ -6090,7 +6240,11 @@
           }
         }
       } catch (err) {
-        showToast('❌ ' + err.message);
+        if (!isRetry) {
+          generateConceptImage(idx, true);
+          return;
+        }
+        showToast('❌ Connection hiccup — check your internet and try again. (' + err.message + ')');
         if (btn) {
           btn.disabled = false;
           btn.style.opacity = '1';
