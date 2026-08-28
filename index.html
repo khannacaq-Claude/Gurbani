@@ -335,6 +335,50 @@
       .fn-signin { padding: 13px 15px; }
     }
 
+    /* ---------- Guided tour (first-time landing page visitors) ---------- */
+    .tour-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(20, 10, 20, 0.6);
+      z-index: 5000;
+    }
+    .tour-overlay.open { display: block; }
+    .tour-highlight {
+      position: absolute;
+      z-index: 5001;
+      border-radius: 10px;
+      box-shadow: 0 0 0 4px var(--marigold), 0 0 0 9999px rgba(20, 10, 20, 0.6);
+      pointer-events: none;
+      transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+    }
+    .tour-tooltip {
+      position: absolute;
+      z-index: 5002;
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      width: 280px;
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 12px 34px rgba(20, 10, 20, 0.3);
+      transition: top 0.3s ease, left 0.3s ease;
+    }
+    .tour-tooltip h4 { margin: 0 0 6px 0; font-family: var(--font-body); font-size: 15px; color: var(--ink); }
+    .tour-tooltip p { margin: 0 0 14px 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .tour-tooltip-footer { display: flex; align-items: center; justify-content: space-between; }
+    .tour-step-count { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+    .tour-tooltip-btns { display: flex; gap: 8px; }
+    .tour-btn {
+      border: none; border-radius: 20px; padding: 7px 14px;
+      font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: var(--font-body);
+    }
+    .tour-btn-skip { background: none; color: var(--text-muted); }
+    .tour-btn-next { background: var(--vivid); color: #fff; }
+    .tour-btn-next:hover { background: var(--vivid-deep); }
+    #tourReplayLink {
+      cursor: pointer; font-size: 12px; color: var(--marigold); font-weight: 600;
+      text-decoration: underline; background: none; border: none; font-family: var(--font-body);
+    }
+
     /* ---------- FAQ Chatbot ---------- */
     .chatbot-fab {
       position: fixed; bottom: 22px; left: 20px; z-index: 500;
@@ -2049,6 +2093,24 @@
     <button type="button" class="fn-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Back to top" aria-label="Back to top">↑</button>
   </div>
 
+  <!-- GUIDED TOUR — first-time landing page visitors only. Auto-runs once
+       (tracked via localStorage), replayable anytime via the tour link
+       placed in the section tabs bar. -->
+  <div class="tour-overlay" id="tourOverlay">
+    <div class="tour-highlight" id="tourHighlight"></div>
+    <div class="tour-tooltip" id="tourTooltip">
+      <h4 id="tourTitle"></h4>
+      <p id="tourText"></p>
+      <div class="tour-tooltip-footer">
+        <span class="tour-step-count" id="tourStepCount"></span>
+        <div class="tour-tooltip-btns">
+          <button type="button" class="tour-btn tour-btn-skip" onclick="endTour()">Skip</button>
+          <button type="button" class="tour-btn tour-btn-next" id="tourNextBtn" onclick="nextTourStep()">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FAQ CHATBOT — simple fixed-answer bot, not a freeform AI. Answers are
        pulled live from the #faqList accordion in the FAQ section below, so
        there's exactly one place to update FAQ content and both stay in sync. -->
@@ -2218,6 +2280,7 @@
     <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
       <nav class="section-tabs" id="sectionTabs">
+        <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
         <button type="button" data-target="lensSection" onclick="jumpToTab('lensSection', this)">✨ AI Design Studio</button>
         <button type="button" data-target="occasionSection" onclick="jumpToTab('occasionSection', this)">🎉 Occasions</button>
         <button type="button" data-target="rcSection" onclick="jumpToTab('rcSection', this)">💰 Rate Card</button>
@@ -4916,7 +4979,91 @@
       }
     }
 
-    // ---------- Section jump-nav (sticky tab bar) ----------
+    // ---------- Guided tour (first-time visitors) ----------
+    const TOUR_STEPS = [
+      {
+        selector: '.trust-badge',
+        title: '👋 Welcome to Gurbani Fashion!',
+        text: "Quick 4-step tour of what you can do here — takes 20 seconds.",
+      },
+      {
+        selector: '#lensSection',
+        title: '✨ Start here: AI Design Studio',
+        text: 'Describe or upload a reference photo and get 3 custom design concepts — free, no sign-in needed to try it.',
+      },
+      {
+        selector: '#sectionTabs',
+        title: '🧭 Jump to any section',
+        text: 'Rate Card, FAQ, Visit Us, and more — this bar stays with you as you scroll and jumps straight there.',
+      },
+      {
+        selector: '#signinTrigger',
+        title: '👤 Sign in anytime',
+        text: 'Sign in here to save your designs, book appointments, and track orders. You can browse and design first without it.',
+      },
+    ];
+    let tourStepIndex = 0;
+
+    function startTour() {
+      tourStepIndex = 0;
+      document.getElementById('tourOverlay').classList.add('open');
+      showTourStep(0);
+    }
+
+    function showTourStep(i) {
+      const step = TOUR_STEPS[i];
+      const target = document.querySelector(step.selector);
+      if (!target) { nextTourStep(); return; }
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // give the smooth scroll a moment to settle before measuring position
+      setTimeout(() => positionTourStep(target, step, i), 350);
+    }
+
+    function positionTourStep(target, step, i) {
+      const rect = target.getBoundingClientRect();
+      const pad = 8;
+      const highlight = document.getElementById('tourHighlight');
+      highlight.style.top = (rect.top - pad) + 'px';
+      highlight.style.left = (rect.left - pad) + 'px';
+      highlight.style.width = (rect.width + pad*2) + 'px';
+      highlight.style.height = (rect.height + pad*2) + 'px';
+
+      document.getElementById('tourTitle').textContent = step.title;
+      document.getElementById('tourText').textContent = step.text;
+      document.getElementById('tourStepCount').textContent = `${i+1} of ${TOUR_STEPS.length}`;
+      document.getElementById('tourNextBtn').textContent = (i === TOUR_STEPS.length - 1) ? 'Got it!' : 'Next';
+
+      const tooltip = document.getElementById('tourTooltip');
+      const spaceBelow = window.innerHeight - rect.bottom;
+      let top = (spaceBelow > 200) ? rect.bottom + 16 : rect.top - 16 - tooltip.offsetHeight;
+      top = Math.max(12, Math.min(top, window.innerHeight - tooltip.offsetHeight - 12));
+      let left = rect.left + rect.width/2 - tooltip.offsetWidth/2;
+      left = Math.max(12, Math.min(left, window.innerWidth - tooltip.offsetWidth - 12));
+      tooltip.style.top = top + 'px';
+      tooltip.style.left = left + 'px';
+    }
+
+    function nextTourStep() {
+      tourStepIndex++;
+      if (tourStepIndex >= TOUR_STEPS.length) { endTour(); return; }
+      showTourStep(tourStepIndex);
+    }
+
+    function endTour() {
+      document.getElementById('tourOverlay').classList.remove('open');
+      localStorage.setItem('hasSeenTour', 'true');
+    }
+
+    function maybeAutoStartTour() {
+      const landingPage = document.getElementById('landingPage');
+      const onLandingPage = landingPage && !landingPage.classList.contains('hidden');
+      if (onLandingPage && !localStorage.getItem('hasSeenTour')) {
+        setTimeout(startTour, 900); // brief pause so the page settles first
+      }
+    }
+
+
     function jumpToTab(id, btn) {
       scrollToSection(id);
       document.querySelectorAll('.section-tabs button').forEach(b => b.classList.remove('active'));
@@ -10498,6 +10645,7 @@
 
     window.addEventListener('load', () => {
       initSectionTabsObserver();
+      maybeAutoStartTour();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
@@ -10569,30 +10717,37 @@
       voiceRecognition.lang = langSelect.value;
 
       let baseText = '';
-      let finalTranscript = '';
 
       voiceRecognition.onstart = () => {
         voiceRecognizing = true;
         baseText = document.getElementById('designDesc').value;
-        finalTranscript = '';
         micBtn.textContent = '⏹️ Stop';
         micBtn.classList.add('recording');
         document.getElementById('voiceInputStatus').textContent = '🎙️ Listening…';
       };
 
       voiceRecognition.onresult = (event) => {
+        // Rebuild the transcript fresh from ALL of event.results every
+        // time, rather than incrementally accumulating with += from
+        // event.resultIndex. Chrome's continuous-mode speech engine can
+        // reset its internal result indexing after a brief pause, and
+        // the old incremental-append approach would then re-add results
+        // that were already appended — that's what was typing the same
+        // word multiple times. Rebuilding fresh each time is immune to
+        // that, since nothing is carried forward to drift out of sync.
+        let final = '';
         let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        for (let i = 0; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
+            final += transcript + ' ';
           } else {
             interim += transcript;
           }
         }
         const textarea = document.getElementById('designDesc');
         const needsSpace = baseText && !/[\s]$/.test(baseText);
-        textarea.value = (baseText + (needsSpace ? ' ' : '') + finalTranscript + interim).trim();
+        textarea.value = (baseText + (needsSpace ? ' ' : '') + final + interim).trim();
         validateDescriptionRealtime();
       };
 
