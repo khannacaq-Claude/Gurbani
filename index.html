@@ -1040,7 +1040,13 @@
       font-family: var(--font-body);
       transition: all 0.2s ease;
     }
-    .occ-sub-row button:hover { background: #FFFFFF; color: var(--ink); }
+    .occ-sub-row button:hover { background: #FFFFFF; color: var(--ink); transform: translateY(-2px) scale(1.03); }
+    .occ-hint {
+      margin: 14px 0 0 0;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
     @media (max-width: 820px) {
       .occ-panel-row { flex-direction: column; min-height: 0; }
       .occ-panel { flex: none !important; min-height: 56px; }
@@ -2334,8 +2340,6 @@
         <button type="button" data-target="statsSection" onclick="jumpToTab('statsSection', this)">📊 Stats</button>
         <button type="button" data-target="visitSection" onclick="jumpToTab('visitSection', this)">📍 Visit Us</button>
         <button type="button" data-target="faqSection" onclick="jumpToTab('faqSection', this)">❓ FAQ</button>
-        <button type="button" data-target="gallerySection" onclick="jumpToTab('gallerySection', this)">🖼️ Gallery</button>
-        <button type="button" data-target="testimonialsSection" onclick="jumpToTab('testimonialsSection', this)">💬 Reviews</button>
         <button type="button" data-target="storySection" onclick="jumpToTab('storySection', this)">📖 Our Story</button>
         <button type="button" data-target="subscribeSection" onclick="jumpToTab('subscribeSection', this)">📲 Stay in Loop</button>
       </nav>
@@ -2464,20 +2468,21 @@
         <!-- SHOP BY OCCASION -->
         <div class="occasion-section snap-section" id="occasionSection">
           <h3 style="text-align:center;">What's the Occasion?</h3>
-          <p style="text-align:center; font-size:12px; color: var(--text-muted); margin-bottom:4px;">Tap a category, then pick your exact occasion</p>
+          <p style="text-align:center; font-size:12px; color: var(--text-muted); margin-bottom:4px;">Tap yours — we'll open AI Design Studio already set up for it</p>
           <div class="occ-panel-row" id="occPanelRow">
             <div class="occ-panel active" data-occ="0" onclick="expandOccPanel(0)" style="background:linear-gradient(160deg, var(--vivid), var(--vivid-deep));">
               <span class="occ-panel-label">Wedding Functions</span>
               <div class="occ-panel-content">
                 <h4>👰 Wedding Functions</h4>
                 <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('wedding')">Wedding / Bridal</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('engagement')">Engagement</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('haldi')">Haldi</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('sangeet')">Sangeet / Mehendi</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('reception')">Reception</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('cocktail')">Cocktail / After-party</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('wedding')">💍 Wedding / Bridal</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('engagement')">💎 Engagement</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('haldi')">🌼 Haldi</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('sangeet')">💃 Sangeet / Mehendi</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('reception')">🥂 Reception</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('cocktail')">🍸 Cocktail / After-party</button>
                 </div>
+                <p class="occ-hint">✨ Pick one — your AI Design Studio opens ready to go</p>
               </div>
             </div>
             <div class="occ-panel" data-occ="1" onclick="expandOccPanel(1)" style="background:linear-gradient(160deg, var(--marigold), var(--marigold-deep));">
@@ -2485,13 +2490,14 @@
               <div class="occ-panel-content">
                 <h4>🪔 Festivals &amp; Pooja</h4>
                 <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('diwali')">Diwali / Festive Pooja</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('navratri')">Navratri / Garba</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('karva-chauth')">Karva Chauth</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('eid')">Eid</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('durga-puja')">Durga Puja</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('festival')">Festival / Celebration</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('diwali')">🪔 Diwali / Festive Pooja</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('navratri')">🕺 Navratri / Garba</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('karva-chauth')">🌙 Karva Chauth</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('eid')">☪️ Eid</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('durga-puja')">🙏 Durga Puja</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('festival')">🎊 Festival / Celebration</button>
                 </div>
+                <p class="occ-hint">✨ Pick one — your AI Design Studio opens ready to go</p>
               </div>
             </div>
             <div class="occ-panel" data-occ="2" onclick="expandOccPanel(2)" style="background:linear-gradient(160deg, #3E6B8A, #254A63);">
@@ -2499,10 +2505,11 @@
               <div class="occ-panel-content">
                 <h4>👗 Everyday &amp; Work</h4>
                 <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('casual')">Casual / Daily Wear</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('office')">Office Wear</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('date-night')">Date Night</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('casual')">👕 Casual / Daily Wear</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('office')">💼 Office Wear</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('date-night')">🌆 Date Night</button>
                 </div>
+                <p class="occ-hint">✨ Pick one — your AI Design Studio opens ready to go</p>
               </div>
             </div>
             <div class="occ-panel" data-occ="3" onclick="expandOccPanel(3)" style="background:linear-gradient(160deg, #7A1257, #4A0A35);">
@@ -2510,12 +2517,13 @@
               <div class="occ-panel-content">
                 <h4>🎉 Parties &amp; Life Events</h4>
                 <div class="occ-sub-row">
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('party')">Party / Formal Event</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('vacation')">Vacation / Resort Wear</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('baby-shower')">Baby Shower / Godh Bharai</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('birthday')">Birthday</button>
-                  <button onclick="event.stopPropagation(); startDesignForOccasion('farewell')">Farewell / Graduation</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('party')">🎉 Party / Formal Event</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('vacation')">🏖️ Vacation / Resort Wear</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('baby-shower')">🍼 Baby Shower / Godh Bharai</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('birthday')">🎂 Birthday</button>
+                  <button onclick="event.stopPropagation(); startDesignForOccasion('farewell')">🎓 Farewell / Graduation</button>
                 </div>
+                <p class="occ-hint">✨ Pick one — your AI Design Studio opens ready to go</p>
               </div>
             </div>
           </div>
@@ -2573,28 +2581,6 @@
                 <script src="https://cdn.lightwidget.com/widgets/lightwidget.js"></script><iframe src="https://cdn.lightwidget.com/widgets/059de719fcc5514baf2b4a4391497ef7.html" scrolling="no" allowtransparency="true" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;"></iframe>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- DESIGN GALLERY — coming soon, waiting on inventory photo shoot -->
-        <div class="coming-soon-section snap-section" id="gallerySection">
-          <h3>🖼️ Designs Gallery</h3>
-          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">Real designs from real orders — coming as soon as our new collection is photographed.</p>
-          <div class="coming-soon-grid">
-            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">👗</div><h4>Bridal Lehengas</h4><p>See finished pieces styled on real customers</p></div>
-            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">🥻</div><h4>Anarkalis &amp; Suits</h4><p>From first sketch to final fitting</p></div>
-            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">✨</div><h4>AI-Assisted Designs</h4><p>Concepts turned into stitched reality</p></div>
-          </div>
-        </div>
-
-        <!-- TESTIMONIALS — coming soon, waiting on real customer reviews -->
-        <div class="coming-soon-section snap-section" id="testimonialsSection">
-          <h3>💬 What Customers Say</h3>
-          <p style="font-size:12px; color: var(--text-muted); margin-bottom: 4px;">We're just getting started collecting reviews — check back soon.</p>
-          <div class="coming-soon-grid cs-alt">
-            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">⭐</div><h4>Customer Stories</h4><p>Real experiences from real families</p></div>
-            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">📝</div><h4>Written Reviews</h4><p>Honest feedback on fit, fabric &amp; service</p></div>
-            <div class="coming-soon-tile"><span class="cs-badge">Coming Soon</span><div class="cs-icon">🤝</div><h4>Google Reviews</h4><p>Linked here once we have enough to show</p></div>
           </div>
         </div>
 
