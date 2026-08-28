@@ -586,6 +586,9 @@
       border-radius: 34px;
       margin-bottom: 22px;
       box-shadow: 0 6px 18px rgba(20, 26, 41, 0.28);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     .trust-badge .live-dot {
       width: 9px;
@@ -2337,7 +2340,7 @@
         <button type="button" data-target="subscribeSection" onclick="jumpToTab('subscribeSection', this)">📲 Stay in Loop</button>
       </nav>
       <div class="card">
-        <div class="trust-badge"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
+        <div class="trust-badge" onclick="scrollToSection('lensSection')" style="cursor:pointer;"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
 
         <!-- FESTIVAL BANNER — admin-editable seasonal awareness banner, off
              by default until Sonia turns it on from the admin Coupons tab.
