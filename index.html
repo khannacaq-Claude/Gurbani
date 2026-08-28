@@ -5052,13 +5052,15 @@
 
     function endTour() {
       document.getElementById('tourOverlay').classList.remove('open');
-      localStorage.setItem('hasSeenTour', 'true');
     }
 
     function maybeAutoStartTour() {
       const landingPage = document.getElementById('landingPage');
       const onLandingPage = landingPage && !landingPage.classList.contains('hidden');
-      if (onLandingPage && !localStorage.getItem('hasSeenTour')) {
+      // Runs on every landing-page visit, not just the first — someone
+      // might not be back for months, and Skip is always right there
+      // if they don't need it this time. No tracking needed either way.
+      if (onLandingPage) {
         setTimeout(startTour, 900); // brief pause so the page settles first
       }
     }
