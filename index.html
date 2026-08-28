@@ -5333,7 +5333,10 @@
         updateGoHomeLink();
         return;
       }
-      showToast(`Sign in first to access ${feature}`);
+      // Not signed in — open the actual sign-in panel directly rather
+      // than just telling them to go find it themselves.
+      showToast(`Sign in to access ${feature}`);
+      toggleEmailAuthPanel();
     }
 
     // Floating back-to-top + sign-in nudge — shows once scrolled past the
@@ -5376,7 +5379,7 @@
       if (authToken) {
         goToDashboard();
       } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        toggleEmailAuthPanel();
       }
     }
 
@@ -5406,8 +5409,8 @@
         document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
         window.pendingOccasion = value;
-        showToast('✨ Sign in above and we\'ll take you straight to designing this look');
-        document.querySelector('.header-right')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showToast('✨ Sign in and we\'ll take you straight to designing this look');
+        toggleEmailAuthPanel();
       }
     }
 
@@ -6069,7 +6072,8 @@
     async function submitDesign(e) {
       e.preventDefault();
       if (!authToken) {
-        showToast('Please sign in first');
+        showToast('Sign in to submit your design');
+        toggleEmailAuthPanel();
         return;
       }
 
