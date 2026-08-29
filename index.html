@@ -2180,6 +2180,22 @@
        external cropper library) so it has no CDN dependency. -->
   <!-- IMAGE LIGHTBOX — tap any generated design image to see it full-size.
        Generic/reusable: openImageLightbox(url) works from anywhere. -->
+  <!-- DESIGNS GALLERY MODAL — opened from the "Design Requests" stat box.
+       Shows publicly-safe featured designs only (same source the AI
+       Design Studio preview already pulls from), paginated via "Show
+       More" instead of ever fetching everything at once. -->
+  <div id="designsGalleryModal" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.75); z-index:3400; align-items:flex-start; justify-content:center; padding:24px; overflow-y:auto;" onclick="if(event.target===this) closeDesignsGalleryModal()">
+    <div style="background:#fff; border-radius:14px; max-width:720px; width:100%; margin-top:40px; padding:24px; position:relative;">
+      <button type="button" onclick="closeDesignsGalleryModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:26px; color:var(--text-muted); cursor:pointer; line-height:1;">×</button>
+      <h3 style="margin-bottom:4px;">🎨 Designs We've Created</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">A few of the custom designs made through AI Design Studio, shared with each customer's permission.</p>
+      <div id="designsGalleryGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px;"></div>
+      <div style="text-align:center; margin-top:20px;">
+        <button type="button" id="designsGalleryShowMoreBtn" onclick="loadDesignsGallery(true)" class="admin-filter-btn" style="display:none;">Show More</button>
+      </div>
+    </div>
+  </div>
+
   <div id="imageLightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.88); z-index:3300; align-items:center; justify-content:center; padding:24px;" onclick="closeImageLightbox()">
     <span onclick="closeImageLightbox()" style="position:absolute; top:18px; right:24px; color:#fff; font-size:32px; cursor:pointer; line-height:1; z-index:3301;">×</span>
     <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:90vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="event.stopPropagation(); closeImageLightbox()">
@@ -4959,7 +4975,7 @@
         if (items.length === 0) return; // nothing meaningful yet — stays hidden
 
         row.innerHTML = items.map(i => `
-          <div class="stat-box">
+          <div class="stat-box" ${i.label === 'Design Requests' ? 'onclick="openDesignsGalleryModal()" style="cursor:pointer;" title="Click to see designs we\'ve created"' : ''}>
             <div class="stat-num">${i.num.toLocaleString('en-IN')}</div>
             <div class="stat-label">${i.label}</div>
           </div>
@@ -4967,6 +4983,63 @@
         section.style.display = 'block';
       } catch (err) {
         console.error('loadPublicStats error:', err); // stays hidden — not critical
+      }
+    }
+
+    // ---------- Designs gallery modal (opened from the stat box) ----------
+    let designsGalleryLimit = 6;
+
+    function openDesignsGalleryModal() {
+      designsGalleryLimit = 6;
+      document.getElementById('designsGalleryModal').style.display = 'flex';
+      loadDesignsGallery(false);
+      history.pushState({ designsGalleryOpen: true }, '');
+    }
+
+    function closeDesignsGalleryModal(fromPopState) {
+      document.getElementById('designsGalleryModal').style.display = 'none';
+      if (!fromPopState && history.state && history.state.designsGalleryOpen) {
+        history.back();
+      }
+    }
+
+    window.addEventListener('popstate', () => {
+      const modal = document.getElementById('designsGalleryModal');
+      if (modal && modal.style.display === 'flex') {
+        closeDesignsGalleryModal(true);
+      }
+    });
+
+    async function loadDesignsGallery(loadMore) {
+      const grid = document.getElementById('designsGalleryGrid');
+      const moreBtn = document.getElementById('designsGalleryShowMoreBtn');
+      if (loadMore) {
+        designsGalleryLimit += 6;
+        moreBtn.textContent = 'Loading...';
+        moreBtn.disabled = true;
+      } else {
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Loading...</p>';
+      }
+      try {
+        const res = await fetch(`${API}/api/designs/featured?limit=${designsGalleryLimit}`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
+          return;
+        }
+        grid.innerHTML = data.designs.map(d => `
+          <div style="border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(20,10,20,0.12); cursor:pointer;" onclick="openImageLightbox('${d.imageUrl}')">
+            <img src="${d.imageUrl}" alt="${escapeHtml(d.title)}" style="width:100%; height:150px; object-fit:cover; display:block;">
+            <div style="padding:8px 10px; font-size:12px; font-weight:600; color:var(--ink);">${escapeHtml(d.title)}</div>
+          </div>
+        `).join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No designs to show yet.</p>';
+
+        moreBtn.style.display = data.hasMore ? 'inline-block' : 'none';
+        moreBtn.textContent = 'Show More';
+        moreBtn.disabled = false;
+      } catch (err) {
+        console.error('loadDesignsGallery error:', err);
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
       }
     }
 
@@ -6756,15 +6829,26 @@
 
     let emailAuthMode = 'signin';
 
+    let googleButtonRenderTimeout = null;
     function renderGoogleSigninButton() {
-      const signinArea = document.getElementById('signinArea');
-      if (!signinArea || !googleInitialized || typeof google === 'undefined') return;
-      signinArea.innerHTML = '';
-      try {
-        google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
-      } catch (err) {
-        console.error('Google renderButton failed:', err);
-      }
+      // Debounced — signing out and reopening the modal within a couple
+      // seconds fires this twice in quick succession (once from the
+      // sign-out flow's UI reset, once from opening the modal), and
+      // Google's SDK doesn't handle being told to render into the same
+      // container twice back-to-back cleanly — it can briefly leave it
+      // empty. Cancelling any pending render before scheduling a new one
+      // means only the LAST call in a rapid burst actually runs.
+      clearTimeout(googleButtonRenderTimeout);
+      googleButtonRenderTimeout = setTimeout(() => {
+        const signinArea = document.getElementById('signinArea');
+        if (!signinArea || !googleInitialized || typeof google === 'undefined') return;
+        signinArea.innerHTML = '';
+        try {
+          google.accounts.id.renderButton(signinArea, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
+        } catch (err) {
+          console.error('Google renderButton failed:', err);
+        }
+      }, 80);
     }
 
     function toggleEmailAuthPanel(event) {
