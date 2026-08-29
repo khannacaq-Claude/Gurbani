@@ -5080,17 +5080,27 @@
     // ---------- Design detail modal: use-as-inspiration / order-directly ----------
     let currentDesignDetailIndex = null;
 
-    function openDesignDetail(index) {
+    async function openDesignDetail(index) {
       const d = (window.currentGalleryDesigns || [])[index];
       if (!d) return;
       currentDesignDetailIndex = index;
-      document.getElementById('designDetailImg').src = d.imageUrl;
-      document.getElementById('designDetailImg').alt = d.title;
+      const imgEl = document.getElementById('designDetailImg');
+      imgEl.src = d.imageUrl; // shows instantly, watermarked version swaps in a moment later
+      imgEl.alt = d.title;
       document.getElementById('designDetailNumber').textContent = d.publicId ? `#${d.publicId}` : '';
       document.getElementById('designDetailTitle').textContent = d.title;
       document.getElementById('designDetailDesc').textContent = d.description || '';
       document.getElementById('designDetailModal').style.display = 'flex';
       history.pushState({ designDetailOpen: true }, '');
+      // Watermark this the same way Download/Print already do — otherwise
+      // a plain screenshot of this modal gets a completely clean copy,
+      // which defeats the point of watermarking at all.
+      try {
+        const canvas = await buildWatermarkedCanvas(d.imageUrl);
+        if (currentDesignDetailIndex === index) imgEl.src = canvas.toDataURL('image/jpeg', 0.92);
+      } catch (err) {
+        console.error('openDesignDetail watermark error:', err); // raw image stays showing — never block the view over this
+      }
     }
 
     function closeDesignDetailModal(fromPopState) {
@@ -5852,12 +5862,20 @@
       document.getElementById('featuredDesignLightbox').style.display = 'flex';
     }
 
-    function showFeaturedLightboxImage() {
+    async function showFeaturedLightboxImage() {
       const item = (window.featuredDesignsData || [])[currentFeaturedLightboxIndex];
       if (!item) return;
-      document.getElementById('lightboxImage').src = item.imageUrl;
+      const thisIndex = currentFeaturedLightboxIndex;
+      const imgEl = document.getElementById('lightboxImage');
+      imgEl.src = item.imageUrl; // shows instantly, watermarked version swaps in a moment later
       document.getElementById('lightboxTitle').textContent = item.title || '';
       document.getElementById('lightboxOccasion').textContent = item.occasion ? `Occasion: ${item.occasion}` : '';
+      try {
+        const canvas = await buildWatermarkedCanvas(item.imageUrl);
+        if (currentFeaturedLightboxIndex === thisIndex) imgEl.src = canvas.toDataURL('image/jpeg', 0.92);
+      } catch (err) {
+        console.error('showFeaturedLightboxImage watermark error:', err);
+      }
     }
 
     function nextFeaturedLightboxImage() {
@@ -6558,14 +6576,23 @@
         </div>`;
     }
 
-    function openImageLightbox(url) {
-      document.getElementById('imageLightboxImg').src = url;
+    let imageLightboxToken = 0;
+    async function openImageLightbox(url) {
+      const myToken = ++imageLightboxToken;
+      const imgEl = document.getElementById('imageLightboxImg');
+      imgEl.src = url; // shows instantly, watermarked version swaps in a moment later
       document.getElementById('imageLightboxOverlay').style.display = 'flex';
       // Push a history entry so the phone's back button closes the
       // lightbox first, instead of leaving the whole site — without
       // this, mobile back-gesture/back-button felt like it "exited"
       // the app rather than just dismissing the photo on top.
       history.pushState({ lightboxOpen: true }, '');
+      try {
+        const canvas = await buildWatermarkedCanvas(url);
+        if (imageLightboxToken === myToken) imgEl.src = canvas.toDataURL('image/jpeg', 0.92);
+      } catch (err) {
+        console.error('openImageLightbox watermark error:', err);
+      }
     }
 
     function closeImageLightbox(fromPopState) {
