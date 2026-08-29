@@ -2184,6 +2184,24 @@
        Shows publicly-safe featured designs only (same source the AI
        Design Studio preview already pulls from), paginated via "Show
        More" instead of ever fetching everything at once. -->
+  <!-- DESIGN DETAIL MODAL — opened by tapping a design in the gallery.
+       Shows its random public number, and offers two actions: reuse it as
+       inspiration for a NEW design of the visitor's own, or order this
+       exact design directly, skipping generation. -->
+  <div id="designDetailModal" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.8); z-index:3450; align-items:center; justify-content:center; padding:20px; overflow-y:auto;" onclick="if(event.target===this) closeDesignDetailModal()">
+    <div style="background:#fff; border-radius:14px; max-width:420px; width:100%; padding:0; position:relative; overflow:hidden;">
+      <button type="button" onclick="closeDesignDetailModal()" style="position:absolute; top:12px; right:14px; background:rgba(0,0,0,0.45); color:#fff; border:none; border-radius:50%; width:30px; height:30px; font-size:18px; cursor:pointer; z-index:2;">×</button>
+      <img id="designDetailImg" src="" alt="" style="width:100%; max-height:50vh; object-fit:cover; display:block;">
+      <div style="padding:20px;">
+        <div style="font-size:11px; font-weight:700; color:var(--marigold); letter-spacing:0.4px; margin-bottom:4px;">DESIGN <span id="designDetailNumber"></span></div>
+        <h4 id="designDetailTitle" style="margin:0 0 8px;"></h4>
+        <p id="designDetailDesc" style="font-size:13px; color:var(--text-muted); margin-bottom:18px; line-height:1.5;"></p>
+        <button type="button" class="btn-submit" style="margin-bottom:10px;" onclick="useDesignAsInspiration()">✨ Use as Inspiration for My Own Design</button>
+        <button type="button" class="btn-submit" onclick="orderThisDesign()">🛒 Order This Exact Design</button>
+      </div>
+    </div>
+  </div>
+
   <div id="designsGalleryModal" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.75); z-index:3400; align-items:flex-start; justify-content:center; padding:24px; overflow-y:auto;" onclick="if(event.target===this) closeDesignsGalleryModal()">
     <div style="background:#fff; border-radius:14px; max-width:720px; width:100%; margin-top:40px; padding:24px; position:relative;">
       <button type="button" onclick="closeDesignsGalleryModal()" style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:26px; color:var(--text-muted); cursor:pointer; line-height:1;">×</button>
@@ -2380,14 +2398,6 @@
       <div class="card">
         <div class="trust-badge" onclick="scrollToSection('lensSection')" style="cursor:pointer;"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
 
-        <!-- FESTIVAL BANNER — admin-editable seasonal awareness banner, off
-             by default until Sonia turns it on from the admin Coupons tab.
-             Not coupon-backed since it's an announcement, not a discount. -->
-        <div id="festivalBannerSection" style="display:none; margin-bottom:16px; text-align:center;"></div>
-
-        <!-- PROMO BANNER — self-gated, only shows if a public coupon is active -->
-        <div id="promoBannerSection" style="display:none; margin-bottom:16px;"></div>
-
         <div class="hero-eyebrow">Finally, a boutique built around your vision...</div>
         <h2 class="hero-headline" style="text-transform: none;">Your Vision. <span class="accent">Designed, Stitched, Fitted.
           <svg viewBox="0 0 260 10" preserveAspectRatio="none">
@@ -2401,11 +2411,26 @@
         <p>From your first idea to the final fitting — design, fabric matching, stitching, all handled by us, start to finish.</p>
         <p>Sign in to create your design, upload reference photos for personalized styling, then have it custom stitched and fitted just for you.</p>
 
-        <!-- STATS — self-gated, only shows once numbers are meaningful -->
+        <!-- STATS — self-gated, only shows once numbers are meaningful.
+             The clickable stat opens the designs gallery — see the "Tap to
+             see designs" hint added directly on that box for discoverability. -->
         <div class="stats-section snap-section" id="statsSection">
           <h3 style="text-align:center;">📊 By the Numbers</h3>
           <div class="stats-row" id="statsRow"></div>
         </div>
+
+        <!-- FESTIVAL BANNER — admin-editable seasonal awareness banner, off
+             by default until Sonia turns it on from the admin Coupons tab.
+             Not coupon-backed since it's an announcement, not a discount.
+             Moved below Stats — the AI Design Studio pitch this banner is
+             ultimately pointing at now lives one section down, with a real
+             gallery of designs already made sitting right above it via the
+             Stats click-through, so this reads better after that context
+             than before it. -->
+        <div id="festivalBannerSection" style="display:none; margin-bottom:16px; text-align:center;"></div>
+
+        <!-- PROMO BANNER — self-gated, only shows if a public coupon is active -->
+        <div id="promoBannerSection" style="display:none; margin-bottom:16px;"></div>
 
         <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
         <div class="lens-section snap-section" id="lensSection">
@@ -4975,9 +5000,10 @@
         if (items.length === 0) return; // nothing meaningful yet — stays hidden
 
         row.innerHTML = items.map(i => `
-          <div class="stat-box" ${i.label === 'Design Requests' ? 'onclick="openDesignsGalleryModal()" style="cursor:pointer;" title="Click to see designs we\'ve created"' : ''}>
+          <div class="stat-box" ${i.label === 'Design Requests' ? 'onclick="openDesignsGalleryModal()" style="cursor:pointer; position:relative;" title="Tap to see designs we\'ve created"' : ''}>
             <div class="stat-num">${i.num.toLocaleString('en-IN')}</div>
             <div class="stat-label">${i.label}</div>
+            ${i.label === 'Design Requests' ? '<div style="font-size:9.5px; font-weight:700; color:var(--marigold); opacity:0.75; margin-top:3px; letter-spacing:0.3px;">TAP TO VIEW ↗</div>' : ''}
           </div>
         `).join('');
         section.style.display = 'block';
@@ -5027,10 +5053,14 @@
           grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
           return;
         }
-        grid.innerHTML = data.designs.map(d => `
-          <div style="border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(20,10,20,0.12); cursor:pointer;" onclick="openImageLightbox('${d.imageUrl}')">
+        window.currentGalleryDesigns = data.designs; // looked up by index when a card is tapped
+        grid.innerHTML = data.designs.map((d, i) => `
+          <div style="border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(20,10,20,0.12); cursor:pointer;" onclick="openDesignDetail(${i})">
             <img src="${d.imageUrl}" alt="${escapeHtml(d.title)}" style="width:100%; height:150px; object-fit:cover; display:block;">
-            <div style="padding:8px 10px; font-size:12px; font-weight:600; color:var(--ink);">${escapeHtml(d.title)}</div>
+            <div style="padding:8px 10px;">
+              <div style="font-size:12px; font-weight:600; color:var(--ink);">${escapeHtml(d.title)}</div>
+              ${d.publicId ? `<div style="font-size:10.5px; color:var(--marigold); font-weight:700; margin-top:2px;">#${d.publicId}</div>` : ''}
+            </div>
           </div>
         `).join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No designs to show yet.</p>';
 
@@ -5040,6 +5070,114 @@
       } catch (err) {
         console.error('loadDesignsGallery error:', err);
         grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
+      }
+    }
+
+    // ---------- Design detail modal: use-as-inspiration / order-directly ----------
+    let currentDesignDetailIndex = null;
+
+    function openDesignDetail(index) {
+      const d = (window.currentGalleryDesigns || [])[index];
+      if (!d) return;
+      currentDesignDetailIndex = index;
+      document.getElementById('designDetailImg').src = d.imageUrl;
+      document.getElementById('designDetailImg').alt = d.title;
+      document.getElementById('designDetailNumber').textContent = d.publicId ? `#${d.publicId}` : '';
+      document.getElementById('designDetailTitle').textContent = d.title;
+      document.getElementById('designDetailDesc').textContent = d.description || '';
+      document.getElementById('designDetailModal').style.display = 'flex';
+      history.pushState({ designDetailOpen: true }, '');
+    }
+
+    function closeDesignDetailModal(fromPopState) {
+      document.getElementById('designDetailModal').style.display = 'none';
+      if (!fromPopState && history.state && history.state.designDetailOpen) {
+        history.back();
+      }
+    }
+
+    window.addEventListener('popstate', () => {
+      const modal = document.getElementById('designDetailModal');
+      if (modal && modal.style.display === 'flex') {
+        closeDesignDetailModal(true);
+      }
+    });
+
+    // Pulls the showcased design's actual image into the visitor's OWN
+    // upload gallery as an inspiration photo, exactly as if they'd
+    // uploaded it themselves — then drops them into AI Design Studio with
+    // a description already started, ready to describe their own changes.
+    async function useDesignAsInspiration() {
+      const d = (window.currentGalleryDesigns || [])[currentDesignDetailIndex];
+      if (!d) return;
+      if (!authToken) {
+        closeDesignDetailModal();
+        promptSignIn('AI Design Studio');
+        return;
+      }
+      try {
+        showToast('✨ Adding as inspiration...');
+        const imgRes = await fetch(d.imageUrl);
+        const blob = await imgRes.blob();
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        if (!uploadedPhotos.inspiration) uploadedPhotos.inspiration = [];
+        uploadedPhotos.inspiration.push(base64);
+        if (typeof displayPhotoGallery === 'function') displayPhotoGallery();
+
+        const descField = document.getElementById('designDesc');
+        if (descField && !descField.value.trim()) {
+          descField.value = `Inspired by Design #${d.publicId || ''} (${d.title}) — `;
+        }
+        closeDesignDetailModal();
+        document.getElementById('dashboard')?.classList.add('show');
+        document.getElementById('landingPage')?.classList.add('hidden');
+        switchTab(null, 'design');
+        updateGoHomeLink();
+        showToast('✨ Added to your inspiration photos — describe any changes you\'d like!');
+      } catch (err) {
+        console.error('useDesignAsInspiration error:', err);
+        showToast('❌ Couldn\'t add that as inspiration right now — please try again.');
+      }
+    }
+
+    // Skips generation entirely — copies the showcased concept straight
+    // into a new design under the visitor's own account, ready for "Ask
+    // Quote". Only ever offered on designs that are already featured,
+    // which means they've already passed the consent/reuse checks.
+    async function orderThisDesign() {
+      const d = (window.currentGalleryDesigns || [])[currentDesignDetailIndex];
+      if (!d) return;
+      if (!authToken) {
+        closeDesignDetailModal();
+        promptSignIn('AI Design Studio');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/designs/${d.id}/order-from-featured`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex: d.conceptIndex }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast('❌ ' + (data.error || "Couldn't start that order right now — please try again."));
+          return;
+        }
+        closeDesignDetailModal();
+        document.getElementById('dashboard')?.classList.add('show');
+        document.getElementById('landingPage')?.classList.add('hidden');
+        switchTab(null, 'orders');
+        loadMyDesigns(); loadMyOrders(); loadMyInvoices();
+        updateGoHomeLink();
+        showToast(`🛒 Added as Design #${data.publicId} in My Designs — ask Sonia for a quote whenever you're ready!`);
+      } catch (err) {
+        console.error('orderThisDesign error:', err);
+        showToast('❌ Couldn\'t start that order right now — please try again.');
       }
     }
 
