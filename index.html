@@ -5725,10 +5725,13 @@
     // and apply it once sign-in completes (see updateUI).
     function startDesignForOccasion(value) {
       if (authToken && currentUser && currentUser._id) {
+        document.getElementById('dashboard').classList.add('show');
+        document.getElementById('landingPage').classList.add('hidden');
         switchTab(null, 'design');
         const occ = document.getElementById('occasion');
         if (occ) occ.value = value;
-        document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        updateGoHomeLink();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         window.pendingOccasion = value;
         showToast('✨ Sign in and we\'ll take you straight to designing this look');
