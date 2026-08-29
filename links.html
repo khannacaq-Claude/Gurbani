@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gurbani Fashion — Quick Links</title>
+<style>
+  :root {
+    --vivid: #DB3B99;
+    --vivid-deep: #A83D74;
+    --ink: #141A29;
+    --marigold: #F2A93B;
+    --cream: #FDF8F0;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(160deg, var(--vivid), var(--vivid-deep));
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px 60px;
+  }
+  .wrap { width: 100%; max-width: 420px; text-align: center; }
+  .wordmark { width: 220px; max-width: 70%; margin: 0 auto 6px; display: block; }
+  .subtitle {
+    color: #fff; font-size: 14px; font-weight: 500; opacity: 0.9;
+    margin: 0 0 34px;
+  }
+  .links { display: flex; flex-direction: column; gap: 14px; }
+  a.btn {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--white); color: var(--ink);
+    text-decoration: none; font-weight: 700; font-size: 16px;
+    padding: 17px 20px; border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(20,10,20,0.18);
+    transition: transform 0.15s ease;
+  }
+  a.btn:active { transform: scale(0.98); }
+  a.btn.primary { background: var(--ink); color: var(--marigold); }
+  a.btn .icon { font-size: 20px; flex: none; }
+  a.btn .label { flex: 1; text-align: left; }
+  a.btn .chev { color: #bbb; font-size: 18px; }
+  a.btn.primary .chev { color: rgba(242,169,59,0.5); }
+  footer {
+    margin-top: 36px; color: rgba(255,255,255,0.75);
+    font-size: 12px; font-weight: 500;
+  }
+  footer a { color: #fff; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="wordmark" src="gurbani_wordmark_final.png" alt="Gurbani Fashion">
+    <p class="subtitle">A Boutique by Sonia · Faridabad, NCR</p>
+
+    <div class="links">
+      <a class="btn primary" href="https://gurbanifashion.com/#lensSection">
+        <span class="icon">✨</span><span class="label">Try AI Design Studio — Free</span><span class="chev">›</span>
+      </a>
+      <a class="btn" href="https://gurbanifashion.com/#rcSection">
+        <span class="icon">💰</span><span class="label">Rate Card</span><span class="chev">›</span>
+      </a>
+      <a class="btn" href="https://gurbanifashion.com/#marketplaceSection">
+        <span class="icon">🛍️</span><span class="label">Marketplace</span><span class="chev">›</span>
+      </a>
+      <a class="btn" href="https://gurbanifashion.com/#journeySection">
+        <span class="icon">📅</span><span class="label">Book / Track an Appointment</span><span class="chev">›</span>
+      </a>
+      <a class="btn" href="https://wa.me/919899810977">
+        <span class="icon">💬</span><span class="label">Chat on WhatsApp</span><span class="chev">›</span>
+      </a>
+      <a class="btn" href="https://gurbanifashion.com/#visitSection">
+        <span class="icon">📍</span><span class="label">Visit Us / Directions</span><span class="chev">›</span>
+      </a>
+      <a class="btn" href="https://gurbanifashion.com">
+        <span class="icon">🏠</span><span class="label">Full Website</span><span class="chev">›</span>
+      </a>
+    </div>
+
+    <footer>
+      9899810977 &nbsp;·&nbsp; <a href="https://gurbanifashion.com">gurbanifashion.com</a>
+    </footer>
+  </div>
+</body>
+</html>
