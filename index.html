@@ -2693,7 +2693,7 @@
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">Do you offer doorstep measurement or fabric pickup?<span class="faq-chevron">▾</span></button>
-              <div class="faq-answer"><p>Yes! Free doorstep measurement and fabric pickup within Greenfields Colony, Faridabad. You'll need to book it as an appointment first (choose "Doorstep Measurement & Pickup" when booking) so we know exactly when to come — it's not something we can arrange over a casual message.</p></div>
+              <div class="faq-answer"><p>Yes! Free doorstep measurement and fabric pickup within Greenfields Colony, Faridabad — book it as an appointment (choose "Doorstep Measurement & Pickup") so we know exactly when to come. Outside Greenfields, it's not free by default, but message Sonia on WhatsApp and she'll let you know if it's possible, with any cost worked out between you.</p></div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">What if I don't like any of the 3 concepts?<span class="faq-chevron">▾</span></button>
@@ -3135,20 +3135,28 @@
               </select>
             </div>
             <div class="form-group" id="doorstepAddressField" style="display:none;">
-              <label>Your Address (Greenfields Colony only)</label>
+              <label>Your PIN Code</label>
+              <input type="text" id="apptDoorstepPincode" inputmode="numeric" maxlength="6" placeholder="e.g. 121010" oninput="checkDoorstepPincode()">
+              <label style="margin-top:10px; display:block;">Your Address</label>
               <textarea id="apptDoorstepAddress" rows="2" placeholder="House no., street, landmark — Greenfields Colony, Faridabad"></textarea>
-              <p style="font-size:11.5px; color:var(--text-muted); margin:4px 0 0;">This free service is only available within Greenfields Colony. If you're outside this area, please choose In-Store Visit instead.</p>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:4px 0 0;">This free service is only available within Greenfields Colony.</p>
             </div>
-            <div class="form-group">
-              <label>Pick a Day</label>
-              <select id="apptDaySelect" onchange="renderApptTimeSlots()"><option>Loading availability...</option></select>
+            <div id="doorstepOutOfAreaNotice" style="display:none; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px; margin-bottom:16px; font-size:13px;">
+              That PIN code doesn't look like Greenfields Colony, so free doorstep pickup isn't guaranteed there. For other areas, message Sonia directly on WhatsApp — she'll let you know if it's possible, and any cost can be worked out between you.
+              <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20ask%20about%20doorstep%20measurement%2Fpickup%20outside%20Greenfields%20Colony." target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; background:#25D366; color:#fff; text-decoration:none; padding:9px 16px; border-radius:20px; font-weight:700; font-size:13px;">💬 Message Sonia on WhatsApp</a>
             </div>
-            <div class="form-group">
-              <label>Pick a Time</label>
-              <div id="apptTimeSlots" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            <div id="apptBookingRestOfForm">
+              <div class="form-group">
+                <label>Pick a Day</label>
+                <select id="apptDaySelect" onchange="renderApptTimeSlots()"><option>Loading availability...</option></select>
+              </div>
+              <div class="form-group">
+                <label>Pick a Time</label>
+                <div id="apptTimeSlots" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+              </div>
+              <div class="form-group"><label>Notes (optional)</label><textarea id="apptNotes" rows="2"></textarea></div>
+              <button type="button" class="btn-submit" onclick="submitAppointment()">Book Appointment</button>
             </div>
-            <div class="form-group"><label>Notes (optional)</label><textarea id="apptNotes" rows="2"></textarea></div>
-            <button type="button" class="btn-submit" onclick="submitAppointment()">Book Appointment</button>
           </div>
           <h4 style="margin-bottom: 10px;">My Appointments</h4>
           <div id="myAppointmentsList">Loading...</div>
@@ -10711,6 +10719,28 @@
     function toggleDoorstepAddressField() {
       const isDoorstep = document.getElementById('apptType').value === 'doorstep-pickup';
       document.getElementById('doorstepAddressField').style.display = isDoorstep ? 'block' : 'none';
+      if (isDoorstep) {
+        checkDoorstepPincode();
+      } else {
+        document.getElementById('doorstepOutOfAreaNotice').style.display = 'none';
+        document.getElementById('apptBookingRestOfForm').style.display = 'block';
+      }
+    }
+
+    // 121010 is Greenfields Colony's registered PIN, but PIN boundaries
+    // routinely cover more than one locality, so this is a best-effort
+    // check, not a guarantee — Sonia still reviews the actual written
+    // address before going anywhere. Outside this PIN, the free-booking
+    // flow is replaced entirely with a WhatsApp redirect, since "free
+    // doorstep pickup" specifically shouldn't be offered/booked for an
+    // area it was never meant to cover.
+    function checkDoorstepPincode() {
+      const pin = document.getElementById('apptDoorstepPincode').value.trim();
+      const notice = document.getElementById('doorstepOutOfAreaNotice');
+      const restOfForm = document.getElementById('apptBookingRestOfForm');
+      const outOfArea = pin.length === 6 && pin !== '121010';
+      notice.style.display = outOfArea ? 'block' : 'none';
+      restOfForm.style.display = outOfArea ? 'none' : 'block';
     }
 
     async function submitAppointment() {
@@ -10726,8 +10756,9 @@
       // the backend appointment schema.
       if (apptType === 'doorstep-pickup') {
         const address = document.getElementById('apptDoorstepAddress').value.trim();
+        const pin = document.getElementById('apptDoorstepPincode').value.trim();
         if (!address) { showToast('❌ Please add your address for doorstep pickup (Greenfields Colony only)'); return; }
-        notes = `📍 Doorstep pickup address: ${address}${notes ? '\n\n' + notes : ''}`;
+        notes = `📍 Doorstep pickup address: ${address} (PIN: ${pin || 'not given'})${notes ? '\n\n' + notes : ''}`;
       }
       const body = {
         appointmentType: apptType,
