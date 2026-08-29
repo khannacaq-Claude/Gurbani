@@ -5697,6 +5697,11 @@
       activeBtn?.setAttribute('aria-selected', 'true');
       if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
       if (tabName === 'appointments' && typeof loadAppointmentAvailability === 'function') loadAppointmentAvailability();
+      // Switching tabs should always land you at the top of the new tab's
+      // content — without this, tapping a tab while scrolled down
+      // elsewhere shows the right content, but leaves you scrolled past
+      // it, making it look like the tap didn't actually take you there.
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // Wires up proper ARIA tab semantics (role="tablist"/"tab"/"tabpanel",
@@ -6310,12 +6315,32 @@
     function openImageLightbox(url) {
       document.getElementById('imageLightboxImg').src = url;
       document.getElementById('imageLightboxOverlay').style.display = 'flex';
+      // Push a history entry so the phone's back button closes the
+      // lightbox first, instead of leaving the whole site — without
+      // this, mobile back-gesture/back-button felt like it "exited"
+      // the app rather than just dismissing the photo on top.
+      history.pushState({ lightboxOpen: true }, '');
     }
 
-    function closeImageLightbox() {
+    function closeImageLightbox(fromPopState) {
       document.getElementById('imageLightboxOverlay').style.display = 'none';
       document.getElementById('imageLightboxImg').src = '';
+      // If this close was triggered by the back button itself (popstate),
+      // the history entry is already gone — don't call history.back()
+      // again or it'll consume a second, real navigation the person
+      // didn't ask for. Only consume the pushed entry when closing via
+      // the × button or tapping outside the image.
+      if (!fromPopState && history.state && history.state.lightboxOpen) {
+        history.back();
+      }
     }
+
+    window.addEventListener('popstate', () => {
+      const overlay = document.getElementById('imageLightboxOverlay');
+      if (overlay && overlay.style.display === 'flex') {
+        closeImageLightbox(true);
+      }
+    });
 
     async function generateConceptImage(idx, isRetry) {
       const imgContainer = document.getElementById(`designImage_${idx}`);
