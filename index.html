@@ -5778,9 +5778,9 @@
 
           img.onerror = function() {
             console.error('❌ Image load error for', file.name, '- storing raw base64 anyway');
-            // Store the raw data URL even if Image() fails
-            uploadedPhotos[currentPhotoType].push(e.target.result);
-            checkDone();
+            // Still route through the same face-check for consistency —
+            // no reason a decode failure should skip validation.
+            storeOrValidatePhoto(e.target.result);
           };
 
           img.onload = function() {
@@ -5798,14 +5798,48 @@
               const ctx = canvas.getContext('2d');
               ctx.drawImage(img, 0, 0, width, height);
               const base64 = canvas.toDataURL('image/jpeg', 0.8);
-              uploadedPhotos[currentPhotoType].push(base64);
-              console.log('✅ Compressed and stored');
+              storeOrValidatePhoto(base64);
             } catch (err) {
               console.error('❌ Compression failed, storing raw:', err);
-              uploadedPhotos[currentPhotoType].push(e.target.result);
+              storeOrValidatePhoto(e.target.result);
             }
-            checkDone();
           };
+
+          // Selfie photos get a quick face-presence check before being
+          // accepted — a non-face photo filed under "Selfie" (wrong
+          // category, a screenshot, anything) would otherwise sit there
+          // looking uploaded while quietly not being useful for anything.
+          // Every other photo type skips this and stores immediately.
+          function storeOrValidatePhoto(dataUrl) {
+            if (currentPhotoType !== 'selfie') {
+              uploadedPhotos[currentPhotoType].push(dataUrl);
+              console.log('✅ Compressed and stored');
+              checkDone();
+              return;
+            }
+            fetch(`${API}/api/designs/validate-selfie`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+              body: JSON.stringify({ photo: dataUrl }),
+            })
+              .then((r) => r.json())
+              .then((data) => {
+                if (data.hasFace === false) {
+                  showToast(`❌ "${file.name}" doesn't look like it shows a face — please upload a clear selfie instead.`);
+                } else {
+                  uploadedPhotos[currentPhotoType].push(dataUrl);
+                  console.log('✅ Selfie verified and stored');
+                }
+                checkDone();
+              })
+              .catch((err) => {
+                // Fail open, matching the backend's own policy — never
+                // block a real upload just because our own check broke.
+                console.warn('⚠️ Selfie face-check request failed, storing anyway:', err.message);
+                uploadedPhotos[currentPhotoType].push(dataUrl);
+                checkDone();
+              });
+          }
 
           img.src = e.target.result;
         };
