@@ -2306,6 +2306,8 @@
             <img src="icon-192.png" alt="" class="auth-modal-mark">
             <h3 id="emailAuthHeading">Sign In</h3>
             <p class="auth-modal-sub" id="emailAuthSub">Welcome back! Please enter your details.</p>
+            <div id="signinArea" class="auth-modal-google"></div>
+            <div class="auth-modal-divider"><span>or sign in with email</span></div>
             <div class="auth-field" id="emailAuthNameField" style="display:none;">
               <div class="auth-field-row"><label>Name</label></div>
               <input type="text" id="emailAuthName" placeholder="Your full name">
@@ -2319,8 +2321,6 @@
               <input type="password" id="emailAuthPassword" placeholder="Password">
             </div>
             <button type="button" class="btn-submit" onclick="submitEmailAuth()">Sign In</button>
-            <div class="auth-modal-divider"><span>or continue with</span></div>
-            <div id="signinArea" class="auth-modal-google"></div>
             <p class="auth-switch" id="emailAuthSwitchLine">Don't have an account? <a href="#" onclick="switchEmailAuthMode('signup'); return false;">Sign up</a></p>
           </div>
         </div>
