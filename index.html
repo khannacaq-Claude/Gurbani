@@ -2606,7 +2606,7 @@
             <div class="process-step">
               <div class="process-step-num">02</div>
               <h4>Measurements</h4>
-              <p>We'll take your measurements in-store, or you can send us ones you already have. Within Greenfields Colony, Faridabad, we'll even come to you — free doorstep measurement &amp; fabric pickup. Every piece is cut just for you — never off-the-rack sizing.</p>
+              <p>We'll take your measurements in-store, or you can send us ones you already have. Within Greenfields Colony, Faridabad, we'll even come to you — book a free doorstep measurement &amp; fabric pickup appointment. Every piece is cut just for you — never off-the-rack sizing.</p>
             </div>
             <div class="process-step">
               <div class="process-step-num">03</div>
@@ -2693,7 +2693,7 @@
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">Do you offer doorstep measurement or fabric pickup?<span class="faq-chevron">▾</span></button>
-              <div class="faq-answer"><p>Yes! Free doorstep measurement and fabric pickup within Greenfields Colony, Faridabad. Just ask Sonia when you book your appointment or message us directly.</p></div>
+              <div class="faq-answer"><p>Yes! Free doorstep measurement and fabric pickup within Greenfields Colony, Faridabad. You'll need to book it as an appointment first (choose "Doorstep Measurement & Pickup" when booking) so we know exactly when to come — it's not something we can arrange over a casual message.</p></div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">What if I don't like any of the 3 concepts?<span class="faq-chevron">▾</span></button>
@@ -3126,12 +3126,18 @@
             <h4 style="margin-bottom: 12px;">Book an Appointment</h4>
             <div class="form-group">
               <label>Type</label>
-              <select id="apptType" onchange="loadAppointmentAvailability()">
+              <select id="apptType" onchange="loadAppointmentAvailability(); toggleDoorstepAddressField();">
                 <option value="in-store-free">In-Store Visit (Free)</option>
+                <option value="doorstep-pickup">Doorstep Measurement &amp; Pickup (Free, Greenfields Colony only)</option>
                 <option value="styling-consultation">Styling Consultation</option>
                 <option value="video-call">Video Call Consultation</option>
                 <option value="urgent-appointment">Urgent Appointment</option>
               </select>
+            </div>
+            <div class="form-group" id="doorstepAddressField" style="display:none;">
+              <label>Your Address (Greenfields Colony only)</label>
+              <textarea id="apptDoorstepAddress" rows="2" placeholder="House no., street, landmark — Greenfields Colony, Faridabad"></textarea>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:4px 0 0;">This free service is only available within Greenfields Colony. If you're outside this area, please choose In-Store Visit instead.</p>
             </div>
             <div class="form-group">
               <label>Pick a Day</label>
@@ -9304,7 +9310,7 @@
     async function loadAdminAppointments() {
       const list = document.getElementById('adminAppointmentsList');
       list.innerHTML = 'Loading...';
-      const typeLabels = { 'in-store-free': 'In-Store Visit', 'styling-consultation': 'Styling Consultation', 'video-call': 'Video Call', 'urgent-appointment': 'Urgent Appointment' };
+      const typeLabels = { 'in-store-free': 'In-Store Visit', 'doorstep-pickup': 'Doorstep Pickup', 'styling-consultation': 'Styling Consultation', 'video-call': 'Video Call', 'urgent-appointment': 'Urgent Appointment' };
       try {
         const res = await fetch(`${API}/api/appointments/admin/all-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
@@ -10702,15 +10708,32 @@
       btnEl.style.color = 'white';
     }
 
+    function toggleDoorstepAddressField() {
+      const isDoorstep = document.getElementById('apptType').value === 'doorstep-pickup';
+      document.getElementById('doorstepAddressField').style.display = isDoorstep ? 'block' : 'none';
+    }
+
     async function submitAppointment() {
       const dayIdx = document.getElementById('apptDaySelect').value;
       const day = apptAvailability[dayIdx];
       if (!day || !apptSelectedTime) { showToast('❌ Pick a day and time first'); return; }
+      const apptType = document.getElementById('apptType').value;
+      let notes = document.getElementById('apptNotes').value.trim();
+      // Doorstep pickup is only actually usable if Sonia knows where to
+      // go — booking is the required path for this service (not an
+      // informal WhatsApp ask), so the address is required here too,
+      // folded into notes since there's no dedicated address field on
+      // the backend appointment schema.
+      if (apptType === 'doorstep-pickup') {
+        const address = document.getElementById('apptDoorstepAddress').value.trim();
+        if (!address) { showToast('❌ Please add your address for doorstep pickup (Greenfields Colony only)'); return; }
+        notes = `📍 Doorstep pickup address: ${address}${notes ? '\n\n' + notes : ''}`;
+      }
       const body = {
-        appointmentType: document.getElementById('apptType').value,
+        appointmentType: apptType,
         appointmentDate: day.date,
         appointmentTime: apptSelectedTime,
-        notes: document.getElementById('apptNotes').value.trim(),
+        notes,
       };
       try {
         const res = await fetch(`${API}/api/appointments`, {
@@ -10722,6 +10745,7 @@
         if (res.ok && data.success) {
           showToast('✅ Appointment booked!');
           document.getElementById('apptNotes').value = '';
+          if (document.getElementById('apptDoorstepAddress')) document.getElementById('apptDoorstepAddress').value = '';
           loadAppointmentAvailability();
           loadMyAppointments();
         } else {
@@ -10753,7 +10777,7 @@
       const list = document.getElementById('myAppointmentsList');
       if (!list) return;
       list.innerHTML = 'Loading...';
-      const typeLabels = { 'in-store-free': 'In-Store Visit', 'styling-consultation': 'Styling Consultation', 'video-call': 'Video Call', 'urgent-appointment': 'Urgent Appointment' };
+      const typeLabels = { 'in-store-free': 'In-Store Visit', 'doorstep-pickup': 'Doorstep Pickup', 'styling-consultation': 'Styling Consultation', 'video-call': 'Video Call', 'urgent-appointment': 'Urgent Appointment' };
       try {
         const res = await fetch(`${API}/api/appointments/my-appointments`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
