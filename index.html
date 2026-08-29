@@ -5292,6 +5292,72 @@
 
     let currentUser = null;
     let authToken = null;
+
+    // ---------- Global session-expiry detection ----------
+    // Wraps every fetch() call site-wide so an expired/invalid token
+    // (backend returns 401) always cleanly signs the person out with a
+    // clear message, instead of leaving them looking "signed in" while
+    // every action silently fails. Excludes the auth endpoints themselves,
+    // since a wrong password during an actual sign-in attempt is also a
+    // legitimate 401 and must NOT be treated as "your session expired."
+    (function () {
+      const originalFetch = window.fetch;
+      const AUTH_ENDPOINTS = ['/api/auth/signin', '/api/auth/signup', '/api/auth/google-signin'];
+      window.fetch = function (...args) {
+        return originalFetch.apply(this, args).then((response) => {
+          const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+          const isAuthEndpoint = AUTH_ENDPOINTS.some((ep) => url.includes(ep));
+          if (response.status === 401 && authToken && !isAuthEndpoint) {
+            handleSessionExpired();
+          }
+          return response;
+        });
+      };
+    })();
+
+    function handleSessionExpired() {
+      if (!authToken) return; // already handled (e.g. two calls failed at once)
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      authToken = null;
+      currentUser = null;
+      updateUI();
+      goToLandingPage();
+      showToast('⏰ Your session expired — please sign in again.');
+    }
+
+    // ---------- Install App link (footer) ----------
+    // Chrome decides entirely on its own when/whether to show its native
+    // install prompt — that's left alone. This just adds a permanent,
+    // always-available manual link for anyone who wants to install without
+    // waiting for Chrome's own timing. Hidden unless the browser reports
+    // the site as actually installable right now (and not already
+    // installed) — never shown as a dead/non-functional link.
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      const link = document.getElementById('installAppLinkWrap');
+      if (link) link.style.display = 'inline';
+    });
+
+    function triggerInstallPrompt(event) {
+      if (event) event.preventDefault();
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.finally(() => {
+        deferredInstallPrompt = null;
+        const link = document.getElementById('installAppLinkWrap');
+        if (link) link.style.display = 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      const link = document.getElementById('installAppLinkWrap');
+      if (link) link.style.display = 'none';
+    });
+
     let googleInitialized = false;
     let uploadedPhotos = {}; // { type: [base64_images] }
     let currentPhotoType = null; // no default — must be explicitly chosen (see
@@ -11048,6 +11114,10 @@
       <a href="/refund-cancellation-policy.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Refund & Cancellation Policy</a>
       <br style="margin-bottom:6px;">
       Gurbani Fashion Boutique &nbsp;·&nbsp; 9899810977
+      <span id="installAppLinkWrap" style="display:none;">
+        <br style="margin-bottom:6px;">
+        <a href="#" id="installAppLink" onclick="triggerInstallPrompt(event)" style="color: var(--vivid); text-decoration: none; font-weight: bold;">📲 Install App</a>
+      </span>
       <br style="margin-bottom:6px;">
       <span class="version-badge" id="versionBadge"></span>
     </footer>
