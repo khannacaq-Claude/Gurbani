@@ -870,8 +870,8 @@
 
     .concept-row { display:flex; gap:8px; }
     .concept-swatch {
-      flex:1; height:70px; border-radius:8px; display:flex; align-items:flex-end;
-      padding:6px; font-size:10px; font-weight:700; color:white;
+      flex:1; height:170px; border-radius:8px; display:flex; align-items:flex-end;
+      padding:8px; font-size:11px; font-weight:700; color:white;
       background: linear-gradient(135deg, var(--c1), var(--c2));
     }
 
@@ -5800,16 +5800,22 @@
     // Swap the illustrative concept swatches for real admin-featured designs,
     // if any exist yet. Fails silently and keeps the illustrative fallback —
     // this must never break the landing page for anyone.
-    (async function loadFeaturedDesigns() {
+    // Pulls a larger pool and picks 3 at random (rather than always the
+    // same "most recent 3") so repeat visitors see variety, and re-runs
+    // every ~2.5 hours for anyone who leaves the tab open a long time.
+    async function loadFeaturedDesigns() {
       try {
-        const res = await fetch(`${API}/api/designs/featured`);
+        const res = await fetch(`${API}/api/designs/featured?limit=15`);
         const data = await res.json();
         if (!res.ok || !data.designs || data.designs.length === 0) return;
 
         const row = document.getElementById('featuredConceptRow');
         if (!row) return;
         const swatches = row.querySelectorAll('.concept-swatch');
-        window.featuredDesignsData = data.designs.slice(0, 3);
+
+        // Shuffle, then take the first 3 — a fresh random pick each run.
+        const shuffled = [...data.designs].sort(() => Math.random() - 0.5);
+        window.featuredDesignsData = shuffled.slice(0, 3);
         window.featuredDesignsData.forEach((item, i) => {
           const el = swatches[i];
           if (!el) return;
@@ -5828,7 +5834,9 @@
       } catch (err) {
         // no-op — illustrative placeholders stay as-is
       }
-    })();
+    }
+    loadFeaturedDesigns();
+    setInterval(loadFeaturedDesigns, 2.5 * 60 * 60 * 1000); // ~every 2.5 hours, for anyone who leaves the tab open
 
     function openFeaturedDesignLightbox(index) {
       const item = (window.featuredDesignsData || [])[index];
