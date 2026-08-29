@@ -2904,7 +2904,7 @@
               </div>
 
               <div class="photo-upload-tabs">
-                <button type="button" class="photo-type-btn active" onclick="selectPhotoType('selfie')" style="position:relative;">👤 Selfies<span id="badge_selfie" class="photo-type-badge" style="display:none;">0</span></button>
+                <button type="button" class="photo-type-btn" onclick="selectPhotoType('selfie')" style="position:relative;">👤 Selfies<span id="badge_selfie" class="photo-type-badge" style="display:none;">0</span></button>
                 <button type="button" class="photo-type-btn" onclick="selectPhotoType('fabric')" style="position:relative;">🧵 Fabrics<span id="badge_fabric" class="photo-type-badge" style="display:none;">0</span></button>
                 <button type="button" class="photo-type-btn" onclick="selectPhotoType('lace')" style="position:relative;">🎀 Laces<span id="badge_lace" class="photo-type-badge" style="display:none;">0</span></button>
                 <button type="button" class="photo-type-btn" onclick="selectPhotoType('accessories')" style="position:relative;">✨ Accessories<span id="badge_accessories" class="photo-type-badge" style="display:none;">0</span></button>
@@ -5294,7 +5294,10 @@
     let authToken = null;
     let googleInitialized = false;
     let uploadedPhotos = {}; // { type: [base64_images] }
-    let currentPhotoType = 'selfie';
+    let currentPhotoType = null; // no default — must be explicitly chosen (see
+    // handlePhotoAreaClick/handleTakePhotoClick). A silent default here is
+    // exactly what caused fabric swatches to get miscategorized as selfies
+    // and then wrongly excluded from image generation — see the guard below.
     let currentDesignId = null;
     let currentDesignDescription = '';
     let currentConcepts = [];
@@ -5668,7 +5671,7 @@
       if (consented) {
         uploadArea.style.opacity = '1';
         takePhotoBtn.style.opacity = '1';
-        hint.textContent = 'Upload selfie photos for best personalization';
+        hint.textContent = currentPhotoType ? photoTypeHints[currentPhotoType] : '👆 First tap what kind of photo this is (Selfie, Fabric, etc.), then upload';
         generateBtn.disabled = false;
         generateBtn.title = '';
       } else {
@@ -5686,6 +5689,10 @@
         showToast('Please check the consent checkbox above before uploading photos.');
         return;
       }
+      if (!currentPhotoType) {
+        showToast('👆 Please tap what kind of photo this is (Selfie, Fabric, Lace, Accessory, or Inspiration) before uploading.');
+        return;
+      }
       document.getElementById('photoInput').click();
     }
 
@@ -5693,6 +5700,10 @@
       const consented = document.getElementById('photoConsentCheckbox').checked;
       if (!consented) {
         showToast('Please check the consent checkbox above before uploading photos.');
+        return;
+      }
+      if (!currentPhotoType) {
+        showToast('👆 Please tap what kind of photo this is (Selfie, Fabric, Lace, Accessory, or Inspiration) before uploading.');
         return;
       }
       document.getElementById('photoCameraInput').click();
@@ -5713,6 +5724,15 @@
       const consented = document.getElementById('photoConsentCheckbox').checked;
       if (!consented) {
         showToast('Please check the consent checkbox above before uploading photos.');
+        event.target.value = '';
+        return;
+      }
+      // Same defense-in-depth for photo type — without this, a photo could
+      // still slip through with no category attached (or a stale one from
+      // before a category was ever chosen), which is the exact bug that
+      // caused fabric swatches to be silently miscategorized before.
+      if (!currentPhotoType) {
+        showToast('👆 Please tap what kind of photo this is before uploading.');
         event.target.value = '';
         return;
       }
