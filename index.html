@@ -2084,11 +2084,16 @@
         display: none !important;
       }
 
-      /* LightWidget's Instagram embed reflows to a taller layout on narrow
-         screens than desktop needs — the fixed 420px min-height combined
-         with overflow:hidden was silently clipping the bottom row of
-         photos on mobile. Give it real room to actually render. */
-      .insta-frame-inner { min-height: 900px; }
+      /* LightWidget's actual rendered height changed once we adjusted its
+         own dashboard settings (fewer rows by default + a "Show More
+         Posts" button, added when we fixed the "showing too few photos"
+         issue). The old 900px reserved height was calibrated for the
+         previous, taller unclipped layout — now that the widget is
+         genuinely shorter (one row + buttons), that same fixed height
+         just leaves a large empty gap below it instead. Lowered to give
+         enough room to avoid the original clipping issue without
+         over-reserving space the content no longer needs. */
+      .insta-frame-inner { min-height: 520px; }
 
       main { padding: 0 12px; margin: 20px auto; }
       .card { padding: 20px 16px; }
@@ -2337,7 +2342,8 @@
           <span>Salwar Suit</span><span class="hp-dot">•</span>
           <span>Anarkali</span><span class="hp-dot">•</span>
           <span>Lehenga</span><span class="hp-dot">•</span>
-          <span>Gown</span>
+          <span>Gown</span><span class="hp-dot">•</span>
+          <span>Designer Dresses</span>
         </div>
         <div class="header-mini">
           <span class="hm-link" onclick="scrollToSection('lensSection')">✨ AI-Powered Designs</span><span class="hm-dot">•</span>
@@ -2606,7 +2612,7 @@
             <div class="process-step">
               <div class="process-step-num">02</div>
               <h4>Measurements</h4>
-              <p>We'll take your measurements in-store, or you can send us ones you already have. Within Greenfields Colony, Faridabad, we'll even come to you — book a free doorstep measurement &amp; fabric pickup appointment. Every piece is cut just for you — never off-the-rack sizing.</p>
+              <p>We'll take your measurements in-store, or you can send us ones you already have. Every piece is cut just for you — never off-the-rack sizing.</p>
             </div>
             <div class="process-step">
               <div class="process-step-num">03</div>
@@ -2690,10 +2696,6 @@
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">Do I need to visit the store?<span class="faq-chevron">▾</span></button>
               <div class="faq-answer"><p>Not to get started — you can browse designs and ask for a quote fully online. You'll just need to come in once (or send us measurements you already have) before we start stitching, so the fit is spot on.</p></div>
-            </div>
-            <div class="faq-item">
-              <button class="faq-question" onclick="toggleFaq(this)">Do you offer doorstep measurement or fabric pickup?<span class="faq-chevron">▾</span></button>
-              <div class="faq-answer"><p>Yes! Free doorstep measurement and fabric pickup within Greenfields Colony, Faridabad — book it as an appointment (choose "Doorstep Measurement & Pickup") so we know exactly when to come. Outside Greenfields, it's not free by default, but message Sonia on WhatsApp and she'll let you know if it's possible, with any cost worked out between you.</p></div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">What if I don't like any of the 3 concepts?<span class="faq-chevron">▾</span></button>
@@ -3706,7 +3708,7 @@
                   <div class="form-group"><label>Phone</label><input id="measPhone" required></div>
                   <div class="form-group"><label>Garment Type</label>
                     <select id="measGarment">
-                      <option>Lehenga</option><option>Anarkali</option><option>Kurti</option><option>Gown</option><option>Blouse</option><option>Other</option>
+                      <option>Lehenga</option><option>Anarkali</option><option>Kurti</option><option>Gown</option><option>Blouse</option><option>Designer Dress</option><option>Other</option>
                     </select>
                   </div>
                 </div>
@@ -4883,9 +4885,9 @@
       const arrowBtnStyle = 'position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; background:rgba(20,10,20,0.16); color:rgba(255,255,255,0.75); border:none; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; opacity:0.55; transition:background 0.2s ease, opacity 0.2s ease, color 0.2s ease;';
 
       const dotsHtml = multi
-        ? `<div style="position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; gap:6px; z-index:2;">` +
+        ? `<div style="position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; align-items:center; gap:6px; z-index:2;">` +
           bannerRotationPool.map((_, i) =>
-            `<button type="button" onclick="event.stopPropagation(); goToBannerSlide(${i})" aria-label="Go to banner ${i + 1}" style="width:${i === bannerRotationIndex ? '18px' : '7px'}; height:7px; border-radius:4px; border:none; padding:0; cursor:pointer; background:${i === bannerRotationIndex ? 'var(--marigold)' : 'rgba(255,255,255,0.6)'}; transition:width 0.2s ease, background 0.2s ease;"></button>`
+            `<button type="button" onclick="event.stopPropagation(); goToBannerSlide(${i})" aria-label="Go to banner ${i + 1}" style="box-sizing:border-box !important; width:${i === bannerRotationIndex ? '18px' : '7px'} !important; height:7px !important; min-width:0 !important; min-height:0 !important; max-height:7px !important; flex:none !important; border-radius:4px !important; border:none !important; padding:0 !important; margin:0 !important; line-height:0 !important; font-size:0 !important; cursor:pointer; background:${i === bannerRotationIndex ? 'var(--marigold)' : 'rgba(255,255,255,0.6)'}; transition:width 0.2s ease, background 0.2s ease;"></button>`
           ).join('') +
           `</div>`
         : '';
@@ -5318,8 +5320,14 @@
       if (!target) { nextTourStep(); return; }
 
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // give the smooth scroll a moment to settle before measuring position
-      setTimeout(() => positionTourStep(target, step, i), 350);
+      // Give the smooth scroll a real chance to fully settle before
+      // measuring position — mobile scroll animations routinely take
+      // longer than a short fixed delay to finish, especially over
+      // longer distances. Measuring too early captures a mid-scroll,
+      // transient position instead of where the element actually ends
+      // up, which is what was making the highlight box land in the
+      // wrong place / cover the wrong content on mobile specifically.
+      setTimeout(() => positionTourStep(target, step, i), 600);
     }
 
     function positionTourStep(target, step, i) {
@@ -11628,6 +11636,8 @@
       <a href="/terms-of-service.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Terms of Service</a>
       &nbsp;·&nbsp;
       <a href="/refund-cancellation-policy.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Refund & Cancellation Policy</a>
+      <br style="margin-bottom:6px;">
+      <a href="/ai-fashion-design-explained.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">How AI Fashion Design Works</a>
       <br style="margin-bottom:6px;">
       Gurbani Fashion Boutique &nbsp;·&nbsp; 9899810977
       <span id="installAppLinkWrap" style="display:none;">
