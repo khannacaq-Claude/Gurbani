@@ -2433,13 +2433,22 @@
         <button type="button" data-target="rcSection" onclick="jumpToTab('rcSection', this)">💰 Rate Card</button>
         <button type="button" data-target="marketplaceSection" onclick="jumpToTab('marketplaceSection', this)">🛍️ Marketplace</button>
         <button type="button" data-target="journeySection" onclick="jumpToTab('journeySection', this)">📅 Your Journey</button>
-        <button type="button" data-target="processSection" onclick="jumpToTab('processSection', this)">✂️ How It Works</button>
-        <button type="button" data-target="instagramSection" onclick="jumpToTab('instagramSection', this)">📷 Instagram</button>
-        <button type="button" data-target="statsSection" onclick="jumpToTab('statsSection', this)">📊 Stats</button>
-        <button type="button" data-target="visitSection" onclick="jumpToTab('visitSection', this)">📍 Visit Us</button>
-        <button type="button" data-target="faqSection" onclick="jumpToTab('faqSection', this)">❓ FAQ</button>
-        <button type="button" data-target="storySection" onclick="jumpToTab('storySection', this)">📖 Our Story</button>
-        <button type="button" data-target="subscribeSection" onclick="jumpToTab('subscribeSection', this)">📲 Stay in Loop</button>
+        <div class="nav-guides-dropdown" style="position:relative; display:inline-block; flex:none;">
+          <button type="button" onclick="toggleGuidesDropdown(event)" style="opacity:0.8;">☰ More ▾</button>
+          <div id="guidesDropdownMenu" style="display:none; position:absolute; top:100%; right:0; background:#fff; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.25); min-width:230px; z-index:600; overflow:hidden; margin-top:4px; max-height:70vh; overflow-y:auto;">
+            <a href="#" onclick="closeGuidesDropdownAndJump('processSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">✂️ How It Works</a>
+            <a href="#" onclick="closeGuidesDropdownAndJump('instagramSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📷 Instagram</a>
+            <a href="#" onclick="closeGuidesDropdownAndJump('statsSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📊 Stats</a>
+            <a href="#" onclick="closeGuidesDropdownAndJump('visitSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📍 Visit Us</a>
+            <a href="#" onclick="closeGuidesDropdownAndJump('faqSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">❓ FAQ</a>
+            <a href="#" onclick="closeGuidesDropdownAndJump('storySection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📖 Our Story</a>
+            <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:2px solid #ddd;">📲 Stay in Loop</a>
+            <a href="/ai-fashion-design-explained.html" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">🎨 How AI Fashion Design Works</a>
+            <a href="/self-measurement-guide.html" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📏 Self-Measurement Guide</a>
+            <a href="/fabric-care-guide.html" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">🧵 Fabric Care Guide</a>
+            <a href="/occasion-fabric-guide.html" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">🎉 Occasion Fabric Guide</a>
+          </div>
+        </div>
       </nav>
       <div class="card">
         <div class="trust-badge" onclick="scrollToSection('lensSection')" style="cursor:pointer;"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
@@ -3225,6 +3234,67 @@
           <p style="color:#666; margin-bottom:16px; font-size:13px;">Indicative starting prices — your final quote depends on fabric, design complexity, and any customization. Ask Sonia for an exact quote.</p>
           <div id="rateCardAdminControls" style="display:none; margin-bottom:20px;"></div>
           <div id="rateCardList">Loading...</div>
+
+          <!-- FABRIC LENGTH CALCULATOR — a general estimate to help someone
+               buying fabric ahead of a visit know roughly how much to get.
+               Deliberately framed as an estimate throughout, not a
+               guarantee — the underlying formulas are common tailoring
+               rule-of-thumb starting points, not Sonia's own calibrated
+               numbers, so this should be reviewed/adjusted by her before
+               being treated as reliable advice a customer acts on. -->
+          <div class="card" style="padding:20px; margin-top:28px;">
+            <h4 style="margin-bottom:6px;">🧵 Fabric Length Estimator</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Not sure how much fabric to buy? Get a rough estimate based on your height and garment type.</p>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Garment Type</label>
+                <select id="fabricCalcGarment">
+                  <option value="blouse">Blouse</option>
+                  <option value="kurti">Kurti / Top</option>
+                  <option value="salwar">Salwar Suit</option>
+                  <option value="anarkali">Anarkali</option>
+                  <option value="lehenga">Lehenga</option>
+                  <option value="gown">Gown</option>
+                  <option value="designerDress">Designer Dress</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Your Height (cm)</label>
+                <input type="number" id="fabricCalcHeight" placeholder="e.g. 160" min="120" max="210">
+              </div>
+              <div class="form-group">
+                <label>Sleeve Length</label>
+                <select id="fabricCalcSleeve">
+                  <option value="sleeveless">Sleeveless</option>
+                  <option value="half" selected>Half Sleeve</option>
+                  <option value="full">Full Sleeve</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Garment Length</label>
+                <select id="fabricCalcLength">
+                  <option value="knee">Knee Length</option>
+                  <option value="calf" selected>Calf Length</option>
+                  <option value="floor">Floor Length</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Fabric Width</label>
+                <select id="fabricCalcWidth">
+                  <option value="44">44 inch (standard)</option>
+                  <option value="58">58–60 inch (wide)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="calculateFabricLength()">📏 Estimate Fabric Needed</button>
+
+            <div id="fabricCalcResult" style="display:none; margin-top:16px; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px;">
+              <div style="font-size:22px; font-weight:800; color:var(--vivid);" id="fabricCalcAmount"></div>
+              <p style="font-size:12px; color:var(--text-ink); margin:6px 0 0;">This is a general estimate only — the exact amount depends on the specific design, embellishment, and lining. Sonia will confirm the precise requirement when you visit or share your design.</p>
+            </div>
+          </div>
         </div>
 
         <!-- CUSTOMER: MARKETPLACE - direct purchase, no stitching, no design concept.
@@ -5260,6 +5330,80 @@
       }
     }
 
+    // ---------- Fabric Length Estimator ----------
+    // These are general tailoring rule-of-thumb starting points, NOT
+    // Sonia's own calibrated numbers — her actual pattern-cutting style,
+    // panel count, and embellishment level will shift the real
+    // requirement. Treat as a first-draft scaffold that needs her review
+    // before being trusted as reliable customer-facing advice; the
+    // on-screen result also says this explicitly so nobody buys fabric
+    // based on this alone without knowing it's an estimate.
+    const FABRIC_CALC_BASE = {
+      // meters, at: 44" width, 160cm height, half sleeve, calf length
+      blouse: 1.2,
+      kurti: 2.5,
+      salwar: 3.2,
+      anarkali: 5.0,
+      lehenga: 6.5,
+      gown: 5.0,
+      designerDress: 4.5,
+    };
+    // Which garments' length actually scales meaningfully with height
+    const FABRIC_CALC_HEIGHT_SENSITIVE = ['kurti', 'anarkali', 'lehenga', 'gown', 'designerDress'];
+    // Which garments have a sleeve at all (lehenga is skirt-only)
+    const FABRIC_CALC_HAS_SLEEVE = ['blouse', 'kurti', 'salwar', 'anarkali', 'gown', 'designerDress'];
+    // Which garments have a meaningful "hemline" length choice
+    const FABRIC_CALC_HAS_LENGTH_CHOICE = ['kurti', 'anarkali', 'gown', 'designerDress'];
+    // Flare-heavy garments benefit more from wider fabric (more panel
+    // width per cut = less total length needed)
+    const FABRIC_CALC_FLARE_HEAVY = ['anarkali', 'lehenga', 'gown', 'designerDress'];
+
+    function calculateFabricLength() {
+      const garment = document.getElementById('fabricCalcGarment').value;
+      const heightCm = parseFloat(document.getElementById('fabricCalcHeight').value);
+      const sleeve = document.getElementById('fabricCalcSleeve').value;
+      const length = document.getElementById('fabricCalcLength').value;
+      const width = document.getElementById('fabricCalcWidth').value;
+
+      if (!heightCm || heightCm < 100 || heightCm > 220) {
+        showToast('❌ Please enter a valid height in cm (e.g. 160)');
+        return;
+      }
+
+      let meters = FABRIC_CALC_BASE[garment];
+
+      // Height adjustment — only for garments whose length actually
+      // scales with the wearer's height
+      if (FABRIC_CALC_HEIGHT_SENSITIVE.includes(garment)) {
+        const heightDiff = heightCm - 160;
+        meters += (heightDiff / 10) * 0.1;
+      }
+
+      // Sleeve adjustment
+      if (FABRIC_CALC_HAS_SLEEVE.includes(garment)) {
+        if (sleeve === 'sleeveless') meters -= 0.3;
+        if (sleeve === 'full') meters += 0.4;
+      }
+
+      // Garment length adjustment
+      if (FABRIC_CALC_HAS_LENGTH_CHOICE.includes(garment)) {
+        if (length === 'knee') meters -= 0.8;
+        if (length === 'floor') meters += 1.0;
+      }
+
+      // Wider fabric needs less total length for flare-heavy garments
+      if (width === '58' && FABRIC_CALC_FLARE_HEAVY.includes(garment)) {
+        meters *= 0.8;
+      } else if (width === '58') {
+        meters *= 0.9;
+      }
+
+      meters = Math.max(1, Math.round(meters * 10) / 10); // never suggest less than 1m, round to nearest 0.1m
+
+      document.getElementById('fabricCalcAmount').textContent = `~${meters} meters`;
+      document.getElementById('fabricCalcResult').style.display = 'block';
+    }
+
     async function initRateCardTeasers() {
       const items = await fetchRateCardItems();
       if (!items) return; // both keep their static fallback content
@@ -5397,6 +5541,27 @@
       }
     }
 
+
+    // Secondary "more info" dropdown, deliberately kept separate from
+    // the primary jump-to-section tabs above it — those lead with the
+    // actual USPs (AI Design Studio, Rate Card, Marketplace); this is
+    // just supporting content that shouldn't compete with them for
+    // attention.
+    function toggleGuidesDropdown(event) {
+      event.stopPropagation();
+      const menu = document.getElementById('guidesDropdownMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', () => {
+      const menu = document.getElementById('guidesDropdownMenu');
+      if (menu) menu.style.display = 'none';
+    });
+
+    function closeGuidesDropdownAndJump(sectionId, event) {
+      event.preventDefault();
+      document.getElementById('guidesDropdownMenu').style.display = 'none';
+      scrollToSection(sectionId);
+    }
 
     function jumpToTab(id, btn) {
       scrollToSection(id);
@@ -11665,6 +11830,12 @@
       <a href="/refund-cancellation-policy.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Refund & Cancellation Policy</a>
       <br style="margin-bottom:6px;">
       <a href="/ai-fashion-design-explained.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">How AI Fashion Design Works</a>
+      &nbsp;·&nbsp;
+      <a href="/self-measurement-guide.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Self-Measurement Guide</a>
+      &nbsp;·&nbsp;
+      <a href="/fabric-care-guide.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Fabric Care Guide</a>
+      &nbsp;·&nbsp;
+      <a href="/occasion-fabric-guide.html" style="color: var(--vivid); text-decoration: none; font-weight: bold;">Occasion Fabric Guide</a>
       <br style="margin-bottom:6px;">
       Gurbani Fashion Boutique &nbsp;·&nbsp; 9899810977
       <span id="installAppLinkWrap" style="display:none;">
