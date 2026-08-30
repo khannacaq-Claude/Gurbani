@@ -1730,6 +1730,28 @@
       font-weight: 600;
       text-transform: capitalize;
       letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .photo-item-crop {
+      flex: none;
+      background: var(--marigold);
+      color: var(--ink);
+      border: 1.5px solid rgba(255,255,255,0.7);
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
     }
 
     .photo-item-remove {
@@ -6266,7 +6288,9 @@
 
             const label = document.createElement('div');
             label.className = 'photo-item-label';
-            label.textContent = (icons[type] || '📷') + ' ' + (labels[type] || type);
+            const labelText = document.createElement('span');
+            labelText.textContent = (icons[type] || '📷') + ' ' + (labels[type] || type);
+            label.appendChild(labelText);
 
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -6278,20 +6302,23 @@
               return function() { removePhoto(t, i); };
             })(type, idx);
 
+            // Crop lives inside the label bar (grouped with visible text)
+            // instead of squeezed into the same corner as delete — makes
+            // it something people actually notice, not two unlabeled
+            // icons competing for the same tiny space.
             const cropBtn = document.createElement('button');
             cropBtn.type = 'button';
-            cropBtn.className = 'photo-item-remove';
-            cropBtn.style.right = '34px';
+            cropBtn.className = 'photo-item-crop';
             cropBtn.title = 'Crop out background';
             cropBtn.setAttribute('aria-label', 'Crop this ' + (labels[type] || type) + ' photo');
             cropBtn.innerHTML = '✂️';
             cropBtn.onclick = (function(t, i) {
-              return function() { openCropModal(t, i); };
+              return function(e) { e.stopPropagation(); openCropModal(t, i); };
             })(type, idx);
+            label.appendChild(cropBtn);
 
             item.appendChild(img);
             item.appendChild(label);
-            item.appendChild(cropBtn);
             item.appendChild(removeBtn);
             grid.appendChild(item);
             totalPhotos++;
@@ -6807,7 +6834,7 @@
           ? `<input type="text" id="conceptTitle_${idx}" value="${escapeHtml(concept.title)}" style="width:100%; font-weight:700; font-family:var(--font-display); font-style:italic; border:1px solid #e0d8d0; border-radius:5px; padding:6px 8px; margin-bottom:6px;">`
           : `<div class="design-title">Design ${idx + 1}: ${escapeHtml(concept.title)}</div>`;
         const descHtml = notYetGenerated
-          ? `<textarea id="conceptDesc_${idx}" rows="2" style="width:100%; font-size:13px; border:1px solid #e0d8d0; border-radius:5px; padding:6px 8px; margin-bottom:6px;">${escapeHtml(concept.description)}</textarea>
+          ? `<textarea id="conceptDesc_${idx}" rows="5" style="width:100%; font-size:13.5px; line-height:1.5; border:1px solid #e0d8d0; border-radius:5px; padding:8px 10px; margin-bottom:6px;">${escapeHtml(concept.description)}</textarea>
              <p id="conceptEditHint_${idx}" style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">✏️ Not quite right? Edit the text above before generating the image — it's free to tweak, only the image costs anything.</p>`
           : `<div class="design-desc">${escapeHtml(concept.description)}</div>`;
 
