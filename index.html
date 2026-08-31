@@ -8169,11 +8169,52 @@
           </div>
           ${f.recentComments.length > 0 ? `
             <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">RECENT COMMENTS</div>
-            ${f.recentComments.map(c => `<div style="background:var(--sand); border-radius:6px; padding:10px 12px; margin-bottom:8px; font-size:13px;"><strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(c.comment)}</div>`).join('')}
+            ${f.recentComments.map(c => `
+              <div style="background:var(--sand); border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:13px;">
+                <strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(c.comment)}
+                ${c.adminReply ? `
+                  <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:12.5px;">
+                    <span style="font-weight:600; color:var(--vivid);">✅ You replied</span> (${new Date(c.adminRepliedAt).toLocaleDateString('en-IN')}): ${escapeHtml(c.adminReply)}
+                  </div>
+                ` : c.email ? `
+                  <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08);">
+                    <textarea id="feedbackReplyText_${c.feedbackId}" placeholder="Write a reply — sent as an email to ${escapeHtml(c.email)}" style="width:100%; font-size:12.5px; min-height:50px; padding:6px 8px; border-radius:5px; border:1px solid #e0d8d0; margin-bottom:6px;"></textarea>
+                    <button type="button" class="admin-filter-btn" style="font-size:11.5px;" onclick="sendFeedbackReply('${c.feedbackId}')">📧 Send Reply</button>
+                  </div>
+                ` : `
+                  <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:12px; color:var(--text-muted);">No email on file for this customer — can't send a reply.</div>
+                `}
+              </div>
+            `).join('')}
           ` : ''}
         `;
       } catch (err) {
         container.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    async function sendFeedbackReply(feedbackId) {
+      const textarea = document.getElementById(`feedbackReplyText_${feedbackId}`);
+      const message = textarea.value.trim();
+      if (!message) {
+        showToast('❌ Write a reply message first');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/feedback/${feedbackId}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ message }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Reply sent!');
+          loadFeedbackDashboard(); // refresh so the sent reply shows in place of the textarea
+        } else {
+          showToast('❌ ' + (data.error || 'Could not send reply'));
+        }
+      } catch (err) {
+        showToast('❌ ' + err.message);
       }
     }
 
