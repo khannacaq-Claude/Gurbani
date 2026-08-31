@@ -3560,6 +3560,16 @@
 
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
         <div id="admin" class="tab-content">
+          <!-- SITE VISITOR COUNTER — quick-glance companion to GA4, not a
+               replacement for it. See loadVisitorStats() for what's
+               actually excluded (only own-admin-session visits) vs what
+               isn't (anonymous browsing while signed out — that needs
+               GA4's IP-based Internal Traffic filter instead). -->
+          <div class="card" style="padding:16px; margin-bottom:20px;">
+            <h4 style="margin-bottom:10px;">👀 Site Visitors <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(your own admin visits excluded)</span></h4>
+            <div id="visitorStatsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">Loading...</div>
+          </div>
+
           <h3>🔐 Design Requests (Admin)</h3>
           <div style="display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;">
             <button type="button" class="admin-filter-btn active" onclick="filterAdminRequests('all', event)">All</button>
@@ -6478,6 +6488,7 @@
       activeBtn?.setAttribute('aria-selected', 'true');
       if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
       if (tabName === 'appointments' && typeof loadAppointmentAvailability === 'function') loadAppointmentAvailability();
+      if (tabName === 'admin' && typeof loadVisitorStats === 'function') loadVisitorStats();
       // Switching tabs should always land you at the top of the new tab's
       // content — without this, tapping a tab while scrolled down
       // elsewhere shows the right content, but leaves you scrolled past
@@ -11972,11 +11983,64 @@
 
       document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
       updateUI();
+      trackSiteVisit();
 
       if (!authToken) {
         setStatus('designStatus', '✅ Ready to sign in', 'success');
       }
     });
+
+    // ---------- On-site visitor counter (companion to GA4, quick-glance
+    // in Admin dashboard) ----------
+    // Deliberately skipped entirely while signed in as admin — that's
+    // what "ignore my own refreshes" means here. This does NOT catch
+    // anonymous browsing by the site owner while signed out; for that,
+    // GA4's IP-based Internal Traffic filter is the real fix — this is a
+    // simpler companion number, not a replacement for it.
+    function trackSiteVisit() {
+      if (currentUser && currentUser.role === 'admin') return;
+      let visitorId = localStorage.getItem('gfVisitorId');
+      if (!visitorId) {
+        visitorId = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('gfVisitorId', visitorId);
+      }
+      fetch(`${API}/api/visitors/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitorId, path: window.location.pathname }),
+      }).catch(() => {}); // never let a tracking failure be visible to a real visitor
+    }
+
+    async function loadVisitorStats() {
+      const grid = document.getElementById('visitorStatsGrid');
+      if (!grid) return;
+      try {
+        const res = await fetch(`${API}/api/visitors/stats`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Could not load visitor stats right now.</p>';
+          return;
+        }
+        const s = data.stats;
+        const stat = (label, value) => `
+          <div style="background:var(--sand); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:22px; font-weight:800; color:var(--vivid);">${value.toLocaleString('en-IN')}</div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px;">${label}</div>
+          </div>`;
+        grid.innerHTML =
+          stat('Unique Visitors (All-Time)', s.uniqueVisitorsAllTime) +
+          stat('Unique Visitors (30 Days)', s.uniqueVisitorsLast30Days) +
+          stat('Unique Visitors (7 Days)', s.uniqueVisitorsLast7Days) +
+          stat('Total Page Views', s.totalViews) +
+          stat("Today's Unique Visitors", s.todayUniqueVisitors) +
+          stat("Today's Page Views", s.todayViews);
+      } catch (err) {
+        grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Could not load visitor stats right now.</p>';
+      }
+    }
+
     // Voice input for the design description — native browser Web Speech
     // API, no new dependency. Appends to whatever's already typed rather
     // than replacing it, so customers can mix typing and speaking freely.
