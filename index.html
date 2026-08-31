@@ -2996,6 +2996,7 @@
               <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
               <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
               <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing(); loadBannerImagesGallery();" style="display: none;">🎟️ Coupons &amp; Banners</button>
+              <button class="tab-btn" id="feedbackTabBtn" onclick="switchTab(event, 'feedback'); loadFeedbackDashboard();" style="display: none;">💬 Feedback</button>
             </div>
           </div>
           <div class="tab-group">
@@ -3580,6 +3581,15 @@
             <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('archived', event)">Archived</button>
           </div>
           <div id="adminRequestsList">Loading...</div>
+        </div>
+
+        <!-- FEEDBACK TAB (admin only) — split out from Profit Dashboard,
+             since customer sentiment and financial performance are
+             genuinely different things and burying feedback under a
+             "Profit Dashboard" label made it hard to find. -->
+        <div id="feedback" class="tab-content">
+          <h3>💬 Customer Feedback</h3>
+          <div id="feedbackDashboardContent">Loading...</div>
         </div>
 
         <!-- PROFIT DASHBOARD TAB (admin only) -->
@@ -5056,6 +5066,7 @@
       appointmentsTabBtn: { icon: 'calendar', label: 'Appointments' },
       myDesignsTabBtn: { icon: 'package', label: 'My Designs' },
       adminTabBtn: { icon: 'shield-check', label: 'Admin: Requests' },
+      feedbackTabBtn: { icon: 'message-circle', label: 'Feedback' },
       profitTabBtn: { icon: 'trending-up', label: 'Profit Dashboard' },
       adminOrdersTabBtn: { icon: 'package', label: 'Manage Orders' },
       pendingApprovalTabBtn: { icon: 'hourglass', label: 'Pending Approval' },
@@ -8026,14 +8037,12 @@
       const container = document.getElementById('profitDashboardContent');
       container.innerHTML = 'Loading...';
       try {
-        const [statsRes, ordersRes, feedbackRes] = await Promise.all([
+        const [statsRes, ordersRes] = await Promise.all([
           fetch(`${API}/api/orders/admin/stats`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
           fetch(`${API}/api/orders?limit=20`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
-          fetch(`${API}/api/feedback/admin/summary`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
         ]);
         const statsData = await statsRes.json();
         const ordersData = await ordersRes.json();
-        const feedbackData = await feedbackRes.json();
 
         if (!statsRes.ok || statsData.status !== 'OK') {
           container.innerHTML = `<p style="color:#c62828;">❌ ${statsData.message || 'Failed to load stats'}</p>`;
@@ -8111,41 +8120,58 @@
           `;
         }
 
-        // Customer feedback summary
-        if (feedbackRes.ok && feedbackData.success) {
-          const f = feedbackData.data;
-          html += `<h4 style="margin: 24px 0 10px 0;">💬 Customer Feedback</h4>`;
-          if (f.totalCount === 0) {
-            html += '<p style="color:var(--text-muted);">No feedback submitted yet.</p>';
-          } else {
-            html += `
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px;">
-                ${profitCard('⭐', 'Avg Rating', f.avgRating + '/10')}
-                ${profitCard('📝', 'Responses', f.totalCount)}
-              </div>
-              <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
-                <div>
-                  <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PRICE PREFERENCE</div>
-                  ${Object.entries(f.pricePreferenceCounts).map(([price, count]) => `<div style="font-size:13px;">₹${price}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
-                </div>
-                <div>
-                  <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PLAN PREFERENCE</div>
-                  ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
-                </div>
-                <div>
-                  <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">FEATURE INTEREST</div>
-                  ${UPCOMING_FEATURES.map(feat => `<div style="font-size:13px;">${feat.icon} ${feat.title}: ${f.featureInterestCounts[feat.key] || 0} vote(s)</div>`).join('')}
-                </div>
-              </div>
-              ${f.recentComments.length > 0 ? `
-                <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">RECENT COMMENTS</div>
-                ${f.recentComments.map(c => `<div style="background:var(--sand); border-radius:6px; padding:10px 12px; margin-bottom:8px; font-size:13px;"><strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(c.comment)}</div>`).join('')}
-              ` : ''}
-            `;
-          }
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
+      }
+    }
+
+    // Split out from loadProfitDashboard() — customer sentiment and
+    // financial performance are genuinely different things, and burying
+    // feedback under a "Profit Dashboard" tab made it hard to actually
+    // find. Powers its own dedicated Feedback tab instead.
+    async function loadFeedbackDashboard() {
+      const container = document.getElementById('feedbackDashboardContent');
+      container.innerHTML = 'Loading...';
+      try {
+        const feedbackRes = await fetch(`${API}/api/feedback/admin/summary`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const feedbackData = await feedbackRes.json();
+
+        if (!feedbackRes.ok || !feedbackData.success) {
+          container.innerHTML = `<p style="color:#c62828;">❌ ${feedbackData.error || 'Failed to load feedback'}</p>`;
+          return;
         }
 
-        container.innerHTML = html;
+        const f = feedbackData.data;
+        if (f.totalCount === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted);">No feedback submitted yet.</p>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px;">
+            ${profitCard('⭐', 'Avg Rating', f.avgRating + '/10')}
+            ${profitCard('📝', 'Responses', f.totalCount)}
+          </div>
+          <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PRICE PREFERENCE</div>
+              ${Object.entries(f.pricePreferenceCounts).map(([price, count]) => `<div style="font-size:13px;">₹${price}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PLAN PREFERENCE</div>
+              ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">FEATURE INTEREST</div>
+              ${UPCOMING_FEATURES.map(feat => `<div style="font-size:13px;">${feat.icon} ${feat.title}: ${f.featureInterestCounts[feat.key] || 0} vote(s)</div>`).join('')}
+            </div>
+          </div>
+          ${f.recentComments.length > 0 ? `
+            <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">RECENT COMMENTS</div>
+            ${f.recentComments.map(c => `<div style="background:var(--sand); border-radius:6px; padding:10px 12px; margin-bottom:8px; font-size:13px;"><strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(c.comment)}</div>`).join('')}
+          ` : ''}
+        `;
       } catch (err) {
         container.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
@@ -11868,6 +11894,7 @@
         document.getElementById('signinTrigger').style.display = 'none';
         document.getElementById('dashboardName').textContent = currentUser.name;
         document.getElementById('adminTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('feedbackTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('profitTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminOrdersTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('pendingApprovalTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
