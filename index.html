@@ -8130,6 +8130,23 @@
     // financial performance are genuinely different things, and burying
     // feedback under a "Profit Dashboard" tab made it hard to actually
     // find. Powers its own dedicated Feedback tab instead.
+    // Renders one clickable preference row (e.g. "₹50: 2 vote(s)") that
+    // expands to show which customers actually voted for it — previously
+    // just an aggregate number with no way to see who was behind it.
+    function preferenceRow(rowId, label, count, voters) {
+      const names = (voters && voters.length) ? voters.join(', ') : 'No responses yet';
+      return `
+        <div style="font-size:13px; cursor:pointer; padding:4px 0;" onclick="togglePreferenceVoters('${rowId}')">
+          <span style="text-decoration:underline dotted;">${label}: ${count} vote(s)</span> <span style="color:var(--text-muted); font-size:11px;">▾</span>
+          <div id="voters_${rowId}" style="display:none; font-size:12px; color:var(--text-muted); padding:4px 0 4px 10px; border-left:2px solid var(--sand);">${escapeHtml(names)}</div>
+        </div>`;
+    }
+
+    function togglePreferenceVoters(rowId) {
+      const el = document.getElementById(`voters_${rowId}`);
+      if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
     async function loadFeedbackDashboard() {
       const container = document.getElementById('feedbackDashboardContent');
       container.innerHTML = 'Loading...';
@@ -8156,15 +8173,15 @@
           <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">
             <div>
               <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PRICE PREFERENCE</div>
-              ${Object.entries(f.pricePreferenceCounts).map(([price, count]) => `<div style="font-size:13px;">₹${price}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
+              ${Object.entries(f.pricePreferenceCounts).map(([price, count], i) => preferenceRow(`price_${i}`, `₹${price}`, count, f.pricePreferenceVoters[price])).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
             </div>
             <div>
               <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PLAN PREFERENCE</div>
-              ${Object.entries(f.planPreferenceCounts).map(([plan, count]) => `<div style="font-size:13px;">${plan === 'per-design' ? 'Pay per design' : 'Monthly plan'}: ${count} vote(s)</div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
+              ${Object.entries(f.planPreferenceCounts).map(([plan, count], i) => preferenceRow(`plan_${i}`, plan === 'per-design' ? 'Pay per design' : 'Monthly plan', count, f.planPreferenceVoters[plan])).join('') || '<div style="font-size:13px; color:var(--text-muted);">No data yet</div>'}
             </div>
             <div>
               <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">FEATURE INTEREST</div>
-              ${UPCOMING_FEATURES.map(feat => `<div style="font-size:13px;">${feat.icon} ${feat.title}: ${f.featureInterestCounts[feat.key] || 0} vote(s)</div>`).join('')}
+              ${UPCOMING_FEATURES.map((feat, i) => preferenceRow(`feat_${i}`, `${feat.icon} ${feat.title}`, f.featureInterestCounts[feat.key] || 0, f.featureInterestVoters[feat.key])).join('')}
             </div>
           </div>
           ${f.recentComments.length > 0 ? `
