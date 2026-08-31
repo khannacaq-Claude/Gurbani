@@ -12043,9 +12043,25 @@
     }
 
     // ---------- Mood/style tag picker -> AI-drafted description ----------
+    // "Style" tags can genuinely combine (Elegant + Romantic & Soft is a
+    // coherent direction), so that group stays multi-select. "Color Mood"
+    // and "Embellishment" are each a spectrum of mutually EXCLUSIVE
+    // choices — Pastel & Soft and Bright & Vibrant can't both be true at
+    // once — so those two groups behave like radio buttons: picking a new
+    // one clears any other selection in that same group, and clicking an
+    // already-selected tag deselects it (leaving that category unset).
+    const SINGLE_SELECT_GROUPS = ['color', 'embellishment'];
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('mood-tag')) {
-        e.target.classList.toggle('selected');
+        const row = e.target.closest('.mood-tag-row');
+        const group = row ? row.dataset.group : null;
+        if (group && SINGLE_SELECT_GROUPS.includes(group)) {
+          const wasSelected = e.target.classList.contains('selected');
+          row.querySelectorAll('.mood-tag.selected').forEach(t => t.classList.remove('selected'));
+          if (!wasSelected) e.target.classList.add('selected');
+        } else {
+          e.target.classList.toggle('selected');
+        }
       }
     });
 
