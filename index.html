@@ -1063,6 +1063,21 @@
       padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer;
     }
     .mood-tag.selected { background:var(--vivid); color:#fff; border-color:var(--vivid); }
+
+    .guide-card {
+      display: block;
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-decoration: none;
+      color: var(--ink);
+      box-shadow: 0 2px 10px rgba(20,10,20,0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .guide-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(20,10,20,0.14); }
+    .guide-card-icon { font-size: 24px; margin-bottom: 8px; }
+    .guide-card-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .guide-card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
     @media (max-width: 820px) {
       .occ-panel-row { flex-direction: column; min-height: 0; }
       .occ-panel { flex: none !important; min-height: 56px; }
@@ -2710,6 +2725,66 @@
           <h3 id="landingRateCardHeading" style="text-align:center;">💰 Rate Card</h3>
           <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">Tap a category to see every item — sign in for exact quotes.</p>
           <div class="rc-panel-row" id="rcPanelRow"></div>
+
+          <!-- FABRIC LENGTH CALCULATOR — public version, same tool that
+               lives in the signed-in Rate Card tab, duplicated here with
+               its own element IDs (suffixed -pub) so both can coexist in
+               the DOM without id collisions. Shares the same formula
+               logic via calculateFabricLength(suffix) rather than
+               duplicating the constants. -->
+          <div class="card" style="padding:20px; margin-top:28px; max-width:520px; margin-left:auto; margin-right:auto;">
+            <h4 style="margin-bottom:6px;">🧵 Fabric Length Estimator</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Not sure how much fabric to buy? Get a rough estimate based on your height and garment type — no sign-in needed.</p>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Garment Type</label>
+                <select id="fabricCalcGarment-pub">
+                  <option value="blouse">Blouse</option>
+                  <option value="kurti">Kurti / Top</option>
+                  <option value="salwar">Salwar Suit</option>
+                  <option value="anarkali">Anarkali</option>
+                  <option value="lehenga">Lehenga</option>
+                  <option value="gown">Gown</option>
+                  <option value="designerDress">Designer Dress</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Your Height (cm)</label>
+                <input type="number" id="fabricCalcHeight-pub" placeholder="e.g. 160" min="120" max="210">
+              </div>
+              <div class="form-group">
+                <label>Sleeve Length</label>
+                <select id="fabricCalcSleeve-pub">
+                  <option value="sleeveless">Sleeveless</option>
+                  <option value="half" selected>Half Sleeve</option>
+                  <option value="full">Full Sleeve</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Garment Length</label>
+                <select id="fabricCalcLength-pub">
+                  <option value="knee">Knee Length</option>
+                  <option value="calf" selected>Calf Length</option>
+                  <option value="floor">Floor Length</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Fabric Width</label>
+                <select id="fabricCalcWidth-pub">
+                  <option value="44">44 inch (standard)</option>
+                  <option value="58">58–60 inch (wide)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="calculateFabricLength('-pub')">📏 Estimate Fabric Needed</button>
+
+            <div id="fabricCalcResult-pub" style="display:none; margin-top:16px; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px;">
+              <div style="font-size:22px; font-weight:800; color:var(--vivid);" id="fabricCalcAmount-pub"></div>
+              <p style="font-size:12px; color:var(--text-ink); margin:6px 0 0;">This is a general estimate only — the exact amount depends on the specific design, embellishment, and lining. Sonia will confirm the precise requirement when you visit or share your design.</p>
+            </div>
+          </div>
         </div>
 
         <!-- INSTAGRAM GALLERY -->
@@ -2758,6 +2833,65 @@
             <div class="visit-map">
               <iframe src="https://maps.google.com/maps?q=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121010&output=embed" loading="lazy" title="Gurbani Fashion Boutique location"></iframe>
             </div>
+          </div>
+        </div>
+
+        <!-- HELPFUL GUIDES — surfaces all 9 guide pages directly on the
+             landing page (they also live in the "More" nav dropdown, but
+             that's easy to miss). Real visibility here matters for two
+             reasons: genuine usefulness for someone actually planning an
+             outfit, and internal links from the highest-traffic page on
+             the site to each guide, which helps their own search
+             visibility too. -->
+        <div class="snap-section" style="margin-top: 48px;">
+          <h3 style="text-align:center;">📚 Helpful Guides</h3>
+          <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:20px;">Everything you might want to know before you start designing.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; max-width:900px; margin:0 auto;">
+            <a href="/ai-fashion-design-explained.html" class="guide-card">
+              <div class="guide-card-icon">🎨</div>
+              <div class="guide-card-title">How AI Fashion Design Works</div>
+              <div class="guide-card-desc">What AI Design Studio can (and honestly can't) do on its own.</div>
+            </a>
+            <a href="/self-measurement-guide.html" class="guide-card">
+              <div class="guide-card-icon">📏</div>
+              <div class="guide-card-title">Self-Measurement Guide</div>
+              <div class="guide-card-desc">Take accurate measurements at home, plus a free sanity-check tool.</div>
+            </a>
+            <a href="/fabric-care-guide.html" class="guide-card">
+              <div class="guide-card-icon">🧵</div>
+              <div class="guide-card-title">Fabric Care Guide</div>
+              <div class="guide-card-desc">How to wash, iron and store silk, georgette, velvet and more.</div>
+            </a>
+            <a href="/occasion-fabric-guide.html" class="guide-card">
+              <div class="guide-card-icon">🎉</div>
+              <div class="guide-card-title">Occasion Fabric Guide</div>
+              <div class="guide-card-desc">Which fabric suits a summer wedding vs a winter function.</div>
+            </a>
+            <a href="/wedding-season-booking-guide.html" class="guide-card">
+              <div class="guide-card-icon">🪔</div>
+              <div class="guide-card-title">Wedding Booking Timeline</div>
+              <div class="guide-card-desc">How far in advance to book bridal, sangeet, and guest outfits.</div>
+            </a>
+            <a href="/fabric-glossary.html" class="guide-card">
+              <div class="guide-card-icon">🧾</div>
+              <div class="guide-card-title">Fabric Glossary</div>
+              <div class="guide-card-desc">Georgette vs chiffon vs crepe — what actually tells them apart.</div>
+            </a>
+            <a href="/blouse-neckline-guide.html" class="guide-card">
+              <div class="guide-card-icon">👚</div>
+              <div class="guide-card-title">Blouse &amp; Neckline Guide</div>
+              <div class="guide-card-desc">Neckline, sleeve, and back styles for sarees and lehengas.</div>
+            </a>
+            <a href="/embroidery-work-types-guide.html" class="guide-card">
+              <div class="guide-card-icon">✨</div>
+              <div class="guide-card-title">Embroidery &amp; Work Types</div>
+              <div class="guide-card-desc">Zardozi, gota patti, thread work, sequin, mirror work and more.</div>
+            </a>
+            <a href="/fitting-appointment-faq.html" class="guide-card">
+              <div class="guide-card-icon">📅</div>
+              <div class="guide-card-title">Fitting Appointment FAQ</div>
+              <div class="guide-card-desc">What to expect, how many rounds, and what to bring.</div>
+            </a>
           </div>
         </div>
 
@@ -5449,12 +5583,13 @@
     // width per cut = less total length needed)
     const FABRIC_CALC_FLARE_HEAVY = ['anarkali', 'lehenga', 'gown', 'designerDress'];
 
-    function calculateFabricLength() {
-      const garment = document.getElementById('fabricCalcGarment').value;
-      const heightCm = parseFloat(document.getElementById('fabricCalcHeight').value);
-      const sleeve = document.getElementById('fabricCalcSleeve').value;
-      const length = document.getElementById('fabricCalcLength').value;
-      const width = document.getElementById('fabricCalcWidth').value;
+    function calculateFabricLength(suffix) {
+      suffix = suffix || ''; // '' = dashboard version, '-pub' = public landing-page version
+      const garment = document.getElementById('fabricCalcGarment' + suffix).value;
+      const heightCm = parseFloat(document.getElementById('fabricCalcHeight' + suffix).value);
+      const sleeve = document.getElementById('fabricCalcSleeve' + suffix).value;
+      const length = document.getElementById('fabricCalcLength' + suffix).value;
+      const width = document.getElementById('fabricCalcWidth' + suffix).value;
 
       if (!heightCm || heightCm < 100 || heightCm > 220) {
         showToast('❌ Please enter a valid height in cm (e.g. 160)');
@@ -5491,8 +5626,8 @@
 
       meters = Math.max(1, Math.round(meters * 10) / 10); // never suggest less than 1m, round to nearest 0.1m
 
-      document.getElementById('fabricCalcAmount').textContent = `~${meters} meters`;
-      document.getElementById('fabricCalcResult').style.display = 'block';
+      document.getElementById('fabricCalcAmount' + suffix).textContent = `~${meters} meters`;
+      document.getElementById('fabricCalcResult' + suffix).style.display = 'block';
     }
 
     async function initRateCardTeasers() {
