@@ -2843,7 +2843,7 @@
              outfit, and internal links from the highest-traffic page on
              the site to each guide, which helps their own search
              visibility too. -->
-        <div class="snap-section" style="margin-top: 48px;">
+        <div class="snap-section" id="guidesShowcaseSection" style="margin-top: 48px;">
           <h3 style="text-align:center;">📚 Helpful Guides</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:20px;">Everything you might want to know before you start designing.</p>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; max-width:900px; margin:0 auto;">
@@ -5216,7 +5216,17 @@
       const banner = bannerRotationPool[bannerRotationIndex];
 
       const destinationFeatureNames = { design: 'AI Design Studio', shopSuits: 'Marketplace', appointments: 'Appointments', rateCard: 'Rate Card' };
+      const PUBLIC_BANNER_DESTINATIONS = { guides: 'guidesShowcaseSection', fabricCalc: 'rcSection' };
       const featureName = destinationFeatureNames[banner.destination] || 'AI Design Studio';
+      // Guides and the Fabric Calculator are genuinely public — no
+      // sign-in needed — so those two destinations scroll straight there
+      // instead of going through promptSignIn like the other 4, which
+      // would otherwise incorrectly ask someone to sign in for content
+      // that's already free to view.
+      const isPublicDestination = banner.destination in PUBLIC_BANNER_DESTINATIONS;
+      const bannerClickHandler = isPublicDestination
+        ? `scrollToSection('${PUBLIC_BANNER_DESTINATIONS[banner.destination]}')`
+        : `promptSignIn('${featureName}')`;
 
       const multi = bannerRotationPool.length > 1;
       const arrowBtnStyle = 'position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; background:rgba(20,10,20,0.16); color:rgba(255,255,255,0.75); border:none; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; opacity:0.55; transition:background 0.2s ease, opacity 0.2s ease, color 0.2s ease;';
@@ -5231,7 +5241,7 @@
 
       section.innerHTML = `
         <div style="position:relative; display:inline-block; max-width:100%; margin:0 auto; text-align:center;">
-          <img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="promptSignIn('${featureName}')" style="max-width:100%; max-height:min(56vh, 460px); width:auto; height:auto; display:block; margin:0 auto; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="${bannerClickHandler}" style="max-width:100%; max-height:min(56vh, 460px); width:auto; height:auto; display:block; margin:0 auto; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
           ${multi ? `<button type="button" onclick="event.stopPropagation(); prevBannerSlide()" aria-label="Previous ad" style="${arrowBtnStyle} left:10px;" onmouseover="this.style.background='rgba(20,10,20,0.6)'; this.style.opacity='1'; this.style.color='#fff'" onmouseout="this.style.background='rgba(20,10,20,0.16)'; this.style.opacity='0.55'; this.style.color='rgba(255,255,255,0.75)'">‹</button>` : ''}
           ${multi ? `<button type="button" onclick="event.stopPropagation(); nextBannerSlide()" aria-label="Next ad" style="${arrowBtnStyle} right:10px;" onmouseover="this.style.background='rgba(20,10,20,0.6)'; this.style.opacity='1'; this.style.color='#fff'" onmouseout="this.style.background='rgba(20,10,20,0.16)'; this.style.opacity='0.55'; this.style.color='rgba(255,255,255,0.75)'">›</button>` : ''}
           ${dotsHtml}
@@ -10213,6 +10223,8 @@
                 <option value="shopSuits" ${b.destination === 'shopSuits' ? 'selected' : ''}>Clicks go to: Marketplace</option>
                 <option value="appointments" ${b.destination === 'appointments' ? 'selected' : ''}>Clicks go to: Appointments</option>
                 <option value="rateCard" ${b.destination === 'rateCard' ? 'selected' : ''}>Clicks go to: Rate Card</option>
+                <option value="guides" ${b.destination === 'guides' ? 'selected' : ''}>Clicks go to: Guides (public, no sign-in)</option>
+                <option value="fabricCalc" ${b.destination === 'fabricCalc' ? 'selected' : ''}>Clicks go to: Fabric Calculator (public, no sign-in)</option>
               </select>
               ${b.active
                 ? `<div style="font-size:11px; color:var(--vivid); font-weight:700; margin-bottom:6px;">🎡 In rotation</div><button type="button" class="admin-filter-btn" style="width:100%; margin-bottom:6px; font-size:11px;" onclick="deactivateBannerImage('${b._id}')">Remove from Rotation</button>`
