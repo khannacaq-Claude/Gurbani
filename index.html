@@ -837,9 +837,18 @@
     }
     .tryit-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 26px;
       align-items: start;
+    }
+    @media (max-width: 600px) {
+      /* The 360px minimum column width was wider than most phone screens
+         once padding is subtracted, forcing the whole grid — and every
+         mood-tag button and line of text inside it — to overflow sideways
+         off the edge of the viewport instead of wrapping to one column.
+         Tightening padding/gap here too, so there's real room to spare. */
+      .tryit-card { padding: 16px 14px !important; }
+      .tryit-grid { gap: 16px; }
     }
     .tryit-label {
       font-family: var(--font-display);
@@ -5950,9 +5959,18 @@
     // page) rather than scrolling to a hidden element.
     function scrollToSection(id) {
       const el = document.getElementById(id);
-      if (el && el.offsetParent !== null) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      if (!el || el.offsetParent === null) return;
+      // The nav bar is position:sticky, pinned to the top of the viewport
+      // while scrolling — aligning a target's top edge to the viewport's
+      // top edge (the old scrollIntoView({block:'start'}) approach) lands
+      // it directly underneath that bar, hidden, not actually visible.
+      // Offsetting by the bar's real height (measured, not hardcoded, so
+      // it stays correct if the bar's size ever changes) lands the actual
+      // heading just below it instead.
+      const nav = document.getElementById('sectionTabs');
+      const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+      const targetY = el.getBoundingClientRect().top + window.pageYOffset - navHeight - 12;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
     }
 
     // ---------- Guided tour (first-time visitors) ----------
@@ -6116,7 +6134,7 @@
     function jumpToRateCardCategory(categoryName) {
       const section = document.getElementById('rcSection');
       if (!section || section.offsetParent === null) return; // not visible right now
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection('rcSection'); // accounts for the sticky nav bar's height
       const panel = document.querySelector(`.rc-panel[data-category="${CSS.escape(categoryName)}"]`);
       if (panel) {
         const idx = panel.dataset.rc;
