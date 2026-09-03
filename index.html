@@ -8396,8 +8396,17 @@
         updateUI();
         document.getElementById('emailAuthPanel').classList.remove('open');
         if (data.isNewAccount) offerWalkinAccountLink('signup');
+        // Restoring saved landing-page inputs and auto-switching to the
+        // design tab are two different things — only the tab-switch
+        // should be admin-exempt (admins belong on their own dashboard,
+        // not bounced to the customer design tab). The restore itself
+        // used to be nested inside the same admin check, which silently
+        // broke it for every admin test account — Sanjeev's own testing
+        // would always show Step 1 empty after sign-in, even when the
+        // carry-over genuinely worked for real customers.
+        restoreLandingDesignInputs();
         if (data.user.role !== 'admin') {
-          setTimeout(() => { switchTab(null, 'design'); restoreLandingDesignInputs(); }, 500);
+          setTimeout(() => switchTab(null, 'design'), 500);
         }
       } catch (err) {
         // Whatever the actual cause — a missing element, a network hiccup,
@@ -8498,8 +8507,11 @@
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
             if (data.isNewAccount) offerWalkinAccountLink('signup');
+            // Same fix as the email path above — restore always runs,
+            // only the auto-redirect to the design tab is admin-exempt.
+            restoreLandingDesignInputs();
             if (data.user.role !== 'admin') {
-              setTimeout(() => { switchTab(null, 'design'); restoreLandingDesignInputs(); }, 500);
+              setTimeout(() => switchTab(null, 'design'), 500);
             }
           } else {
             setStatus('designStatus', '❌ ' + data.error, 'error');
