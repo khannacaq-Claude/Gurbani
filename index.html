@@ -2630,7 +2630,10 @@
              (Dress Type/Occasion side-by-side, smaller gaps throughout) so
              it reads as one glance-able block instead of a long scroll. -->
         <div class="card tryit-card" id="landingDesignPreview" style="max-width:980px; width:100%; margin:0 auto 18px; padding:24px 26px;">
-          <h3 style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+            <h3 style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
+            <button type="button" onclick="resetLandingDesignPreview()" style="flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; padding:4px 0; white-space:nowrap;">↺ Reset</button>
+          </div>
           <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; max-width:560px;">Pick what you're picturing. When you're ready to actually generate it, we'll ask you to sign in — and everything below comes with you.</p>
 
           <div class="tryit-grid">
@@ -6966,6 +6969,29 @@
     // visitor to sign in. Called both from the preview's own "Continue"
     // button and (defensively) before any promptSignIn triggered while the
     // preview has values in it, so nothing typed pre-sign-in gets lost.
+    // Clears every field in the Try It card back to its empty starting
+    // state — dress type, occasion, all selected mood tags, and the
+    // description textarea — plus wipes any saved carry-over draft in
+    // localStorage, so a genuine "start over" doesn't get silently
+    // restored after sign-in with the old values.
+    function resetLandingDesignPreview() {
+      const dressTypeSel = document.getElementById('landingDressType');
+      if (dressTypeSel) {
+        dressTypeSel.value = '';
+        handleLandingDressTypeChange();
+      }
+      const occasionSel = document.getElementById('landingOccasion');
+      if (occasionSel) occasionSel.value = '';
+      document.querySelectorAll('#landingDesignPreview .mood-tag-row .mood-tag.selected').forEach((btn) => {
+        btn.classList.remove('selected');
+      });
+      const descField = document.getElementById('landingDesignDesc');
+      if (descField) descField.value = '';
+      localStorage.removeItem('landingDesignDraft');
+      updateLandingDraftButtonState();
+      showToast('↺ Reset');
+    }
+
     function saveLandingDesignInputs() {
       const dressTypeSel = document.getElementById('landingDressType');
       if (!dressTypeSel) return; // preview not on this page state
