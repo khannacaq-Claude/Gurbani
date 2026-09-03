@@ -2524,8 +2524,12 @@
                 <p id="phoneQuickSuccess" style="display:none; color:#2e7d32; font-size:11.5px; margin-top:4px;"></p>
               </div>
               <button type="button" id="phoneQuickBtn" onclick="submitPhoneQuickAuth()" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:20px; padding:8px; font-weight:700; font-size:13px; cursor:pointer;">Save My Number</button>
+              <div style="text-align:center; margin-top:8px;">
+                <a href="#" onclick="event.preventDefault(); skipPhoneCapture();" style="font-size:11.5px; color:var(--text-muted); text-decoration:underline;">Skip — sign in with email instead</a>
+              </div>
             </div>
             <div class="auth-modal-divider"><span>or sign in with email</span></div>
+            <div id="emailAuthAnchor"></div>
             <div class="auth-field" id="emailAuthNameField" style="display:none;">
               <div class="auth-field-row"><label>Name</label></div>
               <input type="text" id="emailAuthName" placeholder="Your full name">
@@ -2661,7 +2665,7 @@
 
                 <div>
                   <div class="tryit-label">Occasion</div>
-                  <select id="landingOccasion" class="tryit-select">
+                  <select id="landingOccasion" class="tryit-select" onchange="updateLandingDraftButtonState()">
                     <option value="">Choose occasion</option>
                     <optgroup label="Wedding Functions">
                       <option value="wedding-general">Not sure yet — general Wedding Function</option>
@@ -2731,16 +2735,23 @@
             </div>
 
             <div>
-              <div class="tryit-label">Describe Your Dream Outfit</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
+                <div class="tryit-label" style="margin-bottom:0;">Describe Your Dream Outfit</div>
+                <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first" style="background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:5px 12px; font-weight:700; font-size:11.5px; cursor:pointer; white-space:nowrap;">✨ Draft It For Me</button>
+              </div>
               <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
 
               <!-- Real, honest example — never a live AI call for an
                    anonymous visitor. Pulled from an actual past customer's
                    own submitted description via /api/designs/featured, so
-                   it's a genuine sample, not invented copy. Reuses the
-                   site's existing mock-window treatment (.lens-window) so
-                   it echoes the concept-preview panel elsewhere on this
-                   page instead of introducing a new decorative device. -->
+                   it's a genuine sample, not invented copy. Kept alongside
+                   the live Draft It button above (not replaced by it) —
+                   one gives a personalized draft from their own picks, the
+                   other gives real social proof from an actual customer.
+                   Reuses the site's existing mock-window treatment
+                   (.lens-window) so it echoes the concept-preview panel
+                   elsewhere on this page instead of introducing a new
+                   decorative device. -->
               <div id="landingExampleDraft" class="lens-window" style="display:none; margin-top:14px;">
                 <div class="lens-window-bar">
                   <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
@@ -6869,6 +6880,86 @@
       otherInput.style.display = isOther ? 'block' : 'none';
       if (!isOther) otherInput.value = '';
       notice.style.display = isDesignOnly ? 'block' : 'none';
+      updateLandingDraftButtonState();
+    }
+
+    // Returns the effective landing dress type (select value, or the free
+    // text follow-up when "Other" was picked) — '' if not actually
+    // complete yet. Mirrors getSelectedDressType() but for the landing
+    // preview's own element ids.
+    function getLandingDressType() {
+      const sel = document.getElementById('landingDressType');
+      if (!sel || !sel.value) return '';
+      if (sel.value === 'Other') {
+        const other = document.getElementById('landingDressTypeOther');
+        return other ? other.value.trim() : '';
+      }
+      return sel.value;
+    }
+
+    // Gates the "✨ Draft It For Me" button behind Dress Type + Occasion,
+    // same reasoning as the signed-in Step 1 gate — Claude drafts a far
+    // more specific, useful line when it knows the garment and occasion
+    // up front rather than guessing from tags alone.
+    function updateLandingDraftButtonState() {
+      const btn = document.getElementById('landingDraftBtn');
+      if (!btn) return;
+      const ready = getLandingDressType().length > 0 && !!document.getElementById('landingOccasion')?.value;
+      btn.disabled = !ready;
+      btn.title = ready ? '' : 'Please select Dress Type and Occasion above first';
+    }
+
+    // Live, real, and free for anonymous visitors — this is the actual fix
+    // for "Try It" not trying anything: a genuine Claude Haiku call using
+    // whatever the visitor picked, not a canned example. No sign-in
+    // header sent (the backend route no longer requires one), and
+    // IP-based rate limiting on the backend is the only thing standing
+    // between this and abuse now that it's unauthenticated — see
+    // routes/designs.js draftDescriptionLimiter (6/hour).
+    async function generateLandingDescriptionDraft() {
+      const dressType = getLandingDressType();
+      const occasion = document.getElementById('landingOccasion')?.value || '';
+      if (!dressType || !occasion) {
+        showToast('❌ Please select Dress Type and Occasion above first');
+        return;
+      }
+      const selected = [];
+      document.querySelectorAll('#landingDesignPreview .mood-tag-row .mood-tag.selected').forEach((btn) => {
+        selected.push(btn.dataset.value);
+      });
+      if (selected.length === 0) {
+        showToast('❌ Pick at least one vibe first');
+        return;
+      }
+
+      const btn = document.getElementById('landingDraftBtn');
+      const originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ Drafting...';
+      try {
+        const res = await fetch(`${API}/api/designs/draft-description`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tags: selected, occasion, dressType }),
+        });
+        const data = await res.json();
+        if (res.status === 429) {
+          showToast('✋ ' + (data.error || "You've tried a few drafts already — sign in to keep going!"));
+          return;
+        }
+        if (!res.ok || !data.success) {
+          showToast('❌ ' + (data.error || "Couldn't draft a description right now"));
+          return;
+        }
+        document.getElementById('landingDesignDesc').value = data.description;
+        if (typeof gtag === 'function') gtag('event', 'landing_draft_generated');
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+        updateLandingDraftButtonState(); // restore correct disabled state, not just "always enabled"
+      }
     }
 
     // Saves whatever's filled into the landing preview, then sends the
@@ -7603,7 +7694,7 @@
       if (btn) {
         btn.disabled = true;
         btn.style.opacity = '0.6';
-        btn.innerHTML = isRetry ? '⏳ Trying again... (~20-40s)' : '⏳ Generating... (~20-40s)';
+        btn.innerHTML = isRetry ? '⏳ Trying again... (~30-60s)' : '⏳ Generating... (~30-60s)';
       }
       try {
         const res = await fetch(`${API}/api/designs/${currentDesignId}/generate-concept-image`, {
@@ -8189,6 +8280,15 @@
     function clearPhoneQuickError() {
       const err = document.getElementById('phoneQuickError');
       if (err) err.style.display = 'none';
+    }
+
+    // Makes "phone is optional" a real, visible action instead of
+    // something a visitor has to infer by scrolling past it themselves.
+    function skipPhoneCapture() {
+      const anchor = document.getElementById('emailAuthAnchor');
+      if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const emailField = document.getElementById('emailAuthEmail');
+      if (emailField) setTimeout(() => emailField.focus(), 400); // after scroll settles
     }
     function showPhoneQuickError(msg) {
       const err = document.getElementById('phoneQuickError');
