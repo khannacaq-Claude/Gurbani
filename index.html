@@ -2365,6 +2365,7 @@
     <div style="max-width:100%; max-height:90vh; display:flex; flex-direction:column; align-items:center; gap:14px;" onclick="event.stopPropagation()">
       <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:78vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="closeImageLightbox()">
       <div style="display:flex; gap:10px;">
+        <button type="button" onclick="shareDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:#25D366; color:#fff; border:1.5px solid #25D366; border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">📤 Share</button>
         <button type="button" onclick="downloadDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:rgba(255,255,255,0.15); color:#fff; border:1.5px solid rgba(255,255,255,0.4); border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">⬇️ Download</button>
         <button type="button" onclick="printDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:rgba(255,255,255,0.15); color:#fff; border:1.5px solid rgba(255,255,255,0.4); border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">🖨️ Print</button>
       </div>
@@ -8048,6 +8049,7 @@
                 <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
                 <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="bookFittingForDesign(${idx})">📅 Book a Fitting</button>
                 ${!notYetGenerated ? `
+                  <button class="btn-quote" style="background:#25D366; color:#fff; border:1.5px solid #25D366;" onclick="shareDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">📤 Share</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="downloadDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">⬇️ Download</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="printDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">🖨️ Print</button>
                 ` : ''}
@@ -8437,6 +8439,51 @@
       } catch (err) {
         console.error('downloadDesignImage error:', err);
         showToast('❌ Couldn\'t prepare that download right now — please try again.');
+      }
+    }
+
+    // The actual "viral loop" — one tap opens the phone's native share
+    // sheet with the already-watermarked design image attached, letting
+    // the customer pick WhatsApp, Instagram Stories, Messages, anything
+    // installed, no separate integration needed per app. Falls back to a
+    // download + WhatsApp Web caption on browsers without native file
+    // sharing (mostly desktop, where Web Share API can't attach files).
+    async function shareDesignImage(imageUrl, title) {
+      try {
+        showToast('📤 Preparing to share...');
+        const canvas = await buildWatermarkedCanvas(imageUrl);
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            showToast('❌ Couldn\'t prepare that image to share — please try again.');
+            return;
+          }
+          const fileName = `gurbani-fashion-${(title || 'design').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`;
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+          const shareText = `Check out this design I created with Gurbani Fashion's AI Design Studio${title ? ' — ' + title : ''}! Try it free: https://gurbanifashion.com`;
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: title || 'My Gurbani Fashion Design', text: shareText });
+            } catch (shareErr) {
+              if (shareErr.name !== 'AbortError') { // user closing the share sheet themselves isn't an error
+                showToast('❌ Sharing was cancelled or failed.');
+              }
+            }
+          } else {
+            // Desktop fallback — Web Share API generally can't attach files
+            // here, so download the image and open WhatsApp Web with the
+            // caption ready; the customer attaches the just-downloaded file.
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+            showToast('📥 Image downloaded — attach it in the WhatsApp chat that just opened.');
+          }
+        }, 'image/jpeg', 0.92);
+      } catch (err) {
+        console.error('shareDesignImage error:', err);
+        showToast('❌ Couldn\'t prepare that image to share — please try again.');
       }
     }
 
