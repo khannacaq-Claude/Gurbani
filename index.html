@@ -10,13 +10,13 @@
     gtag('config', 'G-N8EX47W6H8');
   </script>
   <script>
-    // Establishes a safe "floor" entry in this tab's history before any
-    // in-page modal (image lightbox, design detail, designs gallery) pushes
-    // its own state on top. Those modals close via history.back() so a
-    // phone's real back button also dismisses them correctly — but without
-    // this floor entry, closing one on someone's very first interaction in
-    // a fresh tab sent them back past the site entirely instead of just
-    // closing the modal. Runs once, immediately, before any modal can open.
+    // Establishes a safe "floor" entry in this tab's history. Kept as a
+    // second line of defense for the physical back button/gesture case
+    // (popstate) — deliberate × closes no longer call history.back() at
+    // all (that caused a real, visible navigation blip; fixed Sep 2026 to
+    // use history.replaceState instead), but the back button still
+    // legitimately needs somewhere safe to land. Runs once, immediately,
+    // before any modal can open.
     if (!history.state || !history.state.gurbaniFloor) {
       history.replaceState({ gurbaniFloor: true }, '', window.location.href);
     }
@@ -5673,8 +5673,15 @@
 
     function closeDesignsGalleryModal(fromPopState) {
       document.getElementById('designsGalleryModal').style.display = 'none';
+      // Replace, don't go back — history.back() is a REAL browser
+      // navigation event even though the floor-state entry keeps it from
+      // ever exiting the site. Visible as a tab-spinner/reload blip on
+      // desktop; on mobile, with no such chrome to explain it, it reads
+      // as the page just closing/resetting. A deliberate × close doesn't
+      // need real back-navigation — only the physical back button/gesture
+      // does, and that's the fromPopState branch, untouched below.
       if (!fromPopState && history.state && history.state.designsGalleryOpen) {
-        history.back();
+        history.replaceState({}, '');
       }
     }
 
@@ -5750,8 +5757,10 @@
 
     function closeDesignDetailModal(fromPopState) {
       document.getElementById('designDetailModal').style.display = 'none';
+      // Same fix as closeDesignsGalleryModal above — replaceState instead
+      // of back() for a deliberate close, avoiding a real navigation blip.
       if (!fromPopState && history.state && history.state.designDetailOpen) {
-        history.back();
+        history.replaceState({}, '');
       }
     }
 
@@ -7693,13 +7702,16 @@
     function closeImageLightbox(fromPopState) {
       document.getElementById('imageLightboxOverlay').style.display = 'none';
       document.getElementById('imageLightboxImg').src = '';
-      // If this close was triggered by the back button itself (popstate),
-      // the history entry is already gone — don't call history.back()
-      // again or it'll consume a second, real navigation the person
-      // didn't ask for. Only consume the pushed entry when closing via
-      // the × button or tapping outside the image.
+      // Replace, don't go back — history.back() is a REAL browser
+      // navigation, visible as a tab-spinner/stop-icon blip on desktop
+      // (caught on video Sep 2026) even though the floor-state entry
+      // keeps it from ever exiting the site. On mobile, with no such
+      // browser chrome to explain what happened, it reads as the page
+      // just closing or resetting. A deliberate × close doesn't need
+      // real back-navigation — only the physical back button/gesture
+      // does, which is the fromPopState branch below, untouched.
       if (!fromPopState && history.state && history.state.lightboxOpen) {
-        history.back();
+        history.replaceState({}, '');
       }
     }
 
