@@ -2445,6 +2445,19 @@
             <h3 id="emailAuthHeading">Sign In</h3>
             <p class="auth-modal-sub" id="emailAuthSub">Welcome back! Please enter your details.</p>
             <div id="signinArea" class="auth-modal-google"></div>
+            <div class="auth-modal-divider"><span>or just use your phone number</span></div>
+            <!-- Quick, unverified — no OTP yet (blocked on MSG91 + DLT
+                 registration, an external process). Deliberately the
+                 lightest option: no name, no email, no password. Same
+                 phone-first identity plan already agreed for the site
+                 overall — this is the interim, not-yet-verified version of
+                 it, forward-compatible with real OTP once that's live. -->
+            <div class="auth-field">
+              <div class="auth-field-row"><label>Phone Number</label></div>
+              <input type="tel" id="phoneQuickInput" placeholder="e.g. 9899810977" maxlength="13" oninput="clearPhoneQuickError()">
+              <p id="phoneQuickError" style="display:none; color:var(--vivid); font-size:11.5px; margin-top:4px;"></p>
+            </div>
+            <button type="button" class="btn-submit" onclick="submitPhoneQuickAuth()" style="background:white; border:1.5px solid var(--vivid); color:var(--vivid);">📱 Continue with Phone Number</button>
             <div class="auth-modal-divider"><span>or sign in with email</span></div>
             <div class="auth-field" id="emailAuthNameField" style="display:none;">
               <div class="auth-field-row"><label>Name</label></div>
@@ -8129,6 +8142,61 @@
       document.getElementById('emailAuthSwitchLine').innerHTML = mode === 'signup'
         ? 'Already have an account? <a href="#" onclick="switchEmailAuthMode(\'signin\'); return false;">Sign in</a>'
         : 'Don\'t have an account? <a href="#" onclick="switchEmailAuthMode(\'signup\'); return false;">Sign up</a>';
+    }
+
+    // ---------- Phone-only quick sign-in (unverified) ----------
+    // Client-side mirror of the backend's India mobile check — catches
+    // obvious typos before a round trip, but the backend re-validates
+    // regardless (never trust client-side checks alone).
+    const INDIA_MOBILE_REGEX = /^[6-9]\d{9}$/;
+    function normalizeIndianPhoneClient(raw) {
+      let digits = (raw || '').replace(/[\s\-()]/g, '');
+      if (digits.startsWith('+91')) digits = digits.slice(3);
+      else if (digits.startsWith('91') && digits.length === 12) digits = digits.slice(2);
+      else if (digits.startsWith('0') && digits.length === 11) digits = digits.slice(1);
+      return digits;
+    }
+    function clearPhoneQuickError() {
+      const err = document.getElementById('phoneQuickError');
+      if (err) err.style.display = 'none';
+    }
+    function showPhoneQuickError(msg) {
+      const err = document.getElementById('phoneQuickError');
+      if (err) { err.textContent = msg; err.style.display = 'block'; }
+    }
+    async function submitPhoneQuickAuth() {
+      const raw = document.getElementById('phoneQuickInput').value;
+      const normalized = normalizeIndianPhoneClient(raw);
+      if (!INDIA_MOBILE_REGEX.test(normalized)) {
+        showPhoneQuickError('❌ Enter a valid 10-digit Indian mobile number');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/auth/phone-quick`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: normalized }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showPhoneQuickError('❌ ' + (data.error || 'Something went wrong — please try again'));
+          return;
+        }
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem('authToken', authToken);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        // Funnel tracking, step 4 of 4 (phone variant): unverified, but a
+        // real conversion — worth distinguishing from email/google in GA4.
+        if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'phone_unverified' });
+        updateUI();
+        document.getElementById('emailAuthPanel').classList.remove('open');
+        if (data.user.role !== 'admin') {
+          setTimeout(() => { switchTab(null, 'design'); restoreLandingDesignInputs(); }, 500);
+        }
+      } catch (err) {
+        showPhoneQuickError('❌ ' + err.message);
+      }
     }
 
     async function submitEmailAuth() {
