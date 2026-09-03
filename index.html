@@ -3151,16 +3151,32 @@
               <label>👗 Dress Type <span style="color:var(--vivid);">*</span></label>
               <select id="dressType" required onchange="handleDressTypeChange()">
                 <option value="">Choose dress type</option>
-                <option value="Lehenga">Lehenga</option>
-                <option value="Anarkali">Anarkali</option>
-                <option value="Saree">Saree</option>
-                <option value="Blouse">Blouse</option>
-                <option value="Kurti">Kurti</option>
-                <option value="Gown">Gown</option>
-                <option value="Suit">Suit</option>
-                <option value="Others">Others (Kids Wear, Gents Wear, etc.)</option>
+                <optgroup label="👗 Ladies Wear">
+                  <option value="Lehenga">Lehenga</option>
+                  <option value="Anarkali">Anarkali</option>
+                  <option value="Saree">Saree</option>
+                  <option value="Ladies Suit">Ladies Suit</option>
+                  <option value="Blouse">Blouse</option>
+                  <option value="Kurti">Kurti</option>
+                  <option value="Gown">Gown</option>
+                </optgroup>
+                <optgroup label="🧒👔 Men's &amp; Kids Wear — Design Only, Stitching Coming Soon">
+                  <option value="Kids Lehenga/Frock" data-design-only="true">Kids Lehenga / Frock</option>
+                  <option value="Kids Kurta/Sherwani" data-design-only="true">Kids Kurta / Sherwani</option>
+                  <option value="Men's Sherwani" data-design-only="true">Men's Sherwani</option>
+                  <option value="Men's Kurta" data-design-only="true">Men's Kurta</option>
+                  <option value="Other" data-design-only="true">Other (Men's/Kids)</option>
+                </optgroup>
               </select>
-              <input type="text" id="dressTypeOther" placeholder="E.g., Kids Lehenga, Gents Sherwani..." style="display:none; margin-top:8px;" oninput="updateDesignGateState()">
+              <input type="text" id="dressTypeOther" placeholder="E.g., Boys Ethnic Set, Men's Nehru Jacket..." style="display:none; margin-top:8px;" oninput="updateDesignGateState()">
+              <!-- Shown whenever a Men's/Kids category is picked. We don't
+                   stitch those yet — capturing demand and letting people
+                   explore ideas is the point right now, but the caveat has
+                   to be visible BEFORE generation, not just implied, so
+                   nobody mistakes this for an order we can actually fulfil. -->
+              <div id="designOnlyNotice" style="display:none; margin-top:8px; font-size:12px; color:#8a5a00; background:#fff8ec; border:1px solid var(--marigold); border-radius:6px; padding:8px 10px;">
+                👀 We're currently stitching Ladies wear only — designs for this category are for exploring ideas, not orders yet.
+              </div>
             </div>
 
             <div class="form-group" style="margin-bottom:0;">
@@ -6597,12 +6613,12 @@
     }
 
     // Returns the effective dress type string: the select's value, or the
-    // free-text follow-up when "Others" was chosen (e.g. "Kids Lehenga").
-    // Returns '' if the selection isn't actually complete yet.
+    // free-text follow-up when "Other (Men's/Kids)" was chosen (e.g. "Boys
+    // Ethnic Set"). Returns '' if the selection isn't actually complete yet.
     function getSelectedDressType() {
       const sel = document.getElementById('dressType');
       if (!sel || !sel.value) return '';
-      if (sel.value === 'Others') {
+      if (sel.value === 'Other') {
         const other = document.getElementById('dressTypeOther');
         return other ? other.value.trim() : '';
       }
@@ -6612,9 +6628,16 @@
     function handleDressTypeChange() {
       const sel = document.getElementById('dressType');
       const otherInput = document.getElementById('dressTypeOther');
-      const isOthers = sel.value === 'Others';
-      otherInput.style.display = isOthers ? 'block' : 'none';
-      if (!isOthers) otherInput.value = '';
+      const notice = document.getElementById('designOnlyNotice');
+      const selectedOption = sel.options[sel.selectedIndex];
+      const isDesignOnly = !!(selectedOption && selectedOption.dataset.designOnly === 'true');
+      const isOther = sel.value === 'Other';
+
+      otherInput.style.display = isOther ? 'block' : 'none';
+      if (!isOther) otherInput.value = '';
+
+      notice.style.display = isDesignOnly ? 'block' : 'none';
+
       updateDesignGateState();
     }
 
