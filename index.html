@@ -3626,7 +3626,15 @@
                isn't (anonymous browsing while signed out — that needs
                GA4's IP-based Internal Traffic filter instead). -->
           <div class="card" style="padding:16px; margin-bottom:20px;">
-            <h4 style="margin-bottom:10px;">👀 Site Visitors <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(your own admin visits excluded)</span></h4>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+              <h4 style="margin:0;">👀 Site Visitors <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(your own admin visits excluded)</span></h4>
+              <!-- Jumps straight into the Gurbani Fashion GA4 property (Property
+                   ID 547786470), skipping the property-picker step. Lands on
+                   the reports home — from there it's 2 clicks to User >
+                   User attributes > Demographic details for the country/city
+                   breakdown this quick counter above doesn't show. -->
+              <a href="https://analytics.google.com/analytics/web/#/p547786470/reports/reportinghub" target="_blank" rel="noopener" style="font-size:12px; font-weight:600; color:var(--vivid); text-decoration:none; white-space:nowrap;">🌍 View in Google Analytics →</a>
+            </div>
             <div id="visitorStatsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">Loading...</div>
           </div>
 
