@@ -7942,6 +7942,25 @@
 
       let html = '<h4 style="margin: 30px 0 15px 0;">🎨 Your AI-Generated Concepts:</h4>';
 
+      // Progress tracker + orientation — deliberately placed BEFORE the
+      // promo message, consent checkbox, and (further down) the fabric
+      // estimator/guides, so the actual next step (quote or fitting) isn't
+      // competing for attention with everything else on this page.
+      html += `
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:14px; font-size:12px; font-weight:600; flex-wrap:wrap;">
+          <span style="color:var(--vivid);">✅ Design Created</span>
+          <span style="color:#ccc;">→</span>
+          <span style="color:var(--ink);">⬜ Quote or Fitting</span>
+          <span style="color:#ccc;">→</span>
+          <span style="color:var(--text-muted);">⬜ Stitching</span>
+          <span style="color:#ccc;">→</span>
+          <span style="color:var(--text-muted);">⬜ Ready</span>
+        </div>
+        <div style="background:linear-gradient(135deg, var(--vivid), var(--vivid-deep)); border-radius:8px; padding:12px 16px; margin-bottom:16px; color:white; font-size:13px; font-weight:600;">
+          👗 Like what you see? Ask Sonia for a quote or book a fitting directly from any design below.
+        </div>
+      `;
+
       if (originalDescription) {
         html += `
           <div style="background: #f5f5f5; border-left: 3px solid var(--vivid); padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #555;">
@@ -8027,6 +8046,7 @@
               ${concept.accessorySuggestion ? `<div style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:8px;">💍 ${escapeHtml(concept.accessorySuggestion)}</div>` : ''}
               <div class="design-actions">
                 <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
+                <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="bookFittingForDesign(${idx})">📅 Book a Fitting</button>
                 ${!notYetGenerated ? `
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="downloadDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">⬇️ Download</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="printDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">🖨️ Print</button>
@@ -8486,6 +8506,27 @@
       } catch (error) {
         showToast('❌ ' + error.message);
       }
+    }
+
+    // Connects a specific generated design to the REAL appointment booking
+    // system (day/time slots, backend record) rather than just another
+    // WhatsApp ping — the notes field carries the design context over so
+    // Sonia sees exactly what the fitting is for without the customer
+    // having to re-explain it, same spirit as sendQuoteConfirmed's
+    // pre-filled WhatsApp message above.
+    function bookFittingForDesign(conceptIndex) {
+      const concept = currentConcepts[conceptIndex] || {};
+      const designLabel = concept.title || `Design ${conceptIndex + 1}`;
+      switchTab(null, 'appointments');
+      setTimeout(() => {
+        const notesField = document.getElementById('apptNotes');
+        if (notesField) {
+          notesField.value = `Fitting/consultation for my AI Design Studio design: "${designLabel}" — ${concept.description || ''}`.trim();
+        }
+        const daySelect = document.getElementById('apptDaySelect');
+        if (daySelect) daySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast(`✨ Pre-filled with "${designLabel}" — just pick a day and time below.`);
+      }, 300); // after switchTab's own scroll/render settles
     }
 
     let emailAuthMode = 'signin';
