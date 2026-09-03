@@ -2738,6 +2738,7 @@
               <div>
                 <div class="tryit-label">Neckline <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
                 <div class="mood-tag-row" data-group="neckline">
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Neckline)">✨ Decide by AI</button>
                   <button type="button" class="mood-tag" data-value="Round Neck">Round Neck</button>
                   <button type="button" class="mood-tag" data-value="V-Neck">V-Neck</button>
                   <button type="button" class="mood-tag" data-value="Boat Neck">Boat Neck</button>
@@ -2749,6 +2750,7 @@
               <div>
                 <div class="tryit-label">Fabric Type <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
                 <div class="mood-tag-row" data-group="fabricType">
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Fabric)">✨ Decide by AI</button>
                   <button type="button" class="mood-tag" data-value="Silk">Silk</button>
                   <button type="button" class="mood-tag" data-value="Cotton">Cotton</button>
                   <button type="button" class="mood-tag" data-value="Georgette">Georgette</button>
@@ -3466,6 +3468,7 @@
             <div style="margin-bottom:16px;">
               <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Neckline <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
               <div class="mood-tag-row" data-group="neckline">
+                <button type="button" class="mood-tag" data-value="Decide by AI (Neckline)">✨ Decide by AI</button>
                 <button type="button" class="mood-tag" data-value="Round Neck">Round Neck</button>
                 <button type="button" class="mood-tag" data-value="V-Neck">V-Neck</button>
                 <button type="button" class="mood-tag" data-value="Boat Neck">Boat Neck</button>
@@ -3478,6 +3481,7 @@
             <div style="margin-bottom:16px;">
               <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Fabric Type <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
               <div class="mood-tag-row" data-group="fabricType">
+                <button type="button" class="mood-tag" data-value="Decide by AI (Fabric)">✨ Decide by AI</button>
                 <button type="button" class="mood-tag" data-value="Silk">Silk</button>
                 <button type="button" class="mood-tag" data-value="Cotton">Cotton</button>
                 <button type="button" class="mood-tag" data-value="Georgette">Georgette</button>
@@ -6993,16 +6997,22 @@
     // Embellishment (single-select, per SINGLE_SELECT_GROUPS), but is read
     // out separately rather than folded into the general "tags" list — the
     // backend treats it as its own structured field, not just another vibe.
+    // "Decide by AI" is a real, explicit choice for the customer to make
+    // (clearer than just leaving nothing selected), but functionally means
+    // the same as no preference once it reaches the API — filtered out
+    // here rather than sent as literal text in the prompt.
     function getLandingNeckline() {
       const btn = document.querySelector('#landingDesignPreview .mood-tag-row[data-group="neckline"] .mood-tag.selected');
-      return btn ? btn.dataset.value : '';
+      if (!btn || btn.dataset.value === 'Decide by AI (Neckline)') return '';
+      return btn.dataset.value;
     }
 
     // Same treatment as getLandingNeckline() — Fabric Type is its own
     // structured field, not folded into the general tags list.
     function getLandingFabricType() {
       const btn = document.querySelector('#landingDesignPreview .mood-tag-row[data-group="fabricType"] .mood-tag.selected');
-      return btn ? btn.dataset.value : '';
+      if (!btn || btn.dataset.value === 'Decide by AI (Fabric)') return '';
+      return btn.dataset.value;
     }
 
     async function generateLandingDescriptionDraft() {
@@ -13062,16 +13072,21 @@
     // Reads the dashboard's own Neckline selection (single-select, same
     // mechanism as landing's getLandingNeckline()) — kept separate from
     // the general tags list since the backend treats it as its own field.
+    // "Decide by AI" filtered out to empty, same reasoning as the landing
+    // version — a real explicit choice in the UI, but no-preference by
+    // the time it reaches the API.
     function getSelectedNeckline() {
       const btn = document.querySelector('#design .mood-tag-row[data-group="neckline"] .mood-tag.selected');
-      return btn ? btn.dataset.value : '';
+      if (!btn || btn.dataset.value === 'Decide by AI (Neckline)') return '';
+      return btn.dataset.value;
     }
 
     // Same treatment as getSelectedNeckline() — Fabric Type is its own
     // structured field, not folded into the general tags list.
     function getSelectedFabricType() {
       const btn = document.querySelector('#design .mood-tag-row[data-group="fabricType"] .mood-tag.selected');
-      return btn ? btn.dataset.value : '';
+      if (!btn || btn.dataset.value === 'Decide by AI (Fabric)') return '';
+      return btn.dataset.value;
     }
 
     async function generateDescriptionDraft() {
