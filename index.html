@@ -9,6 +9,18 @@
     gtag('js', new Date());
     gtag('config', 'G-N8EX47W6H8');
   </script>
+  <script>
+    // Establishes a safe "floor" entry in this tab's history before any
+    // in-page modal (image lightbox, design detail, designs gallery) pushes
+    // its own state on top. Those modals close via history.back() so a
+    // phone's real back button also dismisses them correctly — but without
+    // this floor entry, closing one on someone's very first interaction in
+    // a fresh tab sent them back past the site entirely instead of just
+    // closing the modal. Runs once, immediately, before any modal can open.
+    if (!history.state || !history.state.gurbaniFloor) {
+      history.replaceState({ gurbaniFloor: true }, '', window.location.href);
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gurbani Fashion — Custom Boutique Stitching in Faridabad | AI Design Studio</title>
@@ -3121,6 +3133,76 @@
             </div>
           </div>
 
+          <!-- STEP 1 — mandatory gate: Dress Type + Occasion. Required
+               before the vibe-tag picker or free-text description below
+               become usable, since both AI drafting and image generation
+               produce far more specific, useful results when they know the
+               garment type and occasion up front rather than guessing from
+               free text alone. "Others" under Dress Type exists because AI
+               Design Studio is open to everyone even though the catalogue
+               and branding emphasize women's wear — it quietly covers kids
+               wear, gents wear, or anything else outside the usual lineup
+               without needing a whole separate section built out. -->
+          <div class="card" style="padding:18px; margin-bottom:18px; background:var(--sand); border:1.5px solid var(--vivid);">
+            <label style="font-weight:700; margin-bottom:4px; display:block;">Step 1 — Tell us what and when</label>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Both required — this helps us design something that actually fits the garment and occasion you have in mind.</p>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>👗 Dress Type <span style="color:var(--vivid);">*</span></label>
+              <select id="dressType" required onchange="handleDressTypeChange()">
+                <option value="">Choose dress type</option>
+                <option value="Lehenga">Lehenga</option>
+                <option value="Anarkali">Anarkali</option>
+                <option value="Saree">Saree</option>
+                <option value="Blouse">Blouse</option>
+                <option value="Kurti">Kurti</option>
+                <option value="Gown">Gown</option>
+                <option value="Suit">Suit</option>
+                <option value="Others">Others (Kids Wear, Gents Wear, etc.)</option>
+              </select>
+              <input type="text" id="dressTypeOther" placeholder="E.g., Kids Lehenga, Gents Sherwani..." style="display:none; margin-top:8px;" oninput="updateDesignGateState()">
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <label>🎯 Occasion <span style="color:var(--vivid);">*</span></label>
+              <select id="occasion" required onchange="updateDesignGateState()">
+                <option value="">Choose occasion</option>
+                <optgroup label="Wedding Functions">
+                  <option value="wedding-general">Not sure yet — general Wedding Function</option>
+                  <option value="wedding">Wedding / Bridal</option>
+                  <option value="engagement">Engagement</option>
+                  <option value="haldi">Haldi</option>
+                  <option value="sangeet">Sangeet / Mehendi</option>
+                  <option value="reception">Reception</option>
+                  <option value="cocktail">Cocktail / After-party</option>
+                </optgroup>
+                <optgroup label="Festivals & Pooja">
+                  <option value="festival-general">Not sure yet — general Festival / Pooja</option>
+                  <option value="diwali">Diwali / Festive Pooja</option>
+                  <option value="navratri">Navratri / Garba</option>
+                  <option value="karva-chauth">Karva Chauth</option>
+                  <option value="eid">Eid</option>
+                  <option value="durga-puja">Durga Puja</option>
+                  <option value="festival">Festival / Celebration</option>
+                </optgroup>
+                <optgroup label="Everyday & Work">
+                  <option value="everyday-general">Not sure yet — general Everyday / Work</option>
+                  <option value="casual">Casual / Daily Wear</option>
+                  <option value="office">Office Wear</option>
+                  <option value="date-night">Date Night</option>
+                </optgroup>
+                <optgroup label="Parties & Life Events">
+                  <option value="celebration-general">Not sure yet — general Party / Celebration</option>
+                  <option value="party">Party / Formal Event</option>
+                  <option value="vacation">Vacation / Resort Wear</option>
+                  <option value="baby-shower">Baby Shower / Godh Bharai</option>
+                  <option value="birthday">Birthday</option>
+                  <option value="farewell">Farewell / Graduation</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
           <!-- MOOD/STYLE TAG PICKER — helps someone who doesn't know how to
                start describing what they want. Occasion-picking alone
                (above) doesn't spark ideas, and a blank textarea assumes
@@ -3164,7 +3246,7 @@
               </div>
             </div>
 
-            <button type="button" class="btn-submit" id="draftDescBtn" onclick="generateDescriptionDraft()">✨ Draft My Description</button>
+            <button type="button" class="btn-submit" id="draftDescBtn" onclick="generateDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first">✨ Draft My Description</button>
           </div>
 
           <form onsubmit="submitDesign(event)" id="designForm">
@@ -3181,45 +3263,6 @@
               </div>
               <div id="descValidationFeedback" role="status" aria-live="polite" style="margin-top: 8px; font-size: 13px; display: none; padding: 8px 12px; border-radius: 4px; background: #f0f0f0;"></div>
             </div>
-            <div class="form-group">
-              <label>🎯 Occasion</label>
-              <select id="occasion">
-                <option value="">Choose occasion</option>
-                <optgroup label="Wedding Functions">
-                  <option value="wedding-general">Not sure yet — general Wedding Function</option>
-                  <option value="wedding">Wedding / Bridal</option>
-                  <option value="engagement">Engagement</option>
-                  <option value="haldi">Haldi</option>
-                  <option value="sangeet">Sangeet / Mehendi</option>
-                  <option value="reception">Reception</option>
-                  <option value="cocktail">Cocktail / After-party</option>
-                </optgroup>
-                <optgroup label="Festivals & Pooja">
-                  <option value="festival-general">Not sure yet — general Festival / Pooja</option>
-                  <option value="diwali">Diwali / Festive Pooja</option>
-                  <option value="navratri">Navratri / Garba</option>
-                  <option value="karva-chauth">Karva Chauth</option>
-                  <option value="eid">Eid</option>
-                  <option value="durga-puja">Durga Puja</option>
-                  <option value="festival">Festival / Celebration</option>
-                </optgroup>
-                <optgroup label="Everyday & Work">
-                  <option value="everyday-general">Not sure yet — general Everyday / Work</option>
-                  <option value="casual">Casual / Daily Wear</option>
-                  <option value="office">Office Wear</option>
-                  <option value="date-night">Date Night</option>
-                </optgroup>
-                <optgroup label="Parties & Life Events">
-                  <option value="celebration-general">Not sure yet — general Party / Celebration</option>
-                  <option value="party">Party / Formal Event</option>
-                  <option value="vacation">Vacation / Resort Wear</option>
-                  <option value="baby-shower">Baby Shower / Godh Bharai</option>
-                  <option value="birthday">Birthday</option>
-                  <option value="farewell">Farewell / Graduation</option>
-                </optgroup>
-              </select>
-            </div>
-
             <div class="form-group" id="designFamilyProfileGroup" style="display:none;">
               <label>📏 Whose measurements should we fit this to?</label>
               <select id="designFamilyProfileSelect">
@@ -6541,19 +6584,71 @@
       const uploadArea = document.getElementById('photoUploadArea');
       const takePhotoBtn = document.getElementById('takePhotoBtn');
       const hint = document.getElementById('photoTypeHint');
-      const generateBtn = document.getElementById('generateBtn');
       if (consented) {
         uploadArea.style.opacity = '1';
         takePhotoBtn.style.opacity = '1';
         hint.textContent = currentPhotoType ? photoTypeHints[currentPhotoType] : '👆 First tap what kind of photo this is (Selfie, Fabric, etc.), then upload';
-        generateBtn.disabled = false;
-        generateBtn.title = '';
       } else {
         uploadArea.style.opacity = '0.5';
         takePhotoBtn.style.opacity = '0.5';
         hint.textContent = 'Please check the consent box above to enable photo upload';
-        generateBtn.disabled = true;
-        generateBtn.title = 'Please check the consent checkbox above first';
+      }
+      updateDesignGateState();
+    }
+
+    // Returns the effective dress type string: the select's value, or the
+    // free-text follow-up when "Others" was chosen (e.g. "Kids Lehenga").
+    // Returns '' if the selection isn't actually complete yet.
+    function getSelectedDressType() {
+      const sel = document.getElementById('dressType');
+      if (!sel || !sel.value) return '';
+      if (sel.value === 'Others') {
+        const other = document.getElementById('dressTypeOther');
+        return other ? other.value.trim() : '';
+      }
+      return sel.value;
+    }
+
+    function handleDressTypeChange() {
+      const sel = document.getElementById('dressType');
+      const otherInput = document.getElementById('dressTypeOther');
+      const isOthers = sel.value === 'Others';
+      otherInput.style.display = isOthers ? 'block' : 'none';
+      if (!isOthers) otherInput.value = '';
+      updateDesignGateState();
+    }
+
+    // Single source of truth for whether Draft My Description / Generate My
+    // Designs are usable — combines Step 1 (Dress Type + Occasion, both
+    // mandatory) with the existing photo-consent gate on Generate.
+    function updateDesignGateState() {
+      const dressTypeValid = getSelectedDressType().length > 0;
+      const occasionEl = document.getElementById('occasion');
+      const occasionValid = !!(occasionEl && occasionEl.value);
+      const consentEl = document.getElementById('photoConsentCheckbox');
+      const consented = consentEl ? consentEl.checked : true;
+
+      const step1Missing = !dressTypeValid || !occasionValid;
+      const step1Message = 'Please select Dress Type and Occasion above first';
+
+      const draftBtn = document.getElementById('draftDescBtn');
+      if (draftBtn) {
+        draftBtn.disabled = step1Missing;
+        draftBtn.title = step1Missing ? step1Message : '';
+      }
+
+      const generateBtn = document.getElementById('generateBtn');
+      if (generateBtn) {
+        if (step1Missing) {
+          generateBtn.disabled = true;
+          generateBtn.title = step1Message;
+        } else if (!consented) {
+          generateBtn.disabled = true;
+          generateBtn.title = 'Please check the consent checkbox above first';
+        } else {
+          generateBtn.disabled = false;
+          generateBtn.title = '';
+        }
       }
     }
 
@@ -7012,15 +7107,17 @@
         return;
       }
       
+      const dressType = getSelectedDressType();
       const occasionValue = document.getElementById('occasion').value;
 
-      // Nudge: occasion left unselected — cheap check, no API cost, catches a
-      // common case where the design would be generated without useful context.
-      if (!occasionValue) {
-        const proceedAnyway = await showConfirm('You haven\'t selected an occasion — this helps us suggest better-fitted designs. Continue without one, or go back and choose?\n\nClick OK to continue anyway, or Cancel to go back and select one.');
-        if (!proceedAnyway) return;
+      // Dress Type and Occasion are both mandatory (Step 1, above) — the
+      // Generate button is disabled until both are set, but this is a
+      // defensive re-check in case of a programmatic/edge-case submit.
+      if (!dressType || !occasionValue) {
+        setStatus('designStatus', '❌ Please select Dress Type and Occasion above first', 'error');
+        return;
       }
-      const occasion = occasionValue || 'casual';
+      const occasion = occasionValue;
 
       // Sensibility pre-check: a cheap call BEFORE the expensive full
       // generation runs, to catch likely mistakes (garbled text, wrong-gender
@@ -7033,7 +7130,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ description, occasion }),
+          body: JSON.stringify({ description, occasion, dressType }),
         });
         const checkData = await checkRes.json();
         if (checkRes.ok && checkData.action === 'block') {
@@ -7063,6 +7160,7 @@
         const payload = { 
           description, 
           occasion,
+          dressType,
           photos: uploadedPhotos || null,
           measurements: (selectedProfile?.measurements && Object.keys(selectedProfile.measurements).some((k) => selectedProfile.measurements[k])) ? selectedProfile.measurements : null
         };
@@ -12256,8 +12354,13 @@
         showToast('❌ Pick at least one vibe first');
         return;
       }
+      const dressType = getSelectedDressType();
       const occasionField = document.getElementById('occasion');
       const occasion = occasionField ? occasionField.value : '';
+      if (!dressType || !occasion) {
+        showToast('❌ Please select Dress Type and Occasion above first');
+        return;
+      }
       const btn = document.getElementById('draftDescBtn');
       const originalLabel = btn.textContent;
       btn.disabled = true;
@@ -12266,7 +12369,7 @@
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ tags: selectedTags, occasion }),
+          body: JSON.stringify({ tags: selectedTags, occasion, dressType }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
