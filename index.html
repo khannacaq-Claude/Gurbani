@@ -2735,9 +2735,34 @@
                   <button type="button" class="mood-tag" data-value="Heavy embroidery and embellishment">Heavy Embroidery</button>
                 </div>
               </div>
+              <div>
+                <div class="tryit-label">Neckline <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="mood-tag-row" data-group="neckline">
+                  <button type="button" class="mood-tag" data-value="Round Neck">Round Neck</button>
+                  <button type="button" class="mood-tag" data-value="V-Neck">V-Neck</button>
+                  <button type="button" class="mood-tag" data-value="Boat Neck">Boat Neck</button>
+                  <button type="button" class="mood-tag" data-value="Sweetheart">Sweetheart</button>
+                  <button type="button" class="mood-tag" data-value="High Neck / Collar">High Neck / Collar</button>
+                  <button type="button" class="mood-tag" data-value="Off-Shoulder">Off-Shoulder</button>
+                </div>
+              </div>
+              <div>
+                <div class="tryit-label">Fabric Type <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="mood-tag-row" data-group="fabricType">
+                  <button type="button" class="mood-tag" data-value="Silk">Silk</button>
+                  <button type="button" class="mood-tag" data-value="Cotton">Cotton</button>
+                  <button type="button" class="mood-tag" data-value="Georgette">Georgette</button>
+                  <button type="button" class="mood-tag" data-value="Chiffon">Chiffon</button>
+                  <button type="button" class="mood-tag" data-value="Velvet">Velvet</button>
+                  <button type="button" class="mood-tag" data-value="Crepe">Crepe</button>
+                </div>
+              </div>
             </div>
 
             <div>
+              <div class="tryit-label">Anything else to mention? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+              <textarea id="landingExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px; width:100%; margin-bottom:14px;"></textarea>
+
               <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
                 <div class="tryit-label" style="margin-bottom:0;">Describe Your Dream Outfit</div>
                 <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first" style="background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:5px 12px; font-weight:700; font-size:11.5px; cursor:pointer; white-space:nowrap;">✨ Draft It For Me</button>
@@ -3438,10 +3463,38 @@
               </div>
             </div>
 
+            <div style="margin-bottom:16px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Neckline <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
+              <div class="mood-tag-row" data-group="neckline">
+                <button type="button" class="mood-tag" data-value="Round Neck">Round Neck</button>
+                <button type="button" class="mood-tag" data-value="V-Neck">V-Neck</button>
+                <button type="button" class="mood-tag" data-value="Boat Neck">Boat Neck</button>
+                <button type="button" class="mood-tag" data-value="Sweetheart">Sweetheart</button>
+                <button type="button" class="mood-tag" data-value="High Neck / Collar">High Neck / Collar</button>
+                <button type="button" class="mood-tag" data-value="Off-Shoulder">Off-Shoulder</button>
+              </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Fabric Type <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
+              <div class="mood-tag-row" data-group="fabricType">
+                <button type="button" class="mood-tag" data-value="Silk">Silk</button>
+                <button type="button" class="mood-tag" data-value="Cotton">Cotton</button>
+                <button type="button" class="mood-tag" data-value="Georgette">Georgette</button>
+                <button type="button" class="mood-tag" data-value="Chiffon">Chiffon</button>
+                <button type="button" class="mood-tag" data-value="Velvet">Velvet</button>
+                <button type="button" class="mood-tag" data-value="Crepe">Crepe</button>
+              </div>
+            </div>
+
             <button type="button" class="btn-submit" id="draftDescBtn" onclick="generateDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first">✨ Draft My Description</button>
           </div>
 
           <form onsubmit="submitDesign(event)" id="designForm">
+            <div class="form-group">
+              <label>Anything else to mention? <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(optional)</span></label>
+              <textarea id="designExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px;"></textarea>
+            </div>
             <div class="form-group">
               <label>📝 Describe Your Dream Outfit</label>
               <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required oninput="validateDescriptionRealtime()"></textarea>
@@ -6936,6 +6989,22 @@
     // IP-based rate limiting on the backend is the only thing standing
     // between this and abuse now that it's unauthenticated — see
     // routes/designs.js draftDescriptionLimiter (6/hour).
+    // Neckline uses the same mood-tag-row mechanism as Style/Color/
+    // Embellishment (single-select, per SINGLE_SELECT_GROUPS), but is read
+    // out separately rather than folded into the general "tags" list — the
+    // backend treats it as its own structured field, not just another vibe.
+    function getLandingNeckline() {
+      const btn = document.querySelector('#landingDesignPreview .mood-tag-row[data-group="neckline"] .mood-tag.selected');
+      return btn ? btn.dataset.value : '';
+    }
+
+    // Same treatment as getLandingNeckline() — Fabric Type is its own
+    // structured field, not folded into the general tags list.
+    function getLandingFabricType() {
+      const btn = document.querySelector('#landingDesignPreview .mood-tag-row[data-group="fabricType"] .mood-tag.selected');
+      return btn ? btn.dataset.value : '';
+    }
+
     async function generateLandingDescriptionDraft() {
       const dressType = getLandingDressType();
       const occasion = document.getElementById('landingOccasion')?.value || '';
@@ -6945,12 +7014,17 @@
       }
       const selected = [];
       document.querySelectorAll('#landingDesignPreview .mood-tag-row .mood-tag.selected').forEach((btn) => {
+        const group = btn.closest('.mood-tag-row').dataset.group;
+        if (group === 'neckline' || group === 'fabricType') return; // sent separately, below
         selected.push(btn.dataset.value);
       });
       if (selected.length === 0) {
         showToast('❌ Pick at least one vibe first');
         return;
       }
+      const neckline = getLandingNeckline();
+      const fabricType = getLandingFabricType();
+      const extraNotes = document.getElementById('landingExtraNotes')?.value.trim() || '';
 
       const btn = document.getElementById('landingDraftBtn');
       const originalLabel = btn.textContent;
@@ -6960,7 +7034,7 @@
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tags: selected, occasion, dressType }),
+          body: JSON.stringify({ tags: selected, occasion, dressType, neckline, fabricType, extraNotes }),
         });
         const data = await res.json();
         if (res.status === 429) {
@@ -7004,6 +7078,8 @@
       });
       const descField = document.getElementById('landingDesignDesc');
       if (descField) descField.value = '';
+      const notesField = document.getElementById('landingExtraNotes');
+      if (notesField) notesField.value = '';
       localStorage.removeItem('landingDesignDraft');
       updateLandingDraftButtonState();
       showToast('↺ Reset');
@@ -7020,12 +7096,13 @@
         dressType: dressTypeSel.value || '',
         dressTypeOther: document.getElementById('landingDressTypeOther')?.value || '',
         occasion: document.getElementById('landingOccasion')?.value || '',
-        tags: selected,
+        tags: selected, // includes neckline's selected value too — restored generically below, same as any other tag
         description: document.getElementById('landingDesignDesc')?.value || '',
+        extraNotes: document.getElementById('landingExtraNotes')?.value || '',
       };
       // Only bother saving if they actually filled in something — an empty
       // payload would just silently clear a real in-progress form later.
-      const hasContent = payload.dressType || payload.occasion || payload.tags.length > 0 || payload.description.trim();
+      const hasContent = payload.dressType || payload.occasion || payload.tags.length > 0 || payload.description.trim() || payload.extraNotes.trim();
       if (hasContent) {
         localStorage.setItem('landingDesignDraft', JSON.stringify(payload));
       }
@@ -7071,6 +7148,10 @@
       if (saved.description && saved.description.trim()) {
         const descField = document.getElementById('designDesc');
         if (descField) descField.value = saved.description;
+      }
+      if (saved.extraNotes && saved.extraNotes.trim()) {
+        const notesField = document.getElementById('designExtraNotes');
+        if (notesField) notesField.value = saved.extraNotes;
       }
       updateDesignGateState();
       showToast('✨ Picked up right where you left off');
@@ -7630,6 +7711,9 @@
           description, 
           occasion,
           dressType,
+          neckline: getSelectedNeckline(),
+          fabricType: getSelectedFabricType(),
+          extraNotes: document.getElementById('designExtraNotes')?.value.trim() || '',
           photos: uploadedPhotos || null,
           measurements: (selectedProfile?.measurements && Object.keys(selectedProfile.measurements).some((k) => selectedProfile.measurements[k])) ? selectedProfile.measurements : null
         };
@@ -7655,7 +7739,7 @@
           setStatus('designStatus', '✅ Designs generated! Check your concepts and styling feedback below.', 'success');
           currentDesignId = data.design._id;
           currentDesignDescription = description;
-          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description);
+          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description, false, false, data.design.dressType);
           updateBudget(data.trial);
           document.getElementById('designDesc').value = '';
           uploadedPhotos = {};
@@ -7790,8 +7874,19 @@
       }
     }
 
-    function displayDesigns(concepts, photoAnalysis, originalDescription, alreadyGaveFeedback, existingConsent) {
+    // Best-effort mapping from a Design's dressType (Lehenga, Anarkali,
+    // Ladies Suit, etc.) to the Fabric Calculator's own option values —
+    // no match (Saree, kids/men's Others, etc.) just leaves the dropdown
+    // on its default rather than guessing wrong.
+    const DRESSTYPE_TO_FABRIC_GARMENT = {
+      'Lehenga': 'lehenga', 'Anarkali': 'anarkali', 'Ladies Suit': 'salwar',
+      'Blouse': 'blouse', 'Kurti': 'kurti', 'Gown': 'gown',
+    };
+    let currentDesignDressType = '';
+
+    function displayDesigns(concepts, photoAnalysis, originalDescription, alreadyGaveFeedback, existingConsent, dressType) {
       currentConcepts = concepts;
+      currentDesignDressType = dressType || getSelectedDressType() || '';
       feedbackState = { rating: null, price: null, plan: null, featureInterest: [] };
       const container = document.getElementById('designsContainer');
       if (!concepts || concepts.length === 0) {
@@ -7883,6 +7978,7 @@
                 📅 Delivery: ${concept.deliveryDays || 14} days
                 <br><span style="font-size:11px; opacity:0.85;">Pricing shared by Sonia when you ask for a quote</span>
               </div>
+              ${concept.accessorySuggestion ? `<div style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:8px;">💍 ${escapeHtml(concept.accessorySuggestion)}</div>` : ''}
               <div class="design-actions">
                 <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
                 ${!notYetGenerated ? `
@@ -7896,6 +7992,67 @@
       });
       
       html += '</div>';
+
+      // Fabric length estimator — connects the existing calculator (built
+      // for the public/Rate Card tools) to the actual design just
+      // generated, instead of leaving it as a separate tool the customer
+      // has to go find themselves. Pre-fills garment type from the
+      // design's own dressType where a clean mapping exists; height/
+      // sleeve/length are still the customer's own input, same formulas
+      // as elsewhere (still flagged as general estimates, not final).
+      const fabricGarmentGuess = DRESSTYPE_TO_FABRIC_GARMENT[currentDesignDressType] || '';
+      html += `
+        <div class="card" id="resultsFabricEstimator" style="padding:20px; margin-top:24px; max-width:520px;">
+          <h4 style="margin-bottom:6px;">🧵 Estimate Fabric Needed</h4>
+          <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Rough estimate based on this design's garment type and your height — free, just tell us your height.</p>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Garment Type</label>
+              <select id="fabricCalcGarment-results">
+                <option value="blouse" ${fabricGarmentGuess === 'blouse' ? 'selected' : ''}>Blouse</option>
+                <option value="kurti" ${fabricGarmentGuess === 'kurti' ? 'selected' : ''}>Kurti / Top</option>
+                <option value="salwar" ${fabricGarmentGuess === 'salwar' ? 'selected' : ''}>Salwar Suit</option>
+                <option value="anarkali" ${fabricGarmentGuess === 'anarkali' ? 'selected' : ''}>Anarkali</option>
+                <option value="lehenga" ${fabricGarmentGuess === 'lehenga' ? 'selected' : ''}>Lehenga</option>
+                <option value="gown" ${fabricGarmentGuess === 'gown' ? 'selected' : ''}>Gown</option>
+                <option value="designerDress">Designer Dress</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Your Height (cm)</label>
+              <input type="number" id="fabricCalcHeight-results" placeholder="e.g. 160" min="120" max="210">
+            </div>
+            <div class="form-group">
+              <label>Sleeve Length</label>
+              <select id="fabricCalcSleeve-results">
+                <option value="sleeveless">Sleeveless</option>
+                <option value="half" selected>Half Sleeve</option>
+                <option value="full">Full Sleeve</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Garment Length</label>
+              <select id="fabricCalcLength-results">
+                <option value="knee">Knee Length</option>
+                <option value="calf" selected>Calf Length</option>
+                <option value="floor">Floor Length</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Fabric Width</label>
+              <select id="fabricCalcWidth-results">
+                <option value="44">44 inch (standard)</option>
+                <option value="58">58–60 inch (wide)</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="btn-submit" onclick="calculateFabricLength('-results')">📏 Estimate Fabric Needed</button>
+          <div id="fabricCalcResult-results" style="display:none; margin-top:16px; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px;">
+            <div style="font-size:22px; font-weight:800; color:var(--vivid);" id="fabricCalcAmount-results"></div>
+            <p style="font-size:12px; color:var(--text-ink); margin:6px 0 0;">This is a general estimate only — the exact amount depends on the specific design, embellishment, and lining. Sonia will confirm the precise requirement when you visit or share your design.</p>
+          </div>
+        </div>
+      `;
 
       // Feedback widget — right after designs, while the experience is fresh.
       // Keeps engagement in-app instead of relying only on a later WhatsApp message.
@@ -12321,7 +12478,7 @@
       document.getElementById('design').classList.add('active');
       // Find and activate the AI Design tab button (2nd tab)
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
-      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted);
+      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted, d.dressType);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -12887,7 +13044,7 @@
     // once — so those two groups behave like radio buttons: picking a new
     // one clears any other selection in that same group, and clicking an
     // already-selected tag deselects it (leaving that category unset).
-    const SINGLE_SELECT_GROUPS = ['color', 'embellishment'];
+    const SINGLE_SELECT_GROUPS = ['color', 'embellishment', 'neckline', 'fabricType'];
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('mood-tag')) {
         const row = e.target.closest('.mood-tag-row');
@@ -12902,6 +13059,21 @@
       }
     });
 
+    // Reads the dashboard's own Neckline selection (single-select, same
+    // mechanism as landing's getLandingNeckline()) — kept separate from
+    // the general tags list since the backend treats it as its own field.
+    function getSelectedNeckline() {
+      const btn = document.querySelector('#design .mood-tag-row[data-group="neckline"] .mood-tag.selected');
+      return btn ? btn.dataset.value : '';
+    }
+
+    // Same treatment as getSelectedNeckline() — Fabric Type is its own
+    // structured field, not folded into the general tags list.
+    function getSelectedFabricType() {
+      const btn = document.querySelector('#design .mood-tag-row[data-group="fabricType"] .mood-tag.selected');
+      return btn ? btn.dataset.value : '';
+    }
+
     async function generateDescriptionDraft() {
       // Scoped to #design specifically — the landing-page preview (below)
       // now has its own .mood-tag-row elements too, and this must never
@@ -12909,6 +13081,7 @@
       const groups = document.querySelectorAll('#design .mood-tag-row');
       const selectedTags = [];
       groups.forEach(g => {
+        if (g.dataset.group === 'neckline' || g.dataset.group === 'fabricType') return; // sent separately, below
         g.querySelectorAll('.mood-tag.selected').forEach(btn => selectedTags.push(btn.dataset.value));
       });
       if (selectedTags.length === 0) {
@@ -12922,6 +13095,9 @@
         showToast('❌ Please select Dress Type and Occasion above first');
         return;
       }
+      const neckline = getSelectedNeckline();
+      const fabricType = getSelectedFabricType();
+      const extraNotes = document.getElementById('designExtraNotes')?.value.trim() || '';
       const btn = document.getElementById('draftDescBtn');
       const originalLabel = btn.textContent;
       btn.disabled = true;
@@ -12930,7 +13106,7 @@
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ tags: selectedTags, occasion, dressType }),
+          body: JSON.stringify({ tags: selectedTags, occasion, dressType, neckline, fabricType, extraNotes }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
