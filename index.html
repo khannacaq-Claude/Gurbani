@@ -821,6 +821,54 @@
     .lens-window-body { padding: 16px; color: var(--text-ink); }
     .lens-window-note { font-size: 10.5px; color: var(--text-muted); font-style: italic; margin-top: 10px; }
 
+    /* ---------- "Try It" preview card (landing page) ---------- */
+    .tryit-card {
+      background: linear-gradient(180deg, #FBF3E4 0%, var(--sand) 100%);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(20,10,20,0.04), 0 12px 32px -12px rgba(168,61,116,0.22);
+      position: relative;
+      overflow: hidden;
+    }
+    .tryit-card::before {
+      content: "";
+      position: absolute; top: 0; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg, var(--vivid), var(--marigold));
+    }
+    .tryit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 26px;
+      align-items: start;
+    }
+    .tryit-label {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--vivid-deep);
+      margin-bottom: 6px;
+    }
+    .tryit-select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      background-color: #fff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23A83D74' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      border: 1.5px solid #E7DAC0;
+      border-radius: 10px;
+      padding: 11px 36px 11px 13px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ink);
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tryit-select:focus { outline: none; border-color: var(--vivid); box-shadow: 0 0 0 3px rgba(219,59,153,0.12); }
+    @media (min-width: 761px) {
+      .tryit-col-left { border-right: 1px solid #E7DAC0; padding-right: 26px; }
+    }
+
     /* Rate Card panels — same expand-on-click language as the lenses, but
        category count is dynamic (from the real rate card), so colors cycle
        through a palette instead of fixed lens-1..4 classes. */
@@ -2574,123 +2622,135 @@
              restoreLandingDesignInputs(). Widened + tightened vertically
              (Dress Type/Occasion side-by-side, smaller gaps throughout) so
              it reads as one glance-able block instead of a long scroll. -->
-        <div class="card" id="landingDesignPreview" style="max-width:640px; width:100%; margin:0 auto 18px; padding:16px; background:var(--sand); border:1.5px solid var(--vivid);">
-          <label style="font-weight:700; margin-bottom:4px; display:block;">✨ Try it — no sign-in needed yet</label>
-          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Pick what you're picturing. When you're ready to actually generate it, we'll ask you to sign in — and everything below comes with you.</p>
+        <div class="card tryit-card" id="landingDesignPreview" style="max-width:980px; width:100%; margin:0 auto 18px; padding:24px 26px;">
+          <h3 style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; max-width:560px;">Pick what you're picturing. When you're ready to actually generate it, we'll ask you to sign in — and everything below comes with you.</p>
 
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px 14px; margin-bottom:10px;">
-            <div class="form-group" style="margin-bottom:0;">
-              <label>👗 Dress Type</label>
-              <select id="landingDressType" onchange="handleLandingDressTypeChange()">
-                <option value="">Choose dress type</option>
-                <optgroup label="👗 Ladies Wear">
-                  <option value="Lehenga">Lehenga</option>
-                  <option value="Anarkali">Anarkali</option>
-                  <option value="Saree">Saree</option>
-                  <option value="Ladies Suit">Ladies Suit</option>
-                  <option value="Blouse">Blouse</option>
-                  <option value="Kurti">Kurti</option>
-                  <option value="Gown">Gown</option>
-                </optgroup>
-                <optgroup label="🧒👔 Men's &amp; Kids Wear — Design Only, Stitching Coming Soon">
-                  <option value="Kids Lehenga/Frock" data-design-only="true">Kids Lehenga / Frock</option>
-                  <option value="Kids Kurta/Sherwani" data-design-only="true">Kids Kurta / Sherwani</option>
-                  <option value="Men's Sherwani" data-design-only="true">Men's Sherwani</option>
-                  <option value="Men's Kurta" data-design-only="true">Men's Kurta</option>
-                  <option value="Other" data-design-only="true">Other (Men's/Kids)</option>
-                </optgroup>
-              </select>
-              <input type="text" id="landingDressTypeOther" placeholder="E.g., Boys Ethnic Set, Men's Nehru Jacket..." style="display:none; margin-top:8px;">
-              <div id="landingDesignOnlyNotice" style="display:none; margin-top:8px; font-size:12px; color:#8a5a00; background:#fff8ec; border:1px solid var(--marigold); border-radius:6px; padding:8px 10px;">
-                👀 We're currently stitching Ladies wear only — designs for this category are for exploring ideas, not orders yet.
+          <div class="tryit-grid">
+            <div class="tryit-col-left">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:20px;">
+                <div>
+                  <div class="tryit-label">Dress Type</div>
+                  <select id="landingDressType" class="tryit-select" onchange="handleLandingDressTypeChange()">
+                    <option value="">Choose dress type</option>
+                    <optgroup label="👗 Ladies Wear">
+                      <option value="Lehenga">Lehenga</option>
+                      <option value="Anarkali">Anarkali</option>
+                      <option value="Saree">Saree</option>
+                      <option value="Ladies Suit">Ladies Suit</option>
+                      <option value="Blouse">Blouse</option>
+                      <option value="Kurti">Kurti</option>
+                      <option value="Gown">Gown</option>
+                    </optgroup>
+                    <optgroup label="🧒👔 Men's &amp; Kids Wear — Design Only, Stitching Coming Soon">
+                      <option value="Kids Lehenga/Frock" data-design-only="true">Kids Lehenga / Frock</option>
+                      <option value="Kids Kurta/Sherwani" data-design-only="true">Kids Kurta / Sherwani</option>
+                      <option value="Men's Sherwani" data-design-only="true">Men's Sherwani</option>
+                      <option value="Men's Kurta" data-design-only="true">Men's Kurta</option>
+                      <option value="Other" data-design-only="true">Other (Men's/Kids)</option>
+                    </optgroup>
+                  </select>
+                  <input type="text" id="landingDressTypeOther" placeholder="E.g., Boys Ethnic Set, Men's Nehru Jacket..." style="display:none; margin-top:8px;">
+                  <div id="landingDesignOnlyNotice" style="display:none; margin-top:8px; font-size:12px; color:#8a5a00; background:#fff8ec; border:1px solid var(--marigold); border-radius:6px; padding:8px 10px;">
+                    👀 We're currently stitching Ladies wear only — designs for this category are for exploring ideas, not orders yet.
+                  </div>
+                </div>
+
+                <div>
+                  <div class="tryit-label">Occasion</div>
+                  <select id="landingOccasion" class="tryit-select">
+                    <option value="">Choose occasion</option>
+                    <optgroup label="Wedding Functions">
+                      <option value="wedding-general">Not sure yet — general Wedding Function</option>
+                      <option value="wedding">Wedding / Bridal</option>
+                      <option value="engagement">Engagement</option>
+                      <option value="haldi">Haldi</option>
+                      <option value="sangeet">Sangeet / Mehendi</option>
+                      <option value="reception">Reception</option>
+                      <option value="cocktail">Cocktail / After-party</option>
+                    </optgroup>
+                    <optgroup label="Festivals & Pooja">
+                      <option value="festival-general">Not sure yet — general Festival / Pooja</option>
+                      <option value="diwali">Diwali / Festive Pooja</option>
+                      <option value="navratri">Navratri / Garba</option>
+                      <option value="karva-chauth">Karva Chauth</option>
+                      <option value="eid">Eid</option>
+                      <option value="durga-puja">Durga Puja</option>
+                      <option value="festival">Festival / Celebration</option>
+                    </optgroup>
+                    <optgroup label="Everyday & Work">
+                      <option value="everyday-general">Not sure yet — general Everyday / Work</option>
+                      <option value="casual">Casual / Daily Wear</option>
+                      <option value="office">Office Wear</option>
+                      <option value="date-night">Date Night</option>
+                    </optgroup>
+                    <optgroup label="Parties & Life Events">
+                      <option value="celebration-general">Not sure yet — general Party / Celebration</option>
+                      <option value="party">Party / Formal Event</option>
+                      <option value="vacation">Vacation / Resort Wear</option>
+                      <option value="baby-shower">Baby Shower / Godh Bharai</option>
+                      <option value="birthday">Birthday</option>
+                      <option value="farewell">Farewell / Graduation</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <div class="tryit-label">Style</div>
+                <div class="mood-tag-row" data-group="style">
+                  <button type="button" class="mood-tag" data-value="Elegant">Elegant</button>
+                  <button type="button" class="mood-tag" data-value="Bold & Statement">Bold &amp; Statement</button>
+                  <button type="button" class="mood-tag" data-value="Minimal & Clean">Minimal &amp; Clean</button>
+                  <button type="button" class="mood-tag" data-value="Traditional & Regal">Traditional &amp; Regal</button>
+                  <button type="button" class="mood-tag" data-value="Playful & Fun">Playful &amp; Fun</button>
+                  <button type="button" class="mood-tag" data-value="Romantic & Soft">Romantic &amp; Soft</button>
+                </div>
+              </div>
+              <div style="margin-bottom:16px;">
+                <div class="tryit-label">Color Mood</div>
+                <div class="mood-tag-row" data-group="color">
+                  <button type="button" class="mood-tag" data-value="Pastel & Soft">Pastel &amp; Soft</button>
+                  <button type="button" class="mood-tag" data-value="Rich & Jewel-toned">Rich &amp; Jewel-toned</button>
+                  <button type="button" class="mood-tag" data-value="Neutral & Earthy">Neutral &amp; Earthy</button>
+                  <button type="button" class="mood-tag" data-value="Bright & Vibrant">Bright &amp; Vibrant</button>
+                  <button type="button" class="mood-tag" data-value="Classic Black, White or Gold">Classic Black/White/Gold</button>
+                </div>
+              </div>
+              <div>
+                <div class="tryit-label">Embellishment</div>
+                <div class="mood-tag-row" data-group="embellishment">
+                  <button type="button" class="mood-tag" data-value="Minimal, clean lines">Minimal / Clean Lines</button>
+                  <button type="button" class="mood-tag" data-value="Moderate detailing">Moderate Detailing</button>
+                  <button type="button" class="mood-tag" data-value="Heavy embroidery and embellishment">Heavy Embroidery</button>
+                </div>
               </div>
             </div>
 
-            <div class="form-group" style="margin-bottom:0;">
-              <label>🎯 Occasion</label>
-              <select id="landingOccasion">
-                <option value="">Choose occasion</option>
-                <optgroup label="Wedding Functions">
-                  <option value="wedding-general">Not sure yet — general Wedding Function</option>
-                  <option value="wedding">Wedding / Bridal</option>
-                  <option value="engagement">Engagement</option>
-                  <option value="haldi">Haldi</option>
-                  <option value="sangeet">Sangeet / Mehendi</option>
-                  <option value="reception">Reception</option>
-                  <option value="cocktail">Cocktail / After-party</option>
-                </optgroup>
-                <optgroup label="Festivals & Pooja">
-                  <option value="festival-general">Not sure yet — general Festival / Pooja</option>
-                  <option value="diwali">Diwali / Festive Pooja</option>
-                  <option value="navratri">Navratri / Garba</option>
-                  <option value="karva-chauth">Karva Chauth</option>
-                  <option value="eid">Eid</option>
-                  <option value="durga-puja">Durga Puja</option>
-                  <option value="festival">Festival / Celebration</option>
-                </optgroup>
-                <optgroup label="Everyday & Work">
-                  <option value="everyday-general">Not sure yet — general Everyday / Work</option>
-                  <option value="casual">Casual / Daily Wear</option>
-                  <option value="office">Office Wear</option>
-                  <option value="date-night">Date Night</option>
-                </optgroup>
-                <optgroup label="Parties & Life Events">
-                  <option value="celebration-general">Not sure yet — general Party / Celebration</option>
-                  <option value="party">Party / Formal Event</option>
-                  <option value="vacation">Vacation / Resort Wear</option>
-                  <option value="baby-shower">Baby Shower / Godh Bharai</option>
-                  <option value="birthday">Birthday</option>
-                  <option value="farewell">Farewell / Graduation</option>
-                </optgroup>
-              </select>
+            <div>
+              <div class="tryit-label">Describe Your Dream Outfit</div>
+              <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
+
+              <!-- Real, honest example — never a live AI call for an
+                   anonymous visitor. Pulled from an actual past customer's
+                   own submitted description via /api/designs/featured, so
+                   it's a genuine sample, not invented copy. Reuses the
+                   site's existing mock-window treatment (.lens-window) so
+                   it echoes the concept-preview panel elsewhere on this
+                   page instead of introducing a new decorative device. -->
+              <div id="landingExampleDraft" class="lens-window" style="display:none; margin-top:14px;">
+                <div class="lens-window-bar">
+                  <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                  <span class="lens-window-title">A REAL CUSTOMER WROTE</span>
+                </div>
+                <div class="lens-window-body">
+                  <p id="landingExampleDraftText" style="font-style:italic; font-size:13px; margin:0;"></p>
+                </div>
+              </div>
+
+              <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" style="width:100%; margin-top:16px;">Continue — sign in to generate →</button>
             </div>
           </div>
-
-          <div style="margin-bottom:8px;">
-            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:5px;">Style</div>
-            <div class="mood-tag-row" data-group="style">
-              <button type="button" class="mood-tag" data-value="Elegant">Elegant</button>
-              <button type="button" class="mood-tag" data-value="Bold & Statement">Bold &amp; Statement</button>
-              <button type="button" class="mood-tag" data-value="Minimal & Clean">Minimal &amp; Clean</button>
-              <button type="button" class="mood-tag" data-value="Traditional & Regal">Traditional &amp; Regal</button>
-              <button type="button" class="mood-tag" data-value="Playful & Fun">Playful &amp; Fun</button>
-              <button type="button" class="mood-tag" data-value="Romantic & Soft">Romantic &amp; Soft</button>
-            </div>
-          </div>
-          <div style="margin-bottom:8px;">
-            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:5px;">Color Mood</div>
-            <div class="mood-tag-row" data-group="color">
-              <button type="button" class="mood-tag" data-value="Pastel & Soft">Pastel &amp; Soft</button>
-              <button type="button" class="mood-tag" data-value="Rich & Jewel-toned">Rich &amp; Jewel-toned</button>
-              <button type="button" class="mood-tag" data-value="Neutral & Earthy">Neutral &amp; Earthy</button>
-              <button type="button" class="mood-tag" data-value="Bright & Vibrant">Bright &amp; Vibrant</button>
-              <button type="button" class="mood-tag" data-value="Classic Black, White or Gold">Classic Black/White/Gold</button>
-            </div>
-          </div>
-          <div style="margin-bottom:10px;">
-            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:5px;">Embellishment</div>
-            <div class="mood-tag-row" data-group="embellishment">
-              <button type="button" class="mood-tag" data-value="Minimal, clean lines">Minimal / Clean Lines</button>
-              <button type="button" class="mood-tag" data-value="Moderate detailing">Moderate Detailing</button>
-              <button type="button" class="mood-tag" data-value="Heavy embroidery and embellishment">Heavy Embroidery</button>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom:10px;">
-            <label>📝 Describe Your Dream Outfit</label>
-            <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:56px;"></textarea>
-          </div>
-
-          <!-- Real, honest example — never a live AI call for an anonymous
-               visitor. Pulled from an actual past customer's own submitted
-               description via /api/designs/featured, so it's a genuine
-               sample, not invented copy. -->
-          <div id="landingExampleDraft" style="display:none; background:white; border-left:3px solid var(--marigold); border-radius:6px; padding:9px 12px; margin-bottom:10px; font-size:12px; color:#555;">
-            <strong>✨ Example — a description one of our customers actually wrote:</strong>
-            <p id="landingExampleDraftText" style="margin-top:5px; font-style:italic;"></p>
-          </div>
-
-          <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" style="width:100%;">Continue — sign in to generate →</button>
         </div>
 
         <!-- STATS — self-gated, only shows once numbers are meaningful.
