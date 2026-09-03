@@ -2562,6 +2562,8 @@
         <button type="button" data-target="rcSection" onclick="jumpToTab('rcSection', this)">💰 Rate Card</button>
         <button type="button" data-target="marketplaceSection" onclick="jumpToTab('marketplaceSection', this)">🛍️ Marketplace</button>
         <button type="button" data-target="journeySection" onclick="jumpToTab('journeySection', this)">📅 Your Journey</button>
+        <button type="button" data-target="fabricCalcCard-pub" onclick="jumpToTab('fabricCalcCard-pub', this)">🧵 Fabric Calculator</button>
+        <button type="button" data-target="guidesShowcaseSection" onclick="jumpToTab('guidesShowcaseSection', this)">📚 Guides</button>
         <button type="button" id="guidesDropdownTrigger" onclick="toggleGuidesDropdown(event)" style="opacity:0.8; flex:none;">☰ More ▾</button>
       </nav>
       <!-- Dropdown menu deliberately lives OUTSIDE .section-tabs, not
@@ -2878,7 +2880,7 @@
                the DOM without id collisions. Shares the same formula
                logic via calculateFabricLength(suffix) rather than
                duplicating the constants. -->
-          <div class="card" style="padding:20px; margin-top:28px; max-width:520px; margin-left:auto; margin-right:auto;">
+          <div class="card" id="fabricCalcCard-pub" style="padding:20px; margin-top:28px; max-width:520px; margin-left:auto; margin-right:auto;">
             <h4 style="margin-bottom:6px;">🧵 Fabric Length Estimator</h4>
             <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Not sure how much fabric to buy? Get a rough estimate based on your height and garment type — no sign-in needed.</p>
 
