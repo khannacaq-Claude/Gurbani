@@ -7749,7 +7749,7 @@
           setStatus('designStatus', '✅ Designs generated! Check your concepts and styling feedback below.', 'success');
           currentDesignId = data.design._id;
           currentDesignDescription = description;
-          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description, false, false, data.design.dressType);
+          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description, false, false, data.design.dressType, { occasion: data.design.occasion, neckline: data.design.neckline, fabricType: data.design.fabricType });
           updateBudget(data.trial);
           document.getElementById('designDesc').value = '';
           uploadedPhotos = {};
@@ -7894,9 +7894,45 @@
     };
     let currentDesignDressType = '';
 
-    function displayDesigns(concepts, photoAnalysis, originalDescription, alreadyGaveFeedback, existingConsent, dressType) {
+    // Maps whatever's known about this design (occasion, fabric, neckline,
+    // dress type) to the most relevant of the 9 existing guide pages —
+    // shown after results as a soft next-step, not a hard sell. Always
+    // includes Self-Measurement + Fitting FAQ (genuinely the next real
+    // step after any design), then adds up to 2 more based on context.
+    // Capped at 4 total so it reads as "a few useful things," not a wall
+    // of links nobody will actually click.
+    function getRelevantGuides(ctx) {
+      ctx = ctx || {};
+      const WEDDING_OCCASIONS = ['wedding-general', 'wedding', 'engagement', 'haldi', 'sangeet', 'reception', 'cocktail'];
+      const FESTIVAL_OCCASIONS = ['festival-general', 'diwali', 'navratri', 'karva-chauth', 'eid', 'durga-puja', 'festival'];
+      const guides = [];
+      const add = (icon, title, url) => { if (!guides.some(g => g.url === url)) guides.push({ icon, title, url }); };
+
+      if (ctx.occasion && WEDDING_OCCASIONS.includes(ctx.occasion)) add('🪔', 'Wedding Booking Timeline', '/wedding-season-booking-guide.html');
+      if (ctx.occasion && FESTIVAL_OCCASIONS.includes(ctx.occasion)) add('🎉', 'Occasion Fabric Guide', '/occasion-fabric-guide.html');
+      if (ctx.fabricType) add('🧵', 'Fabric Care Guide', '/fabric-care-guide.html');
+      if (ctx.neckline) add('👚', 'Blouse & Neckline Guide', '/blouse-neckline-guide.html');
+      // Always-relevant fallbacks — fill remaining slots up to 4 total.
+      add('📏', 'Self-Measurement Guide', '/self-measurement-guide.html');
+      add('📅', 'Fitting Appointment FAQ', '/fitting-appointment-faq.html');
+      add('🧾', 'Fabric Glossary', '/fabric-glossary.html');
+      add('✨', 'Embroidery & Work Types', '/embroidery-work-types-guide.html');
+
+      return guides.slice(0, 4);
+    }
+
+    function displayDesigns(concepts, photoAnalysis, originalDescription, alreadyGaveFeedback, existingConsent, dressType, extraContext) {
       currentConcepts = concepts;
       currentDesignDressType = dressType || getSelectedDressType() || '';
+      // Same fallback pattern as dressType above — use what's passed in
+      // (the actual saved values) when available, otherwise fall back to
+      // whatever's currently selected in the live form (fresh generation).
+      extraContext = extraContext || {};
+      const guideContext = {
+        occasion: extraContext.occasion || document.getElementById('occasion')?.value || '',
+        neckline: extraContext.neckline || getSelectedNeckline() || '',
+        fabricType: extraContext.fabricType || getSelectedFabricType() || '',
+      };
       feedbackState = { rating: null, price: null, plan: null, featureInterest: [] };
       const container = document.getElementById('designsContainer');
       if (!concepts || concepts.length === 0) {
@@ -8063,6 +8099,28 @@
           </div>
         </div>
       `;
+
+      // Helpful Guides — a few relevant ones based on this design's own
+      // context (occasion/fabric/neckline), not the whole catalogue. Each
+      // opens in a new tab so exploring a guide never loses the results
+      // just generated — the point is to keep them on the site a little
+      // longer, not to send them away from what they just made.
+      const relevantGuides = getRelevantGuides(guideContext);
+      if (relevantGuides.length > 0) {
+        html += `
+          <div class="card" style="padding:20px; margin-top:24px; max-width:520px;">
+            <h4 style="margin-bottom:6px;">📚 You Might Find These Helpful</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">A few guides worth a look before your fitting.</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              ${relevantGuides.map(g => `
+                <a href="${g.url}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--sand); border-radius:8px; text-decoration:none; color:var(--ink); font-size:13.5px; font-weight:600;">
+                  <span style="font-size:18px;">${g.icon}</span> ${escapeHtml(g.title)} <span style="margin-left:auto; color:var(--vivid);">→</span>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
 
       // Feedback widget — right after designs, while the experience is fresh.
       // Keeps engagement in-app instead of relying only on a later WhatsApp message.
@@ -12488,7 +12546,7 @@
       document.getElementById('design').classList.add('active');
       // Find and activate the AI Design tab button (2nd tab)
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
-      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted, d.dressType);
+      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted, d.dressType, { occasion: d.occasion, neckline: d.neckline, fabricType: d.fabricType });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
