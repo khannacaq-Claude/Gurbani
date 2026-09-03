@@ -2626,6 +2626,134 @@
             </div>
           </div>
 
+          <!-- PUBLIC PREVIEW OF THE DESIGN FLOW — Step 1 (Dress Type +
+               Occasion), the mood-tag picker, and the description textarea
+               are genuinely usable here, free, no sign-in. This stops at
+               pure UI deliberately: nothing here calls Claude or Replicate,
+               so it costs nothing to let anonymous visitors play with it.
+               "Draft My Description" and "Generate My Designs" both cost
+               real money per call (Sonnet + Replicate) and stay behind
+               sign-in — see landingContinueToSignIn(). Whatever's filled in
+               here is carried over automatically once they sign in, via
+               localStorage + restoreLandingDesignInputs(), so nothing typed
+               here gets lost. -->
+          <div class="card" id="landingDesignPreview" style="max-width:460px; margin:0 auto 18px; padding:18px; background:var(--sand); border:1.5px solid var(--vivid);">
+            <label style="font-weight:700; margin-bottom:4px; display:block;">✨ Try it — no sign-in needed yet</label>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Pick what you're picturing. When you're ready to actually generate it, we'll ask you to sign in — and everything below comes with you.</p>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>👗 Dress Type</label>
+              <select id="landingDressType" onchange="handleLandingDressTypeChange()">
+                <option value="">Choose dress type</option>
+                <optgroup label="👗 Ladies Wear">
+                  <option value="Lehenga">Lehenga</option>
+                  <option value="Anarkali">Anarkali</option>
+                  <option value="Saree">Saree</option>
+                  <option value="Ladies Suit">Ladies Suit</option>
+                  <option value="Blouse">Blouse</option>
+                  <option value="Kurti">Kurti</option>
+                  <option value="Gown">Gown</option>
+                </optgroup>
+                <optgroup label="🧒👔 Men's &amp; Kids Wear — Design Only, Stitching Coming Soon">
+                  <option value="Kids Lehenga/Frock" data-design-only="true">Kids Lehenga / Frock</option>
+                  <option value="Kids Kurta/Sherwani" data-design-only="true">Kids Kurta / Sherwani</option>
+                  <option value="Men's Sherwani" data-design-only="true">Men's Sherwani</option>
+                  <option value="Men's Kurta" data-design-only="true">Men's Kurta</option>
+                  <option value="Other" data-design-only="true">Other (Men's/Kids)</option>
+                </optgroup>
+              </select>
+              <input type="text" id="landingDressTypeOther" placeholder="E.g., Boys Ethnic Set, Men's Nehru Jacket..." style="display:none; margin-top:8px;">
+              <div id="landingDesignOnlyNotice" style="display:none; margin-top:8px; font-size:12px; color:#8a5a00; background:#fff8ec; border:1px solid var(--marigold); border-radius:6px; padding:8px 10px;">
+                👀 We're currently stitching Ladies wear only — designs for this category are for exploring ideas, not orders yet.
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>🎯 Occasion</label>
+              <select id="landingOccasion">
+                <option value="">Choose occasion</option>
+                <optgroup label="Wedding Functions">
+                  <option value="wedding-general">Not sure yet — general Wedding Function</option>
+                  <option value="wedding">Wedding / Bridal</option>
+                  <option value="engagement">Engagement</option>
+                  <option value="haldi">Haldi</option>
+                  <option value="sangeet">Sangeet / Mehendi</option>
+                  <option value="reception">Reception</option>
+                  <option value="cocktail">Cocktail / After-party</option>
+                </optgroup>
+                <optgroup label="Festivals & Pooja">
+                  <option value="festival-general">Not sure yet — general Festival / Pooja</option>
+                  <option value="diwali">Diwali / Festive Pooja</option>
+                  <option value="navratri">Navratri / Garba</option>
+                  <option value="karva-chauth">Karva Chauth</option>
+                  <option value="eid">Eid</option>
+                  <option value="durga-puja">Durga Puja</option>
+                  <option value="festival">Festival / Celebration</option>
+                </optgroup>
+                <optgroup label="Everyday & Work">
+                  <option value="everyday-general">Not sure yet — general Everyday / Work</option>
+                  <option value="casual">Casual / Daily Wear</option>
+                  <option value="office">Office Wear</option>
+                  <option value="date-night">Date Night</option>
+                </optgroup>
+                <optgroup label="Parties & Life Events">
+                  <option value="celebration-general">Not sure yet — general Party / Celebration</option>
+                  <option value="party">Party / Formal Event</option>
+                  <option value="vacation">Vacation / Resort Wear</option>
+                  <option value="baby-shower">Baby Shower / Godh Bharai</option>
+                  <option value="birthday">Birthday</option>
+                  <option value="farewell">Farewell / Graduation</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Style</div>
+              <div class="mood-tag-row" data-group="style">
+                <button type="button" class="mood-tag" data-value="Elegant">Elegant</button>
+                <button type="button" class="mood-tag" data-value="Bold & Statement">Bold &amp; Statement</button>
+                <button type="button" class="mood-tag" data-value="Minimal & Clean">Minimal &amp; Clean</button>
+                <button type="button" class="mood-tag" data-value="Traditional & Regal">Traditional &amp; Regal</button>
+                <button type="button" class="mood-tag" data-value="Playful & Fun">Playful &amp; Fun</button>
+                <button type="button" class="mood-tag" data-value="Romantic & Soft">Romantic &amp; Soft</button>
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Color Mood</div>
+              <div class="mood-tag-row" data-group="color">
+                <button type="button" class="mood-tag" data-value="Pastel & Soft">Pastel &amp; Soft</button>
+                <button type="button" class="mood-tag" data-value="Rich & Jewel-toned">Rich &amp; Jewel-toned</button>
+                <button type="button" class="mood-tag" data-value="Neutral & Earthy">Neutral &amp; Earthy</button>
+                <button type="button" class="mood-tag" data-value="Bright & Vibrant">Bright &amp; Vibrant</button>
+                <button type="button" class="mood-tag" data-value="Classic Black, White or Gold">Classic Black/White/Gold</button>
+              </div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Embellishment</div>
+              <div class="mood-tag-row" data-group="embellishment">
+                <button type="button" class="mood-tag" data-value="Minimal, clean lines">Minimal / Clean Lines</button>
+                <button type="button" class="mood-tag" data-value="Moderate detailing">Moderate Detailing</button>
+                <button type="button" class="mood-tag" data-value="Heavy embroidery and embellishment">Heavy Embroidery</button>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>📝 Describe Your Dream Outfit</label>
+              <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..."></textarea>
+            </div>
+
+            <!-- Real, honest example — never a live AI call for an
+                 anonymous visitor. Pulled from an actual past customer's
+                 own submitted description via /api/designs/featured, so
+                 it's a genuine sample, not invented copy. -->
+            <div id="landingExampleDraft" style="display:none; background:white; border-left:3px solid var(--marigold); border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:12.5px; color:#555;">
+              <strong>✨ Example — a description one of our customers actually wrote:</strong>
+              <p id="landingExampleDraftText" style="margin-top:6px; font-style:italic;"></p>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="landingContinueToSignIn()">Continue — sign in to generate →</button>
+          </div>
+
           <div style="text-align:center; margin: 18px 0;">
             <button onclick="promptSignIn('AI Design Studio')">✨ Start designing (no occasion picked yet is fine too) →</button>
           </div>
@@ -6112,6 +6240,11 @@
 
     let currentUser = null;
     let authToken = null;
+    // GA4 funnel tracking: reached studio -> completed Step 1 -> hit sign-in
+    // wall -> signed in/up. Each flag fires its event once per page load so
+    // tab-hopping or re-checking a select doesn't inflate the counts —
+    // these are meant to show a real funnel, not raw interaction counts.
+    const ga4Funnel = { designStudioViewed: false, step1Completed: false, signinWallHit: false };
 
     // ---------- Global session-expiry detection ----------
     // Wraps every fetch() call site-wide so an expired/invalid token
@@ -6204,6 +6337,13 @@
     };
 
     function promptSignIn(feature) {
+      // Whatever's filled into the landing preview should never be lost,
+      // no matter which button actually triggered sign-in — the preview's
+      // own "Continue" button, the general "Start designing" CTA, or any
+      // other entry point. Safe/no-op if the preview isn't on this page
+      // state or is empty.
+      if (typeof saveLandingDesignInputs === 'function') saveLandingDesignInputs();
+
       // Already signed in (e.g. arrived here via the new "Back to Home"
       // link) — take them straight to the relevant tab instead of the
       // confusing "sign in first" message, which would be actively wrong.
@@ -6450,6 +6590,20 @@
         if (titleEl) titleEl.textContent = 'REAL DESIGNS · FROM OUR CUSTOMERS';
         const noteEl = document.getElementById('featuredConceptNote');
         if (noteEl) noteEl.textContent = 'Generate as many designs as you like — only the ones customers choose to share ever show up here. Tap any to see it full-size.';
+
+        // Landing-page preview: show one real customer's actual submitted
+        // description as an honest example — never a live AI call for an
+        // anonymous visitor, just a genuine real sample.
+        const withText = data.designs.filter((d) => d.customerDescription && d.customerDescription.trim());
+        if (withText.length > 0) {
+          const pick = withText[Math.floor(Math.random() * withText.length)];
+          const exampleBox = document.getElementById('landingExampleDraft');
+          const exampleText = document.getElementById('landingExampleDraftText');
+          if (exampleBox && exampleText) {
+            exampleText.textContent = `"${pick.customerDescription.trim()}"`;
+            exampleBox.style.display = 'block';
+          }
+        }
       } catch (err) {
         // no-op — illustrative placeholders stay as-is
       }
@@ -6565,6 +6719,13 @@
       activeBtn?.classList.add('active');
       activeBtn?.setAttribute('aria-selected', 'true');
       if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
+      // Funnel tracking, step 1 of 4: reached AI Design Studio. Fired once
+      // per page load (not every tab-hop back and forth) so repeat visits
+      // to this tab in one session don't inflate the count.
+      if (tabName === 'design' && !ga4Funnel.designStudioViewed) {
+        ga4Funnel.designStudioViewed = true;
+        if (typeof gtag === 'function') gtag('event', 'design_studio_viewed');
+      }
       if (tabName === 'appointments' && typeof loadAppointmentAvailability === 'function') loadAppointmentAvailability();
       if (tabName === 'admin' && typeof loadVisitorStats === 'function') loadVisitorStats();
       // Switching tabs should always land you at the top of the new tab's
@@ -6649,9 +6810,96 @@
       updateDesignGateState();
     }
 
-    // Single source of truth for whether Draft My Description / Generate My
-    // Designs are usable — combines Step 1 (Dress Type + Occasion, both
-    // mandatory) with the existing photo-consent gate on Generate.
+    // ---------- Landing-page (pre-sign-in) design preview ----------
+    // Mirrors handleDressTypeChange() but for the landing preview's own
+    // element ids — kept as a separate function rather than sharing one,
+    // since the landing version has no gate state to update (nothing here
+    // is submittable; it only becomes real after sign-in restores these
+    // values into the actual dashboard form).
+    function handleLandingDressTypeChange() {
+      const sel = document.getElementById('landingDressType');
+      const otherInput = document.getElementById('landingDressTypeOther');
+      const notice = document.getElementById('landingDesignOnlyNotice');
+      const selectedOption = sel.options[sel.selectedIndex];
+      const isDesignOnly = !!(selectedOption && selectedOption.dataset.designOnly === 'true');
+      const isOther = sel.value === 'Other';
+      otherInput.style.display = isOther ? 'block' : 'none';
+      if (!isOther) otherInput.value = '';
+      notice.style.display = isDesignOnly ? 'block' : 'none';
+    }
+
+    // Saves whatever's filled into the landing preview, then sends the
+    // visitor to sign in. Called both from the preview's own "Continue"
+    // button and (defensively) before any promptSignIn triggered while the
+    // preview has values in it, so nothing typed pre-sign-in gets lost.
+    function saveLandingDesignInputs() {
+      const dressTypeSel = document.getElementById('landingDressType');
+      if (!dressTypeSel) return; // preview not on this page state
+      const selected = [];
+      document.querySelectorAll('#landingDesignPreview .mood-tag-row .mood-tag.selected').forEach((btn) => {
+        selected.push(btn.dataset.value);
+      });
+      const payload = {
+        dressType: dressTypeSel.value || '',
+        dressTypeOther: document.getElementById('landingDressTypeOther')?.value || '',
+        occasion: document.getElementById('landingOccasion')?.value || '',
+        tags: selected,
+        description: document.getElementById('landingDesignDesc')?.value || '',
+      };
+      // Only bother saving if they actually filled in something — an empty
+      // payload would just silently clear a real in-progress form later.
+      const hasContent = payload.dressType || payload.occasion || payload.tags.length > 0 || payload.description.trim();
+      if (hasContent) {
+        localStorage.setItem('landingDesignDraft', JSON.stringify(payload));
+      }
+    }
+
+    function landingContinueToSignIn() {
+      saveLandingDesignInputs();
+      promptSignIn('AI Design Studio');
+    }
+
+    // Called once, right after a successful sign-in/sign-up, before landing
+    // on the design tab — restores whatever was filled into the landing
+    // preview into the REAL form fields, so the visitor never has to
+    // re-type anything they already did pre-sign-in.
+    function restoreLandingDesignInputs() {
+      const raw = localStorage.getItem('landingDesignDraft');
+      if (!raw) return;
+      localStorage.removeItem('landingDesignDraft'); // one-time use — never re-apply on a later sign-in
+      let saved;
+      try { saved = JSON.parse(raw); } catch (e) { return; }
+      if (!saved) return;
+
+      if (saved.dressType) {
+        const dressTypeSel = document.getElementById('dressType');
+        if (dressTypeSel) {
+          dressTypeSel.value = saved.dressType;
+          handleDressTypeChange();
+          if (saved.dressType === 'Other' && saved.dressTypeOther) {
+            const otherInput = document.getElementById('dressTypeOther');
+            if (otherInput) otherInput.value = saved.dressTypeOther;
+          }
+        }
+      }
+      if (saved.occasion) {
+        const occasionSel = document.getElementById('occasion');
+        if (occasionSel) occasionSel.value = saved.occasion;
+      }
+      if (Array.isArray(saved.tags) && saved.tags.length > 0) {
+        document.querySelectorAll('#design .mood-tag-row .mood-tag').forEach((btn) => {
+          if (saved.tags.includes(btn.dataset.value)) btn.classList.add('selected');
+        });
+      }
+      if (saved.description && saved.description.trim()) {
+        const descField = document.getElementById('designDesc');
+        if (descField) descField.value = saved.description;
+      }
+      updateDesignGateState();
+      showToast('✨ Picked up right where you left off');
+    }
+
+
     function updateDesignGateState() {
       const dressTypeValid = getSelectedDressType().length > 0;
       const occasionEl = document.getElementById('occasion');
@@ -6661,6 +6909,12 @@
 
       const step1Missing = !dressTypeValid || !occasionValid;
       const step1Message = 'Please select Dress Type and Occasion above first';
+
+      // Funnel tracking, step 2 of 4: completed the mandatory Step 1 gate.
+      if (!step1Missing && !ga4Funnel.step1Completed) {
+        ga4Funnel.step1Completed = true;
+        if (typeof gtag === 'function') gtag('event', 'design_step1_completed');
+      }
 
       const draftBtn = document.getElementById('draftDescBtn');
       if (draftBtn) {
@@ -7118,6 +7372,13 @@
     async function submitDesign(e) {
       e.preventDefault();
       if (!authToken) {
+        // Funnel tracking, step 3 of 4: hit the sign-in wall while trying
+        // to actually generate — the moment that separates "browsing" from
+        // "wanted to do this but wasn't signed in."
+        if (!ga4Funnel.signinWallHit) {
+          ga4Funnel.signinWallHit = true;
+          if (typeof gtag === 'function') gtag('event', 'design_signin_wall_hit');
+        }
         showToast('Sign in to submit your design');
         toggleEmailAuthPanel();
         return;
@@ -7900,11 +8161,13 @@
         currentUser = data.user;
         localStorage.setItem('authToken', authToken);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        // Funnel tracking, step 4 of 4: sign-in/sign-up actually completed.
+        if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'email' });
         updateUI();
         document.getElementById('emailAuthPanel').classList.remove('open');
         if (data.isNewAccount) offerWalkinAccountLink('signup');
         if (data.user.role !== 'admin') {
-          setTimeout(() => switchTab(null, 'design'), 500);
+          setTimeout(() => { switchTab(null, 'design'); restoreLandingDesignInputs(); }, 500);
         }
       } catch (err) {
         // Whatever the actual cause — a missing element, a network hiccup,
@@ -7999,12 +8262,14 @@
             currentUser = data.user;
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            // Funnel tracking, step 4 of 4: sign-in/sign-up actually completed.
+            if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'google' });
             setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
             if (data.isNewAccount) offerWalkinAccountLink('signup');
             if (data.user.role !== 'admin') {
-              setTimeout(() => switchTab(null, 'design'), 500);
+              setTimeout(() => { switchTab(null, 'design'); restoreLandingDesignInputs(); }, 500);
             }
           } else {
             setStatus('designStatus', '❌ ' + data.error, 'error');
@@ -12376,7 +12641,10 @@
     });
 
     async function generateDescriptionDraft() {
-      const groups = document.querySelectorAll('.mood-tag-row');
+      // Scoped to #design specifically — the landing-page preview (below)
+      // now has its own .mood-tag-row elements too, and this must never
+      // read those in by accident once a signed-in user is on this tab.
+      const groups = document.querySelectorAll('#design .mood-tag-row');
       const selectedTags = [];
       groups.forEach(g => {
         g.querySelectorAll('.mood-tag.selected').forEach(btn => selectedTags.push(btn.dataset.value));
