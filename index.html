@@ -2450,19 +2450,23 @@
             <h3 id="emailAuthHeading">Sign In</h3>
             <p class="auth-modal-sub" id="emailAuthSub">Welcome back! Please enter your details.</p>
             <div id="signinArea" class="auth-modal-google"></div>
-            <div class="auth-modal-divider"><span>or just use your phone number</span></div>
-            <!-- Quick, unverified — no OTP yet (blocked on MSG91 + DLT
-                 registration, an external process). Deliberately the
-                 lightest option: no name, no email, no password. Same
-                 phone-first identity plan already agreed for the site
-                 overall — this is the interim, not-yet-verified version of
-                 it, forward-compatible with real OTP once that's live. -->
-            <div class="auth-field">
-              <div class="auth-field-row"><label>Phone Number</label></div>
-              <input type="tel" id="phoneQuickInput" placeholder="e.g. 9899810977" maxlength="13" oninput="clearPhoneQuickError()">
-              <p id="phoneQuickError" style="display:none; color:var(--vivid); font-size:11.5px; margin-top:4px;"></p>
+            <div class="auth-modal-divider"><span>Sign in with Google, or with email below</span></div>
+            <!-- Optional lead capture — NOT a sign-in method. No OTP yet
+                 (blocked on MSG91 + DLT registration, an external process),
+                 so this deliberately does not authenticate anyone — it just
+                 saves the number for later outreach. Sign-in for real
+                 (needed to use AI Design Studio) still requires Google or
+                 email below. This becomes a real login path itself once
+                 real OTP verification lands — same phone field either way. -->
+            <div style="background:var(--sand); border-radius:8px; padding:10px 12px; margin:14px 0;">
+              <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px;">📱 <strong>Optional:</strong> leave your number and we'll text you when your designs are ready — this doesn't sign you in, sign in with Google or email below to actually use the AI Design Studio.</p>
+              <div class="auth-field" style="margin-bottom:8px;">
+                <input type="tel" id="phoneQuickInput" placeholder="e.g. 9899810977" maxlength="13" oninput="clearPhoneQuickError()">
+                <p id="phoneQuickError" style="display:none; color:var(--vivid); font-size:11.5px; margin-top:4px;"></p>
+                <p id="phoneQuickSuccess" style="display:none; color:#2e7d32; font-size:11.5px; margin-top:4px;"></p>
+              </div>
+              <button type="button" id="phoneQuickBtn" onclick="submitPhoneQuickAuth()" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:20px; padding:8px; font-weight:700; font-size:13px; cursor:pointer;">Save My Number</button>
             </div>
-            <button type="button" class="btn-submit" onclick="submitPhoneQuickAuth()" style="background:white; border:1.5px solid var(--vivid); color:var(--vivid);">📱 Continue with Phone Number</button>
             <div class="auth-modal-divider"><span>or sign in with email</span></div>
             <div class="auth-field" id="emailAuthNameField" style="display:none;">
               <div class="auth-field-row"><label>Name</label></div>
@@ -2716,66 +2720,14 @@
           <p style="text-align:center; max-width:560px; margin:0 auto;">Tell us what you want in your own words, or send a reference photo — get 3 AI-made design ideas back, matched to your selfies, fabric and accessories.</p>
           <p id="lensPromoMessage" style="text-align:center; font-size:11.5px; color:var(--marigold); font-weight:600; max-width:560px; margin:8px auto 0;">✨ Free to explore right now — and even once AI Design Studio becomes a paid feature, the design fee is refunded the moment you get that design stitched. You only ever really pay for the garment.</p>
 
-          <!-- Occasion quick-start, merged in from the old standalone
-               Occasions section — it never was its own destination, every
-               button here just pre-fills and launches this same tool. -->
-          <div class="occ-quickstart">
-            <p class="occ-quickstart-label">Optional quick start — pick an occasion and we'll pre-fill it for you:</p>
-            <div class="occ-panel-row" id="occPanelRow">
-              <div class="occ-panel active" data-occ="0" onclick="expandOccPanel(0)" style="background:linear-gradient(160deg, var(--vivid), var(--vivid-deep));">
-                <span class="occ-panel-label">Wedding Functions</span>
-                <div class="occ-panel-content">
-                  <h4>👰 Wedding Functions</h4>
-                  <div class="occ-sub-row">
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('wedding')">💍 Wedding / Bridal</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('engagement')">💎 Engagement</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('haldi')">🌼 Haldi</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('sangeet')">💃 Sangeet / Mehendi</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('reception')">🥂 Reception</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('cocktail')">🍸 Cocktail / After-party</button>
-                  </div>
-                </div>
-              </div>
-              <div class="occ-panel" data-occ="1" onclick="expandOccPanel(1)" style="background:linear-gradient(160deg, var(--marigold), var(--marigold-deep));">
-                <span class="occ-panel-label">Festivals &amp; Pooja</span>
-                <div class="occ-panel-content">
-                  <h4>🪔 Festivals &amp; Pooja</h4>
-                  <div class="occ-sub-row">
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('diwali')">🪔 Diwali / Festive Pooja</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('navratri')">🕺 Navratri / Garba</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('karva-chauth')">🌙 Karva Chauth</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('eid')">☪️ Eid</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('durga-puja')">🙏 Durga Puja</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('festival')">🎊 Festival / Celebration</button>
-                  </div>
-                </div>
-              </div>
-              <div class="occ-panel" data-occ="2" onclick="expandOccPanel(2)" style="background:linear-gradient(160deg, #3E6B8A, #254A63);">
-                <span class="occ-panel-label">Everyday &amp; Work</span>
-                <div class="occ-panel-content">
-                  <h4>👗 Everyday &amp; Work</h4>
-                  <div class="occ-sub-row">
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('casual')">👕 Casual / Daily Wear</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('office')">💼 Office Wear</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('date-night')">🌆 Date Night</button>
-                  </div>
-                </div>
-              </div>
-              <div class="occ-panel" data-occ="3" onclick="expandOccPanel(3)" style="background:linear-gradient(160deg, #7A1257, #4A0A35);">
-                <span class="occ-panel-label">Parties &amp; Life Events</span>
-                <div class="occ-panel-content">
-                  <h4>🎉 Parties &amp; Life Events</h4>
-                  <div class="occ-sub-row">
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('party')">🎉 Party / Formal Event</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('vacation')">🏖️ Vacation / Resort Wear</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('baby-shower')">🍼 Baby Shower / Godh Bharai</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('birthday')">🎂 Birthday</button>
-                    <button onclick="event.stopPropagation(); startDesignForOccasion('farewell')">🎓 Farewell / Graduation</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- The old colorful occasion quick-start accordion used to live
+               right here, but it's now redundant — the "Try It" preview
+               card up top (right after the hero) already covers Occasion,
+               plus Dress Type, mood tags, and a description box on top of
+               that. Keeping both meant two different ways to pick an
+               occasion, in two different visual styles, doing overlapping
+               jobs. One tool, one place, higher up the page — everything
+               below now just supports that, rather than duplicating it. -->
 
           <div style="text-align:center; margin: 18px 0;">
             <button onclick="promptSignIn('AI Design Studio')">✨ Start designing (no occasion picked yet is fine too) →</button>
@@ -8181,6 +8133,8 @@
         showPhoneQuickError('❌ Enter a valid 10-digit Indian mobile number');
         return;
       }
+      const btn = document.getElementById('phoneQuickBtn');
+      btn.disabled = true;
       try {
         const res = await fetch(`${API}/api/auth/phone-quick`, {
           method: 'POST',
@@ -8190,22 +8144,26 @@
         const data = await res.json();
         if (!res.ok || !data.success) {
           showPhoneQuickError('❌ ' + (data.error || 'Something went wrong — please try again'));
+          btn.disabled = false;
           return;
         }
-        authToken = data.token;
-        currentUser = data.user;
-        localStorage.setItem('authToken', authToken);
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        // Funnel tracking, step 4 of 4 (phone variant): unverified, but a
-        // real conversion — worth distinguishing from email/google in GA4.
-        if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'phone_unverified' });
-        updateUI();
-        document.getElementById('emailAuthPanel').classList.remove('open');
-        if (data.user.role !== 'admin') {
-          setTimeout(() => { switchTab(null, 'design'); restoreLandingDesignInputs(); }, 500);
+        // Deliberately NOT a sign-in — no authToken, no currentUser, no
+        // redirect to the design tab. This just records the number for
+        // later outreach; real sign-in still requires Google or email
+        // right below, until real OTP verification exists. Tracked as its
+        // own funnel event (not sign_up_completed/sign_in_completed) so
+        // those two stay an honest measure of actual accounts, not leads.
+        if (typeof gtag === 'function') gtag('event', 'phone_lead_captured');
+        const successEl = document.getElementById('phoneQuickSuccess');
+        if (successEl) {
+          successEl.textContent = "✅ Got it — we'll text you when your designs are ready. Sign in with Google or email below to continue.";
+          successEl.style.display = 'block';
         }
+        document.getElementById('phoneQuickInput').disabled = true;
+        btn.textContent = 'Saved ✓';
       } catch (err) {
         showPhoneQuickError('❌ ' + err.message);
+        btn.disabled = false;
       }
     }
 
