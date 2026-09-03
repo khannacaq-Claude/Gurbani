@@ -6424,6 +6424,14 @@
         document.getElementById('landingPage').classList.add('hidden');
         switchTab(null, tabMap[feature] || 'overview');
         updateGoHomeLink();
+        // The save above (saveLandingDesignInputs) covers everyone who
+        // reaches this function — but restoring was only ever wired into
+        // the actual sign-in success handlers, never this "already
+        // signed in" shortcut. Someone filling in the landing preview
+        // after going Back to Home, then clicking through while already
+        // authenticated, would have their input silently saved but never
+        // restored. Fixed: restore runs here too.
+        restoreLandingDesignInputs();
         return;
       }
       // Not signed in — open the actual sign-in panel directly rather
