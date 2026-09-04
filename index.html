@@ -12917,11 +12917,19 @@
     // refreshes via /api/auth/me for the real referral count and latest
     // points — that data isn't in the initial login payload, only here.
     function loadReferralCard() {
-      if (!currentUser || !currentUser.referralCode) return;
-      const link = `https://gurbanifashion.com/?ref=${currentUser.referralCode}`;
+      if (!currentUser) return;
       const linkField = document.getElementById('referralLinkDisplay');
-      if (linkField) linkField.value = link;
       const pointsEl = document.getElementById('referralPointsDisplay');
+      // Show whatever's already known immediately, but don't bail out just
+      // because referralCode is missing — that's exactly the case for any
+      // account created before this feature existed, and the /me call
+      // below now self-heals it server-side (generates one on first
+      // load). Bailing out here before that fetch ever ran was the actual
+      // bug: the card showed a permanently blank link for every
+      // pre-existing account.
+      if (currentUser.referralCode && linkField) {
+        linkField.value = `https://gurbanifashion.com/?ref=${currentUser.referralCode}`;
+      }
       if (pointsEl) pointsEl.textContent = currentUser.loyaltyPoints || 0;
 
       fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${authToken}` } })
@@ -12930,12 +12938,16 @@
           if (!data.success) return;
           currentUser.loyaltyPoints = data.user.loyaltyPoints || 0;
           currentUser.referralCount = data.user.referralCount || 0;
+          currentUser.referralCode = data.user.referralCode || currentUser.referralCode;
           localStorage.setItem('currentUser', JSON.stringify(currentUser));
           if (pointsEl) pointsEl.textContent = currentUser.loyaltyPoints;
           const countEl = document.getElementById('referralCountDisplay');
           if (countEl) countEl.textContent = currentUser.referralCount;
+          if (linkField && currentUser.referralCode) {
+            linkField.value = `https://gurbanifashion.com/?ref=${currentUser.referralCode}`;
+          }
         })
-        .catch(() => {}); // non-critical — the card still shows the link either way
+        .catch(() => {}); // non-critical — the card still shows whatever was already known
     }
 
     function copyReferralLink() {
