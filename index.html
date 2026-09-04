@@ -3383,7 +3383,10 @@
                wear, gents wear, or anything else outside the usual lineup
                without needing a whole separate section built out. -->
           <div class="card" style="padding:18px; margin-bottom:18px; background:var(--sand); border:1.5px solid var(--vivid);">
-            <label style="font-weight:700; margin-bottom:4px; display:block;">Step 1 — Tell us what and when</label>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+              <label style="font-weight:700; margin-bottom:4px; display:block;">Step 1 — Tell us what and when</label>
+              <button type="button" onclick="resetDesignForm()" style="flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; padding:4px 0; white-space:nowrap;">↺ Reset</button>
+            </div>
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Both required — this helps us design something that actually fits the garment and occasion you have in mind.</p>
 
             <div class="form-group" style="margin-bottom:14px;">
@@ -7131,6 +7134,38 @@
       updateLandingDraftButtonState();
       showToast('↺ Reset');
     }
+
+    // Dashboard equivalent of resetLandingDesignPreview() — a genuinely
+    // complete reset, not just Step 1. Also clears uploaded photos and the
+    // consent checkbox, since the dashboard form has state the landing
+    // preview doesn't (no point calling something "Reset" if it quietly
+    // leaves 3 uploaded photos and a checked consent box behind).
+    function resetDesignForm() {
+      const dressTypeSel = document.getElementById('dressType');
+      if (dressTypeSel) {
+        dressTypeSel.value = '';
+        handleDressTypeChange();
+      }
+      const occasionSel = document.getElementById('occasion');
+      if (occasionSel) occasionSel.value = '';
+      document.querySelectorAll('#design .mood-tag-row .mood-tag.selected').forEach((btn) => {
+        btn.classList.remove('selected');
+      });
+      const notesField = document.getElementById('designExtraNotes');
+      if (notesField) notesField.value = '';
+      const descField = document.getElementById('designDesc');
+      if (descField) descField.value = '';
+      uploadedPhotos = {};
+      if (typeof displayPhotoGallery === 'function') displayPhotoGallery();
+      const consentEl = document.getElementById('photoConsentCheckbox');
+      if (consentEl) {
+        consentEl.checked = false;
+        if (typeof handleConsentChange === 'function') handleConsentChange();
+      }
+      updateDesignGateState();
+      showToast('↺ Reset');
+    }
+
 
     function saveLandingDesignInputs() {
       const dressTypeSel = document.getElementById('landingDressType');
