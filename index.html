@@ -12682,6 +12682,7 @@
               <input type="checkbox" ${consentOn ? 'checked' : ''} onchange="toggleMyShowcaseConsent('${d._id}', this.checked)" style="width:auto;">
               ✨ Show this design on our homepage${d.featured ? ' <span style="color:#2e7d32; font-weight:600;">(currently featured)</span>' : ''}
             </label>
+            <button type="button" onclick="reuseDesignForNewGeneration(${i})" style="margin-top:10px; background:#fff; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;">🔄 Reuse &amp; Tweak This</button>
           </div>
         `;
         }).join('');
@@ -12724,6 +12725,61 @@
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
       displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted, d.dressType, { occasion: d.occasion, neckline: d.neckline, fabricType: d.fabricType });
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Different from viewPastDesign() above — that one re-shows the OLD
+    // results. This one takes the old inputs (dress type, occasion,
+    // neckline, fabric type, description, extra notes) and loads them back
+    // into Step 1 as a fresh, editable starting point for a NEW generation
+    // — tweak a word or two and get a genuinely different set of concepts,
+    // rather than starting the whole form from a blank page every time.
+    // Style/Color Mood/Embellishment tag selections aren't restorable —
+    // only the resulting description was ever saved, not which specific
+    // tags produced it — but that context already lives in the
+    // description text itself, which the customer can still see and edit.
+    function reuseDesignForNewGeneration(index) {
+      const d = myDesignsCache[index];
+      if (!d) return;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('design').classList.add('active');
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+
+      const dressTypeSel = document.getElementById('dressType');
+      if (dressTypeSel && d.dressType) {
+        const matchingOption = Array.from(dressTypeSel.options).find(o => o.value === d.dressType);
+        if (matchingOption) {
+          dressTypeSel.value = d.dressType;
+        } else {
+          // Not one of the standard options — likely a free-text "Other"
+          // value (e.g. a Men's/Kids category) from before this dropdown existed.
+          dressTypeSel.value = 'Other';
+          const otherInput = document.getElementById('dressTypeOther');
+          if (otherInput) otherInput.value = d.dressType;
+        }
+        handleDressTypeChange();
+      }
+      const occasionSel = document.getElementById('occasion');
+      if (occasionSel && d.occasion) occasionSel.value = d.occasion;
+
+      document.querySelectorAll('#design .mood-tag-row .mood-tag').forEach(btn => btn.classList.remove('selected'));
+      if (d.neckline) {
+        const btn = document.querySelector(`#design .mood-tag-row[data-group="neckline"] .mood-tag[data-value="${CSS.escape(d.neckline)}"]`);
+        if (btn) btn.classList.add('selected');
+      }
+      if (d.fabricType) {
+        const btn = document.querySelector(`#design .mood-tag-row[data-group="fabricType"] .mood-tag[data-value="${CSS.escape(d.fabricType)}"]`);
+        if (btn) btn.classList.add('selected');
+      }
+
+      const descField = document.getElementById('designDesc');
+      if (descField) descField.value = d.description || '';
+      const notesField = document.getElementById('designExtraNotes');
+      if (notesField) notesField.value = d.extraNotes || '';
+
+      updateDesignGateState();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast('✏️ Loaded — tweak anything below, then generate a fresh version.');
     }
 
     async function checkProfileNudge() {
