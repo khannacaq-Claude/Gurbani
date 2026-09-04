@@ -2978,10 +2978,12 @@
               </div>
               <div class="form-group" style="grid-column: 1 / -1;">
                 <label>Fabric Width</label>
-                <select id="fabricCalcWidth-pub">
+                <select id="fabricCalcWidth-pub" onchange="handleFabricWidthChange('-pub')">
                   <option value="44">44 inch (standard)</option>
                   <option value="58">58–60 inch (wide)</option>
+                  <option value="custom">Custom width...</option>
                 </select>
+                <input type="number" id="fabricCalcWidthCustom-pub" placeholder="Enter width in inches" min="20" max="120" style="display:none; margin-top:8px;">
               </div>
             </div>
 
@@ -3859,10 +3861,12 @@
               </div>
               <div class="form-group" style="grid-column: 1 / -1;">
                 <label>Fabric Width</label>
-                <select id="fabricCalcWidth">
+                <select id="fabricCalcWidth" onchange="handleFabricWidthChange('')">
                   <option value="44">44 inch (standard)</option>
                   <option value="58">58–60 inch (wide)</option>
+                  <option value="custom">Custom width...</option>
                 </select>
+                <input type="number" id="fabricCalcWidthCustom" placeholder="Enter width in inches" min="20" max="120" style="display:none; margin-top:8px;">
               </div>
             </div>
 
@@ -5983,13 +5987,23 @@
     // width per cut = less total length needed)
     const FABRIC_CALC_FLARE_HEAVY = ['anarkali', 'lehenga', 'gown', 'designerDress'];
 
+    // Shows/hides the custom-width input for whichever calculator
+    // instance triggered it (dashboard, public, or results — same
+    // suffix pattern as calculateFabricLength itself).
+    function handleFabricWidthChange(suffix) {
+      const sel = document.getElementById('fabricCalcWidth' + suffix);
+      const customInput = document.getElementById('fabricCalcWidthCustom' + suffix);
+      if (!sel || !customInput) return;
+      customInput.style.display = sel.value === 'custom' ? 'block' : 'none';
+    }
+
     function calculateFabricLength(suffix) {
       suffix = suffix || ''; // '' = dashboard version, '-pub' = public landing-page version
       const garment = document.getElementById('fabricCalcGarment' + suffix).value;
       const heightCm = parseFloat(document.getElementById('fabricCalcHeight' + suffix).value);
       const sleeve = document.getElementById('fabricCalcSleeve' + suffix).value;
       const length = document.getElementById('fabricCalcLength' + suffix).value;
-      const width = document.getElementById('fabricCalcWidth' + suffix).value;
+      const widthSel = document.getElementById('fabricCalcWidth' + suffix).value;
 
       if (!heightCm || heightCm < 100 || heightCm > 220) {
         showToast('❌ Please enter a valid height in cm (e.g. 160)');
@@ -6017,11 +6031,29 @@
         if (length === 'floor') meters += 1.0;
       }
 
-      // Wider fabric needs less total length for flare-heavy garments
-      if (width === '58' && FABRIC_CALC_FLARE_HEAVY.includes(garment)) {
-        meters *= 0.8;
-      } else if (width === '58') {
-        meters *= 0.9;
+      // Wider fabric needs less total length for flare-heavy garments.
+      // Custom width: linearly extrapolated from the same two reference
+      // points already used for the 44"/58" presets (1.0x at 44",
+      // 0.8x/0.9x at 58") rather than inventing a new formula — same
+      // "generic estimate, not final" caveat applies either way, this
+      // just extends it to widths in between or beyond those two presets.
+      // Clamped to a sane range so an extreme input (e.g. 20") can't
+      // produce a nonsensical multiplier.
+      let widthInches = 44;
+      if (widthSel === '58') {
+        widthInches = 58;
+      } else if (widthSel === 'custom') {
+        const customVal = parseFloat(document.getElementById('fabricCalcWidthCustom' + suffix)?.value);
+        if (!customVal || customVal < 20 || customVal > 120) {
+          showToast('❌ Please enter a valid fabric width in inches (e.g. 44)');
+          return;
+        }
+        widthInches = customVal;
+      }
+      if (widthInches !== 44) {
+        const slope = FABRIC_CALC_FLARE_HEAVY.includes(garment) ? (0.8 - 1.0) / (58 - 44) : (0.9 - 1.0) / (58 - 44);
+        const widthMultiplier = Math.max(0.6, Math.min(1.4, 1.0 + slope * (widthInches - 44)));
+        meters *= widthMultiplier;
       }
 
       meters = Math.max(1, Math.round(meters * 10) / 10); // never suggest less than 1m, round to nearest 0.1m
@@ -8189,10 +8221,12 @@
             </div>
             <div class="form-group" style="grid-column: 1 / -1;">
               <label>Fabric Width</label>
-              <select id="fabricCalcWidth-results">
+              <select id="fabricCalcWidth-results" onchange="handleFabricWidthChange('-results')">
                 <option value="44">44 inch (standard)</option>
                 <option value="58">58–60 inch (wide)</option>
+                <option value="custom">Custom width...</option>
               </select>
+              <input type="number" id="fabricCalcWidthCustom-results" placeholder="Enter width in inches" min="20" max="120" style="display:none; margin-top:8px;">
             </div>
           </div>
           <button type="button" class="btn-submit" onclick="calculateFabricLength('-results')">📏 Estimate Fabric Needed</button>
