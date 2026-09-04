@@ -2725,7 +2725,7 @@
               </div>
 
               <div style="margin-bottom:16px;">
-                <div class="tryit-label">Style</div>
+                <div class="tryit-label">Style <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
                 <div class="mood-tag-row" data-group="style">
                   <button type="button" class="mood-tag" data-value="Elegant">Elegant</button>
                   <button type="button" class="mood-tag" data-value="Bold & Statement">Bold &amp; Statement</button>
@@ -2736,7 +2736,7 @@
                 </div>
               </div>
               <div style="margin-bottom:16px;">
-                <div class="tryit-label">Color Mood</div>
+                <div class="tryit-label">Color Mood <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
                 <div class="mood-tag-row" data-group="color">
                   <button type="button" class="mood-tag" data-value="Pastel & Soft">Pastel &amp; Soft</button>
                   <button type="button" class="mood-tag" data-value="Rich & Jewel-toned">Rich &amp; Jewel-toned</button>
@@ -2746,7 +2746,7 @@
                 </div>
               </div>
               <div>
-                <div class="tryit-label">Embellishment</div>
+                <div class="tryit-label">Embellishment <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
                 <div class="mood-tag-row" data-group="embellishment">
                   <button type="button" class="mood-tag" data-value="Minimal, clean lines">Minimal / Clean Lines</button>
                   <button type="button" class="mood-tag" data-value="Moderate detailing">Moderate Detailing</button>
@@ -3473,7 +3473,7 @@
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Choose what resonates, and we'll draft a starting description for you to edit — completely optional.</p>
 
             <div style="margin-bottom:12px;">
-              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Style</div>
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Style <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
               <div class="mood-tag-row" data-group="style">
                 <button type="button" class="mood-tag" data-value="Elegant">Elegant</button>
                 <button type="button" class="mood-tag" data-value="Bold & Statement">Bold &amp; Statement</button>
@@ -3485,7 +3485,7 @@
             </div>
 
             <div style="margin-bottom:12px;">
-              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Color Mood</div>
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Color Mood <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
               <div class="mood-tag-row" data-group="color">
                 <button type="button" class="mood-tag" data-value="Pastel & Soft">Pastel &amp; Soft</button>
                 <button type="button" class="mood-tag" data-value="Rich & Jewel-toned">Rich &amp; Jewel-toned</button>
@@ -3496,7 +3496,7 @@
             </div>
 
             <div style="margin-bottom:16px;">
-              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Embellishment</div>
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Embellishment <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional)</span></div>
               <div class="mood-tag-row" data-group="embellishment">
                 <button type="button" class="mood-tag" data-value="Minimal, clean lines">Minimal / Clean Lines</button>
                 <button type="button" class="mood-tag" data-value="Moderate detailing">Moderate Detailing</button>
@@ -7068,9 +7068,12 @@
         if (group === 'neckline' || group === 'fabricType') return; // sent separately, below
         selected.push(btn.dataset.value);
       });
+      // Style/Color Mood/Embellishment are optional, same as Neckline and
+      // Fabric Type — no hard block. A nudge instead, since the draft
+      // genuinely is more specific with at least one picked, but nothing
+      // here should force a choice that's supposed to be optional.
       if (selected.length === 0) {
-        showToast('❌ Pick at least one vibe first');
-        return;
+        showToast('💡 Tip: picking a vibe or two makes for a richer draft — drafting from Dress Type + Occasion alone for now.');
       }
       const neckline = getLandingNeckline();
       const fabricType = getLandingFabricType();
@@ -13464,9 +13467,9 @@
         if (g.dataset.group === 'neckline' || g.dataset.group === 'fabricType') return; // sent separately, below
         g.querySelectorAll('.mood-tag.selected').forEach(btn => selectedTags.push(btn.dataset.value));
       });
+      // Optional, same as Neckline and Fabric Type — nudge, not a block.
       if (selectedTags.length === 0) {
-        showToast('❌ Pick at least one vibe first');
-        return;
+        showToast('💡 Tip: picking a vibe or two makes for a richer draft — drafting from Dress Type + Occasion alone for now.');
       }
       const dressType = getSelectedDressType();
       const occasionField = document.getElementById('occasion');
