@@ -35,6 +35,11 @@
       const ref = params.get('ref');
       if (ref && /^[A-Z0-9]{4,10}$/i.test(ref)) {
         localStorage.setItem('pendingReferralCode', ref.toUpperCase());
+        // Funnel step 1 of 2 — someone actually landed via a referral
+        // link. Step 2 (did it convert to a real signup) fires later, from
+        // the sign-in success handlers in the main script — see
+        // referral_signup_completed.
+        if (typeof gtag === 'function') gtag('event', 'referral_link_visit', { referral_code: ref.toUpperCase() });
       }
     })();
   </script>
@@ -8857,7 +8862,18 @@
         if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'email' });
         updateUI();
         document.getElementById('emailAuthPanel').classList.remove('open');
-        if (data.isNewAccount) { offerWalkinAccountLink('signup'); localStorage.removeItem('pendingReferralCode'); }
+        if (data.isNewAccount) {
+          offerWalkinAccountLink('signup');
+          // Funnel step 2 of 2 — did the referral-link visit actually
+          // convert to a real signup. Checked BEFORE clearing the code,
+          // since that's the only moment we still know whether this
+          // specific signup came through a referral link at all.
+          const referredCode = getPendingReferralCode();
+          if (referredCode && typeof gtag === 'function') {
+            gtag('event', 'referral_signup_completed', { referral_code: referredCode });
+          }
+          localStorage.removeItem('pendingReferralCode');
+        }
         // Restoring saved landing-page inputs and auto-switching to the
         // design tab are two different things — only the tab-switch
         // should be admin-exempt (admins belong on their own dashboard,
@@ -8969,7 +8985,18 @@
             setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
-            if (data.isNewAccount) { offerWalkinAccountLink('signup'); localStorage.removeItem('pendingReferralCode'); }
+            if (data.isNewAccount) {
+          offerWalkinAccountLink('signup');
+          // Funnel step 2 of 2 — did the referral-link visit actually
+          // convert to a real signup. Checked BEFORE clearing the code,
+          // since that's the only moment we still know whether this
+          // specific signup came through a referral link at all.
+          const referredCode = getPendingReferralCode();
+          if (referredCode && typeof gtag === 'function') {
+            gtag('event', 'referral_signup_completed', { referral_code: referredCode });
+          }
+          localStorage.removeItem('pendingReferralCode');
+        }
             // Same fix as the email path above — restore always runs,
             // only the auto-redirect to the design tab is admin-exempt.
             restoreLandingDesignInputs();
