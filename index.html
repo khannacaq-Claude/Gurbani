@@ -21,6 +21,23 @@
       history.replaceState({ gurbaniFloor: true }, '', window.location.href);
     }
   </script>
+  <script>
+    // Referral link capture — someone arriving via
+    // gurbanifashion.com/?ref=ABC123 gets that code saved immediately, so
+    // it survives however long they browse before actually signing up.
+    // Read at signup time via getPendingReferralCode() (defined in the
+    // main script below) and sent to the backend, which already has the
+    // crediting logic built (see authController.js linkReferralIfAny) —
+    // this was the missing piece connecting an actual referral link to
+    // that existing backend logic.
+    (function captureReferralCode() {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref && /^[A-Z0-9]{4,10}$/i.test(ref)) {
+        localStorage.setItem('pendingReferralCode', ref.toUpperCase());
+      }
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gurbani Fashion — Custom Boutique Stitching in Faridabad | AI Design Studio</title>
@@ -3260,6 +3277,24 @@
             <div style="display: flex; gap: 8px; flex-shrink: 0;">
               <button type="button" onclick="switchTab(null, 'profile'); loadProfileTab();" style="background: var(--vivid); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">Complete Profile</button>
               <button type="button" onclick="dismissProfileNudge()" style="background: transparent; color: var(--text-muted); border: none; padding: 8px; font-size: 13px; cursor: pointer;">Not now</button>
+            </div>
+          </div>
+
+          <!-- REFER A FRIEND — points-only for now (no redemption yet, see
+               authController.js linkReferralIfAny for the full reasoning).
+               Populated by loadReferralCard(), called from updateUI() once
+               currentUser is available. -->
+          <div class="card" id="referralCard" style="padding:20px; margin-top:20px; display:none;">
+            <h4 style="margin-bottom:6px;">🎁 Refer a Friend</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Redeeming points for a discount is coming soon; they're already adding up.</p>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+              <input type="text" id="referralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0;">
+              <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyReferralLink()">📋 Copy</button>
+              <button type="button" class="btn-quote" style="background:#25D366; color:#fff; border:1.5px solid #25D366; white-space:nowrap;" onclick="shareReferralLink()">📤 Share</button>
+            </div>
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+              <div><span style="font-size:22px; font-weight:800; color:var(--vivid);" id="referralPointsDisplay">0</span> <span style="font-size:12px; color:var(--text-muted);">points earned</span></div>
+              <div><span style="font-size:22px; font-weight:800; color:var(--vivid);" id="referralCountDisplay">0</span> <span style="font-size:12px; color:var(--text-muted);">friends joined</span></div>
             </div>
           </div>
 
@@ -8694,6 +8729,13 @@
       }
     }
 
+    // Reads whatever referral code was captured from the URL on landing
+    // (see captureReferralCode() in <head>). Returns null if none — the
+    // backend already no-ops safely on a missing/invalid code.
+    function getPendingReferralCode() {
+      return localStorage.getItem('pendingReferralCode') || null;
+    }
+
     async function submitEmailAuth() {
       try {
         const name = document.getElementById('emailAuthName').value.trim();
@@ -8708,7 +8750,9 @@
           return;
         }
         const endpoint = emailAuthMode === 'signup' ? '/api/auth/signup' : '/api/auth/signin';
-        const body = emailAuthMode === 'signup' ? { name, email, password } : { email, password };
+        const body = emailAuthMode === 'signup'
+          ? { name, email, password, referralCode: getPendingReferralCode() }
+          : { email, password };
         const res = await fetch(`${API}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -8728,7 +8772,7 @@
         if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'email' });
         updateUI();
         document.getElementById('emailAuthPanel').classList.remove('open');
-        if (data.isNewAccount) offerWalkinAccountLink('signup');
+        if (data.isNewAccount) { offerWalkinAccountLink('signup'); localStorage.removeItem('pendingReferralCode'); }
         // Restoring saved landing-page inputs and auto-switching to the
         // design tab are two different things — only the tab-switch
         // should be admin-exempt (admins belong on their own dashboard,
@@ -8825,6 +8869,7 @@
             email: payload.email,
             name: payload.name,
             avatar: payload.picture,
+            referralCode: getPendingReferralCode(),
           }),
         })
         .then(r => r.json())
@@ -8839,7 +8884,7 @@
             setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
-            if (data.isNewAccount) offerWalkinAccountLink('signup');
+            if (data.isNewAccount) { offerWalkinAccountLink('signup'); localStorage.removeItem('pendingReferralCode'); }
             // Same fix as the email path above — restore always runs,
             // only the auto-redirect to the design tab is admin-exempt.
             restoreLandingDesignInputs();
@@ -12867,6 +12912,58 @@
       }
     }
 
+    // Populates the Refer a Friend card. Shows what's already known
+    // immediately (referralCode from the login response, no wait), then
+    // refreshes via /api/auth/me for the real referral count and latest
+    // points — that data isn't in the initial login payload, only here.
+    function loadReferralCard() {
+      if (!currentUser || !currentUser.referralCode) return;
+      const link = `https://gurbanifashion.com/?ref=${currentUser.referralCode}`;
+      const linkField = document.getElementById('referralLinkDisplay');
+      if (linkField) linkField.value = link;
+      const pointsEl = document.getElementById('referralPointsDisplay');
+      if (pointsEl) pointsEl.textContent = currentUser.loyaltyPoints || 0;
+
+      fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${authToken}` } })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) return;
+          currentUser.loyaltyPoints = data.user.loyaltyPoints || 0;
+          currentUser.referralCount = data.user.referralCount || 0;
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          if (pointsEl) pointsEl.textContent = currentUser.loyaltyPoints;
+          const countEl = document.getElementById('referralCountDisplay');
+          if (countEl) countEl.textContent = currentUser.referralCount;
+        })
+        .catch(() => {}); // non-critical — the card still shows the link either way
+    }
+
+    function copyReferralLink() {
+      const field = document.getElementById('referralLinkDisplay');
+      if (!field || !field.value) return;
+      field.select();
+      navigator.clipboard.writeText(field.value)
+        .then(() => showToast('📋 Link copied!'))
+        .catch(() => showToast('❌ Could not copy — please select and copy manually.'));
+    }
+
+    // Same native-share pattern as shareDesignImage() — text-only here
+    // since there's no image, just the link and a short pitch.
+    async function shareReferralLink() {
+      const field = document.getElementById('referralLinkDisplay');
+      if (!field || !field.value) return;
+      const shareText = `I've been designing custom outfits with Gurbani Fashion's AI Design Studio — try it free with my link: ${field.value}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Gurbani Fashion', text: shareText });
+        } catch (err) {
+          if (err.name !== 'AbortError') showToast('❌ Sharing was cancelled or failed.');
+        }
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+      }
+    }
+
     function updateUI() {
       const landingPage = document.getElementById('landingPage');
       const dashboard = document.getElementById('dashboard');
@@ -12937,6 +13034,17 @@
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        // Refer a Friend — customer-facing only; doesn't make sense on an
+        // admin/staff account.
+        const referralCardEl = document.getElementById('referralCard');
+        if (referralCardEl) {
+          if (currentUser.role !== 'admin') {
+            referralCardEl.style.display = 'block';
+            loadReferralCard();
+          } else {
+            referralCardEl.style.display = 'none';
+          }
+        }
 
         // Simplified view for staff who aren't comfortable with tech (Sonia) —
         // hides power-user/business-owner tools (bulk import, bill scanner,
