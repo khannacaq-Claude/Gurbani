@@ -7264,10 +7264,17 @@
 
       const generateBtn = document.getElementById('generateBtn');
       if (generateBtn) {
+        // Consent is specifically about processing uploaded photos — it
+        // shouldn't block a pure text-only design request that never
+        // touches the (optional) photo upload section at all. Previously
+        // this checked `consented` unconditionally, meaning someone who
+        // never intended to upload anything was still stuck checking a
+        // box about photo usage before they could generate.
+        const hasPhotos = uploadedPhotos && Object.keys(uploadedPhotos).length > 0;
         if (step1Missing) {
           generateBtn.disabled = true;
           generateBtn.title = step1Message;
-        } else if (!consented) {
+        } else if (hasPhotos && !consented) {
           generateBtn.disabled = true;
           generateBtn.title = 'Please check the consent checkbox above first';
         } else {
