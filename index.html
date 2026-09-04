@@ -3527,14 +3527,15 @@
               </div>
             </div>
 
+            <div class="form-group" style="margin:0 0 14px 0;">
+              <label>Anything else to mention? <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(optional)</span></label>
+              <textarea id="designExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px;"></textarea>
+            </div>
+
             <button type="button" class="btn-submit" id="draftDescBtn" onclick="generateDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first">✨ Draft My Description</button>
           </div>
 
           <form onsubmit="submitDesign(event)" id="designForm">
-            <div class="form-group">
-              <label>Anything else to mention? <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(optional)</span></label>
-              <textarea id="designExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px;"></textarea>
-            </div>
             <div class="form-group">
               <label>📝 Describe Your Dream Outfit</label>
               <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required oninput="validateDescriptionRealtime()"></textarea>
