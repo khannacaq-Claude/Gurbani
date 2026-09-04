@@ -8574,11 +8574,16 @@
           }
           const fileName = `gurbani-fashion-${(title || 'design').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`;
           const file = new File([blob], fileName, { type: 'image/jpeg' });
-          const shareText = `Check out this design I created with Gurbani Fashion's AI Design Studio${title ? ' — ' + title : ''}! Try it free: https://gurbanifashion.com`;
+          const shareText = `Check out this design I created with Gurbani Fashion's AI Design Studio${title ? ' — ' + title : ''}! Try it free.`;
+          const siteUrl = 'https://gurbanifashion.com';
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
-              await navigator.share({ files: [file], title: title || 'My Gurbani Fashion Design', text: shareText });
+              // url as its own field, not embedded in text — same fix as
+              // shareReferralLink(), same reasoning: some share sheets
+              // preview "the current page" instead of a clean link when
+              // the URL is just buried inside a text blob.
+              await navigator.share({ files: [file], title: title || 'My Gurbani Fashion Design', text: shareText, url: siteUrl });
             } catch (shareErr) {
               if (shareErr.name !== 'AbortError') { // user closing the share sheet themselves isn't an error
                 showToast('❌ Sharing was cancelled or failed.');
@@ -8592,7 +8597,7 @@
             link.download = fileName;
             link.href = URL.createObjectURL(blob);
             link.click();
-            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + siteUrl)}`, '_blank');
             showToast('📥 Image downloaded — attach it in the WhatsApp chat that just opened.');
           }
         }, 'image/jpeg', 0.92);
@@ -13100,15 +13105,21 @@
     async function shareReferralLink() {
       const field = document.getElementById('referralLinkDisplay');
       if (!field || !field.value) return;
-      const shareText = `I've been designing custom outfits with Gurbani Fashion's AI Design Studio — try it free with my link: ${field.value}`;
+      const shareCaption = `I've been designing custom outfits with Gurbani Fashion's AI Design Studio — try it free with my link!`;
       if (navigator.share) {
         try {
-          await navigator.share({ title: 'Gurbani Fashion', text: shareText });
+          // url passed as its own field, NOT embedded inside text — some
+          // share sheets, without a proper separate url, try to preview
+          // "whatever page is currently open" instead of the link itself,
+          // which meant the dashboard (points, past designs, everything)
+          // was showing up in the share preview instead of a clean link.
+          // Confirmed live Sep 2026 via a screenshot showing exactly that.
+          await navigator.share({ title: 'Gurbani Fashion', text: shareCaption, url: field.value });
         } catch (err) {
           if (err.name !== 'AbortError') showToast('❌ Sharing was cancelled or failed.');
         }
       } else {
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareCaption + ' ' + field.value)}`, '_blank');
       }
     }
 
