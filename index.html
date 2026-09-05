@@ -406,6 +406,10 @@
       font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: var(--font-body);
     }
     .tour-btn-skip { background: none; color: var(--text-muted); }
+    .tour-btn-back { background: none; color: var(--vivid); border: 1.5px solid var(--vivid); }
+    .tour-btn-back:hover { background: rgba(219,59,153,0.08); }
+    .tour-btn-back:disabled { opacity: 0.35; cursor: default; border-color: var(--text-muted); color: var(--text-muted); }
+    .tour-btn-back:disabled:hover { background: none; }
     .tour-btn-next { background: var(--vivid); color: #fff; }
     .tour-btn-next:hover { background: var(--vivid-deep); }
     #tourReplayLink {
@@ -2305,6 +2309,7 @@
         <span class="tour-step-count" id="tourStepCount"></span>
         <div class="tour-tooltip-btns">
           <button type="button" class="tour-btn tour-btn-skip" onclick="endTour()">Skip</button>
+          <button type="button" class="tour-btn tour-btn-back" id="tourBackBtn" onclick="prevTourStep()">Back</button>
           <button type="button" class="tour-btn tour-btn-next" id="tourNextBtn" onclick="nextTourStep()">Next</button>
         </div>
       </div>
@@ -6172,10 +6177,15 @@
     function startTour() {
       tourStepIndex = 0;
       document.getElementById('tourOverlay').classList.add('open');
-      showTourStep(0);
+      showTourStep(0, 1);
     }
 
-    function showTourStep(i) {
+    // direction: 1 when moving forward (Next), -1 when moving backward
+    // (Back) — needed so that skipping a hidden/invisible step (see below)
+    // continues in the direction the person actually asked for, instead of
+    // a Back click silently behaving like Next whenever it lands on a step
+    // that has to be skipped.
+    function showTourStep(i, direction) {
       const step = TOUR_STEPS[i];
       const target = document.querySelector(step.selector);
       // offsetParent === null catches display:none (and any hidden ancestor,
@@ -6184,7 +6194,14 @@
       // (e.g. the Sign In step, for someone who replays the tour manually
       // via "Take a Tour" while already signed in). Skip straight past it
       // instead of measuring/highlighting a hidden element.
-      if (!target || target.offsetParent === null) { nextTourStep(); return; }
+      if (!target || target.offsetParent === null) {
+        const nextIndex = i + direction;
+        if (nextIndex < 0) { endTour(); return; } // no earlier visible step to fall back to
+        if (nextIndex >= TOUR_STEPS.length) { endTour(); return; }
+        tourStepIndex = nextIndex;
+        showTourStep(nextIndex, direction);
+        return;
+      }
 
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       // Give the smooth scroll a real chance to fully settle before
@@ -6215,6 +6232,7 @@
       document.getElementById('tourText').textContent = step.text;
       document.getElementById('tourStepCount').textContent = `${i+1} of ${TOUR_STEPS.length}`;
       document.getElementById('tourNextBtn').textContent = (i === TOUR_STEPS.length - 1) ? 'Got it!' : 'Next';
+      document.getElementById('tourBackBtn').disabled = (i === 0);
 
       const tooltip = document.getElementById('tourTooltip');
       const spaceBelow = window.innerHeight - rect.bottom;
@@ -6229,7 +6247,13 @@
     function nextTourStep() {
       tourStepIndex++;
       if (tourStepIndex >= TOUR_STEPS.length) { endTour(); return; }
-      showTourStep(tourStepIndex);
+      showTourStep(tourStepIndex, 1);
+    }
+
+    function prevTourStep() {
+      if (tourStepIndex <= 0) return; // Back button is disabled here anyway — guard in case it's ever called some other way
+      tourStepIndex--;
+      showTourStep(tourStepIndex, -1);
     }
 
     function endTour() {
