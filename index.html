@@ -126,14 +126,14 @@
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); }
 
-    /* Section jump-nav — sticks directly under the now-permanently-visible
-       header (see --header-h, set by JS to the header's actual rendered
-       height) rather than only appearing once the header scrolls away.
-       Landing page only. */
+    /* Section jump-nav — NOT sticky. It was made sticky earlier today
+       (to sit directly under the newly-pinned header), but its
+       containing block is the entire landing page, which is very long —
+       that meant it stayed pinned across the WHOLE scroll, including
+       floating on top of unrelated sections further down (confirmed:
+       it was overlapping the Instagram photo grid). Reverted to normal,
+       non-sticky flow. Only the header itself stays pinned now. */
     .section-tabs {
-      position: sticky;
-      top: var(--header-h, 0px);
-      z-index: 400;
       background: var(--ink);
       display: flex;
       overflow-x: auto;
@@ -1373,14 +1373,11 @@
       background: linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       border-radius: 6px;
       padding: 10px 6px 6px;
-      /* Same sticky-under-header treatment as .section-tabs on the landing
-         page — this already shows different tabs for customer vs admin
-         (via each button's own display:none toggle in updateUI()), so
-         pinning it is the whole fix for "no nav once signed in and
-         scrolled" — no new nav content needed, just keeping this visible. */
-      position: sticky;
-      top: var(--header-h, 0px);
-      z-index: 400;
+      /* NOT sticky — same reasoning as .section-tabs: this same mechanism
+         just caused it to float over unrelated content further down the
+         landing page, and this panel has the identical risk for any
+         sufficiently long dashboard tab (e.g. a long customer list).
+         Reverted. Only the header itself stays pinned. */
     }
     .tab-group {
       display: flex;
@@ -13670,20 +13667,7 @@
         document.getElementById('signinTrigger').style.display = 'inline-flex';
       }
       if (typeof updateFloatingNudge === 'function') updateFloatingNudge();
-      updateHeaderHeightVar(); // header content (name/email/sign-out) just changed size — re-measure so the sticky nav bars below it stay correctly offset
     }
-
-    // Keeps --header-h in sync with the header's actual rendered height —
-    // it varies by screen width and by what's showing on the right side
-    // (Sign In vs name+email+Sign Out), so a hardcoded px value would
-    // drift out of sync and leave a gap or overlap under the sticky nav.
-    function updateHeaderHeightVar() {
-      const header = document.querySelector('header');
-      if (header) {
-        document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
-      }
-    }
-    window.addEventListener('resize', updateHeaderHeightVar);
 
     window.addEventListener('load', () => {
       initSectionTabsObserver();
