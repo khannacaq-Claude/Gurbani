@@ -2352,8 +2352,8 @@
        and still the lasting place to find this link later. -->
   <div id="referralWelcomeOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,26,41,0.6); z-index:3050; align-items:center; justify-content:center; padding:20px;">
     <div class="confirm-box" style="max-width:420px; border-top-color:var(--marigold);">
-      <h4 style="margin-bottom:8px;">🎉 Welcome to Gurbani Fashion!</h4>
-      <p style="text-align:left;">Here's your own personal referral link. Share it with anyone — when a friend signs up through it, you earn loyalty points.</p>
+      <h4 id="referralWelcomeHeading" style="margin-bottom:8px;">🎉 Welcome to Gurbani Fashion!</h4>
+      <p id="referralWelcomeText" style="text-align:left;">Here's your own personal referral link. Share it with anyone — when a friend signs up through it, you earn loyalty points.</p>
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
         <input type="text" id="welcomeReferralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0; padding:8px; border-radius:6px;">
         <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyWelcomeReferralLink()">📋 Copy</button>
@@ -8931,6 +8931,8 @@
             gtag('event', 'referral_signup_completed', { referral_code: referredCode });
           }
           localStorage.removeItem('pendingReferralCode');
+        } else {
+          maybeShowReferralReminder();
         }
         // Restoring saved landing-page inputs and auto-switching to the
         // design tab are two different things — only the tab-switch
@@ -9055,6 +9057,8 @@
             gtag('event', 'referral_signup_completed', { referral_code: referredCode });
           }
           localStorage.removeItem('pendingReferralCode');
+        } else {
+          maybeShowReferralReminder();
         }
             // Same fix as the email path above — restore always runs,
             // only the auto-redirect to the design tab is admin-exempt.
@@ -13209,16 +13213,40 @@
       }
     }
 
-    // ── Referral welcome modal (shown once, right after signup) ───────────
+    // ── Referral welcome modal (shown once, right after signup — or as an
+    // occasional "welcome back" reminder for returning sign-ins, capped
+    // below) ─────────────────────────────────────────────────────────────
     // Separate field id + separate copy/share functions from the Overview
     // card's on purpose — two elements on the same page can't share one id,
     // and duplicating this little bit of logic is lower-risk than
     // generalizing the existing (already-working) Overview functions.
-    function showReferralWelcomeModal() {
-      if (!currentUser || !currentUser.referralCode) return; // nothing to show yet — fails silently, signup flow itself is unaffected
+    function showReferralWelcomeModal(opts) {
+      if (!currentUser || !currentUser.referralCode) return; // nothing to show yet — fails silently, sign-in flow itself is unaffected
+      const isWelcomeBack = !!(opts && opts.welcomeBack);
+      document.getElementById('referralWelcomeHeading').textContent = isWelcomeBack
+        ? '👋 Welcome back!'
+        : '🎉 Welcome to Gurbani Fashion!';
+      document.getElementById('referralWelcomeText').textContent = isWelcomeBack
+        ? "Just a reminder — you can share your referral link anytime, and earn loyalty points when a friend signs up through it."
+        : "Here's your own personal referral link. Share it with anyone — when a friend signs up through it, you earn loyalty points.";
       const field = document.getElementById('welcomeReferralLinkDisplay');
       if (field) field.value = `https://gurbanifashion.com/?ref=${currentUser.referralCode}`;
       document.getElementById('referralWelcomeOverlay').style.display = 'flex';
+    }
+
+    // Shows the same modal for a RETURNING sign-in, but capped to once a
+    // week per device — deliberately not on every single sign-in. This
+    // already lives permanently in the Overview tab, so showing it on
+    // every sign-in as well would mostly just be repeated interruption for
+    // someone who signs in often (checking an order, browsing designs,
+    // etc.), for very little extra benefit over an occasional reminder.
+    function maybeShowReferralReminder() {
+      if (!currentUser || !currentUser.referralCode) return;
+      const REMINDER_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // once a week at most
+      const lastShown = parseInt(localStorage.getItem('referralReminderLastShown') || '0', 10);
+      if (Date.now() - lastShown < REMINDER_COOLDOWN_MS) return;
+      localStorage.setItem('referralReminderLastShown', String(Date.now()));
+      showReferralWelcomeModal({ welcomeBack: true });
     }
 
     function closeReferralWelcomeModal() {
