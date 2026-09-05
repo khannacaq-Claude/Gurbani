@@ -2338,6 +2338,29 @@
     </div>
   </div>
 
+  <!-- REFERRAL WELCOME MODAL — shown once, right after a brand-new signup
+       completes (after the walk-in phone-link prompt, if that one showed).
+       Purpose: the referral link used to only live in the Overview tab,
+       so a new customer had no reason to ever notice it existed. This
+       surfaces it immediately as part of the "you're signed up!" moment
+       instead. The permanent Refer a Friend card in Overview is unchanged
+       and still the lasting place to find this link later. -->
+  <div id="referralWelcomeOverlay" style="display:none; position:fixed; inset:0; background:rgba(20,26,41,0.6); z-index:3050; align-items:center; justify-content:center; padding:20px;">
+    <div class="confirm-box" style="max-width:420px; border-top-color:var(--marigold);">
+      <h4 style="margin-bottom:8px;">🎉 Welcome to Gurbani Fashion!</h4>
+      <p style="text-align:left;">Here's your own personal referral link. Share it with anyone — when a friend signs up through it, you earn loyalty points.</p>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+        <input type="text" id="welcomeReferralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0; padding:8px; border-radius:6px;">
+        <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyWelcomeReferralLink()">📋 Copy</button>
+        <button type="button" class="btn-quote" style="background:#25D366; color:#fff; border:1.5px solid #25D366; white-space:nowrap;" onclick="shareWelcomeReferralLink()">📤 Share</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); text-align:left; margin-bottom:16px;">You can always find this again later in your Overview tab, under "Refer a Friend."</p>
+      <div class="confirm-actions">
+        <button type="button" id="referralWelcomeContinueBtn" onclick="closeReferralWelcomeModal()">Continue</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PHOTO CROP TOOL — a one-tap photo upload often catches background
        clutter along with the actual reference item; this lets the person
        trim that out before it's used for AI matching. Self-built (no
@@ -3293,7 +3316,7 @@
                currentUser is available. -->
           <div class="card" id="referralCard" style="padding:20px; margin-top:20px; display:none;">
             <h4 style="margin-bottom:6px;">🎁 Refer a Friend</h4>
-            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Once they join, they get their own link too, so it keeps spreading (and earning) past just you. Redeeming points for a discount is coming soon; they're already adding up.</p>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Redeeming points for a discount is coming soon; they're already adding up.</p>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
               <input type="text" id="referralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0;">
               <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyReferralLink()">📋 Copy</button>
@@ -6155,7 +6178,13 @@
     function showTourStep(i) {
       const step = TOUR_STEPS[i];
       const target = document.querySelector(step.selector);
-      if (!target) { nextTourStep(); return; }
+      // offsetParent === null catches display:none (and any hidden ancestor,
+      // e.g. the whole landing page) — exactly the case where a step's
+      // target technically exists in the DOM but isn't actually visible
+      // (e.g. the Sign In step, for someone who replays the tour manually
+      // via "Take a Tour" while already signed in). Skip straight past it
+      // instead of measuring/highlighting a hidden element.
+      if (!target || target.offsetParent === null) { nextTourStep(); return; }
 
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       // Give the smooth scroll a real chance to fully settle before
@@ -6170,6 +6199,11 @@
 
     function positionTourStep(target, step, i) {
       const rect = target.getBoundingClientRect();
+      // Belt-and-braces re-check: visibility can change during the 600ms
+      // wait above (e.g. sign-in completing mid-tour). A degenerate rect
+      // here would otherwise draw a highlight box in the wrong place —
+      // skip the step instead.
+      if (rect.width === 0 && rect.height === 0) { nextTourStep(); return; }
       const pad = 8;
       const highlight = document.getElementById('tourHighlight');
       highlight.style.top = (rect.top - pad) + 'px';
@@ -8863,7 +8897,7 @@
         updateUI();
         document.getElementById('emailAuthPanel').classList.remove('open');
         if (data.isNewAccount) {
-          offerWalkinAccountLink('signup');
+          offerWalkinAccountLink('signup', showReferralWelcomeModal);
           // Funnel step 2 of 2 — did the referral-link visit actually
           // convert to a real signup. Checked BEFORE clearing the code,
           // since that's the only moment we still know whether this
@@ -8986,7 +9020,7 @@
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
             if (data.isNewAccount) {
-          offerWalkinAccountLink('signup');
+          offerWalkinAccountLink('signup', showReferralWelcomeModal);
           // Funnel step 2 of 2 — did the referral-link visit actually
           // convert to a real signup. Checked BEFORE clearing the code,
           // since that's the only moment we still know whether this
@@ -13150,6 +13184,46 @@
       }
     }
 
+    // ── Referral welcome modal (shown once, right after signup) ───────────
+    // Separate field id + separate copy/share functions from the Overview
+    // card's on purpose — two elements on the same page can't share one id,
+    // and duplicating this little bit of logic is lower-risk than
+    // generalizing the existing (already-working) Overview functions.
+    function showReferralWelcomeModal() {
+      if (!currentUser || !currentUser.referralCode) return; // nothing to show yet — fails silently, signup flow itself is unaffected
+      const field = document.getElementById('welcomeReferralLinkDisplay');
+      if (field) field.value = `https://gurbanifashion.com/?ref=${currentUser.referralCode}`;
+      document.getElementById('referralWelcomeOverlay').style.display = 'flex';
+    }
+
+    function closeReferralWelcomeModal() {
+      document.getElementById('referralWelcomeOverlay').style.display = 'none';
+    }
+
+    function copyWelcomeReferralLink() {
+      const field = document.getElementById('welcomeReferralLinkDisplay');
+      if (!field || !field.value) return;
+      field.select();
+      navigator.clipboard.writeText(field.value)
+        .then(() => showToast('📋 Link copied!'))
+        .catch(() => showToast('❌ Could not copy — please select and copy manually.'));
+    }
+
+    async function shareWelcomeReferralLink() {
+      const field = document.getElementById('welcomeReferralLinkDisplay');
+      if (!field || !field.value) return;
+      const shareCaption = `I've been designing custom outfits with Gurbani Fashion's AI Design Studio — try it free with my link!`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Gurbani Fashion', text: shareCaption, url: field.value });
+        } catch (err) {
+          if (err.name !== 'AbortError') showToast('❌ Sharing was cancelled or failed.');
+        }
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareCaption + ' ' + field.value)}`, '_blank');
+      }
+    }
+
     function updateUI() {
       const landingPage = document.getElementById('landingPage');
       const dashboard = document.getElementById('dashboard');
@@ -13293,7 +13367,6 @@
 
     window.addEventListener('load', () => {
       initSectionTabsObserver();
-      maybeAutoStartTour();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
@@ -13331,6 +13404,13 @@
 
       document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
       updateUI();
+      // Moved to run AFTER updateUI() — previously this ran first thing on
+      // load, before the saved login was even read from localStorage, so
+      // the landing-page check inside it was always true regardless of
+      // actual sign-in state and the tour fired for signed-in returning
+      // customers too. Now it only runs once we genuinely know whether
+      // the landing page is actually what's showing.
+      maybeAutoStartTour();
       trackSiteVisit();
 
       if (!authToken) {
