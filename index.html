@@ -8993,17 +8993,18 @@
         if (!token) {
           throw new Error('Google didn\'t return a sign-in token — this can happen if third-party cookies are blocked, or an ad-blocker interfered with Google\'s sign-in script.');
         }
-        const parts = token.split('.');
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
+        // Previously this decoded the token client-side and sent the
+        // decoded fields (googleId/email/name/avatar) directly — the
+        // backend then trusted those at face value with no way to tell
+        // whether they'd actually come from Google. Sending the raw token
+        // instead lets the backend verify it itself against Google's own
+        // keys before trusting anything in it.
         fetch(`${API}/api/auth/google-signin`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            googleId: payload.sub,
-            email: payload.email,
-            name: payload.name,
-            avatar: payload.picture,
+            idToken: token,
             referralCode: getPendingReferralCode(),
           }),
         })
