@@ -3315,6 +3315,12 @@
             </div>
           </div>
           <div class="tab-group">
+            <div class="tab-group-label">Marketing</div>
+            <div class="tab-group-row">
+              <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory();" style="display: none;">📸 Photo Tools</button>
+            </div>
+          </div>
+          <div class="tab-group">
             <div class="tab-group-label">Help</div>
             <div class="tab-group-row">
               <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
@@ -4624,6 +4630,42 @@
           </div>
         </div>
 
+        <!-- PHOTO TOOLS — admin prompt-based photo editing (background swap,
+             watermark removal, anonymization) via Replicate's Kontext model,
+             auto-persisted to Cloudinary instead of Replicate's own
+             temporary (expires ~1hr) delivery URLs. -->
+        <div id="adminPhotoTools" class="tab-content">
+          <h3>📸 Photo Tools</h3>
+          <p style="color:#666; margin-bottom:20px; font-size:13px;">Describe an edit in plain English — background swaps, removing a watermark, anonymizing a customer's face for portfolio use, etc. The result is saved permanently to Cloudinary automatically (Replicate's own links expire after about an hour).</p>
+
+          <div class="card" style="padding:20px; margin-bottom:20px;">
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">1. Photo</label>
+            <input type="file" id="photoToolsFile" accept=".jpg,.jpeg,.png,.webp" style="margin-bottom:14px;">
+
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">2. Describe the edit</label>
+            <textarea id="photoToolsPrompt" rows="4" placeholder="e.g. Replace the background with a soft cream-to-taupe studio gradient. Remove the pink watermark text near the hem, seamlessly restoring the fabric underneath." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:13px; font-family:var(--font-body); margin-bottom:14px;"></textarea>
+
+            <button type="button" onclick="runPhotoToolsProcess()" id="photoToolsRunBtn" class="btn-submit" style="width:auto; padding:10px 24px;">✨ Process Photo</button>
+
+            <div id="photoToolsStatus" style="margin-top:14px; font-size:13px;"></div>
+
+            <div id="photoToolsResultBox" style="display:none; margin-top:16px; padding:16px; background:#FFFBF5; border:1px solid var(--marigold); border-radius:8px;">
+              <img id="photoToolsResultImg" style="max-width:100%; max-height:400px; border-radius:6px; display:block; margin-bottom:10px;">
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="photoToolsResultUrl" readonly style="flex:1; min-width:200px; font-size:12px; background:white; border:1px solid #e0d8d0; padding:8px; border-radius:6px;">
+                <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyPhotoToolsUrl()">📋 Copy Link</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:20px;">
+            <h4 style="margin-bottom:12px;">🖼️ Recent Results</h4>
+            <div id="photoToolsHistory" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px;">
+              <div style="font-size:12px; color:#888;">Loading...</div>
+            </div>
+          </div>
+        </div>
+
         <!-- QUICK GUIDE (always-available reference, especially for Sonia) -->
         <div id="adminHelp" class="tab-content">
           <h3>📖 Quick Guide</h3>
@@ -5041,6 +5083,90 @@
         html += `<div style="margin-top:8px; color:#c62828;">Issues:<ul style="margin:4px 0 0 18px;">${errors.slice(0, 20).map((e) => `<li>${e}</li>`).join('')}</ul></div>`;
       }
       resultEl.innerHTML = html;
+    }
+
+    // ── Photo Tools (admin prompt-based photo editing via Replicate Kontext) ──
+    async function runPhotoToolsProcess() {
+      const fileInput = document.getElementById('photoToolsFile');
+      const promptEl = document.getElementById('photoToolsPrompt');
+      const statusEl = document.getElementById('photoToolsStatus');
+      const runBtn = document.getElementById('photoToolsRunBtn');
+      const resultBox = document.getElementById('photoToolsResultBox');
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showToast('Please choose a photo first');
+        return;
+      }
+      const prompt = promptEl.value.trim();
+      if (!prompt) {
+        showToast('Please describe the edit you want');
+        return;
+      }
+
+      runBtn.disabled = true;
+      resultBox.style.display = 'none';
+      statusEl.innerHTML = '⏳ Processing — this typically takes 10-30 seconds...';
+
+      try {
+        // maxSize 1500 (vs the 1000 default elsewhere) — these are portfolio/
+        // marketing photos, worth a bit more resolution than a quick reference thumbnail.
+        const imageBase64 = await resizeFileToBase64(fileInput.files[0], 1500);
+
+        const res = await fetch(`${API}/api/photo-tools/process`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ imageBase64, prompt }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          // Surface Replicate's own error text directly — e.g. the E005
+          // safety-flag message — since that's exactly what tells you
+          // whether to reword the prompt or swap the input photo.
+          statusEl.innerHTML = `❌ ${data.error || 'Something went wrong.'}`;
+          return;
+        }
+
+        statusEl.innerHTML = '✅ Done — saved permanently to Cloudinary.';
+        document.getElementById('photoToolsResultImg').src = data.cloudinaryUrl;
+        document.getElementById('photoToolsResultUrl').value = data.cloudinaryUrl;
+        resultBox.style.display = 'block';
+        loadPhotoToolsHistory();
+      } catch (err) {
+        statusEl.innerHTML = `❌ ${err.message}`;
+      } finally {
+        runBtn.disabled = false;
+      }
+    }
+
+    function copyPhotoToolsUrl() {
+      const field = document.getElementById('photoToolsResultUrl');
+      if (!field || !field.value) return;
+      field.select();
+      navigator.clipboard.writeText(field.value)
+        .then(() => showToast('📋 Link copied!'))
+        .catch(() => showToast('❌ Could not copy — please select and copy manually.'));
+    }
+
+    async function loadPhotoToolsHistory() {
+      const el = document.getElementById('photoToolsHistory');
+      try {
+        const res = await fetch(`${API}/api/photo-tools/history`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.results || data.results.length === 0) {
+          el.innerHTML = '<div style="font-size:12px; color:#888;">No photos processed yet.</div>';
+          return;
+        }
+        el.innerHTML = data.results.map((r) => `
+          <div style="cursor:pointer;" onclick="navigator.clipboard.writeText('${r.cloudinaryUrl}'); showToast('📋 Link copied!');" title="${(r.prompt || '').replace(/"/g, '&quot;')}">
+            <img src="${r.cloudinaryUrl}" style="width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:6px; border:1px solid #eee;">
+          </div>
+        `).join('');
+      } catch (err) {
+        el.innerHTML = '<div style="font-size:12px; color:#c62828;">Could not load history.</div>';
+      }
     }
 
     async function uploadImportFile(type) {
@@ -5480,6 +5606,7 @@
       adminEmployeesTabBtn: { icon: 'user-cog', label: 'Employees & Payroll' },
       adminMeasurementsTabBtn: { icon: 'ruler', label: 'Measurements' },
       adminImportTabBtn: { icon: 'upload', label: 'Import Data' },
+      adminPhotoToolsTabBtn: { icon: 'image', label: 'Photo Tools' },
       adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
     };
     let _tabIconsLoaded = false;
@@ -13368,6 +13495,7 @@
         document.getElementById('adminEmployeesTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminPhotoToolsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // Refer a Friend — customer-facing only; doesn't make sense on an
         // admin/staff account.
@@ -13396,6 +13524,7 @@
           document.getElementById('profitTabBtn').style.display = 'none';
           document.getElementById('adminEmployeesTabBtn').style.display = 'none';
           document.getElementById('adminImportTabBtn').style.display = 'none';
+          document.getElementById('adminPhotoToolsTabBtn').style.display = 'none';
         }
 
         // Customer-facing tabs (Overview/AI Design/My Profile/Appointments/
