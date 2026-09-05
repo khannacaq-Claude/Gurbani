@@ -2110,6 +2110,28 @@
     .toast.error { border-left-color: #D9534F; }
     .toast.warning { border-left-color: var(--marigold); }
     .toast.info { border-left-color: var(--vivid); }
+    /* Bigger, more celebratory variant — for moments like a successful
+       sign-in that deserve more presence than a routine status toast.
+       Sized differently per breakpoint rather than one fixed size: what
+       reads as "prominent" on a wide desktop screen would eat most of a
+       phone's width if left at the same absolute size. */
+    .toast-big {
+      font-size: 16px;
+      font-weight: 700;
+      padding: 20px 28px;
+      border-radius: 14px;
+      max-width: 480px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.3);
+    }
+    @media (max-width: 640px) {
+      .toast-big {
+        font-size: 14.5px;
+        font-weight: 700;
+        padding: 16px 20px;
+        max-width: calc(100% - 8px);
+        border-radius: 12px;
+      }
+    }
     .toast.hide { animation: toastOut 0.25s ease forwards; }
     @keyframes toastIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
     @keyframes toastOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-12px); } }
@@ -6412,7 +6434,7 @@
        showToast(message): non-blocking, auto-dismissing
        showConfirm(message): returns a Promise<boolean>, await it
        ============================================================ */
-    function showToast(message, durationMs = 4500) {
+    function showToast(message, durationMs = 4500, options = {}) {
       const container = document.getElementById('toastContainer');
       let type = 'info';
       if (message.startsWith('✅')) type = 'success';
@@ -6420,7 +6442,7 @@
       else if (message.startsWith('⚠️')) type = 'warning';
 
       const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
+      toast.className = `toast ${type}` + (options.big ? ' toast-big' : '');
       toast.textContent = message;
       container.appendChild(toast);
 
@@ -9043,7 +9065,7 @@
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             // Funnel tracking, step 4 of 4: sign-in/sign-up actually completed.
             if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'google' });
-            setStatus('designStatus', '✅ Signed in! Welcome!', 'success');
+            showToast('✅ Signed in! Welcome!', 4000, { big: true });
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
             if (data.isNewAccount) {
