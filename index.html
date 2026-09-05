@@ -4642,7 +4642,19 @@
             <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">1. Photo</label>
             <input type="file" id="photoToolsFile" accept=".jpg,.jpeg,.png,.webp" style="margin-bottom:14px;">
 
-            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">2. Describe the edit</label>
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">2. Aspect ratio</label>
+            <select id="photoToolsAspectRatio" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:13px; margin-bottom:14px;">
+              <option value="match_input_image">Match input photo (default)</option>
+              <option value="1:1">1:1 — square</option>
+              <option value="2:1">2:1 — wide banner (e.g. 72×36in signboard)</option>
+              <option value="4:5">4:5 — tall portrait (closest preset to 57×72in)</option>
+              <option value="3:4">3:4 — tall portrait</option>
+              <option value="16:9">16:9 — widescreen</option>
+              <option value="9:16">9:16 — tall/story format</option>
+              <option value="21:9">21:9 — ultra-wide (closest preset available — still far short of an 18ft strip's 12:1)</option>
+            </select>
+
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">3. Describe the edit</label>
             <textarea id="photoToolsPrompt" rows="4" placeholder="e.g. Replace the background with a soft cream-to-taupe studio gradient. Remove the pink watermark text near the hem, seamlessly restoring the fabric underneath." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:13px; font-family:var(--font-body); margin-bottom:14px;"></textarea>
 
             <button type="button" onclick="runPhotoToolsProcess()" id="photoToolsRunBtn" class="btn-submit" style="width:auto; padding:10px 24px;">✨ Process Photo</button>
@@ -5111,11 +5123,12 @@
         // maxSize 1500 (vs the 1000 default elsewhere) — these are portfolio/
         // marketing photos, worth a bit more resolution than a quick reference thumbnail.
         const imageBase64 = await resizeFileToBase64(fileInput.files[0], 1500);
+        const aspectRatio = document.getElementById('photoToolsAspectRatio').value;
 
         const res = await fetch(`${API}/api/photo-tools/process`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ imageBase64, prompt }),
+          body: JSON.stringify({ imageBase64, prompt, aspectRatio }),
         });
         const data = await res.json();
 
