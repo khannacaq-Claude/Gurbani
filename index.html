@@ -126,12 +126,13 @@
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); }
 
-    /* Section jump-nav — sticks under the top of the viewport once you
-       scroll past the header, so any section is one tap away regardless
-       of how far down the page you are. Landing page only. */
+    /* Section jump-nav — sticks directly under the now-permanently-visible
+       header (see --header-h, set by JS to the header's actual rendered
+       height) rather than only appearing once the header scrolls away.
+       Landing page only. */
     .section-tabs {
       position: sticky;
-      top: 0;
+      top: var(--header-h, 0px);
       z-index: 400;
       background: var(--ink);
       display: flex;
@@ -174,7 +175,9 @@
       color: white;
       padding: 18px 24px 14px 24px;
       text-align: left;
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 401;
       border-bottom: 4px solid var(--marigold);
     }
 
@@ -1370,6 +1373,14 @@
       background: linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       border-radius: 6px;
       padding: 10px 6px 6px;
+      /* Same sticky-under-header treatment as .section-tabs on the landing
+         page — this already shows different tabs for customer vs admin
+         (via each button's own display:none toggle in updateUI()), so
+         pinning it is the whole fix for "no nav once signed in and
+         scrolled" — no new nav content needed, just keeping this visible. */
+      position: sticky;
+      top: var(--header-h, 0px);
+      z-index: 400;
     }
     .tab-group {
       display: flex;
@@ -1389,6 +1400,42 @@
       padding: 0 4px 3px;
     }
     .tab-group-row { display: flex; flex-wrap: wrap; gap: 2px; }
+
+    /* Admin section groups (Sales & Orders, Finance, Inventory, People,
+       Marketing, Help) collapse into single dropdown-trigger buttons
+       instead of six permanently-expanded rows — the tabs bar is now
+       pinned under the sticky header at all times, so staying tall would
+       eat a lot of screen, especially on mobile. Same "position:fixed,
+       computed from the trigger's own on-screen position" approach as
+       the landing page's "☰ More ▾" dropdown, for the same reason: a
+       sticky/overflow ancestor would otherwise silently clip it. */
+    .tab-group-dropdown-bar { display: flex; flex-wrap: wrap; gap: 2px; padding: 0 6px 6px; }
+    .tab-group-dropdown-trigger {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.9);
+      padding: 10px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: var(--font-body);
+      font-size: 12.5px;
+      letter-spacing: 0.3px;
+      transition: all 0.2s ease;
+    }
+    .tab-group-dropdown-trigger:hover { background: rgba(255,255,255,0.18); color: white; }
+    .tab-group-dropdown-panel {
+      display: none;
+      position: fixed;
+      background: linear-gradient(135deg, var(--vivid), var(--vivid-deep));
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      padding: 8px;
+      flex-wrap: wrap;
+      gap: 2px;
+      max-width: min(90vw, 480px);
+      z-index: 450;
+    }
 
     .tab-btn {
       background: transparent;
@@ -3278,54 +3325,55 @@
               <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">🛍️ Marketplace</button>
             </div>
           </div>
-          <div class="tab-group">
-            <div class="tab-group-label">Sales &amp; Orders</div>
-            <div class="tab-group-row">
-              <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Requests</button>
-              <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
-              <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
-              <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
-              <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing(); loadBannerImagesGallery();" style="display: none;">🎟️ Coupons &amp; Banners</button>
-              <button class="tab-btn" id="feedbackTabBtn" onclick="switchTab(event, 'feedback'); loadFeedbackDashboard();" style="display: none;">💬 Feedback</button>
-            </div>
+
+          <!-- Admin-only sections — collapsed into one row of dropdown
+               triggers (see .tab-group-dropdown-bar comment above) rather
+               than six stacked always-open rows. Hidden entirely for
+               customers in updateUI(), same as every individual admin
+               button already was. -->
+          <div class="tab-group-dropdown-bar" id="adminGroupDropdownBar" style="display: none;">
+            <button type="button" class="tab-group-dropdown-trigger" onclick="toggleTabGroupDropdown(event, 'salesOrdersGroupPanel')">💰 Sales &amp; Orders ▾</button>
+            <button type="button" class="tab-group-dropdown-trigger" onclick="toggleTabGroupDropdown(event, 'financeGroupPanel')">💵 Finance ▾</button>
+            <button type="button" class="tab-group-dropdown-trigger" onclick="toggleTabGroupDropdown(event, 'inventoryGroupPanel')">🧵 Inventory ▾</button>
+            <button type="button" class="tab-group-dropdown-trigger" onclick="toggleTabGroupDropdown(event, 'peopleGroupPanel')">👥 People ▾</button>
+            <button type="button" class="tab-group-dropdown-trigger" id="marketingGroupTrigger" onclick="toggleTabGroupDropdown(event, 'marketingGroupPanel')">📸 Marketing ▾</button>
+            <button type="button" class="tab-group-dropdown-trigger" onclick="toggleTabGroupDropdown(event, 'helpGroupPanel')">📖 Help ▾</button>
           </div>
-          <div class="tab-group">
-            <div class="tab-group-label">Finance</div>
-            <div class="tab-group-row">
-              <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
-              <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
-              <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
-              <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
-            </div>
-          </div>
-          <div class="tab-group">
-            <div class="tab-group-label">Inventory</div>
-            <div class="tab-group-row">
-              <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
-              <button class="tab-btn" id="stockShortfallsTabBtn" onclick="switchTab(event, 'stockShortfalls'); loadStockShortfalls();" style="display: none;">⚠️ Stock Shortfalls</button>
-              <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
-            </div>
-          </div>
-          <div class="tab-group">
-            <div class="tab-group-label">People</div>
-            <div class="tab-group-row">
-              <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
-              <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
-              <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
-            </div>
-          </div>
-          <div class="tab-group">
-            <div class="tab-group-label">Marketing</div>
-            <div class="tab-group-row">
-              <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory();" style="display: none;">📸 Photo Tools</button>
-            </div>
-          </div>
-          <div class="tab-group">
-            <div class="tab-group-label">Help</div>
-            <div class="tab-group-row">
-              <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
-            </div>
-          </div>
+        </div>
+
+        <!-- Dropdown panels — siblings of .tabs, not nested inside it, so
+             position:fixed here is never subject to .tabs' own sticky
+             positioning or any overflow clipping (same reasoning as
+             guidesDropdownMenu on the landing page). -->
+        <div class="tab-group-dropdown-panel" id="salesOrdersGroupPanel">
+          <button class="tab-btn" id="adminTabBtn" onclick="switchTab(event, 'admin'); loadAdminRequests();" style="display: none;">🔐 Requests</button>
+          <button class="tab-btn" id="adminOrdersTabBtn" onclick="switchTab(event, 'adminOrders'); loadAdminOrders();" style="display: none;">📦 Manage Orders</button>
+          <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
+          <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
+          <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing(); loadBannerImagesGallery();" style="display: none;">🎟️ Coupons &amp; Banners</button>
+          <button class="tab-btn" id="feedbackTabBtn" onclick="switchTab(event, 'feedback'); loadFeedbackDashboard();" style="display: none;">💬 Feedback</button>
+        </div>
+        <div class="tab-group-dropdown-panel" id="financeGroupPanel">
+          <button class="tab-btn" id="profitTabBtn" onclick="switchTab(event, 'profit'); loadProfitDashboard();" style="display: none;">💰 Profit Dashboard</button>
+          <button class="tab-btn" id="adminCashTabBtn" onclick="switchTab(event, 'adminCash'); loadCashDay();" style="display: none;">💵 Cash Register</button>
+          <button class="tab-btn" id="adminReconcileTabBtn" onclick="switchTab(event, 'adminReconcile'); loadReconciliationQueue();" style="display: none;">🔄 Reconciliation</button>
+          <button class="tab-btn" id="adminInvoicesTabBtn" onclick="switchTab(event, 'adminInvoices'); loadAdminInvoices();" style="display: none;">🧾 Invoices</button>
+        </div>
+        <div class="tab-group-dropdown-panel" id="inventoryGroupPanel">
+          <button class="tab-btn" id="adminInventoryTabBtn" onclick="switchTab(event, 'adminInventory'); loadInventoryTab('fabrics');" style="display: none;">🧵 Inventory</button>
+          <button class="tab-btn" id="stockShortfallsTabBtn" onclick="switchTab(event, 'stockShortfalls'); loadStockShortfalls();" style="display: none;">⚠️ Stock Shortfalls</button>
+          <button class="tab-btn" id="adminImportTabBtn" onclick="switchTab(event, 'adminImport')" style="display: none;">📥 Import Data</button>
+        </div>
+        <div class="tab-group-dropdown-panel" id="peopleGroupPanel">
+          <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
+          <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
+          <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
+        </div>
+        <div class="tab-group-dropdown-panel" id="marketingGroupPanel">
+          <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory();" style="display: none;">📸 Photo Tools</button>
+        </div>
+        <div class="tab-group-dropdown-panel" id="helpGroupPanel">
+          <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -4640,7 +4688,9 @@
 
           <div class="card" style="padding:20px; margin-bottom:20px;">
             <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">1. Photo</label>
-            <input type="file" id="photoToolsFile" accept=".jpg,.jpeg,.png,.webp" style="margin-bottom:14px;">
+            <button type="button" onclick="document.getElementById('photoToolsFile').click()" style="padding:10px 20px; border-radius:8px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer; margin-bottom:10px;">📎 Choose File</button>
+            <span id="photoToolsFileName" style="font-size:12px; color:var(--text-muted); margin-left:10px;">No file chosen</span>
+            <input type="file" id="photoToolsFile" accept=".jpg,.jpeg,.png,.webp" onchange="document.getElementById('photoToolsFileName').textContent = this.files[0]?.name || 'No file chosen'" style="margin-bottom:14px;">
 
             <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">2. Aspect ratio</label>
             <select id="photoToolsAspectRatio" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:13px; margin-bottom:14px;">
@@ -6462,6 +6512,35 @@
     document.addEventListener('click', () => {
       const menu = document.getElementById('guidesDropdownMenu');
       if (menu) menu.style.display = 'none';
+    });
+
+    // Generic version of the same pattern for the admin tab-group
+    // dropdowns (Sales & Orders, Finance, Inventory, People, Marketing,
+    // Help) — position:fixed computed from the trigger's own on-screen
+    // position, so it's never clipped by .tabs' sticky positioning.
+    function toggleTabGroupDropdown(event, panelId) {
+      event.stopPropagation();
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      const isOpening = panel.style.display !== 'flex';
+      // Only one group dropdown open at a time — closing the others first
+      // avoids overlapping panels if someone clicks two triggers quickly.
+      document.querySelectorAll('.tab-group-dropdown-panel').forEach(p => { if (p !== panel) p.style.display = 'none'; });
+      if (isOpening) {
+        const trigger = event.currentTarget;
+        const rect = trigger.getBoundingClientRect();
+        panel.style.top = (rect.bottom + 4) + 'px';
+        let left = rect.left;
+        // Keep it on-screen if the trigger sits near the right edge.
+        const estWidth = 300;
+        if (left + estWidth > window.innerWidth - 8) left = window.innerWidth - estWidth - 8;
+        if (left < 8) left = 8;
+        panel.style.left = left + 'px';
+      }
+      panel.style.display = isOpening ? 'flex' : 'none';
+    }
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.tab-group-dropdown-panel').forEach(p => p.style.display = 'none');
     });
 
     function closeGuidesDropdownAndJump(sectionId, event) {
@@ -13510,6 +13589,12 @@
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminPhotoToolsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        // The dropdown-trigger row itself (Sales & Orders/Finance/etc.) —
+        // customers never had any of the buttons inside these groups
+        // visible anyway, but with them collapsed into dropdowns now, an
+        // empty trigger button would be a dead click for a customer if
+        // this weren't also hidden.
+        document.getElementById('adminGroupDropdownBar').style.display = currentUser.role === 'admin' ? 'flex' : 'none';
         // Refer a Friend — customer-facing only; doesn't make sense on an
         // admin/staff account.
         const referralCardEl = document.getElementById('referralCard');
@@ -13538,6 +13623,11 @@
           document.getElementById('adminEmployeesTabBtn').style.display = 'none';
           document.getElementById('adminImportTabBtn').style.display = 'none';
           document.getElementById('adminPhotoToolsTabBtn').style.display = 'none';
+          // Photo Tools was the only thing in the Marketing group — with
+          // it hidden, the trigger button would open an empty dropdown
+          // for her specifically. Finance/Inventory/People triggers stay,
+          // since each still has other items visible in her view.
+          document.getElementById('marketingGroupTrigger').style.display = 'none';
         }
 
         // Customer-facing tabs (Overview/AI Design/My Profile/Appointments/
@@ -13580,7 +13670,20 @@
         document.getElementById('signinTrigger').style.display = 'inline-flex';
       }
       if (typeof updateFloatingNudge === 'function') updateFloatingNudge();
+      updateHeaderHeightVar(); // header content (name/email/sign-out) just changed size — re-measure so the sticky nav bars below it stay correctly offset
     }
+
+    // Keeps --header-h in sync with the header's actual rendered height —
+    // it varies by screen width and by what's showing on the right side
+    // (Sign In vs name+email+Sign Out), so a hardcoded px value would
+    // drift out of sync and leave a gap or overlap under the sticky nav.
+    function updateHeaderHeightVar() {
+      const header = document.querySelector('header');
+      if (header) {
+        document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+      }
+    }
+    window.addEventListener('resize', updateHeaderHeightVar);
 
     window.addEventListener('load', () => {
       initSectionTabsObserver();
