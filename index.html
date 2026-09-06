@@ -124,7 +124,7 @@
        smoothly instead of trapping the scroll mid-section. */
     html.snap-scroll { scroll-snap-type: y proximity; scroll-behavior: smooth; }
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
-    body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); }
+    body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); padding-top: var(--header-h, 330px); }
 
     /* Section jump-nav — NOT sticky. It was made sticky earlier today
        (to sit directly under the newly-pinned header), but its
@@ -175,8 +175,19 @@
       color: white;
       padding: 18px 24px 14px 24px;
       text-align: left;
-      position: sticky;
+      /* position: fixed instead of sticky — sticky was confirmed correctly
+         applied (checked via computed styles) but still intermittently
+         appeared to vanish partway down long pages. The landing page has
+         a pre-existing scroll-snap system (html.snap-scroll) with
+         scroll-behavior: smooth, and sticky + smooth-scroll is a known
+         Chrome rendering interaction that can cause exactly this kind of
+         flicker/disappear. Fixed positioning doesn't share that failure
+         mode at all — it's a simpler, more predictable mechanism, so this
+         sidesteps the question entirely rather than chasing it further. */
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 401;
       border-bottom: 4px solid var(--marigold);
     }
@@ -13667,7 +13678,23 @@
         document.getElementById('signinTrigger').style.display = 'inline-flex';
       }
       if (typeof updateFloatingNudge === 'function') updateFloatingNudge();
+      updateHeaderHeightVar(); // header content (name/email/sign-out) just changed size — re-measure so body's top padding stays correctly offset for the now-fixed header
     }
+
+    // Keeps --header-h in sync with the header's actual rendered height —
+    // needed now that header is position:fixed (removed from normal flow
+    // entirely) rather than sticky (which still occupied its own space).
+    // Varies by screen width and by what's showing on the right side
+    // (Sign In vs name+email+Sign Out), so a hardcoded px value would
+    // drift out of sync and leave a gap or overlap under the header.
+    function updateHeaderHeightVar() {
+      const header = document.querySelector('header');
+      if (header) {
+        document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+      }
+    }
+    window.addEventListener('resize', updateHeaderHeightVar);
+    window.addEventListener('load', updateHeaderHeightVar);
 
     window.addEventListener('load', () => {
       initSectionTabsObserver();
