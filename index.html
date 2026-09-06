@@ -9661,29 +9661,61 @@
             </div>
           </div>
           ${f.recentComments.length > 0 ? `
-            <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">RECENT COMMENTS</div>
-            ${f.recentComments.map(c => `
-              <div style="background:var(--sand); border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:13px;">
-                <strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(c.comment)}
-                ${c.adminReply ? `
-                  <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:12.5px;">
-                    <span style="font-weight:600; color:var(--vivid);">✅ You replied</span> (${new Date(c.adminRepliedAt).toLocaleDateString('en-IN')}): ${escapeHtml(c.adminReply)}
-                  </div>
-                ` : c.email ? `
-                  <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08);">
-                    <textarea id="feedbackReplyText_${c.feedbackId}" placeholder="Write a reply — sent as an email to ${escapeHtml(c.email)}" style="width:100%; font-size:12.5px; min-height:50px; padding:6px 8px; border-radius:5px; border:1px solid #e0d8d0; margin-bottom:6px;"></textarea>
-                    <button type="button" class="admin-filter-btn" style="font-size:11.5px;" onclick="sendFeedbackReply('${c.feedbackId}')">📧 Send Reply</button>
-                  </div>
-                ` : `
-                  <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:12px; color:var(--text-muted);">No email on file for this customer — can't send a reply.</div>
-                `}
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-size:12px; font-weight:600; color:var(--text-muted);">RECENT COMMENTS</div>
+              <div style="display:flex; gap:6px;">
+                <button type="button" onclick="setAllFeedbackCards(true)" style="padding:3px 10px; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">⬇️ Expand All</button>
+                <button type="button" onclick="setAllFeedbackCards(false)" style="padding:3px 10px; background:white; border:1.5px solid #999; color:#666; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">⬆️ Collapse All</button>
               </div>
-            `).join('')}
+            </div>
+            ${f.recentComments.map(c => {
+              const fbDetailsId = `fb-details-${c.feedbackId}`;
+              const fbChevronId = `fb-chevron-${c.feedbackId}`;
+              const commentPreview = (c.comment || '').length > 80 ? c.comment.slice(0, 80) + '…' : (c.comment || '');
+              return `
+              <div style="background:var(--sand); border-radius:6px; margin-bottom:10px; font-size:13px;">
+                <div onclick="toggleFeedbackCard('${c.feedbackId}')" style="cursor:pointer; padding:10px 12px; display:flex; justify-content:space-between; align-items:start; gap:8px;">
+                  <div><strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(commentPreview)}</div>
+                  <span id="${fbChevronId}" style="font-size:16px; color:#999; flex-shrink:0; transition:transform 0.2s ease;">▾</span>
+                </div>
+                <div id="${fbDetailsId}" style="display:none; padding:0 12px 12px;">
+                  <div style="margin-bottom:4px;"><strong>${escapeHtml(c.name)}</strong> (${c.rating}/10): ${escapeHtml(c.comment)}</div>
+                  ${c.adminReply ? `
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:12.5px;">
+                      <span style="font-weight:600; color:var(--vivid);">✅ You replied</span> (${new Date(c.adminRepliedAt).toLocaleDateString('en-IN')}): ${escapeHtml(c.adminReply)}
+                    </div>
+                  ` : c.email ? `
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08);">
+                      <textarea id="feedbackReplyText_${c.feedbackId}" placeholder="Write a reply — sent as an email to ${escapeHtml(c.email)}" style="width:100%; font-size:12.5px; min-height:50px; padding:6px 8px; border-radius:5px; border:1px solid #e0d8d0; margin-bottom:6px;"></textarea>
+                      <button type="button" class="admin-filter-btn" style="font-size:11.5px;" onclick="sendFeedbackReply('${c.feedbackId}')">📧 Send Reply</button>
+                    </div>
+                  ` : `
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:12px; color:var(--text-muted);">No email on file for this customer — can't send a reply.</div>
+                  `}
+                </div>
+              </div>
+            `;
+            }).join('')}
           ` : ''}
         `;
       } catch (err) {
         container.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
+    }
+
+    // Same collapse/expand pattern as Design Requests — one toggle per
+    // comment, plus a bulk expand/collapse-all pair above the list.
+    function toggleFeedbackCard(feedbackId) {
+      const details = document.getElementById(`fb-details-${feedbackId}`);
+      const chevron = document.getElementById(`fb-chevron-${feedbackId}`);
+      if (!details) return;
+      const isOpening = details.style.display !== 'block';
+      details.style.display = isOpening ? 'block' : 'none';
+      if (chevron) chevron.style.transform = isOpening ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+    function setAllFeedbackCards(expand) {
+      document.querySelectorAll('[id^="fb-details-"]').forEach(el => { el.style.display = expand ? 'block' : 'none'; });
+      document.querySelectorAll('[id^="fb-chevron-"]').forEach(el => { el.style.transform = expand ? 'rotate(180deg)' : 'rotate(0deg)'; });
     }
 
     async function sendFeedbackReply(feedbackId) {
