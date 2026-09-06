@@ -4041,6 +4041,10 @@
             <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('completed', event)">Completed</button>
             <button type="button" class="admin-filter-btn" onclick="filterAdminRequests('archived', event)">Archived</button>
           </div>
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button type="button" onclick="setAllAdminRequestCards(true)" style="padding:6px 12px; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">⬇️ Expand All</button>
+            <button type="button" onclick="setAllAdminRequestCards(false)" style="padding:6px 12px; background:white; border:1.5px solid #999; color:#666; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">⬆️ Collapse All</button>
+          </div>
           <div id="adminRequestsList">Loading...</div>
         </div>
 
@@ -5597,24 +5601,58 @@
             </div>
           </div>`;
 
+        // Collapsed by default — with potentially dozens of requests, a
+        // fully-expanded list (quote text + concept thumbnails + buttons +
+        // note field, all always visible, for every single one) is what
+        // made scrolling through them impractical. Only the header row
+        // stays permanently visible; clicking it (or the chevron) reveals
+        // the rest. Bulk expand/collapse-all lives above the whole list.
+        const detailsId = `req-details-${d._id}`;
+        const chevronId = `req-chevron-${d._id}`;
+        const preview = (d.description || '').length > 90 ? d.description.slice(0, 90) + '…' : (d.description || '');
+
         return `
-          <div style="background:white; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); ${d.businessReuseAllowed === false ? 'border-left:4px solid #c62828;' : ''}">
-            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
-              <div>
+          <div style="background:white; border-radius:8px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,0.08); ${d.businessReuseAllowed === false ? 'border-left:4px solid #c62828;' : ''}">
+            <div onclick="toggleAdminRequestCard('${d._id}')" style="cursor:pointer; padding:16px; display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:8px;">
+              <div style="flex:1; min-width:200px;">
                 <div style="font-weight:bold; font-size:15px;">${escapeHtml(customer.name) || 'Unknown'}</div>
                 <div style="font-size:12px; color:#666;">${escapeHtml(customer.email) || ''} ${customer.phone ? '· ' + escapeHtml(customer.phone) : ''}</div>
+                <div style="font-size:12px; color:#888; margin-top:4px; font-style:italic;">"${escapeHtml(preview)}"</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
               </div>
-              <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${d.status}</span>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; background:${statusColors[d.status]}22; color:${statusColors[d.status]};">${d.status}</span>
+                <span id="${chevronId}" style="font-size:18px; color:#999; transition:transform 0.2s ease;">▾</span>
+              </div>
             </div>
-            ${d.businessReuseAllowed === false ? `<div style="margin-top:8px; font-size:11px; font-weight:700; color:#c62828;">🔒 Customer kept design ownership — do not reuse or restitch this design for anyone else</div>` : ''}
-            <div style="margin:10px 0; font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
-            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">${conceptsHtml}</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">Requested: ${new Date(d.createdAt).toLocaleString('en-IN')}</div>
-            ${waLink}${orderBtn}${completeBtn}${archiveBtn}${deleteBtn}
-            ${noteHtml}
+            <div id="${detailsId}" style="display:none; padding:0 16px 16px;">
+              ${d.businessReuseAllowed === false ? `<div style="margin-bottom:8px; font-size:11px; font-weight:700; color:#c62828;">🔒 Customer kept design ownership — do not reuse or restitch this design for anyone else</div>` : ''}
+              <div style="margin-bottom:10px; font-size:13px; color:#444;">"${escapeHtml(d.description)}" — ${escapeHtml(d.occasion)}</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">${conceptsHtml}</div>
+              ${waLink}${orderBtn}${completeBtn}${archiveBtn}${deleteBtn}
+              ${noteHtml}
+            </div>
           </div>
         `;
       }).join('');
+    }
+
+    // Toggles one request card's detail panel + flips its chevron.
+    function toggleAdminRequestCard(designId) {
+      const details = document.getElementById(`req-details-${designId}`);
+      const chevron = document.getElementById(`req-chevron-${designId}`);
+      if (!details) return;
+      const isOpening = details.style.display !== 'block';
+      details.style.display = isOpening ? 'block' : 'none';
+      if (chevron) chevron.style.transform = isOpening ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    // Bulk control above the list — open everything (e.g. to Ctrl+F search
+    // across all requests at once) or close everything back down after
+    // reviewing a batch.
+    function setAllAdminRequestCards(expand) {
+      document.querySelectorAll('[id^="req-details-"]').forEach(el => { el.style.display = expand ? 'block' : 'none'; });
+      document.querySelectorAll('[id^="req-chevron-"]').forEach(el => { el.style.transform = expand ? 'rotate(180deg)' : 'rotate(0deg)'; });
     }
   </script>
 
