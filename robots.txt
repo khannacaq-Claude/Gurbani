@@ -1,4 +1,90 @@
 User-agent: *
 Allow: /
 
+# ── AI training crawlers — blocked ──────────────────────────────────────
+# These scrape site content (text, photos, design images) to train AI
+# models. No benefit to Gurbani Fashion, only the risk of content/artwork
+# ending up reused elsewhere. Blocking is honor-system, not a technical
+# lock (see note below) — but the major operators listed here do publicly
+# commit to respecting it.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Omgili
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: TikTokSpider
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: MistralAI-Index
+Disallow: /
+
+# ── AI search / citation crawlers — deliberately left ALLOWED ──────────
+# These power AI-generated answers (e.g. someone asking ChatGPT/Claude/
+# Perplexity "best custom boutique in Faridabad"). Blocking them would
+# remove Gurbani Fashion from being recommended in AI search results
+# entirely — a visibility loss with no upside. Listed explicitly (not
+# just left out) so the intent is unambiguous to anyone reading this file.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# ── Standard search engines — always allowed (unrelated to AI training,
+#    these are what keep the site findable on Google/Bing at all) ──────
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
 Sitemap: https://gurbanifashion.com/sitemap.xml
