@@ -47,6 +47,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gurbani Fashion — Custom Boutique Stitching in Faridabad | AI Design Studio</title>
   <meta name="description" content="Gurbani Fashion Boutique in Greenfields Colony, Faridabad — custom-stitched lehengas, anarkalis, kurtis, gowns & blouses. Describe your vision and get 3 AI-generated design concepts free, then get it perfectly tailored by Sonia. Call 9899810977.">
+  <!-- Explicit no-AI-training signal, alongside robots.txt. Patchily
+       adopted across the industry (nowhere near as universally respected
+       as robots.txt), but costs nothing to include as a second signal. -->
+  <meta name="robots" content="noai, noimageai">
   <link rel="canonical" href="https://gurbanifashion.com/">
   <meta property="og:type" content="business.business">
   <meta property="og:title" content="Gurbani Fashion — Custom Boutique Stitching in Faridabad">
@@ -227,6 +231,16 @@
       filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 18px rgba(255,255,255,0.12));
     }
 
+    /* Wordmark + "A Boutique by Sonia" stacked together as one lockup —
+       matches the finalized flex signboard's layout, where the boutique
+       line sits directly under the wordmark, not off in its own column. */
+    .header-brand-lockup {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: none;
+    }
+
     .header-mid { flex: 1 1 300px; min-width: 220px; }
 
     /* Full-width, high-contrast text wordmark — shown only on mobile in
@@ -256,71 +270,41 @@
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
     }
 
-    /* Plain-text stand-in for the circular "A Boutique by Sonia" badge —
-       the fixed-size circle is fine on desktop but just eats vertical
-       space on mobile now that the wordmark is a full-width text line. */
+    /* "A Boutique by Sonia" — matches the finalized flex signboard's
+       treatment: plain uppercase text flanked by thin gold rules, in
+       place of the old circular badge. Same style everywhere now (no
+       more separate mobile-only fallback vs desktop-only circle). */
     .header-boutique-text {
-      display: none;
-      width: 100%;
-      text-align: center;
-      font-family: var(--font-body);
-      font-weight: 700;
-      font-size: 12px;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.92);
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-    .header-boutique-text .hbt-name {
-      font-family: var(--font-script);
-      font-weight: 700;
-      font-size: 22px;
-      color: #FFFFFF;
-      margin-left: 5px;
-    }
-
-    /* "By Sonia" badge — same treatment as the flex board / print materials,
-       for a consistent trust signal across every touchpoint */
-    .sonia-badge {
-      flex: none;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      background: linear-gradient(160deg, var(--vivid), var(--vivid-deep));
-      border: 3px solid var(--marigold);
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 12px;
+      width: 100%;
+      margin-top: 5px;
       text-align: center;
-      position: relative;
-    }
-    .sonia-badge::before {
-      content: '';
-      position: absolute;
-      inset: 6px;
-      border-radius: 50%;
-      border: 1px solid var(--marigold);
-      opacity: 0.7;
-    }
-    .sonia-badge .sb-by {
       font-family: var(--font-body);
-      font-weight: 700;
-      font-size: 8px;
-      letter-spacing: 0.06em;
-      color: #FFFFFF;
-      line-height: 1.3;
+      font-weight: 600;
+      font-size: clamp(11px, 2.2vw, 13px);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--marigold);
     }
-    .sonia-badge .sb-name {
-      font-family: var(--font-script);
-      font-size: 30px;
-      color: #FFFFFF;
-      line-height: 1;
-      margin-top: 2px;
+    .header-boutique-text::before,
+    .header-boutique-text::after {
+      content: '';
+      flex: 1 1 30px;
+      max-width: 55px;
+      height: 1px;
+      background: var(--marigold);
+      opacity: 0.75;
     }
-    @media (max-width: 640px) {
-      .sonia-badge { width: 90px; height: 90px; }
-      .sonia-badge .sb-name { font-size: 24px; }
-      .sonia-badge .sb-by { font-size: 7px; }
+    .header-boutique-text .hbt-name {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: inherit;
+      color: inherit;
+      text-transform: uppercase;
+      margin-left: 4px;
     }
 
     header p.header-tagline {
@@ -2291,8 +2275,6 @@
          Slightly smaller cap than before to cut a bit more header height. */
       .header-wordmark-final { display: block; width: 62vw; max-width: 240px; }
       .header-wordmark-wrap { display: none; }
-      .sonia-badge { display: none; }
-      .header-boutique-text { display: block; margin-bottom: 2px; font-size: 12px; }
 
       /* header-mid was inheriting flex: 1 1 300px from the desktop row
          layout — under flex-direction:column that 300px basis becomes a
@@ -2606,16 +2588,14 @@
 
   <header>
     <div class="header-topbar">
-      <img src="gurbani_wordmark_on_dark.png" alt="Gurbani Fashion" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
-      <div class="header-wordmark-wrap" onclick="goToLandingPage(event)" style="cursor:pointer;">
-        <div class="header-wordmark-text">Gurbani Fashion</div>
-        <img src="gurbani_ribbon_accent.png" alt="" class="header-wordmark-ribbon">
+      <div class="header-brand-lockup">
+        <img src="gurbani_wordmark_on_dark.png" alt="Gurbani Fashion" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
+        <div class="header-wordmark-wrap" onclick="goToLandingPage(event)" style="cursor:pointer;">
+          <div class="header-wordmark-text">Gurbani Fashion</div>
+          <img src="gurbani_ribbon_accent.png" alt="" class="header-wordmark-ribbon">
+        </div>
+        <div class="header-boutique-text">A BOUTIQUE BY<span class="hbt-name">Sonia</span></div>
       </div>
-      <div class="sonia-badge">
-        <span class="sb-by">A BOUTIQUE<br>BY</span>
-        <span class="sb-name">Sonia</span>
-      </div>
-      <div class="header-boutique-text">A BOUTIQUE BY<span class="hbt-name">Sonia</span></div>
       <div class="header-mid">
         <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
         <div class="header-products" id="headerProductsRow">
@@ -3073,7 +3053,7 @@
             <div class="grid-2">
               <div class="form-group">
                 <label>Garment Type</label>
-                <select id="fabricCalcGarment-pub">
+                <select id="fabricCalcGarment-pub" onchange="updateFabricCalcFieldVisibility('-pub')">
                   <option value="blouse">Blouse</option>
                   <option value="kurti">Kurti / Top</option>
                   <option value="salwar">Salwar Suit</option>
@@ -3087,7 +3067,7 @@
                 <label>Your Height (cm)</label>
                 <input type="number" id="fabricCalcHeight-pub" placeholder="e.g. 160" min="120" max="210">
               </div>
-              <div class="form-group">
+              <div class="form-group" id="fabricCalcSleeveGroup-pub">
                 <label>Sleeve Length</label>
                 <select id="fabricCalcSleeve-pub">
                   <option value="sleeveless">Sleeveless</option>
@@ -3095,7 +3075,7 @@
                   <option value="full">Full Sleeve</option>
                 </select>
               </div>
-              <div class="form-group">
+              <div class="form-group" id="fabricCalcLengthGroup-pub">
                 <label>Garment Length</label>
                 <select id="fabricCalcLength-pub">
                   <option value="knee">Knee Length</option>
@@ -3963,7 +3943,7 @@
             <div class="grid-2">
               <div class="form-group">
                 <label>Garment Type</label>
-                <select id="fabricCalcGarment">
+                <select id="fabricCalcGarment" onchange="updateFabricCalcFieldVisibility('')">
                   <option value="blouse">Blouse</option>
                   <option value="kurti">Kurti / Top</option>
                   <option value="salwar">Salwar Suit</option>
@@ -3977,7 +3957,7 @@
                 <label>Your Height (cm)</label>
                 <input type="number" id="fabricCalcHeight" placeholder="e.g. 160" min="120" max="210">
               </div>
-              <div class="form-group">
+              <div class="form-group" id="fabricCalcSleeveGroup">
                 <label>Sleeve Length</label>
                 <select id="fabricCalcSleeve">
                   <option value="sleeveless">Sleeveless</option>
@@ -3985,7 +3965,7 @@
                   <option value="full">Full Sleeve</option>
                 </select>
               </div>
-              <div class="form-group">
+              <div class="form-group" id="fabricCalcLengthGroup">
                 <label>Garment Length</label>
                 <select id="fabricCalcLength">
                   <option value="knee">Knee Length</option>
@@ -6305,6 +6285,26 @@
       customInput.style.display = sel.value === 'custom' ? 'block' : 'none';
     }
 
+    // Shows/hides the Sleeve Length and Garment Length fields based on
+    // which garment is selected — reuses the SAME arrays the actual
+    // calculation already keys off (FABRIC_CALC_HAS_SLEEVE /
+    // FABRIC_CALC_HAS_LENGTH_CHOICE), so the form can never show a field
+    // that the math silently ignores anyway. That mismatch was the actual
+    // bug: e.g. Lehenga showing a Sleeve Length picker (lehenga is a
+    // skirt, no sleeve), or Blouse showing Knee/Calf/Floor Length options
+    // (a blouse's length isn't a variable hemline choice the way a
+    // kurti's or gown's is).
+    function updateFabricCalcFieldVisibility(suffix) {
+      suffix = suffix || '';
+      const garmentSel = document.getElementById('fabricCalcGarment' + suffix);
+      const sleeveGroup = document.getElementById('fabricCalcSleeveGroup' + suffix);
+      const lengthGroup = document.getElementById('fabricCalcLengthGroup' + suffix);
+      if (!garmentSel) return;
+      const garment = garmentSel.value;
+      if (sleeveGroup) sleeveGroup.style.display = FABRIC_CALC_HAS_SLEEVE.includes(garment) ? '' : 'none';
+      if (lengthGroup) lengthGroup.style.display = FABRIC_CALC_HAS_LENGTH_CHOICE.includes(garment) ? '' : 'none';
+    }
+
     function calculateFabricLength(suffix) {
       suffix = suffix || ''; // '' = dashboard version, '-pub' = public landing-page version
       const garment = document.getElementById('fabricCalcGarment' + suffix).value;
@@ -8556,7 +8556,7 @@
           <div class="grid-2">
             <div class="form-group">
               <label>Garment Type</label>
-              <select id="fabricCalcGarment-results">
+              <select id="fabricCalcGarment-results" onchange="updateFabricCalcFieldVisibility('-results')">
                 <option value="blouse" ${fabricGarmentGuess === 'blouse' ? 'selected' : ''}>Blouse</option>
                 <option value="kurti" ${fabricGarmentGuess === 'kurti' ? 'selected' : ''}>Kurti / Top</option>
                 <option value="salwar" ${fabricGarmentGuess === 'salwar' ? 'selected' : ''}>Salwar Suit</option>
@@ -8570,7 +8570,7 @@
               <label>Your Height (cm)</label>
               <input type="number" id="fabricCalcHeight-results" placeholder="e.g. 160" min="120" max="210">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="fabricCalcSleeveGroup-results">
               <label>Sleeve Length</label>
               <select id="fabricCalcSleeve-results">
                 <option value="sleeveless">Sleeveless</option>
@@ -8578,7 +8578,7 @@
                 <option value="full">Full Sleeve</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="fabricCalcLengthGroup-results">
               <label>Garment Length</label>
               <select id="fabricCalcLength-results">
                 <option value="knee">Knee Length</option>
@@ -8687,9 +8687,8 @@
       }
 
       container.innerHTML = html;
+      updateFabricCalcFieldVisibility('-results'); // correct initial Sleeve/Length visibility for whichever garment was pre-selected from this design's dressType
     }
-
-    let feedbackState = { rating: null, price: null, plan: null, featureInterest: [] };
 
     function toggleFeatureInterest(key) {
       const idx = feedbackState.featureInterest.indexOf(key);
@@ -13788,6 +13787,12 @@
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
+      // Set correct initial Sleeve/Length field visibility for both static
+      // fabric calculators — default garment is Blouse, which should load
+      // with Garment Length already hidden rather than only correcting
+      // itself after the first onchange.
+      updateFabricCalcFieldVisibility('-pub');
+      updateFabricCalcFieldVisibility('');
       loadPromoBanner();
       loadFestivalBanner();
       loadPromoMessage();
