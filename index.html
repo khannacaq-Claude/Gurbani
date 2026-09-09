@@ -101,6 +101,12 @@
       --ink-soft: #1c2338;
       --vivid: #DB3B99;
       --vivid-deep: #A83D74;
+      /* Wine — from the finalized flex signboard (color-sampled directly
+         from the artwork, not eyeballed). Not yet applied anywhere except
+         the header, per the plan to test there first before considering
+         a full site-wide swap from magenta to wine. */
+      --wine: #40192D;
+      --wine-deep: #2A0F1D;
       --marigold: #F2A93B;
       --marigold-deep: #D68C1F;
       --cream: #FDF8F0;
@@ -171,7 +177,7 @@
     header {
       background:
         radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.14), transparent 65%),
-        linear-gradient(135deg, var(--vivid), var(--vivid-deep));
+        linear-gradient(135deg, var(--wine), var(--wine-deep));
       color: white;
       padding: 18px 24px 14px 24px;
       text-align: left;
@@ -190,6 +196,17 @@
       right: 0;
       z-index: 401;
       border-bottom: 4px solid var(--marigold);
+    }
+    /* Scoped specifically to the header's Sign Out button — NOT a change
+       to the generic `button` default (that's used everywhere site-wide
+       and stays magenta for now, per "test the header first" before any
+       broader rollout). Gold-on-wine matches the actual accent language
+       used throughout the finalized signboard (e.g. the "Visit · Call ·
+       Start Designing" pill), rather than a low-contrast wine-on-wine
+       button that plain var(--wine) would have produced here. */
+    header #signOutBtn {
+      background: var(--marigold);
+      color: var(--wine-deep);
     }
 
     .header-topbar {
