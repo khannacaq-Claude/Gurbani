@@ -2907,12 +2907,18 @@
                   <button type="button" class="mood-tag" data-value="Crepe">Crepe</button>
                 </div>
               </div>
+              <div>
+                <div class="tryit-label">Age Bracket <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional — helps pick colours & prints that suit you)</span></div>
+                <div class="mood-tag-row" data-group="ageBracket">
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Age)">✨ Decide by AI</button>
+                  <button type="button" class="mood-tag" data-value="18-25">18–25</button>
+                  <button type="button" class="mood-tag" data-value="26-35">26–35</button>
+                  <button type="button" class="mood-tag" data-value="36-45">36–45</button>
+                  <button type="button" class="mood-tag" data-value="46-55">46–55</button>
+                  <button type="button" class="mood-tag" data-value="56+">56+</button>
+                </div>
+              </div>
             </div>
-
-            <div>
-              <div class="tryit-label">Anything else to mention? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
-              <textarea id="landingExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px; width:100%; margin-bottom:14px;"></textarea>
-
               <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
                 <div class="tryit-label" style="margin-bottom:0;">Describe Your Dream Outfit</div>
                 <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first" style="background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:5px 12px; font-weight:700; font-size:11.5px; cursor:pointer; white-space:nowrap;">✨ Draft It For Me</button>
@@ -3666,6 +3672,18 @@
                 <button type="button" class="mood-tag" data-value="Chiffon">Chiffon</button>
                 <button type="button" class="mood-tag" data-value="Velvet">Velvet</button>
                 <button type="button" class="mood-tag" data-value="Crepe">Crepe</button>
+              </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Age Bracket <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional — helps pick colours & prints that suit you)</span></div>
+              <div class="mood-tag-row" data-group="ageBracket">
+                <button type="button" class="mood-tag" data-value="Decide by AI (Age)">✨ Decide by AI</button>
+                <button type="button" class="mood-tag" data-value="18-25">18–25</button>
+                <button type="button" class="mood-tag" data-value="26-35">26–35</button>
+                <button type="button" class="mood-tag" data-value="36-45">36–45</button>
+                <button type="button" class="mood-tag" data-value="46-55">46–55</button>
+                <button type="button" class="mood-tag" data-value="56+">56+</button>
               </div>
             </div>
 
@@ -7477,6 +7495,14 @@
       return btn.dataset.value;
     }
 
+    // Same treatment again — Age Bracket informs colour/print choices but
+    // isn't itself a "vibe" tag.
+    function getLandingAgeBracket() {
+      const btn = document.querySelector('#landingDesignPreview .mood-tag-row[data-group="ageBracket"] .mood-tag.selected');
+      if (!btn || btn.dataset.value === 'Decide by AI (Age)') return '';
+      return btn.dataset.value;
+    }
+
     async function generateLandingDescriptionDraft() {
       const dressType = getLandingDressType();
       const occasion = document.getElementById('landingOccasion')?.value || '';
@@ -7487,7 +7513,7 @@
       const selected = [];
       document.querySelectorAll('#landingDesignPreview .mood-tag-row .mood-tag.selected').forEach((btn) => {
         const group = btn.closest('.mood-tag-row').dataset.group;
-        if (group === 'neckline' || group === 'fabricType') return; // sent separately, below
+        if (group === 'neckline' || group === 'fabricType' || group === 'ageBracket') return; // sent separately, below
         selected.push(btn.dataset.value);
       });
       // Style/Color Mood/Embellishment are optional, same as Neckline and
@@ -7499,6 +7525,7 @@
       }
       const neckline = getLandingNeckline();
       const fabricType = getLandingFabricType();
+      const ageBracket = getLandingAgeBracket();
       const extraNotes = document.getElementById('landingExtraNotes')?.value.trim() || '';
 
       const btn = document.getElementById('landingDraftBtn');
@@ -7509,7 +7536,7 @@
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tags: selected, occasion, dressType, neckline, fabricType, extraNotes }),
+          body: JSON.stringify({ tags: selected, occasion, dressType, neckline, fabricType, ageBracket, extraNotes }),
         });
         const data = await res.json();
         if (res.status === 429) {
@@ -8227,6 +8254,7 @@
           dressType,
           neckline: getSelectedNeckline(),
           fabricType: getSelectedFabricType(),
+          ageBracket: getSelectedAgeBracket(),
           extraNotes: document.getElementById('designExtraNotes')?.value.trim() || '',
           photos: uploadedPhotos || null,
           measurements: (selectedProfile?.measurements && Object.keys(selectedProfile.measurements).some((k) => selectedProfile.measurements[k])) ? selectedProfile.measurements : null
@@ -8253,7 +8281,7 @@
           setStatus('designStatus', '✅ Designs generated! Check your concepts and styling feedback below.', 'success');
           currentDesignId = data.design._id;
           currentDesignDescription = description;
-          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description, false, false, data.design.dressType, { occasion: data.design.occasion, neckline: data.design.neckline, fabricType: data.design.fabricType });
+          displayDesigns(data.design.aiConcepts, data.design.photoAnalysis, description, false, false, data.design.dressType, { occasion: data.design.occasion, neckline: data.design.neckline, fabricType: data.design.fabricType, ageBracket: data.design.ageBracket });
           updateBudget(data.trial);
           document.getElementById('designDesc').value = '';
           uploadedPhotos = {};
@@ -13213,7 +13241,7 @@
       document.getElementById('design').classList.add('active');
       // Find and activate the AI Design tab button (2nd tab)
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
-      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted, d.dressType, { occasion: d.occasion, neckline: d.neckline, fabricType: d.fabricType });
+      displayDesigns(d.aiConcepts, d.photoAnalysis, d.description, d.feedbackSubmitted, !!d.showcaseConsent?.granted, d.dressType, { occasion: d.occasion, neckline: d.neckline, fabricType: d.fabricType, ageBracket: d.ageBracket });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -13259,6 +13287,10 @@
       }
       if (d.fabricType) {
         const btn = document.querySelector(`#design .mood-tag-row[data-group="fabricType"] .mood-tag[data-value="${CSS.escape(d.fabricType)}"]`);
+        if (btn) btn.classList.add('selected');
+      }
+      if (d.ageBracket) {
+        const btn = document.querySelector(`#design .mood-tag-row[data-group="ageBracket"] .mood-tag[data-value="${CSS.escape(d.ageBracket)}"]`);
         if (btn) btn.classList.add('selected');
       }
 
@@ -14020,7 +14052,7 @@
     // once — so those two groups behave like radio buttons: picking a new
     // one clears any other selection in that same group, and clicking an
     // already-selected tag deselects it (leaving that category unset).
-    const SINGLE_SELECT_GROUPS = ['color', 'embellishment', 'neckline', 'fabricType'];
+    const SINGLE_SELECT_GROUPS = ['color', 'embellishment', 'neckline', 'fabricType', 'ageBracket'];
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('mood-tag')) {
         const row = e.target.closest('.mood-tag-row');
@@ -14055,6 +14087,14 @@
       return btn.dataset.value;
     }
 
+    // Same treatment again — Age Bracket informs colour/print choices but
+    // isn't itself a "vibe" tag.
+    function getSelectedAgeBracket() {
+      const btn = document.querySelector('#design .mood-tag-row[data-group="ageBracket"] .mood-tag.selected');
+      if (!btn || btn.dataset.value === 'Decide by AI (Age)') return '';
+      return btn.dataset.value;
+    }
+
     async function generateDescriptionDraft() {
       // Scoped to #design specifically — the landing-page preview (below)
       // now has its own .mood-tag-row elements too, and this must never
@@ -14062,7 +14102,7 @@
       const groups = document.querySelectorAll('#design .mood-tag-row');
       const selectedTags = [];
       groups.forEach(g => {
-        if (g.dataset.group === 'neckline' || g.dataset.group === 'fabricType') return; // sent separately, below
+        if (g.dataset.group === 'neckline' || g.dataset.group === 'fabricType' || g.dataset.group === 'ageBracket') return; // sent separately, below
         g.querySelectorAll('.mood-tag.selected').forEach(btn => selectedTags.push(btn.dataset.value));
       });
       // Optional, same as Neckline and Fabric Type — nudge, not a block.
@@ -14078,6 +14118,7 @@
       }
       const neckline = getSelectedNeckline();
       const fabricType = getSelectedFabricType();
+      const ageBracket = getSelectedAgeBracket();
       const extraNotes = document.getElementById('designExtraNotes')?.value.trim() || '';
       const btn = document.getElementById('draftDescBtn');
       const originalLabel = btn.textContent;
@@ -14087,7 +14128,7 @@
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ tags: selectedTags, occasion, dressType, neckline, fabricType, extraNotes }),
+          body: JSON.stringify({ tags: selectedTags, occasion, dressType, neckline, fabricType, ageBracket, extraNotes }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
