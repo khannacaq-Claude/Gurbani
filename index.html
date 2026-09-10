@@ -83,7 +83,7 @@
   <link rel="shortcut icon" type="image/png" href="favicon-32.png?v=3">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#DB3B99">
+  <meta name="theme-color" content="#7B3056">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Gurbani Fashion">
@@ -103,12 +103,22 @@
     :root {
       --ink: #141a29;
       --ink-soft: #1c2338;
-      --vivid: #DB3B99;
-      --vivid-deep: #A83D74;
+      /* Site-wide primary color — wine, approved after testing on the
+         header alone first. Was magenta (#DB3B99/#A83D74) until now;
+         every button/tab/badge across the whole site reads this same
+         variable, so this one change is what rolls wine out everywhere
+         at once. The original magenta values are kept below in a comment
+         in case of rollback. Original: --vivid: #DB3B99; --vivid-deep: #A83D74; */
+      --vivid: #7B3056;
+      --vivid-deep: #662447;
       /* Wine — from the finalized flex signboard (color-sampled directly
-         from the artwork, not eyeballed). Not yet applied anywhere except
-         the header, per the plan to test there first before considering
-         a full site-wide swap from magenta to wine. */
+         from the artwork, not eyeballed). --wine/--wine-deep are the
+         signboard's exact (darker) tones, kept for reference and still
+         used below for the Sign Out button's text contrast. The site-wide
+         rollout above uses the lighter tested variant instead (was
+         --wine-light/--wine-light-deep during the header-only test phase
+         — now folded directly into --vivid/--vivid-deep since that test
+         passed and every component already reads those two names). */
       --wine: #40192D;
       --wine-deep: #2A0F1D;
       --marigold: #F2A93B;
@@ -181,7 +191,7 @@
     header {
       background:
         radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.14), transparent 65%),
-        linear-gradient(135deg, var(--wine), var(--wine-deep));
+        linear-gradient(135deg, var(--vivid), var(--vivid-deep));
       color: white;
       padding: 18px 24px 14px 24px;
       text-align: left;
@@ -278,13 +288,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
       margin-top: 5px;
       text-align: center;
       font-family: var(--font-body);
       font-weight: 600;
-      font-size: clamp(11px, 2.2vw, 13px);
+      font-size: clamp(9px, 2.2vw, 13px);
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--marigold);
@@ -292,11 +302,24 @@
     .header-boutique-text::before,
     .header-boutique-text::after {
       content: '';
-      flex: 1 1 30px;
+      flex: 1 1 15px;
+      min-width: 8px;
       max-width: 55px;
       height: 1px;
       background: var(--marigold);
       opacity: 0.75;
+    }
+    /* The actual "A BOUTIQUE BY SONIA" text — wrapped in its own span
+       (below, in the HTML) with nowrap + flex-shrink:0 so it can never
+       break across lines internally, even on a narrow screen. Previously
+       this was a bare text node with no wrapping control, so under
+       flexbox it got squeezed and line-wrapped into "A BOUTIQUE" / "BY" /
+       "SONIA" on separate lines instead of staying one line — the
+       flanking rule lines now give up their space first (via the
+       reduced flex-basis above) rather than the text. */
+    .header-boutique-text .hbt-label {
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .header-boutique-text .hbt-name {
       font-family: var(--font-body);
@@ -1022,7 +1045,7 @@
       background:
         radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1.5px) 0 0/28px 28px,
         radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1.5px) 14px 14px/28px 28px,
-        linear-gradient(100deg, #7A123A 0%, #F2A93B 34%, #DB3B99 68%, #A83D74 100%);
+        linear-gradient(100deg, #40192D 0%, #F2A93B 34%, #7B3056 68%, #662447 100%);
       border-radius: 14px; padding: 30px 22px 20px; text-align: center;
       box-shadow: 0 6px 18px rgba(0,0,0,0.18);
       position: relative; overflow: hidden;
@@ -2594,7 +2617,7 @@
           <div class="header-wordmark-text">Gurbani Fashion</div>
           <img src="gurbani_ribbon_accent.png" alt="" class="header-wordmark-ribbon">
         </div>
-        <div class="header-boutique-text">A BOUTIQUE BY<span class="hbt-name">Sonia</span></div>
+        <div class="header-boutique-text"><span class="hbt-label">A BOUTIQUE BY<span class="hbt-name">Sonia</span></span></div>
       </div>
       <div class="header-mid">
         <p class="header-tagline">Your Vision. Your Fit. Stitched to Perfection.</p>
@@ -2952,9 +2975,9 @@
             <div class="lens-window-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lens-window-title" id="featuredConceptTitle">CONCEPT STUDIO · PREVIEW</span></div>
             <div class="lens-window-body">
               <div class="concept-row" id="featuredConceptRow">
-                <div class="concept-swatch" style="--c1:#F2A93B;--c2:#DB3B99;">Concept 1</div>
-                <div class="concept-swatch" style="--c1:#DB3B99;--c2:#6B0F4D;">Concept 2</div>
-                <div class="concept-swatch" style="--c1:#E8698F;--c2:#F2A93B;">Concept 3</div>
+                <div class="concept-swatch" style="--c1:#F2A93B;--c2:#7B3056;">Concept 1</div>
+                <div class="concept-swatch" style="--c1:#7B3056;--c2:#40192D;">Concept 2</div>
+                <div class="concept-swatch" style="--c1:#B5698F;--c2:#F2A93B;">Concept 3</div>
               </div>
               <p class="lens-window-note" id="featuredConceptNote">Illustrative preview — real concepts are generated from your own description &amp; photos</p>
             </div>
@@ -5959,7 +5982,7 @@
         const emojiLeft = data.emojiLeft || ['diya', 'moon', 'bow', 'confetti'];
         const emojiRight = data.emojiRight || ['fireworkBurst', 'danceSwirl', 'sparkle', 'confetti'];
         const iconHtml = (key) => FESTIVAL_ICONS[key] || FESTIVAL_ICONS.sparkle;
-        const gradient = data.gradient || 'linear-gradient(100deg, #7A123A 0%, #F2A93B 34%, #DB3B99 68%, #A83D74 100%)';
+        const gradient = data.gradient || 'linear-gradient(100deg, #40192D 0%, #F2A93B 34%, #7B3056 68%, #662447 100%)';
         // Reconstructing the full 3-layer value (not just background-image
         // alone) — otherwise this would silently wipe out the dot-texture
         // layers defined in the base CSS shorthand rule, since inline
@@ -13078,7 +13101,7 @@
             else { showToast('❌ Payment made but verification failed — contact Sonia with your payment ID.'); }
           },
           prefill: { name: currentUser?.name || '', email: currentUser?.email || '', contact: currentUser?.phone || '' },
-          theme: { color: '#DB3B99' },
+          theme: { color: '#7B3056' },
         };
         const rzp = new Razorpay(options);
         rzp.open();
