@@ -1719,6 +1719,13 @@
          regardless of what JS does, so it can't ever appear twice. */
       .install-app-header-btn { display: none !important; }
     }
+    @media (max-width: 640px) {
+      /* The other half of the rule above — mobile already has this in the
+         header, so hide the footer's copy there too. Without this, the
+         footer version showed on mobile regardless of the header one,
+         instead of each screen size having exactly one. */
+      #installAppLinkWrap { display: none !important; }
+    }
 
     .account-tap-hint {
       font-size: 9px;
