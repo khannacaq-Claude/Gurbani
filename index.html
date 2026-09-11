@@ -2934,6 +2934,22 @@
               </div>
               <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
 
+              <!-- Anonymous-compatible trend picker — appends a short
+                   phrase to the description text only, since actual photo
+                   upload (uploadedPhotos) only exists in the signed-in
+                   dashboard. The nudge line directly under it is the
+                   upsell to what signing in actually adds: the REAL
+                   trending photo attached as visual reference, not just
+                   descriptive text — see useTrendAsInspiration() for that
+                   fuller version. Populated by loadPublicTrends() reusing
+                   the same /api/trends fetch as the full showcase below,
+                   not a second network call. -->
+              <div id="landingTrendPicker" style="margin-top:12px; display:none;">
+                <div class="tryit-label" style="font-size:12px;">✨ Inspired by a trend? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional — taps add a line to your description above)</span></div>
+                <div id="landingTrendPickerRow" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;"></div>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">💡 Sign in and you can attach the actual trending photo itself as a visual reference for the AI — not just a description.</p>
+              </div>
+
               <div style="margin-top:14px;">
                 <div class="tryit-label">Anything else to mention? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
                 <textarea id="landingExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px; width:100%;"></textarea>
@@ -6616,6 +6632,21 @@
     // just a front view still displays cleanly without empty tabs.
     let publicTrendImages = {}; // trendKey -> {front,back,side}, populated below, read by switchPublicTrendView
 
+    // Short phrases for the anonymous trend picker (Try It card) — kept
+    // separate from the full sentence descriptions used in the showcase
+    // below, since those read as marketing copy, not something a
+    // customer would naturally write about their own outfit.
+    const TREND_APPEND_PHRASES = {
+      'corset-blouse': 'with a structured corset-style blouse',
+      'cape-dupatta': 'with a dramatic cape dupatta for layered styling',
+      'fish-cut-lehenga': 'with a fish-cut mermaid silhouette skirt',
+      'jewel-tones': 'in a rich jewel tone like emerald, sapphire or ruby',
+      'soft-pastels': 'in a soft pastel shade like lilac, sage or powder blue',
+      'sunshine-yellow': 'in a vibrant sunshine yellow',
+      'pre-draped-saree': 'styled as an easy pre-draped saree',
+      'minimalist-embroidery': 'with minimalist, understated embroidery rather than heavy work',
+    };
+
     async function loadPublicTrends() {
       const grid = document.getElementById('trendingGrid');
       if (!grid) return;
@@ -6644,9 +6675,41 @@
           </div>
         `;
         }).join('');
+
+        // Same data, second lightweight render — the compact picker in
+        // the Try It card, for anonymous visitors who haven't signed in
+        // yet. Only trends with an actual image are offered (a text-only
+        // trend has no thumbnail to show here), and the whole picker
+        // stays hidden if none qualify yet.
+        const pickerRow = document.getElementById('landingTrendPickerRow');
+        const pickerWrap = document.getElementById('landingTrendPicker');
+        if (pickerRow && pickerWrap) {
+          const withImages = data.trends.filter((t) => t.images.front);
+          if (withImages.length > 0) {
+            pickerRow.innerHTML = withImages.map((t) => `
+              <button type="button" onclick="useTrendInDescription('${t.trendKey}')" style="flex:none; width:64px; border:none; background:none; cursor:pointer; padding:0; text-align:center;">
+                <img src="${t.images.front}" style="width:64px; height:80px; object-fit:cover; border-radius:8px; border:1.5px solid var(--sand);">
+                <div style="font-size:9px; color:var(--text-muted); margin-top:3px; line-height:1.2;">${t.label.replace(/^\S+\s/, '')}</div>
+              </button>
+            `).join('');
+            pickerWrap.style.display = 'block';
+          }
+        }
       } catch (err) {
         console.warn('loadPublicTrends failed:', err.message); // silent on the page itself, same reasoning as above
       }
+    }
+
+    // Anonymous-compatible version — appends text only, since photo
+    // upload doesn't exist pre-sign-in. See useTrendAsInspiration() for
+    // the fuller, signed-in version that attaches the real image.
+    function useTrendInDescription(trendKey) {
+      const phrase = TREND_APPEND_PHRASES[trendKey];
+      const field = document.getElementById('landingDesignDesc');
+      if (!phrase || !field) return;
+      const current = field.value.trim();
+      field.value = current ? `${current}, ${phrase}` : phrase.charAt(0).toUpperCase() + phrase.slice(1);
+      showToast('✨ Added to your description');
     }
 
     // Adds the trend's CURRENTLY DISPLAYED image (whichever view tab is
