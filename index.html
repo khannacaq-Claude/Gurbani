@@ -2798,7 +2798,7 @@
             <h3 style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
             <button type="button" onclick="resetLandingDesignPreview()" style="flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; padding:4px 0; white-space:nowrap;">↺ Reset</button>
           </div>
-          <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; max-width:560px;">Pick what you're picturing. When you're ready to actually generate it, we'll ask you to sign in — and everything below comes with you.</p>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; max-width:560px;">Pick what you're picturing and we'll help you put it into words — right here, no sign-in needed. Sign in when you're ready to see 3 actual AI-generated <em>images</em> of it — that part needs an account, everything below comes with you.</p>
 
           <div class="tryit-grid">
             <div class="tryit-col-left">
@@ -6693,7 +6693,7 @@
           const availableViews = VIEWS_CLIENT.filter((v) => t.images[v]);
           const defaultView = availableViews[0] || null;
           return `
-          <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden;">
+          <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden; scroll-snap-align: start;">
             ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${t.images[defaultView]}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block;">` : ''}
             ${availableViews.length > 1 ? `
               <div id="trendTabs-${t.trendKey}" style="display:flex; gap:4px; padding:8px 8px 0;">
@@ -7937,6 +7937,7 @@
           return;
         }
         document.getElementById('landingDesignDesc').value = data.description;
+        showToast('✅ Description drafted! Sign in when ready to see 3 actual AI-generated images of it.');
         if (typeof gtag === 'function') gtag('event', 'landing_draft_generated');
       } catch (err) {
         showToast('❌ ' + err.message);
