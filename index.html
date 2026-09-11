@@ -1852,7 +1852,15 @@
 
     .btn-quote {
       background: var(--vivid);
-      color: var(--ink);
+      /* Was var(--ink) — dark navy text on a dark background. Likely
+         fine-ish against the old bright magenta --vivid, but the wine
+         rollout made --vivid noticeably darker, and dark-on-dark is
+         genuinely unreadable, not just suboptimal (confirmed by an actual
+         screenshot of the Trending admin panel's Generate/Retry buttons).
+         White matches every other --vivid-background button already
+         correctly does across the site (button, .btn-submit,
+         .photo-type-btn.active, etc.) — this was the one outlier. */
+      color: #FFFFFF;
     }
 
     .loading {
