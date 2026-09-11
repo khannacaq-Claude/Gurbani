@@ -5370,33 +5370,64 @@
       }
     }
 
+    // Kicks off generation (fast, returns immediately with a prediction
+    // ID), then the BROWSER itself polls a separate status-check endpoint
+    // every 3 seconds — short, independent requests, none of them at risk
+    // of the timeout that caused the original "Failed to fetch" (the old
+    // version held one request open for the whole generation, which could
+    // run past whatever timeout the hosting platform enforces).
     async function generateTrendPreview(trendKey) {
       const btn = document.getElementById(`trendGenBtn-${trendKey}`);
       const imageArea = document.getElementById(`trendImageArea-${trendKey}`);
       const actionsArea = document.getElementById(`trendActions-${trendKey}`);
       btn.disabled = true;
-      btn.textContent = '⏳ Generating...';
+      btn.textContent = '⏳ Starting...';
       try {
-        const res = await fetch(`${API}/api/trends/generate-preview`, {
+        const startRes = await fetch(`${API}/api/trends/generate-preview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
           body: JSON.stringify({ trendKey }),
         });
-        const data = await res.json();
-        if (!res.ok) {
-          showToast(`❌ ${data.error || 'Generation failed.'}`);
+        const startData = await startRes.json();
+        if (!startRes.ok) {
+          showToast(`❌ ${startData.error || 'Could not start generation.'}`);
           btn.disabled = false;
           btn.textContent = '✨ Try Again';
           return;
         }
-        trendPreviews[trendKey] = data.previewUrl;
-        imageArea.innerHTML = `<img src="${data.previewUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:2px solid var(--marigold);">
-          <div style="font-size:10px; color:var(--marigold); font-weight:600; margin-top:4px;">PREVIEW — not live yet</div>`;
-        actionsArea.innerHTML = `
-          <div style="display:flex; gap:6px;">
-            <button type="button" class="btn-submit" style="flex:1; font-size:12px; padding:8px;" onclick="keepTrendImage('${trendKey}')">✅ Keep This</button>
-            <button type="button" class="btn-quote" style="flex:1; font-size:12px; padding:8px;" onclick="generateTrendPreview('${trendKey}')">🔄 Try Again</button>
-          </div>`;
+
+        btn.textContent = '⏳ Generating...';
+        const predictionId = startData.predictionId;
+        const maxPolls = 30; // ~90s ceiling — flux-schnell is normally done in a few seconds
+        for (let i = 0; i < maxPolls; i++) {
+          await new Promise((r) => setTimeout(r, 3000));
+          const checkRes = await fetch(`${API}/api/trends/check-preview/${predictionId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` },
+          });
+          const checkData = await checkRes.json();
+
+          if (checkData.status === 'succeeded') {
+            trendPreviews[trendKey] = checkData.previewUrl;
+            imageArea.innerHTML = `<img src="${checkData.previewUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:2px solid var(--marigold);">
+              <div style="font-size:10px; color:var(--marigold); font-weight:600; margin-top:4px;">PREVIEW — not live yet</div>`;
+            actionsArea.innerHTML = `
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn-submit" style="flex:1; font-size:12px; padding:8px;" onclick="keepTrendImage('${trendKey}')">✅ Keep This</button>
+                <button type="button" class="btn-quote" style="flex:1; font-size:12px; padding:8px;" onclick="generateTrendPreview('${trendKey}')">🔄 Try Again</button>
+              </div>`;
+            return;
+          }
+          if (checkData.status === 'failed') {
+            showToast(`❌ ${checkData.error || 'Generation failed.'}`);
+            btn.disabled = false;
+            btn.textContent = '✨ Try Again';
+            return;
+          }
+          // else 'processing' — loop continues
+        }
+        showToast('❌ Generation is taking unusually long — try again in a moment.');
+        btn.disabled = false;
+        btn.textContent = '✨ Try Again';
       } catch (err) {
         showToast(`❌ ${err.message}`);
         btn.disabled = false;
