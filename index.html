@@ -6638,13 +6638,55 @@
               </div>` : ''}
             <div style="padding:16px;">
               <div style="font-weight:700; color:var(--vivid); margin-bottom:4px;">${t.label}</div>
-              <div style="font-size:12.5px; color:var(--text-muted); line-height:1.5;">${t.description}</div>
+              <div style="font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:${defaultView ? '10px' : '0'};">${t.description}</div>
+              ${defaultView ? `<button type="button" class="btn-quote" style="width:100%; font-size:12px; padding:8px;" onclick="useTrendAsInspiration('${t.trendKey}')">✨ Use as My Inspiration</button>` : ''}
             </div>
           </div>
         `;
         }).join('');
       } catch (err) {
         console.warn('loadPublicTrends failed:', err.message); // silent on the page itself, same reasoning as above
+      }
+    }
+
+    // Adds the trend's CURRENTLY DISPLAYED image (whichever view tab is
+    // active) as a real reference photo — same mechanism as a genuine
+    // upload (fetched and converted to base64, pushed into
+    // uploadedPhotos.inspiration), not a fake/simulated attachment. Only
+    // works signed in, since uploadedPhotos/the design form itself only
+    // exist in the signed-in dashboard — for a signed-out visitor this
+    // just opens sign-in and stops there rather than trying to carry the
+    // intent across the redirect, which would be a lot of fragile state-
+    // passing for a nice-to-have feature.
+    async function useTrendAsInspiration(trendKey) {
+      if (!currentUser) {
+        showToast('✨ Sign in to use this as inspiration for your own design');
+        document.getElementById('signinTrigger')?.click();
+        return;
+      }
+      const img = document.getElementById(`trendImg-${trendKey}`);
+      if (!img || !img.src) { showToast('❌ No image to use yet.'); return; }
+
+      showToast('⏳ Adding as inspiration...');
+      try {
+        const res = await fetch(img.src);
+        const blob = await res.blob();
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        if (!uploadedPhotos.inspiration) uploadedPhotos.inspiration = [];
+        uploadedPhotos.inspiration.push(base64);
+        if (typeof displayPhotoGallery === 'function') displayPhotoGallery();
+
+        switchTab(null, 'design');
+        showToast('✅ Added as inspiration — describe your own take on it below');
+        document.getElementById('designDesc')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (err) {
+        showToast('❌ Could not add this image — try again in a moment.');
       }
     }
 
