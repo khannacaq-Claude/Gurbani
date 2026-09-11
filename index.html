@@ -2910,7 +2910,7 @@
               <div>
                 <div class="tryit-label">Age Bracket <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional — helps pick colours & prints that suit you)</span></div>
                 <div class="mood-tag-row" data-group="ageBracket">
-                  <button type="button" class="mood-tag" data-value="Decide by AI (Age)">✨ Decide by AI</button>
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Age)">🤐 Prefer not to disclose</button>
                   <button type="button" class="mood-tag" data-value="18-25">18–25</button>
                   <button type="button" class="mood-tag" data-value="26-35">26–35</button>
                   <button type="button" class="mood-tag" data-value="36-45">36–45</button>
@@ -3155,6 +3155,22 @@
               </div>
               <p class="lens-window-note">Sold per meter (fabric/lace/lining) or per set (suits)</p>
             </div>
+          </div>
+        </div>
+
+        <!-- TRENDING THIS SEASON — real, researched current-season Indian
+             fashion trends. Images are admin-managed (Photo Tools tab →
+             generated via Replicate, reviewed, and explicitly kept before
+             going live) rather than sourced from anywhere else online —
+             see loadPublicTrends() below. Falls back to a text-only card
+             for any trend that hasn't had an image generated yet, so the
+             section degrades gracefully rather than showing broken
+             images. -->
+        <div class="snap-section" id="trendingSection" style="margin-top: 48px;">
+          <h3 style="text-align:center;">✨ Trending This Season in India</h3>
+          <p style="text-align:center; font-size:12px; color:var(--text-muted); max-width:520px; margin:6px auto 20px;">What's actually moving in Indian ethnic wear right now — a quick read before you describe your own outfit below.</p>
+          <div id="trendingGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px; max-width:980px; margin:0 auto;">
+            <div style="grid-column:1/-1; text-align:center; font-size:12px; color:var(--text-muted);">Loading...</div>
           </div>
         </div>
 
@@ -3404,7 +3420,7 @@
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
         </div>
         <div class="tab-group-dropdown-panel" id="marketingGroupPanel">
-          <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory();" style="display: none;">📸 Photo Tools</button>
+          <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory(); loadTrendsManagement();" style="display: none;">📸 Photo Tools</button>
         </div>
         <div class="tab-group-dropdown-panel" id="helpGroupPanel">
           <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
@@ -3678,7 +3694,7 @@
             <div style="margin-bottom:16px;">
               <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--vivid); margin-bottom:6px;">Age Bracket <span style="text-transform:none; font-weight:400; color:var(--text-muted);">(optional — helps pick colours & prints that suit you)</span></div>
               <div class="mood-tag-row" data-group="ageBracket">
-                <button type="button" class="mood-tag" data-value="Decide by AI (Age)">✨ Decide by AI</button>
+                <button type="button" class="mood-tag" data-value="Decide by AI (Age)">🤐 Prefer not to disclose</button>
                 <button type="button" class="mood-tag" data-value="18-25">18–25</button>
                 <button type="button" class="mood-tag" data-value="26-35">26–35</button>
                 <button type="button" class="mood-tag" data-value="36-45">36–45</button>
@@ -4776,6 +4792,19 @@
               <div style="font-size:12px; color:#888;">Loading...</div>
             </div>
           </div>
+
+          <!-- TRENDING SECTION MANAGEMENT — generates/keeps the images shown
+               in the public "Trending This Season" landing-page section.
+               Generation only ever produces a PREVIEW; nothing visitors see
+               changes until "Keep This" is clicked, so a bad generation
+               never goes live by accident. -->
+          <div class="card" style="padding:20px; margin-top:20px;">
+            <h4 style="margin-bottom:4px;">🔥 Trending This Season — Section Images</h4>
+            <p id="trendsLastRefreshed" style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Loading...</p>
+            <div id="trendsManagementGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+              <div style="font-size:12px; color:#888;">Loading...</div>
+            </div>
+          </div>
         </div>
 
         <!-- QUICK GUIDE (always-available reference, especially for Sonia) -->
@@ -5279,6 +5308,105 @@
         `).join('');
       } catch (err) {
         el.innerHTML = '<div style="font-size:12px; color:#c62828;">Could not load history.</div>';
+      }
+    }
+
+    // ── Trending Section management ─────────────────────────────────────
+    // Generation only ever produces a PREVIEW (held in a per-card local
+    // variable, not the DB) — nothing visitors see on the public site
+    // changes until "Keep This" is explicitly clicked. This is the whole
+    // point: a bad generation should never be one click away from going
+    // live, the same review discipline as everything else built today.
+    const trendPreviews = {}; // trendKey -> previewUrl, cleared once kept or on reload
+
+    async function loadTrendsManagement() {
+      const grid = document.getElementById('trendsManagementGrid');
+      const lastRefreshedEl = document.getElementById('trendsLastRefreshed');
+      try {
+        const res = await fetch(`${API}/api/trends`);
+        const data = await res.json();
+        if (!res.ok || !data.trends) {
+          grid.innerHTML = '<div style="font-size:12px; color:#c62828;">Could not load trends.</div>';
+          return;
+        }
+
+        if (data.lastRefreshed) {
+          const days = Math.floor((Date.now() - new Date(data.lastRefreshed).getTime()) / 86400000);
+          const staleNote = days > 120 ? ' — worth a look before the next wedding/festival season.' : '';
+          lastRefreshedEl.textContent = `Last refreshed ${days === 0 ? 'today' : days + ' day' + (days === 1 ? '' : 's') + ' ago'}${staleNote}`;
+        } else {
+          lastRefreshedEl.textContent = 'No trend images generated yet — each card below starts as text-only until you generate one.';
+        }
+
+        grid.innerHTML = data.trends.map((t) => `
+          <div class="card" style="padding:12px;" id="trendCard-${t.trendKey}">
+            <div style="font-weight:700; font-size:13px; margin-bottom:6px;">${t.label}</div>
+            <div id="trendImageArea-${t.trendKey}" style="margin-bottom:8px;">
+              ${t.imageUrl
+                ? `<img src="${t.imageUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:1px solid #eee;">`
+                : `<div style="width:100%; aspect-ratio:4/5; border-radius:6px; background:#f5f0e8; display:flex; align-items:center; justify-content:center; font-size:11px; color:#999; text-align:center; padding:10px;">No image yet — text-only on the live site</div>`
+              }
+            </div>
+            <div id="trendActions-${t.trendKey}">
+              <button type="button" class="btn-quote" style="width:100%; font-size:12px;" onclick="generateTrendPreview('${t.trendKey}')" id="trendGenBtn-${t.trendKey}">✨ ${t.imageUrl ? 'Regenerate' : 'Generate'}</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = '<div style="font-size:12px; color:#c62828;">Could not load trends.</div>';
+      }
+    }
+
+    async function generateTrendPreview(trendKey) {
+      const btn = document.getElementById(`trendGenBtn-${trendKey}`);
+      const imageArea = document.getElementById(`trendImageArea-${trendKey}`);
+      const actionsArea = document.getElementById(`trendActions-${trendKey}`);
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      try {
+        const res = await fetch(`${API}/api/trends/generate-preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ trendKey }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(`❌ ${data.error || 'Generation failed.'}`);
+          btn.disabled = false;
+          btn.textContent = '✨ Try Again';
+          return;
+        }
+        trendPreviews[trendKey] = data.previewUrl;
+        imageArea.innerHTML = `<img src="${data.previewUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:2px solid var(--marigold);">
+          <div style="font-size:10px; color:var(--marigold); font-weight:600; margin-top:4px;">PREVIEW — not live yet</div>`;
+        actionsArea.innerHTML = `
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn-submit" style="flex:1; font-size:12px; padding:8px;" onclick="keepTrendImage('${trendKey}')">✅ Keep This</button>
+            <button type="button" class="btn-quote" style="flex:1; font-size:12px; padding:8px;" onclick="generateTrendPreview('${trendKey}')">🔄 Try Again</button>
+          </div>`;
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '✨ Try Again';
+      }
+    }
+
+    async function keepTrendImage(trendKey) {
+      const previewUrl = trendPreviews[trendKey];
+      if (!previewUrl) { showToast('❌ No preview to keep — generate one first.'); return; }
+      try {
+        const res = await fetch(`${API}/api/trends/keep`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ trendKey, imageUrl: previewUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(`❌ ${data.error || 'Could not save.'}`); return; }
+        delete trendPreviews[trendKey];
+        showToast('✅ Now live on the site.');
+        loadTrendsManagement();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
       }
     }
 
@@ -6409,6 +6537,30 @@
 
       document.getElementById('fabricCalcAmount' + suffix).textContent = `~${meters} meters`;
       document.getElementById('fabricCalcResult' + suffix).style.display = 'block';
+    }
+
+    // Public, no-auth fetch for the landing page's Trending section —
+    // renders whatever the admin has currently "kept" via Photo Tools,
+    // falling back to a text-only card for any trend without an image yet.
+    async function loadPublicTrends() {
+      const grid = document.getElementById('trendingGrid');
+      if (!grid) return;
+      try {
+        const res = await fetch(`${API}/api/trends`);
+        const data = await res.json();
+        if (!res.ok || !data.trends) return; // fail quietly — this is a nice-to-have section, not core functionality
+        grid.innerHTML = data.trends.map((t) => `
+          <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden;">
+            ${t.imageUrl ? `<img src="${t.imageUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block;">` : ''}
+            <div style="padding:16px;">
+              <div style="font-weight:700; color:var(--vivid); margin-bottom:4px;">${t.label}</div>
+              <div style="font-size:12.5px; color:var(--text-muted); line-height:1.5;">${t.description}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.warn('loadPublicTrends failed:', err.message); // silent on the page itself, same reasoning as above
+      }
     }
 
     async function initRateCardTeasers() {
@@ -13842,6 +13994,7 @@
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initRateCardTeasers();
+      loadPublicTrends();
       // Set correct initial Sleeve/Length field visibility for both static
       // fabric calculators — default garment is Blouse, which should load
       // with Garment Length already hidden rather than only correcting
