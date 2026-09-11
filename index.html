@@ -2727,6 +2727,7 @@
       <nav class="section-tabs" id="sectionTabs">
         <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
         <button type="button" data-target="landingDesignPreview" onclick="jumpToTab('landingDesignPreview', this)">✨ AI Design Studio</button>
+        <button type="button" data-target="trendingSection" onclick="jumpToTab('trendingSection', this)">🔥 Trending</button>
         <button type="button" data-target="rcSection" onclick="jumpToTab('rcSection', this)">💰 Rate Card</button>
         <button type="button" data-target="marketplaceSection" onclick="jumpToTab('marketplaceSection', this)">🛍️ Marketplace</button>
         <button type="button" data-target="journeySection" onclick="jumpToTab('journeySection', this)">📅 Your Journey</button>
@@ -2964,6 +2965,25 @@
           </div>
         </div>
 
+        <!-- TRENDING THIS SEASON — real, researched current-season Indian
+             fashion trends. Images are admin-managed (Photo Tools tab →
+             generated via Replicate, reviewed, and explicitly kept before
+             going live) rather than sourced from anywhere else online —
+             see loadPublicTrends() below. Falls back to a text-only card
+             for any trend that hasn't had an image generated yet, so the
+             section degrades gracefully rather than showing broken
+             images. Moved to sit right after the Try It card (was further
+             down, past Stats/Lenses/Journey/Rate Card/Marketplace) so it
+             reads as direct inspiration right after describing an outfit,
+             not buried past several unrelated sections. -->
+        <div class="snap-section" id="trendingSection" style="margin-top: 48px;">
+          <h3 style="text-align:center;">✨ Trending This Season in India</h3>
+          <p style="text-align:center; font-size:12px; color:var(--text-muted); max-width:520px; margin:6px auto 20px;">What's actually moving in Indian ethnic wear right now — worth a look if you're still deciding what to describe above.</p>
+          <div id="trendingGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px; max-width:980px; margin:0 auto;">
+            <div style="grid-column:1/-1; text-align:center; font-size:12px; color:var(--text-muted);">Loading...</div>
+          </div>
+        </div>
+
         <!-- STATS — self-gated, only shows once numbers are meaningful.
              The clickable stat opens the designs gallery — see the "Tap to
              see designs" hint added directly on that box for discoverability. -->
@@ -3168,22 +3188,6 @@
               </div>
               <p class="lens-window-note">Sold per meter (fabric/lace/lining) or per set (suits)</p>
             </div>
-          </div>
-        </div>
-
-        <!-- TRENDING THIS SEASON — real, researched current-season Indian
-             fashion trends. Images are admin-managed (Photo Tools tab →
-             generated via Replicate, reviewed, and explicitly kept before
-             going live) rather than sourced from anywhere else online —
-             see loadPublicTrends() below. Falls back to a text-only card
-             for any trend that hasn't had an image generated yet, so the
-             section degrades gracefully rather than showing broken
-             images. -->
-        <div class="snap-section" id="trendingSection" style="margin-top: 48px;">
-          <h3 style="text-align:center;">✨ Trending This Season in India</h3>
-          <p style="text-align:center; font-size:12px; color:var(--text-muted); max-width:520px; margin:6px auto 20px;">What's actually moving in Indian ethnic wear right now — a quick read before you describe your own outfit below.</p>
-          <div id="trendingGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px; max-width:980px; margin:0 auto;">
-            <div style="grid-column:1/-1; text-align:center; font-size:12px; color:var(--text-muted);">Loading...</div>
           </div>
         </div>
 
@@ -5332,6 +5336,9 @@
     // live, the same review discipline as everything else built today.
     const trendPreviews = {}; // trendKey -> previewUrl, cleared once kept or on reload
 
+    const VIEW_LABELS = { front: 'Front', back: 'Back', side: 'Side' };
+    const VIEWS_CLIENT = ['front', 'back', 'side'];
+
     async function loadTrendsManagement() {
       const grid = document.getElementById('trendsManagementGrid');
       const lastRefreshedEl = document.getElementById('trendsLastRefreshed');
@@ -5351,17 +5358,28 @@
           lastRefreshedEl.textContent = 'No trend images generated yet — each card below starts as text-only until you generate one.';
         }
 
+        grid.style.gridTemplateColumns = '1fr'; // each trend is now a full-width row of 3 views, not a grid cell
         grid.innerHTML = data.trends.map((t) => `
-          <div class="card" style="padding:12px;" id="trendCard-${t.trendKey}">
-            <div style="font-weight:700; font-size:13px; margin-bottom:6px;">${t.label}</div>
-            <div id="trendImageArea-${t.trendKey}" style="margin-bottom:8px;">
-              ${t.imageUrl
-                ? `<img src="${t.imageUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:1px solid #eee;">`
-                : `<div style="width:100%; aspect-ratio:4/5; border-radius:6px; background:#f5f0e8; display:flex; align-items:center; justify-content:center; font-size:11px; color:#999; text-align:center; padding:10px;">No image yet — text-only on the live site</div>`
-              }
-            </div>
-            <div id="trendActions-${t.trendKey}">
-              <button type="button" class="btn-quote" style="width:100%; font-size:12px;" onclick="generateTrendPreview('${t.trendKey}')" id="trendGenBtn-${t.trendKey}">✨ ${t.imageUrl ? 'Regenerate' : 'Generate'}</button>
+          <div class="card" style="padding:14px;" id="trendCard-${t.trendKey}">
+            <div style="font-weight:700; font-size:14px; margin-bottom:10px;">${t.label}</div>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+              ${VIEWS_CLIENT.map((view) => {
+                const url = t.images[view];
+                const vk = `${t.trendKey}-${view}`;
+                return `
+                <div>
+                  <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px; text-align:center;">${VIEW_LABELS[view]}</div>
+                  <div id="trendImageArea-${vk}" style="margin-bottom:6px;">
+                    ${url
+                      ? `<img src="${url}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:1px solid #eee;">`
+                      : `<div style="width:100%; aspect-ratio:4/5; border-radius:6px; background:#f5f0e8; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; text-align:center; padding:6px;">No image yet</div>`
+                    }
+                  </div>
+                  <div id="trendActions-${vk}">
+                    <button type="button" class="btn-quote" style="width:100%; font-size:11px; padding:6px;" onclick="generateTrendPreview('${t.trendKey}', '${view}')" id="trendGenBtn-${vk}">✨ ${url ? 'Regenerate' : 'Generate'}</button>
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
           </div>
         `).join('');
@@ -5376,17 +5394,18 @@
     // of the timeout that caused the original "Failed to fetch" (the old
     // version held one request open for the whole generation, which could
     // run past whatever timeout the hosting platform enforces).
-    async function generateTrendPreview(trendKey) {
-      const btn = document.getElementById(`trendGenBtn-${trendKey}`);
-      const imageArea = document.getElementById(`trendImageArea-${trendKey}`);
-      const actionsArea = document.getElementById(`trendActions-${trendKey}`);
+    async function generateTrendPreview(trendKey, view) {
+      const vk = `${trendKey}-${view}`;
+      const btn = document.getElementById(`trendGenBtn-${vk}`);
+      const imageArea = document.getElementById(`trendImageArea-${vk}`);
+      const actionsArea = document.getElementById(`trendActions-${vk}`);
       btn.disabled = true;
       btn.textContent = '⏳ Starting...';
       try {
         const startRes = await fetch(`${API}/api/trends/generate-preview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ trendKey }),
+          body: JSON.stringify({ trendKey, view }),
         });
         const startData = await startRes.json();
         if (!startRes.ok) {
@@ -5407,13 +5426,13 @@
           const checkData = await checkRes.json();
 
           if (checkData.status === 'succeeded') {
-            trendPreviews[trendKey] = checkData.previewUrl;
+            trendPreviews[vk] = checkData.previewUrl;
             imageArea.innerHTML = `<img src="${checkData.previewUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:2px solid var(--marigold);">
-              <div style="font-size:10px; color:var(--marigold); font-weight:600; margin-top:4px;">PREVIEW — not live yet</div>`;
+              <div style="font-size:9px; color:var(--marigold); font-weight:600; margin-top:3px; text-align:center;">PREVIEW</div>`;
             actionsArea.innerHTML = `
-              <div style="display:flex; gap:6px;">
-                <button type="button" class="btn-submit" style="flex:1; font-size:12px; padding:8px;" onclick="keepTrendImage('${trendKey}')">✅ Keep This</button>
-                <button type="button" class="btn-quote" style="flex:1; font-size:12px; padding:8px;" onclick="generateTrendPreview('${trendKey}')">🔄 Try Again</button>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <button type="button" class="btn-submit" style="font-size:11px; padding:6px;" onclick="keepTrendImage('${trendKey}', '${view}')">✅ Keep</button>
+                <button type="button" class="btn-quote" style="font-size:11px; padding:6px;" onclick="generateTrendPreview('${trendKey}', '${view}')">🔄 Retry</button>
               </div>`;
             return;
           }
@@ -5423,7 +5442,6 @@
             btn.textContent = '✨ Try Again';
             return;
           }
-          // else 'processing' — loop continues
         }
         showToast('❌ Generation is taking unusually long — try again in a moment.');
         btn.disabled = false;
@@ -5435,19 +5453,20 @@
       }
     }
 
-    async function keepTrendImage(trendKey) {
-      const previewUrl = trendPreviews[trendKey];
+    async function keepTrendImage(trendKey, view) {
+      const vk = `${trendKey}-${view}`;
+      const previewUrl = trendPreviews[vk];
       if (!previewUrl) { showToast('❌ No preview to keep — generate one first.'); return; }
       try {
         const res = await fetch(`${API}/api/trends/keep`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ trendKey, imageUrl: previewUrl }),
+          body: JSON.stringify({ trendKey, view, imageUrl: previewUrl }),
         });
         const data = await res.json();
         if (!res.ok) { showToast(`❌ ${data.error || 'Could not save.'}`); return; }
-        delete trendPreviews[trendKey];
-        showToast('✅ Now live on the site.');
+        delete trendPreviews[vk];
+        showToast(`✅ ${VIEW_LABELS[view]} view now live on the site.`);
         loadTrendsManagement();
       } catch (err) {
         showToast(`❌ ${err.message}`);
@@ -6586,6 +6605,11 @@
     // Public, no-auth fetch for the landing page's Trending section —
     // renders whatever the admin has currently "kept" via Photo Tools,
     // falling back to a text-only card for any trend without an image yet.
+    // Each trend can have up to 3 views (front/back/side); a small tab
+    // switcher only shows for views that actually exist, so a trend with
+    // just a front view still displays cleanly without empty tabs.
+    let publicTrendImages = {}; // trendKey -> {front,back,side}, populated below, read by switchPublicTrendView
+
     async function loadPublicTrends() {
       const grid = document.getElementById('trendingGrid');
       if (!grid) return;
@@ -6593,17 +6617,43 @@
         const res = await fetch(`${API}/api/trends`);
         const data = await res.json();
         if (!res.ok || !data.trends) return; // fail quietly — this is a nice-to-have section, not core functionality
-        grid.innerHTML = data.trends.map((t) => `
+
+        publicTrendImages = Object.fromEntries(data.trends.map((t) => [t.trendKey, t.images]));
+
+        grid.innerHTML = data.trends.map((t) => {
+          const availableViews = VIEWS_CLIENT.filter((v) => t.images[v]);
+          const defaultView = availableViews[0] || null;
+          return `
           <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden;">
-            ${t.imageUrl ? `<img src="${t.imageUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block;">` : ''}
+            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${t.images[defaultView]}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block;">` : ''}
+            ${availableViews.length > 1 ? `
+              <div id="trendTabs-${t.trendKey}" style="display:flex; gap:4px; padding:8px 8px 0;">
+                ${availableViews.map((v) => `<button type="button" onclick="switchPublicTrendView('${t.trendKey}','${v}')" data-view="${v}" style="flex:1; font-size:10px; font-weight:700; text-transform:uppercase; padding:4px; border-radius:4px; border:1px solid var(--sand); background:${v === defaultView ? 'var(--vivid)' : 'white'}; color:${v === defaultView ? 'white' : 'var(--text-muted)'}; cursor:pointer;">${VIEW_LABELS[v]}</button>`).join('')}
+              </div>` : ''}
             <div style="padding:16px;">
               <div style="font-weight:700; color:var(--vivid); margin-bottom:4px;">${t.label}</div>
               <div style="font-size:12.5px; color:var(--text-muted); line-height:1.5;">${t.description}</div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       } catch (err) {
         console.warn('loadPublicTrends failed:', err.message); // silent on the page itself, same reasoning as above
+      }
+    }
+
+    function switchPublicTrendView(trendKey, view) {
+      const img = document.getElementById(`trendImg-${trendKey}`);
+      const urls = publicTrendImages[trendKey];
+      if (!img || !urls || !urls[view]) return;
+      img.src = urls[view];
+      const tabs = document.getElementById(`trendTabs-${trendKey}`);
+      if (tabs) {
+        tabs.querySelectorAll('button').forEach((btn) => {
+          const active = btn.dataset.view === view;
+          btn.style.background = active ? 'var(--vivid)' : 'white';
+          btn.style.color = active ? 'white' : 'var(--text-muted)';
+        });
       }
     }
 
@@ -11399,8 +11449,111 @@
               <button type="button" onclick="generateInvoiceForOrder('${o._id}', '${escapeHtml(o.customerId?.phone || '')}')" class="admin-filter-btn" style="white-space:nowrap;">🧾 Generate Invoice</button>
             </div>
           </div>
+          ${o.status !== 'cancelled' && o.design?.description ? `
+          <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0d8d0; display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; max-width:340px;">
+            ${['back','side'].map((view) => {
+              const existing = o.design?.additionalViews?.[view];
+              const vk = `${o._id}-${view}`;
+              return `
+              <div>
+                <div style="font-size:10px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">${view === 'back' ? 'Back View' : 'Side View'}</div>
+                <div id="orderViewArea-${vk}" style="margin-bottom:4px;">
+                  ${existing
+                    ? `<img src="${existing}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:1px solid #eee;">`
+                    : `<div style="width:100%; aspect-ratio:4/5; border-radius:6px; background:#f5f0e8;"></div>`
+                  }
+                </div>
+                <div id="orderViewActions-${vk}">
+                  <button type="button" class="btn-quote" style="width:100%; font-size:10px; padding:4px;" onclick="generateOrderView('${o._id}', '${view}')" id="orderViewGenBtn-${vk}">✨ ${existing ? 'Regenerate' : 'Generate'}</button>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>` : ''}
         </div>
       `).join('');
+    }
+
+    // Admin-triggered reference-view generation for an already-placed
+    // order — see orderController.js for why this only ever runs here,
+    // never speculatively during the AI Design Studio flow itself. Same
+    // create-then-poll pattern as Trending, for the same "no single
+    // request held open long enough to risk Failed to fetch" reason.
+    async function generateOrderView(orderId, view) {
+      const vk = `${orderId}-${view}`;
+      const btn = document.getElementById(`orderViewGenBtn-${vk}`);
+      const imageArea = document.getElementById(`orderViewArea-${vk}`);
+      const actionsArea = document.getElementById(`orderViewActions-${vk}`);
+      btn.disabled = true;
+      btn.textContent = '⏳ Starting...';
+      try {
+        const startRes = await fetch(`${API}/api/orders/${orderId}/generate-view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ view }),
+        });
+        const startData = await startRes.json();
+        if (!startRes.ok) {
+          showToast(`❌ ${startData.error || 'Could not start generation.'}`);
+          btn.disabled = false;
+          btn.textContent = '✨ Try Again';
+          return;
+        }
+
+        btn.textContent = '⏳ Generating...';
+        const predictionId = startData.predictionId;
+        for (let i = 0; i < 30; i++) {
+          await new Promise((r) => setTimeout(r, 3000));
+          const checkRes = await fetch(`${API}/api/orders/check-view/${predictionId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` },
+          });
+          const checkData = await checkRes.json();
+
+          if (checkData.status === 'succeeded') {
+            orderViewPreviews[vk] = checkData.previewUrl;
+            imageArea.innerHTML = `<img src="${checkData.previewUrl}" style="width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:6px; border:2px solid var(--marigold);">`;
+            actionsArea.innerHTML = `
+              <div style="display:flex; flex-direction:column; gap:3px;">
+                <button type="button" class="btn-submit" style="font-size:10px; padding:4px;" onclick="saveOrderView('${orderId}', '${view}')">✅ Keep</button>
+                <button type="button" class="btn-quote" style="font-size:10px; padding:4px;" onclick="generateOrderView('${orderId}', '${view}')">🔄 Retry</button>
+              </div>`;
+            return;
+          }
+          if (checkData.status === 'failed') {
+            showToast(`❌ ${checkData.error || 'Generation failed.'}`);
+            btn.disabled = false;
+            btn.textContent = '✨ Try Again';
+            return;
+          }
+        }
+        showToast('❌ Generation is taking unusually long — try again in a moment.');
+        btn.disabled = false;
+        btn.textContent = '✨ Try Again';
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '✨ Try Again';
+      }
+    }
+    const orderViewPreviews = {};
+
+    async function saveOrderView(orderId, view) {
+      const vk = `${orderId}-${view}`;
+      const previewUrl = orderViewPreviews[vk];
+      if (!previewUrl) { showToast('❌ No preview to keep — generate one first.'); return; }
+      try {
+        const res = await fetch(`${API}/api/orders/${orderId}/save-view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ view, imageUrl: previewUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(`❌ ${data.error || 'Could not save.'}`); return; }
+        delete orderViewPreviews[vk];
+        showToast(`✅ ${view === 'back' ? 'Back' : 'Side'} view saved.`);
+        loadAdminOrders();
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
     }
 
     function toggleOrderSelection(orderId, customerId, phone, amount) {
