@@ -2936,10 +2936,7 @@
               </div>
             </div>
             <div>
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
-                <div class="tryit-label" style="margin-bottom:0;">Describe Your Dream Outfit</div>
-                <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first" style="background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:5px 12px; font-weight:700; font-size:11.5px; cursor:pointer; white-space:nowrap;">✨ Draft It For Me</button>
-              </div>
+              <div class="tryit-label" style="margin-bottom:6px;">Describe Your Dream Outfit</div>
               <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
 
               <!-- Anonymous-compatible trend picker — appends a short
@@ -2984,7 +2981,17 @@
                 </div>
               </div>
 
-              <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" style="width:100%; margin-top:16px;">Continue — sign in to generate →</button>
+              <!-- Moved here from beside the (empty, at that point) textarea
+                   at the top — this button DRAFTS from the tag selections
+                   made in the left column, so it only makes sense once
+                   those selections actually exist, right before the
+                   customer moves on. Still disabled until Dress Type +
+                   Occasion are picked, same as before, just positioned
+                   where that constraint reads as natural instead of
+                   surprising. -->
+              <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:10px 12px; font-weight:700; font-size:13px; cursor:pointer; margin-top:16px;">✨ Draft It For Me</button>
+
+              <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" style="width:100%; margin-top:10px;">Continue — sign in to generate →</button>
             </div>
           </div>
         </div>
