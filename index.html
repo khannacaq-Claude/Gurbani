@@ -5406,7 +5406,7 @@
                     }
                   </div>
                   <div id="trendActions-${vk}">
-                    <button type="button" class="btn-quote" style="width:100%; font-size:11px; padding:6px;" onclick="generateTrendPreview('${t.trendKey}', '${view}')" id="trendGenBtn-${vk}" ${needsFrontFirst ? 'disabled title="Keep the Front view first"' : ''}>✨ ${url ? 'Regenerate' : 'Generate'}</button>
+                    <button type="button" class="btn-quote" style="width:100%; font-size:11px; padding:6px;" onclick="generateTrendPreview('${t.trendKey}', '${view}')" id="trendGenBtn-${vk}" ${needsFrontFirst ? 'disabled data-front-gated="true" title="Keep the Front view first"' : ''}>✨ ${url ? 'Regenerate' : 'Generate'}</button>
                   </div>
                 </div>`;
               }).join('')}
@@ -5424,6 +5424,20 @@
     // of the timeout that caused the original "Failed to fetch" (the old
     // version held one request open for the whole generation, which could
     // run past whatever timeout the hosting platform enforces).
+    // Disables the OTHER two Generate buttons in the same trend card while
+    // one view is generating — each view is technically independent and
+    // safe to run concurrently, but letting an admin fire off all three
+    // at once from rapid clicking is sloppy and needlessly multiplies
+    // in-flight generations (and cost) for no real benefit. Re-enabled via
+    // the try/finally below regardless of how generation ends up
+    // resolving (success, failure, or timeout).
+    function setSiblingTrendButtonsDisabled(trendKey, view, disabled) {
+      VIEWS_CLIENT.filter((v) => v !== view).forEach((v) => {
+        const siblingBtn = document.getElementById(`trendGenBtn-${trendKey}-${v}`);
+        if (siblingBtn && !siblingBtn.dataset.frontGated) siblingBtn.disabled = disabled;
+      });
+    }
+
     async function generateTrendPreview(trendKey, view) {
       const vk = `${trendKey}-${view}`;
       const btn = document.getElementById(`trendGenBtn-${vk}`);
@@ -5431,6 +5445,7 @@
       const actionsArea = document.getElementById(`trendActions-${vk}`);
       btn.disabled = true;
       btn.textContent = '⏳ Starting...';
+      setSiblingTrendButtonsDisabled(trendKey, view, true);
       try {
         const startRes = await fetch(`${API}/api/trends/generate-preview`, {
           method: 'POST',
@@ -5480,6 +5495,8 @@
         showToast(`❌ ${err.message}`);
         btn.disabled = false;
         btn.textContent = '✨ Try Again';
+      } finally {
+        setSiblingTrendButtonsDisabled(trendKey, view, false);
       }
     }
 
@@ -11597,6 +11614,18 @@
     // never speculatively during the AI Design Studio flow itself. Same
     // create-then-poll pattern as Trending, for the same "no single
     // request held open long enough to risk Failed to fetch" reason.
+    // Same reasoning as the Trending section's equivalent guard — back and
+    // side are each independently safe to generate, but rapid clicking
+    // both at once is still sloppy and needlessly multiplies in-flight
+    // generations. Simpler than Trending's version since there's no
+    // front-gating concept here — both views derive from the order's
+    // already-existing saved image, not from each other.
+    function setSiblingOrderViewButtonDisabled(orderId, view, disabled) {
+      const otherView = view === 'back' ? 'side' : 'back';
+      const siblingBtn = document.getElementById(`orderViewGenBtn-${orderId}-${otherView}`);
+      if (siblingBtn) siblingBtn.disabled = disabled;
+    }
+
     async function generateOrderView(orderId, view) {
       const vk = `${orderId}-${view}`;
       const btn = document.getElementById(`orderViewGenBtn-${vk}`);
@@ -11604,6 +11633,7 @@
       const actionsArea = document.getElementById(`orderViewActions-${vk}`);
       btn.disabled = true;
       btn.textContent = '⏳ Starting...';
+      setSiblingOrderViewButtonDisabled(orderId, view, true);
       try {
         const startRes = await fetch(`${API}/api/orders/${orderId}/generate-view`, {
           method: 'POST',
@@ -11651,6 +11681,8 @@
         showToast(`❌ ${err.message}`);
         btn.disabled = false;
         btn.textContent = '✨ Try Again';
+      } finally {
+        setSiblingOrderViewButtonDisabled(orderId, view, false);
       }
     }
     const orderViewPreviews = {};
