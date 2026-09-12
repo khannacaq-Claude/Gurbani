@@ -3052,6 +3052,17 @@
               <div class="tryit-label" data-i18n="lblDescribeOutfit" style="margin-top:16px; margin-bottom:6px;">Describe Your Dream Outfit</div>
               <textarea id="landingDesignDesc" data-i18n-placeholder="phDescribeOutfit" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
 
+              <!-- Free anonymous text-only preview — 3 real Claude-generated
+                   concepts, no sign-in, no images (images stay the sign-in
+                   gate, same reasoning as always). Limited per visitor —
+                   see generateLandingConcepts() in designController.js —
+                   button relabels itself once the limit is hit, pointing
+                   at Continue instead of just going silent. -->
+              <button type="button" id="landingConceptsBtn" onclick="generateLandingConceptsPreview()" disabled title="Please select Dress Type and Occasion above first" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:10px 12px; font-weight:700; font-size:13px; cursor:pointer; margin-top:12px;">✨ See 3 Design Concepts (Free Preview)</button>
+              <p id="landingConceptsRemainingNote" style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:4px;"></p>
+
+              <div id="landingConceptsResults" style="display:none; margin-top:10px;"></div>
+
               <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" data-i18n="btnContinueSignIn" style="width:100%; margin-top:10px;">Continue — sign in to generate →</button>
             </div>
           </div>
@@ -8111,12 +8122,20 @@
     // same reasoning as the signed-in Step 1 gate — Claude drafts a far
     // more specific, useful line when it knows the garment and occasion
     // up front rather than guessing from tags alone.
+    let landingConceptsLimitReached = false; // set by checkLandingConceptsRemaining() — once true, this gate must never re-enable the button regardless of Dress Type/Occasion
+
     function updateLandingDraftButtonState() {
       const btn = document.getElementById('landingDraftBtn');
-      if (!btn) return;
+      const conceptsBtn = document.getElementById('landingConceptsBtn');
       const ready = getLandingDressType().length > 0 && !!document.getElementById('landingOccasion')?.value;
-      btn.disabled = !ready;
-      btn.title = ready ? '' : 'Please select Dress Type and Occasion above first';
+      if (btn) {
+        btn.disabled = !ready;
+        btn.title = ready ? '' : 'Please select Dress Type and Occasion above first';
+      }
+      if (conceptsBtn && !landingConceptsLimitReached) {
+        conceptsBtn.disabled = !ready;
+        conceptsBtn.title = ready ? '' : 'Please select Dress Type and Occasion above first';
+      }
     }
 
     // Live, real, and free for anonymous visitors — this is the actual fix
@@ -8212,7 +8231,120 @@
       }
     }
 
-    // Saves whatever's filled into the landing preview, then sends the
+    // Checks and displays remaining free tries — called on page load, so
+    // the button/label are correct immediately rather than only updating
+    // after a wasted click. Fails quietly (leaves the button in its
+    // normal Dress-Type/Occasion-gated state) if the check itself fails,
+    // since this is a nice-to-have upfront display, not something that
+    // should block the feature if the network hiccups.
+    async function checkLandingConceptsRemaining() {
+      const visitorId = getOrCreateVisitorId();
+      const note = document.getElementById('landingConceptsRemainingNote');
+      const btn = document.getElementById('landingConceptsBtn');
+      try {
+        const res = await fetch(`${API}/api/designs/landing-concepts/remaining?visitorId=${encodeURIComponent(visitorId)}`);
+        const data = await res.json();
+        if (!res.ok) return;
+        if (data.remaining <= 0) {
+          landingConceptsLimitReached = true;
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = '✨ Free previews used — sign in for more';
+            btn.title = 'Sign in below to keep designing, no limit once signed in';
+          }
+          if (note) note.textContent = '';
+        } else if (note) {
+          note.textContent = `${data.remaining} of ${data.limit} free previews left`;
+        }
+      } catch (err) {
+        // silent — see comment above
+      }
+    }
+
+    // The free anonymous 3-concept preview — same inputs as Draft It For
+    // Me, but a bigger, real Sonnet call producing actual design concepts
+    // (title/description/price/accessory), not just a starting sentence.
+    // Renders as simple read-only cards, no images (that stays the
+    // sign-in gate). Once the visitor's limit is used up, the button
+    // itself relabels via checkLandingConceptsRemaining() rather than
+    // silently doing nothing on further clicks.
+    async function generateLandingConceptsPreview() {
+      const dressType = getLandingDressType();
+      const occasion = document.getElementById('landingOccasion')?.value || '';
+      const description = document.getElementById('landingDesignDesc')?.value.trim() || '';
+      if (!dressType || !occasion) {
+        showToast('❌ Please select Dress Type and Occasion above first');
+        return;
+      }
+      if (!description) {
+        showToast('❌ Describe your dream outfit above first — even a line or two helps');
+        highlightFieldNeedsAttention('landingDesignDesc');
+        return;
+      }
+      const neckline = getLandingNeckline();
+      const fabricType = getLandingFabricType();
+      const ageBracket = getLandingAgeBracket();
+      const extraNotes = document.getElementById('landingExtraNotes')?.value.trim() || '';
+      const visitorId = getOrCreateVisitorId();
+
+      const btn = document.getElementById('landingConceptsBtn');
+      const originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ Designing...';
+      try {
+        const res = await fetch(`${API}/api/designs/landing-concepts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visitorId, description, occasion, dressType, neckline, fabricType, ageBracket, extraNotes }),
+        });
+        const data = await res.json();
+        if (res.status === 403 && data.limitReached) {
+          landingConceptsLimitReached = true;
+          showToast('✋ ' + data.error);
+          btn.textContent = '✨ Free previews used — sign in for more';
+          return;
+        }
+        if (res.status === 429) {
+          showToast('✋ ' + (data.error || 'Too many attempts — please wait a bit.'));
+          return;
+        }
+        if (!res.ok || !data.success) {
+          showToast('❌ ' + (data.error || "Couldn't generate a preview right now"));
+          return;
+        }
+        renderLandingConcepts(data.concepts);
+        const note = document.getElementById('landingConceptsRemainingNote');
+        if (note) note.textContent = data.remaining > 0 ? `${data.remaining} of ${data.limit} free previews left` : '';
+        if (data.remaining <= 0) {
+          landingConceptsLimitReached = true;
+          btn.textContent = '✨ Free previews used — sign in for more';
+          btn.disabled = true;
+          return;
+        }
+        if (typeof gtag === 'function') gtag('event', 'landing_concepts_generated');
+      } catch (err) {
+        showToast('❌ ' + err.message);
+      } finally {
+        if (!landingConceptsLimitReached) {
+          btn.disabled = false;
+          btn.textContent = originalLabel;
+        }
+      }
+    }
+
+    function renderLandingConcepts(concepts) {
+      const container = document.getElementById('landingConceptsResults');
+      if (!container) return;
+      container.style.display = 'block';
+      container.innerHTML = concepts.map((c) => `
+        <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:8px; padding:12px 14px; margin-bottom:8px;">
+          <div style="font-weight:700; color:var(--vivid); font-size:13.5px; margin-bottom:3px;">${escapeHtml(c.title)}</div>
+          <div style="font-size:12.5px; color:var(--text-ink); line-height:1.5; margin-bottom:4px;">${escapeHtml(c.description)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">₹${c.priceMin}–₹${c.priceMax} · ~${c.deliveryDays} days · ${escapeHtml(c.accessorySuggestion)}</div>
+        </div>
+      `).join('') + `<p style="font-size:11.5px; color:var(--text-muted); text-align:center; margin-top:6px;">💡 Sign in to see actual AI-generated pictures of these — not just descriptions.</p>`;
+    }
+
     // visitor to sign in. Called both from the preview's own "Continue"
     // button and (defensively) before any promptSignIn triggered while the
     // preview has values in it, so nothing typed pre-sign-in gets lost.
@@ -10168,6 +10300,7 @@
             // Funnel tracking, step 4 of 4: sign-in/sign-up actually completed.
             if (typeof gtag === 'function') gtag('event', data.isNewAccount ? 'sign_up_completed' : 'sign_in_completed', { method: 'google' });
             showToast('✅ Signed in! Welcome!', 4000, { big: true });
+            document.getElementById('designStatus')?.classList.remove('show'); // clears the "Processing sign-in..." message — previously only the failure paths below ever updated this, so a successful sign-in left it stuck on screen indefinitely
             updateUI();
             document.getElementById('emailAuthPanel').classList.remove('open');
             if (data.isNewAccount) {
@@ -14722,6 +14855,7 @@
       initRateCardTeasers();
       loadPublicTrends();
       setTryItLanguage(localStorage.getItem('gfTryItLang') || 'en'); // restore a returning visitor's language choice — was being saved but never read back
+      checkLandingConceptsRemaining();
       // Set correct initial Sleeve/Length field visibility for both static
       // fabric calculators — default garment is Blouse, which should load
       // with Garment Length already hidden rather than only correcting
@@ -14783,13 +14917,23 @@
     // anonymous browsing by the site owner while signed out; for that,
     // GA4's IP-based Internal Traffic filter is the real fix — this is a
     // simpler companion number, not a replacement for it.
-    function trackSiteVisit() {
-      if (currentUser && currentUser.role === 'admin') return;
+    // Shared, robust visitorId getter — trackSiteVisit() below only
+    // creates one for non-admins (deliberately, it skips tracking
+    // entirely for admins), which would leave an admin testing this
+    // browser with no ID at all for unrelated features that still need
+    // one regardless of role, like the landing-concepts free-tries limit.
+    function getOrCreateVisitorId() {
       let visitorId = localStorage.getItem('gfVisitorId');
       if (!visitorId) {
         visitorId = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
         localStorage.setItem('gfVisitorId', visitorId);
       }
+      return visitorId;
+    }
+
+    function trackSiteVisit() {
+      if (currentUser && currentUser.role === 'admin') return;
+      const visitorId = getOrCreateVisitorId();
       fetch(`${API}/api/visitors/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
