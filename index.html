@@ -2794,139 +2794,157 @@
              (Dress Type/Occasion side-by-side, smaller gaps throughout) so
              it reads as one glance-able block instead of a long scroll. -->
         <div class="card tryit-card" id="landingDesignPreview" style="max-width:980px; width:100%; margin:0 auto 18px; padding:24px 26px;">
-          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
-            <h3 style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
-            <button type="button" onclick="resetLandingDesignPreview()" style="flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; padding:4px 0; white-space:nowrap;">↺ Reset</button>
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <h3 data-i18n="tryItTitle" style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+              <!-- Language switcher — scoped to just this card's own text,
+                   not a site-wide translation system. Values chosen for
+                   Faridabad/Delhi NCR reach specifically (Hindi is the
+                   clear highest-value second language here); more can be
+                   added later by extending TRY_IT_I18N the same way. The
+                   customer's own free-text description works in any
+                   language regardless of this toggle — Claude reads Hindi
+                   natively — this only translates the surrounding labels/
+                   buttons/options, which don't automatically follow the
+                   backend's own English data-value strings (kept in
+                   English on purpose so existing prompt logic never needs
+                   to change). -->
+              <div id="tryItLangSwitcher" style="display:flex; gap:4px; font-size:12px;">
+                <button type="button" onclick="setTryItLanguage('en')" id="tryItLangBtn-en" style="border:1.5px solid var(--vivid); background:var(--vivid); color:white; border-radius:12px; padding:3px 10px; font-weight:700; cursor:pointer;">English</button>
+                <button type="button" onclick="setTryItLanguage('hi')" id="tryItLangBtn-hi" style="border:1.5px solid var(--vivid); background:white; color:var(--vivid); border-radius:12px; padding:3px 10px; font-weight:700; cursor:pointer;">हिंदी</button>
+              </div>
+              <button type="button" onclick="resetLandingDesignPreview()" data-i18n="resetBtn" style="flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; padding:4px 0; white-space:nowrap;">↺ Reset</button>
+            </div>
           </div>
-          <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; max-width:560px;">Pick what you're picturing and we'll help you put it into words — right here, no sign-in needed. Sign in when you're ready to see 3 actual AI-generated <em>images</em> of it — that part needs an account, everything below comes with you.</p>
+          <p data-i18n="tryItIntro" style="font-size:13px; color:var(--text-muted); margin-bottom:20px; max-width:560px;">Pick what you're picturing and we'll help you put it into words — right here, no sign-in needed. Sign in when you're ready to see 3 actual AI-generated <em>images</em> of it — that part needs an account, everything below comes with you.</p>
 
           <div class="tryit-grid">
             <div class="tryit-col-left">
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:20px;">
                 <div>
-                  <div class="tryit-label">Dress Type</div>
+                  <div class="tryit-label" data-i18n="lblDressType">Dress Type</div>
                   <select id="landingDressType" class="tryit-select" onchange="handleLandingDressTypeChange()">
-                    <option value="">Choose dress type</option>
-                    <optgroup label="👗 Ladies Wear">
-                      <option value="Lehenga">Lehenga</option>
-                      <option value="Anarkali">Anarkali</option>
-                      <option value="Saree">Saree</option>
-                      <option value="Ladies Suit">Ladies Suit</option>
-                      <option value="Blouse">Blouse</option>
-                      <option value="Kurti">Kurti</option>
-                      <option value="Gown">Gown</option>
+                    <option value="" data-i18n="optChooseDressType">Choose dress type</option>
+                    <optgroup label="👗 Ladies Wear" data-i18n-label="grpLadiesWear">
+                      <option value="Lehenga" data-i18n="optLehenga">Lehenga</option>
+                      <option value="Anarkali" data-i18n="optAnarkali">Anarkali</option>
+                      <option value="Saree" data-i18n="optSaree">Saree</option>
+                      <option value="Ladies Suit" data-i18n="optLadiesSuit">Ladies Suit</option>
+                      <option value="Blouse" data-i18n="optBlouse">Blouse</option>
+                      <option value="Kurti" data-i18n="optKurti">Kurti</option>
+                      <option value="Gown" data-i18n="optGown">Gown</option>
                     </optgroup>
-                    <optgroup label="🧒👔 Men's &amp; Kids Wear — Design Only, Stitching Coming Soon">
-                      <option value="Kids Lehenga/Frock" data-design-only="true">Kids Lehenga / Frock</option>
-                      <option value="Kids Kurta/Sherwani" data-design-only="true">Kids Kurta / Sherwani</option>
-                      <option value="Men's Sherwani" data-design-only="true">Men's Sherwani</option>
-                      <option value="Men's Kurta" data-design-only="true">Men's Kurta</option>
-                      <option value="Other" data-design-only="true">Other (Men's/Kids)</option>
+                    <optgroup label="🧒👔 Men's &amp; Kids Wear — Design Only, Stitching Coming Soon" data-i18n-label="grpMenKids">
+                      <option value="Kids Lehenga/Frock" data-design-only="true" data-i18n="optKidsLehenga">Kids Lehenga / Frock</option>
+                      <option value="Kids Kurta/Sherwani" data-design-only="true" data-i18n="optKidsKurta">Kids Kurta / Sherwani</option>
+                      <option value="Men's Sherwani" data-design-only="true" data-i18n="optMensSherwani">Men's Sherwani</option>
+                      <option value="Men's Kurta" data-design-only="true" data-i18n="optMensKurta">Men's Kurta</option>
+                      <option value="Other" data-design-only="true" data-i18n="optOtherMenKids">Other (Men's/Kids)</option>
                     </optgroup>
                   </select>
-                  <input type="text" id="landingDressTypeOther" placeholder="E.g., Boys Ethnic Set, Men's Nehru Jacket..." style="display:none; margin-top:8px;">
-                  <div id="landingDesignOnlyNotice" style="display:none; margin-top:8px; font-size:12px; color:#8a5a00; background:#fff8ec; border:1px solid var(--marigold); border-radius:6px; padding:8px 10px;">
+                  <input type="text" id="landingDressTypeOther" data-i18n-placeholder="phOtherDressType" placeholder="E.g., Boys Ethnic Set, Men's Nehru Jacket..." style="display:none; margin-top:8px;">
+                  <div id="landingDesignOnlyNotice" data-i18n="noticeDesignOnly" style="display:none; margin-top:8px; font-size:12px; color:#8a5a00; background:#fff8ec; border:1px solid var(--marigold); border-radius:6px; padding:8px 10px;">
                     👀 We're currently stitching Ladies wear only — designs for this category are for exploring ideas, not orders yet.
                   </div>
                 </div>
 
                 <div>
-                  <div class="tryit-label">Occasion</div>
+                  <div class="tryit-label" data-i18n="lblOccasion">Occasion</div>
                   <select id="landingOccasion" class="tryit-select" onchange="updateLandingDraftButtonState()">
-                    <option value="">Choose occasion</option>
-                    <optgroup label="Wedding Functions">
-                      <option value="wedding-general">Not sure yet — general Wedding Function</option>
-                      <option value="wedding">Wedding / Bridal</option>
-                      <option value="engagement">Engagement</option>
-                      <option value="haldi">Haldi</option>
-                      <option value="sangeet">Sangeet / Mehendi</option>
-                      <option value="reception">Reception</option>
-                      <option value="cocktail">Cocktail / After-party</option>
+                    <option value="" data-i18n="optChooseOccasion">Choose occasion</option>
+                    <optgroup label="Wedding Functions" data-i18n-label="grpWedding">
+                      <option value="wedding-general" data-i18n="occWeddingGeneral">Not sure yet — general Wedding Function</option>
+                      <option value="wedding" data-i18n="occWedding">Wedding / Bridal</option>
+                      <option value="engagement" data-i18n="occEngagement">Engagement</option>
+                      <option value="haldi" data-i18n="occHaldi">Haldi</option>
+                      <option value="sangeet" data-i18n="occSangeet">Sangeet / Mehendi</option>
+                      <option value="reception" data-i18n="occReception">Reception</option>
+                      <option value="cocktail" data-i18n="occCocktail">Cocktail / After-party</option>
                     </optgroup>
-                    <optgroup label="Festivals & Pooja">
-                      <option value="festival-general">Not sure yet — general Festival / Pooja</option>
-                      <option value="diwali">Diwali / Festive Pooja</option>
-                      <option value="navratri">Navratri / Garba</option>
-                      <option value="karva-chauth">Karva Chauth</option>
-                      <option value="eid">Eid</option>
-                      <option value="durga-puja">Durga Puja</option>
-                      <option value="festival">Festival / Celebration</option>
+                    <optgroup label="Festivals & Pooja" data-i18n-label="grpFestivals">
+                      <option value="festival-general" data-i18n="occFestivalGeneral">Not sure yet — general Festival / Pooja</option>
+                      <option value="diwali" data-i18n="occDiwali">Diwali / Festive Pooja</option>
+                      <option value="navratri" data-i18n="occNavratri">Navratri / Garba</option>
+                      <option value="karva-chauth" data-i18n="occKarvaChauth">Karva Chauth</option>
+                      <option value="eid" data-i18n="occEid">Eid</option>
+                      <option value="durga-puja" data-i18n="occDurgaPuja">Durga Puja</option>
+                      <option value="festival" data-i18n="occFestival">Festival / Celebration</option>
                     </optgroup>
-                    <optgroup label="Everyday & Work">
-                      <option value="everyday-general">Not sure yet — general Everyday / Work</option>
-                      <option value="casual">Casual / Daily Wear</option>
-                      <option value="office">Office Wear</option>
-                      <option value="date-night">Date Night</option>
+                    <optgroup label="Everyday & Work" data-i18n-label="grpEveryday">
+                      <option value="everyday-general" data-i18n="occEverydayGeneral">Not sure yet — general Everyday / Work</option>
+                      <option value="casual" data-i18n="occCasual">Casual / Daily Wear</option>
+                      <option value="office" data-i18n="occOffice">Office Wear</option>
+                      <option value="date-night" data-i18n="occDateNight">Date Night</option>
                     </optgroup>
-                    <optgroup label="Parties & Life Events">
-                      <option value="celebration-general">Not sure yet — general Party / Celebration</option>
-                      <option value="party">Party / Formal Event</option>
-                      <option value="vacation">Vacation / Resort Wear</option>
-                      <option value="baby-shower">Baby Shower / Godh Bharai</option>
-                      <option value="birthday">Birthday</option>
-                      <option value="farewell">Farewell / Graduation</option>
+                    <optgroup label="Parties & Life Events" data-i18n-label="grpParties">
+                      <option value="celebration-general" data-i18n="occCelebrationGeneral">Not sure yet — general Party / Celebration</option>
+                      <option value="party" data-i18n="occParty">Party / Formal Event</option>
+                      <option value="vacation" data-i18n="occVacation">Vacation / Resort Wear</option>
+                      <option value="baby-shower" data-i18n="occBabyShower">Baby Shower / Godh Bharai</option>
+                      <option value="birthday" data-i18n="occBirthday">Birthday</option>
+                      <option value="farewell" data-i18n="occFarewell">Farewell / Graduation</option>
                     </optgroup>
                   </select>
                 </div>
               </div>
 
               <div style="margin-bottom:16px;">
-                <div class="tryit-label">Style <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="tryit-label" data-i18n="lblStyle">Style <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
                 <div class="mood-tag-row" data-group="style">
-                  <button type="button" class="mood-tag" data-value="Elegant">Elegant</button>
-                  <button type="button" class="mood-tag" data-value="Bold & Statement">Bold &amp; Statement</button>
-                  <button type="button" class="mood-tag" data-value="Minimal & Clean">Minimal &amp; Clean</button>
-                  <button type="button" class="mood-tag" data-value="Traditional & Regal">Traditional &amp; Regal</button>
-                  <button type="button" class="mood-tag" data-value="Playful & Fun">Playful &amp; Fun</button>
-                  <button type="button" class="mood-tag" data-value="Romantic & Soft">Romantic &amp; Soft</button>
+                  <button type="button" class="mood-tag" data-value="Elegant" data-i18n="tagElegant">Elegant</button>
+                  <button type="button" class="mood-tag" data-value="Bold & Statement" data-i18n="tagBold">Bold &amp; Statement</button>
+                  <button type="button" class="mood-tag" data-value="Minimal & Clean" data-i18n="tagMinimalClean">Minimal &amp; Clean</button>
+                  <button type="button" class="mood-tag" data-value="Traditional & Regal" data-i18n="tagTraditional">Traditional &amp; Regal</button>
+                  <button type="button" class="mood-tag" data-value="Playful & Fun" data-i18n="tagPlayful">Playful &amp; Fun</button>
+                  <button type="button" class="mood-tag" data-value="Romantic & Soft" data-i18n="tagRomantic">Romantic &amp; Soft</button>
                 </div>
               </div>
               <div style="margin-bottom:16px;">
-                <div class="tryit-label">Color Mood <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="tryit-label" data-i18n="lblColorMood">Color Mood <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
                 <div class="mood-tag-row" data-group="color">
-                  <button type="button" class="mood-tag" data-value="Pastel & Soft">Pastel &amp; Soft</button>
-                  <button type="button" class="mood-tag" data-value="Rich & Jewel-toned">Rich &amp; Jewel-toned</button>
-                  <button type="button" class="mood-tag" data-value="Neutral & Earthy">Neutral &amp; Earthy</button>
-                  <button type="button" class="mood-tag" data-value="Bright & Vibrant">Bright &amp; Vibrant</button>
-                  <button type="button" class="mood-tag" data-value="Classic Black, White or Gold">Classic Black/White/Gold</button>
+                  <button type="button" class="mood-tag" data-value="Pastel & Soft" data-i18n="tagPastel">Pastel &amp; Soft</button>
+                  <button type="button" class="mood-tag" data-value="Rich & Jewel-toned" data-i18n="tagJewelToned">Rich &amp; Jewel-toned</button>
+                  <button type="button" class="mood-tag" data-value="Neutral & Earthy" data-i18n="tagEarthy">Neutral &amp; Earthy</button>
+                  <button type="button" class="mood-tag" data-value="Bright & Vibrant" data-i18n="tagVibrant">Bright &amp; Vibrant</button>
+                  <button type="button" class="mood-tag" data-value="Classic Black, White or Gold" data-i18n="tagClassic">Classic Black/White/Gold</button>
                 </div>
               </div>
               <div>
-                <div class="tryit-label">Embellishment <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="tryit-label" data-i18n="lblEmbellishment">Embellishment <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
                 <div class="mood-tag-row" data-group="embellishment">
-                  <button type="button" class="mood-tag" data-value="Minimal, clean lines">Minimal / Clean Lines</button>
-                  <button type="button" class="mood-tag" data-value="Moderate detailing">Moderate Detailing</button>
-                  <button type="button" class="mood-tag" data-value="Heavy embroidery and embellishment">Heavy Embroidery</button>
+                  <button type="button" class="mood-tag" data-value="Minimal, clean lines" data-i18n="tagMinimalLines">Minimal / Clean Lines</button>
+                  <button type="button" class="mood-tag" data-value="Moderate detailing" data-i18n="tagModerateDetail">Moderate Detailing</button>
+                  <button type="button" class="mood-tag" data-value="Heavy embroidery and embellishment" data-i18n="tagHeavyEmbroidery">Heavy Embroidery</button>
                 </div>
               </div>
               <div>
-                <div class="tryit-label">Neckline <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="tryit-label" data-i18n="lblNeckline">Neckline <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
                 <div class="mood-tag-row" data-group="neckline">
-                  <button type="button" class="mood-tag" data-value="Decide by AI (Neckline)">✨ Decide by AI</button>
-                  <button type="button" class="mood-tag" data-value="Round Neck">Round Neck</button>
-                  <button type="button" class="mood-tag" data-value="V-Neck">V-Neck</button>
-                  <button type="button" class="mood-tag" data-value="Boat Neck">Boat Neck</button>
-                  <button type="button" class="mood-tag" data-value="Sweetheart">Sweetheart</button>
-                  <button type="button" class="mood-tag" data-value="High Neck / Collar">High Neck / Collar</button>
-                  <button type="button" class="mood-tag" data-value="Off-Shoulder">Off-Shoulder</button>
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Neckline)" data-i18n="tagDecideAI">✨ Decide by AI</button>
+                  <button type="button" class="mood-tag" data-value="Round Neck" data-i18n="tagRoundNeck">Round Neck</button>
+                  <button type="button" class="mood-tag" data-value="V-Neck" data-i18n="tagVNeck">V-Neck</button>
+                  <button type="button" class="mood-tag" data-value="Boat Neck" data-i18n="tagBoatNeck">Boat Neck</button>
+                  <button type="button" class="mood-tag" data-value="Sweetheart" data-i18n="tagSweetheart">Sweetheart</button>
+                  <button type="button" class="mood-tag" data-value="High Neck / Collar" data-i18n="tagHighNeck">High Neck / Collar</button>
+                  <button type="button" class="mood-tag" data-value="Off-Shoulder" data-i18n="tagOffShoulder">Off-Shoulder</button>
                 </div>
               </div>
               <div>
-                <div class="tryit-label">Fabric Type <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
+                <div class="tryit-label" data-i18n="lblFabricType">Fabric Type <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
                 <div class="mood-tag-row" data-group="fabricType">
-                  <button type="button" class="mood-tag" data-value="Decide by AI (Fabric)">✨ Decide by AI</button>
-                  <button type="button" class="mood-tag" data-value="Silk">Silk</button>
-                  <button type="button" class="mood-tag" data-value="Cotton">Cotton</button>
-                  <button type="button" class="mood-tag" data-value="Georgette">Georgette</button>
-                  <button type="button" class="mood-tag" data-value="Chiffon">Chiffon</button>
-                  <button type="button" class="mood-tag" data-value="Velvet">Velvet</button>
-                  <button type="button" class="mood-tag" data-value="Crepe">Crepe</button>
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Fabric)" data-i18n="tagDecideAI">✨ Decide by AI</button>
+                  <button type="button" class="mood-tag" data-value="Silk" data-i18n="tagSilk">Silk</button>
+                  <button type="button" class="mood-tag" data-value="Cotton" data-i18n="tagCotton">Cotton</button>
+                  <button type="button" class="mood-tag" data-value="Georgette" data-i18n="tagGeorgette">Georgette</button>
+                  <button type="button" class="mood-tag" data-value="Chiffon" data-i18n="tagChiffon">Chiffon</button>
+                  <button type="button" class="mood-tag" data-value="Velvet" data-i18n="tagVelvet">Velvet</button>
+                  <button type="button" class="mood-tag" data-value="Crepe" data-i18n="tagCrepe">Crepe</button>
                 </div>
               </div>
               <div>
-                <div class="tryit-label">Age Bracket <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional — helps pick colours & prints that suit you)</span></div>
+                <div class="tryit-label" data-i18n="lblAgeBracket">Age Bracket <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="ageBracketHint">(optional — helps pick colours &amp; prints that suit you)</span></div>
                 <div class="mood-tag-row" data-group="ageBracket">
-                  <button type="button" class="mood-tag" data-value="Decide by AI (Age)">🤐 Prefer not to disclose</button>
+                  <button type="button" class="mood-tag" data-value="Decide by AI (Age)" data-i18n="tagPreferNotDisclose">🤐 Prefer not to disclose</button>
                   <button type="button" class="mood-tag" data-value="18-25">18–25</button>
                   <button type="button" class="mood-tag" data-value="26-35">26–35</button>
                   <button type="button" class="mood-tag" data-value="36-45">36–45</button>
@@ -2936,9 +2954,6 @@
               </div>
             </div>
             <div>
-              <div class="tryit-label" style="margin-bottom:6px;">Describe Your Dream Outfit</div>
-              <textarea id="landingDesignDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
-
               <!-- Anonymous-compatible trend picker — appends a short
                    phrase to the description text only, since actual photo
                    upload (uploadedPhotos) only exists in the signed-in
@@ -2948,29 +2963,35 @@
                    descriptive text — see useTrendAsInspiration() for that
                    fuller version. Populated by loadPublicTrends() reusing
                    the same /api/trends fetch as the full showcase below,
-                   not a second network call. -->
-              <div id="landingTrendPicker" style="margin-top:12px; display:none;">
-                <div class="tryit-label" style="font-size:12px;">✨ Inspired by a trend? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional — taps add a line to your description above)</span></div>
+                   not a second network call. Sits BEFORE the description
+                   box now (was after) — it's an input that feeds the
+                   draft, same as the tag selections above, so it belongs
+                   with the other pre-drafting choices, not after the
+                   output it helps produce. -->
+              <div id="landingTrendPicker" style="display:none;">
+                <div class="tryit-label" style="font-size:12px;" data-i18n="lblInspiredByTrend">✨ Inspired by a trend? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="trendPickerHint">(optional — taps add a line to your description above)</span></div>
                 <div id="landingTrendPickerRow" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;"></div>
-                <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">💡 Sign in and you can attach the actual trending photo itself as a visual reference for the AI — not just a description.</p>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:6px;" data-i18n="trendSignInNudge">💡 Sign in and you can attach the actual trending photo itself as a visual reference for the AI — not just a description.</p>
               </div>
 
               <div style="margin-top:14px;">
-                <div class="tryit-label">Anything else to mention? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);">(optional)</span></div>
-                <textarea id="landingExtraNotes" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px; width:100%;"></textarea>
+                <div class="tryit-label" data-i18n="lblAnythingElse">Anything else to mention? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
+                <textarea id="landingExtraNotes" data-i18n-placeholder="phAnythingElse" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px; width:100%;"></textarea>
               </div>
 
               <!-- Real, honest example — never a live AI call for an
                    anonymous visitor. Pulled from an actual past customer's
                    own submitted description via /api/designs/featured, so
                    it's a genuine sample, not invented copy. Kept alongside
-                   the live Draft It button above (not replaced by it) —
+                   the live Draft It button below (not replaced by it) —
                    one gives a personalized draft from their own picks, the
                    other gives real social proof from an actual customer.
                    Reuses the site's existing mock-window treatment
                    (.lens-window) so it echoes the concept-preview panel
                    elsewhere on this page instead of introducing a new
-                   decorative device. -->
+                   decorative device. Deliberately NOT translated — it's a
+                   direct quote from a real customer, translating it would
+                   misrepresent what they actually wrote. -->
               <div id="landingExampleDraft" class="lens-window" style="display:none; margin-top:14px;">
                 <div class="lens-window-bar">
                   <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
@@ -2981,17 +3002,24 @@
                 </div>
               </div>
 
-              <!-- Moved here from beside the (empty, at that point) textarea
-                   at the top — this button DRAFTS from the tag selections
-                   made in the left column, so it only makes sense once
-                   those selections actually exist, right before the
-                   customer moves on. Still disabled until Dress Type +
-                   Occasion are picked, same as before, just positioned
-                   where that constraint reads as natural instead of
-                   surprising. -->
-              <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled title="Please select Dress Type and Occasion above first" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:10px 12px; font-weight:700; font-size:13px; cursor:pointer; margin-top:16px;">✨ Draft It For Me</button>
+              <!-- This button DRAFTS from the tag selections and inputs
+                   above, so it only makes sense once those actually exist
+                   — right before the customer moves on. Still disabled
+                   until Dress Type + Occasion are picked. -->
+              <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled data-i18n="btnDraftItForMe" data-i18n-title="titleSelectFirst" title="Please select Dress Type and Occasion above first" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:10px 12px; font-weight:700; font-size:13px; cursor:pointer; margin-top:16px;">✨ Draft It For Me</button>
 
-              <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" style="width:100%; margin-top:10px;">Continue — sign in to generate →</button>
+              <!-- The output box — deliberately right after the button
+                   that fills it, not above it. It used to sit at the top
+                   of this column, meaning clicking Draft It For Me (now
+                   further down, after the selections it drafts from)
+                   filled a box the customer had already scrolled past,
+                   forcing a scroll back up to see what just happened.
+                   Still works fine for typing manually too — the button
+                   above it is optional, not a gate. -->
+              <div class="tryit-label" data-i18n="lblDescribeOutfit" style="margin-top:16px; margin-bottom:6px;">Describe Your Dream Outfit</div>
+              <textarea id="landingDesignDesc" data-i18n-placeholder="phDescribeOutfit" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
+
+              <button type="button" class="btn-submit" onclick="landingContinueToSignIn()" data-i18n="btnContinueSignIn" style="width:100%; margin-top:10px;">Continue — sign in to generate →</button>
             </div>
           </div>
         </div>
@@ -3564,6 +3592,48 @@
               <div style="font-weight:700; color:var(--marigold); font-size:14px;">AI Design Studio</div>
               <div id="dashboardPromoMessage" style="font-size:12px; color:rgba(255,255,255,0.9); margin-top:2px;">Free to explore right now — and even once AI Design Studio becomes a paid feature, the design fee is refunded the moment you get that design stitched. You only ever really pay for the garment.</div>
             </div>
+          </div>
+
+          <!-- Compact post-sign-in summary — shown ONLY when arriving here
+               with a carried-over draft from the landing page's Try It
+               card (see showDesignSummary(), called from
+               restoreLandingDesignInputs() below). Deliberately a
+               read-only recap + a couple of nudges + Generate, NOT the
+               full form again — the customer already made every one of
+               these choices once on landing; re-showing the whole form
+               would feel like being asked to do the same work twice.
+               "Start over" doesn't open an edit view either — it sends
+               them back to the landing card itself (already built,
+               already familiar) with a clean slate, rather than building
+               a second, parallel editing interface just for this moment. -->
+          <div id="designSummaryCard" class="card" style="display:none; max-width:640px; margin:0 auto 20px; padding:24px;">
+            <h3 style="margin-bottom:4px;">✨ Here's what you're picturing</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Picked up from before you signed in — nothing to redo.</p>
+            <div id="designSummaryContent" style="font-size:13.5px; line-height:1.7; margin-bottom:18px;"></div>
+            <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:8px; padding:12px 14px; margin-bottom:18px; font-size:12px; color:var(--text-muted); line-height:1.6;">
+              💡 We'll generate 3 different design concepts from this — you'll pick a favourite and can ask for tweaks afterward, nothing here is final yet.<br>
+              💡 Want even more personalized results? You can attach reference photos (fabric, inspiration, a selfie) right after this.
+            </div>
+            <button type="button" class="btn-submit" onclick="confirmAndGenerateFromSummary()" style="width:100%;">✨ Generate My 3 Designs</button>
+            <p style="text-align:center; margin-top:10px;"><a href="#" onclick="startOverFromSummary(event)" style="font-size:12.5px; color:var(--text-muted); text-decoration:underline;">✏️ Not quite right? Start over</a></p>
+          </div>
+
+          <!-- Shown instead of the raw form for anyone who reaches this tab
+               with NO carried-over draft — arrived here directly rather
+               than through the landing page's Try It card. The form
+               itself is never the direct entry point anymore, even for
+               this case — describing an outfit always starts on landing,
+               whether or not the customer has signed in yet, so there's
+               one consistent starting place rather than two different
+               ones depending on how someone arrived. See
+               checkDesignTabEntryState(), called from switchTab()
+               whenever tabName is 'design', not just right after sign-in
+               — this needs to hold every time the tab is opened, not
+               only the first time. -->
+          <div id="designNoGoToLanding" class="card" style="display:none; max-width:520px; margin:0 auto 20px; padding:24px; text-align:center;">
+            <h3 style="margin-bottom:8px;">✨ Let's start with what you're picturing</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">Describing your outfit happens on our AI Design Studio preview — no need to fill anything in here directly.</p>
+            <a href="#" onclick="goToLandingPage(event)" class="btn-submit" style="display:inline-block; text-decoration:none;">Go to AI Design Studio →</a>
           </div>
 
           <div id="onBehalfOfBlock" class="card" style="display:none; padding:14px; margin-bottom:16px; border:1px solid var(--vivid);">
@@ -6679,6 +6749,155 @@
       'minimalist-embroidery': 'with minimalist, understated embroidery rather than heavy work',
     };
 
+    // ── Try It card — Hindi/English toggle ──────────────────────────────
+    // Scoped to just this card's own display text (labels, buttons, tag
+    // names, dropdown options) — NOT the underlying data-value strings the
+    // backend prompts key off, which stay in English on purpose so no
+    // server-side logic needs to change for this. The customer's own
+    // free-text description works in Hindi (or any language) regardless
+    // of this toggle, independent of it — Claude reads Hindi natively.
+    const TRY_IT_I18N = {
+      en: {
+        tryItTitle: '✨ Try it — no sign-in needed yet',
+        resetBtn: '↺ Reset',
+        tryItIntro: 'Pick what you\'re picturing and we\'ll help you put it into words — right here, no sign-in needed. Sign in when you\'re ready to see 3 actual AI-generated <em>images</em> of it — that part needs an account, everything below comes with you.',
+        lblDressType: 'Dress Type',
+        optChooseDressType: 'Choose dress type',
+        grpLadiesWear: '👗 Ladies Wear',
+        optLehenga: 'Lehenga', optAnarkali: 'Anarkali', optSaree: 'Saree', optLadiesSuit: 'Ladies Suit', optBlouse: 'Blouse', optKurti: 'Kurti', optGown: 'Gown',
+        grpMenKids: '🧒👔 Men\'s & Kids Wear — Design Only, Stitching Coming Soon',
+        optKidsLehenga: 'Kids Lehenga / Frock', optKidsKurta: 'Kids Kurta / Sherwani', optMensSherwani: 'Men\'s Sherwani', optMensKurta: 'Men\'s Kurta', optOtherMenKids: 'Other (Men\'s/Kids)',
+        phOtherDressType: 'E.g., Boys Ethnic Set, Men\'s Nehru Jacket...',
+        noticeDesignOnly: '👀 We\'re currently stitching Ladies wear only — designs for this category are for exploring ideas, not orders yet.',
+        lblOccasion: 'Occasion',
+        optChooseOccasion: 'Choose occasion',
+        grpWedding: 'Wedding Functions',
+        occWeddingGeneral: 'Not sure yet — general Wedding Function', occWedding: 'Wedding / Bridal', occEngagement: 'Engagement', occHaldi: 'Haldi', occSangeet: 'Sangeet / Mehendi', occReception: 'Reception', occCocktail: 'Cocktail / After-party',
+        grpFestivals: 'Festivals & Pooja',
+        occFestivalGeneral: 'Not sure yet — general Festival / Pooja', occDiwali: 'Diwali / Festive Pooja', occNavratri: 'Navratri / Garba', occKarvaChauth: 'Karva Chauth', occEid: 'Eid', occDurgaPuja: 'Durga Puja', occFestival: 'Festival / Celebration',
+        grpEveryday: 'Everyday & Work',
+        occEverydayGeneral: 'Not sure yet — general Everyday / Work', occCasual: 'Casual / Daily Wear', occOffice: 'Office Wear', occDateNight: 'Date Night',
+        grpParties: 'Parties & Life Events',
+        occCelebrationGeneral: 'Not sure yet — general Party / Celebration', occParty: 'Party / Formal Event', occVacation: 'Vacation / Resort Wear', occBabyShower: 'Baby Shower / Godh Bharai', occBirthday: 'Birthday', occFarewell: 'Farewell / Graduation',
+        lblStyle: 'Style', optionalTag: '(optional)',
+        tagElegant: 'Elegant', tagBold: 'Bold & Statement', tagMinimalClean: 'Minimal & Clean', tagTraditional: 'Traditional & Regal', tagPlayful: 'Playful & Fun', tagRomantic: 'Romantic & Soft',
+        lblColorMood: 'Color Mood',
+        tagPastel: 'Pastel & Soft', tagJewelToned: 'Rich & Jewel-toned', tagEarthy: 'Neutral & Earthy', tagVibrant: 'Bright & Vibrant', tagClassic: 'Classic Black/White/Gold',
+        lblEmbellishment: 'Embellishment',
+        tagMinimalLines: 'Minimal / Clean Lines', tagModerateDetail: 'Moderate Detailing', tagHeavyEmbroidery: 'Heavy Embroidery',
+        lblNeckline: 'Neckline',
+        tagDecideAI: '✨ Decide by AI', tagRoundNeck: 'Round Neck', tagVNeck: 'V-Neck', tagBoatNeck: 'Boat Neck', tagSweetheart: 'Sweetheart', tagHighNeck: 'High Neck / Collar', tagOffShoulder: 'Off-Shoulder',
+        lblFabricType: 'Fabric Type',
+        tagSilk: 'Silk', tagCotton: 'Cotton', tagGeorgette: 'Georgette', tagChiffon: 'Chiffon', tagVelvet: 'Velvet', tagCrepe: 'Crepe',
+        lblAgeBracket: 'Age Bracket', ageBracketHint: '(optional — helps pick colours & prints that suit you)',
+        tagPreferNotDisclose: '🤐 Prefer not to disclose',
+        lblDescribeOutfit: 'Describe Your Dream Outfit',
+        phDescribeOutfit: 'E.g., Pink embroidered anarkali with gold work for wedding ceremony...',
+        lblInspiredByTrend: '✨ Inspired by a trend?', trendPickerHint: '(optional — taps add a line to your description above)',
+        trendSignInNudge: '💡 Sign in and you can attach the actual trending photo itself as a visual reference for the AI — not just a description.',
+        lblAnythingElse: 'Anything else to mention?',
+        phAnythingElse: 'E.g., I\'m petite, prefer not too tight-fitting, need it within 3 weeks...',
+        btnDraftItForMe: '✨ Draft It For Me', titleSelectFirst: 'Please select Dress Type and Occasion above first',
+        btnContinueSignIn: 'Continue — sign in to generate →',
+      },
+      hi: {
+        tryItTitle: '✨ आज़माएं — अभी साइन-इन की ज़रूरत नहीं',
+        resetBtn: '↺ रीसेट',
+        tryItIntro: 'आप जो सोच रहे हैं उसे चुनें, हम उसे शब्दों में ढालने में मदद करेंगे — यहीं, बिना साइन-इन किए। जब आप इसकी 3 असली AI-जनरेटेड <em>तस्वीरें</em> देखना चाहें, तब साइन इन करें — उसके लिए अकाउंट ज़रूरी है, नीचे भरी हर चीज़ आपके साथ आएगी।',
+        lblDressType: 'पोशाक का प्रकार',
+        optChooseDressType: 'पोशाक का प्रकार चुनें',
+        grpLadiesWear: '👗 महिलाओं के परिधान',
+        optLehenga: 'लहंगा', optAnarkali: 'अनारकली', optSaree: 'साड़ी', optLadiesSuit: 'लेडीज़ सूट', optBlouse: 'ब्लाउज़', optKurti: 'कुर्ती', optGown: 'गाउन',
+        grpMenKids: '🧒👔 पुरुष एवं बच्चों के परिधान — केवल डिज़ाइन, सिलाई जल्द आ रही है',
+        optKidsLehenga: 'बच्चों का लहंगा / फ्रॉक', optKidsKurta: 'बच्चों का कुर्ता / शेरवानी', optMensSherwani: 'पुरुषों की शेरवानी', optMensKurta: 'पुरुषों का कुर्ता', optOtherMenKids: 'अन्य (पुरुष/बच्चे)',
+        phOtherDressType: 'जैसे, बॉयज़ एथनिक सेट, पुरुषों की नेहरू जैकेट...',
+        noticeDesignOnly: '👀 फ़िलहाल हम केवल महिलाओं के परिधान सिल रहे हैं — इस श्रेणी के डिज़ाइन अभी सिर्फ़ विचार जानने के लिए हैं, ऑर्डर के लिए नहीं।',
+        lblOccasion: 'अवसर',
+        optChooseOccasion: 'अवसर चुनें',
+        grpWedding: 'शादी के कार्यक्रम',
+        occWeddingGeneral: 'अभी तय नहीं — सामान्य शादी कार्यक्रम', occWedding: 'शादी / दुल्हन', occEngagement: 'सगाई', occHaldi: 'हल्दी', occSangeet: 'संगीत / मेहंदी', occReception: 'रिसेप्शन', occCocktail: 'कॉकटेल / आफ्टर-पार्टी',
+        grpFestivals: 'त्योहार एवं पूजा',
+        occFestivalGeneral: 'अभी तय नहीं — सामान्य त्योहार / पूजा', occDiwali: 'दिवाली / त्योहारी पूजा', occNavratri: 'नवरात्रि / गरबा', occKarvaChauth: 'करवा चौथ', occEid: 'ईद', occDurgaPuja: 'दुर्गा पूजा', occFestival: 'त्योहार / उत्सव',
+        grpEveryday: 'रोज़मर्रा एवं ऑफ़िस',
+        occEverydayGeneral: 'अभी तय नहीं — सामान्य रोज़मर्रा / ऑफ़िस', occCasual: 'कैज़ुअल / रोज़ाना पहनावा', occOffice: 'ऑफ़िस वियर', occDateNight: 'डेट नाइट',
+        grpParties: 'पार्टी एवं जीवन के खास पल',
+        occCelebrationGeneral: 'अभी तय नहीं — सामान्य पार्टी / उत्सव', occParty: 'पार्टी / औपचारिक कार्यक्रम', occVacation: 'छुट्टी / रिसॉर्ट वियर', occBabyShower: 'बेबी शावर / गोद भराई', occBirthday: 'जन्मदिन', occFarewell: 'विदाई / स्नातक समारोह',
+        lblStyle: 'स्टाइल', optionalTag: '(वैकल्पिक)',
+        tagElegant: 'सुरुचिपूर्ण', tagBold: 'बोल्ड एंड स्टेटमेंट', tagMinimalClean: 'मिनिमल एंड क्लीन', tagTraditional: 'पारंपरिक एंड शाही', tagPlayful: 'चंचल एंड मज़ेदार', tagRomantic: 'रोमांटिक एंड सॉफ्ट',
+        lblColorMood: 'रंग मूड',
+        tagPastel: 'पेस्टल एंड सॉफ्ट', tagJewelToned: 'गहरे एंड जूल-टोन', tagEarthy: 'न्यूट्रल एंड अर्थी', tagVibrant: 'चमकीला एंड जीवंत', tagClassic: 'क्लासिक ब्लैक/व्हाइट/गोल्ड',
+        lblEmbellishment: 'एम्बेलिशमेंट',
+        tagMinimalLines: 'मिनिमल / क्लीन लाइन्स', tagModerateDetail: 'मध्यम डिटेलिंग', tagHeavyEmbroidery: 'भारी कढ़ाई',
+        lblNeckline: 'नेकलाइन',
+        tagDecideAI: '✨ AI तय करे', tagRoundNeck: 'राउंड नेक', tagVNeck: 'वी-नेक', tagBoatNeck: 'बोट नेक', tagSweetheart: 'स्वीटहार्ट', tagHighNeck: 'हाई नेक / कॉलर', tagOffShoulder: 'ऑफ-शोल्डर',
+        lblFabricType: 'फैब्रिक प्रकार',
+        tagSilk: 'सिल्क', tagCotton: 'कॉटन', tagGeorgette: 'जॉर्जेट', tagChiffon: 'शिफॉन', tagVelvet: 'वेलवेट', tagCrepe: 'क्रेप',
+        lblAgeBracket: 'आयु वर्ग', ageBracketHint: '(वैकल्पिक — आप पर सूट करने वाले रंग और प्रिंट चुनने में मदद करता है)',
+        tagPreferNotDisclose: '🤐 बताना नहीं चाहते',
+        lblDescribeOutfit: 'अपनी ड्रीम आउटफिट का वर्णन करें',
+        phDescribeOutfit: 'जैसे, शादी समारोह के लिए गोल्ड वर्क वाला गुलाबी कढ़ाईदार अनारकली...',
+        lblInspiredByTrend: '✨ किसी ट्रेंड से प्रेरित?', trendPickerHint: '(वैकल्पिक — टैप करने से ऊपर आपके विवरण में एक पंक्ति जुड़ जाती है)',
+        trendSignInNudge: '💡 साइन इन करें और आप असली ट्रेंडिंग फोटो को ही AI के लिए विज़ुअल रेफरेंस के रूप में जोड़ सकते हैं — सिर्फ़ विवरण नहीं।',
+        lblAnythingElse: 'और कुछ बताना चाहेंगे?',
+        phAnythingElse: 'जैसे, मैं पतली हूं, बहुत टाइट फिटिंग पसंद नहीं, 3 हफ्तों में चाहिए...',
+        btnDraftItForMe: '✨ मेरे लिए ड्राफ्ट करें', titleSelectFirst: 'कृपया पहले ऊपर पोशाक का प्रकार और अवसर चुनें',
+        btnContinueSignIn: 'जारी रखें — जनरेट करने के लिए साइन इन करें →',
+      },
+    };
+
+    function setTryItLanguage(lang) {
+      const dict = TRY_IT_I18N[lang];
+      if (!dict) return;
+      localStorage.setItem('gfTryItLang', lang);
+
+      const card = document.getElementById('landingDesignPreview');
+      if (!card) return;
+
+      card.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.dataset.i18n;
+        const text = dict[key];
+        if (text === undefined) return;
+        // Elements with a NESTED [data-i18n] child (the "Label (optional)"
+        // pattern) only get their own leading text node updated — setting
+        // .textContent on the parent would wipe out the child span
+        // entirely, since textContent replaces ALL content, not just the
+        // parent's own text.
+        if (el.querySelector('[data-i18n]')) {
+          if (el.childNodes[0] && el.childNodes[0].nodeType === Node.TEXT_NODE) {
+            el.childNodes[0].textContent = text + ' ';
+          }
+        } else if (el.tagName === 'OPTGROUP') {
+          el.label = text;
+        } else if (text.includes('<em>')) {
+          el.innerHTML = text; // only tryItIntro uses this, for the <em>images</em> emphasis
+        } else {
+          el.textContent = text;
+        }
+      });
+      card.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+        const text = dict[el.dataset.i18nPlaceholder];
+        if (text !== undefined) el.placeholder = text;
+      });
+      card.querySelectorAll('[data-i18n-title]').forEach((el) => {
+        const text = dict[el.dataset.i18nTitle];
+        if (text !== undefined) el.title = text;
+      });
+      card.querySelectorAll('[data-i18n-label]').forEach((el) => {
+        const text = dict[el.dataset.i18nLabel];
+        if (text !== undefined) el.label = text;
+      });
+
+      ['en', 'hi'].forEach((l) => {
+        const btn = document.getElementById(`tryItLangBtn-${l}`);
+        if (!btn) return;
+        const active = l === lang;
+        btn.style.background = active ? 'var(--vivid)' : 'white';
+        btn.style.color = active ? 'white' : 'var(--vivid)';
+      });
+
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+
     async function loadPublicTrends() {
       const grid = document.getElementById('trendingGrid');
       if (!grid) return;
@@ -7700,6 +7919,21 @@
       }
     }
 
+    // Called from switchTab() every time tabName is 'design' — decides
+    // between three states: summary already resolved (leave it alone),
+    // or nothing resolved yet (show the "go to landing" prompt, keep the
+    // real form hidden). The form itself is never shown directly by this
+    // function — see confirmAndGenerateFromSummary(), the only path that
+    // ever makes it visible, and even then only for the instant needed to
+    // call requestSubmit().
+    function checkDesignTabEntryState() {
+      if (designEntryResolved) return;
+      const form = document.getElementById('designForm');
+      const noticeCard = document.getElementById('designNoGoToLanding');
+      if (form) form.style.display = 'none';
+      if (noticeCard) noticeCard.style.display = 'block';
+    }
+
     function switchTab(event, tabName) {
       if (event) event.preventDefault();
       // Leaving Shop Suits with nothing added to cart - nudge toward AI Design Studio.
@@ -7719,6 +7953,7 @@
       activeBtn?.classList.add('active');
       activeBtn?.setAttribute('aria-selected', 'true');
       if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
+      if (tabName === 'design' && typeof checkDesignTabEntryState === 'function') checkDesignTabEntryState();
       // Funnel tracking, step 1 of 4: reached AI Design Studio. Fired once
       // per page load (not every tab-hop back and forth) so repeat visits
       // to this tab in one session don't inflate the count.
@@ -7925,7 +8160,7 @@
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tags: selected, occasion, dressType, neckline, fabricType, ageBracket, extraNotes }),
+          body: JSON.stringify({ tags: selected, occasion, dressType, neckline, fabricType, ageBracket, extraNotes, language: localStorage.getItem('gfTryItLang') || 'en' }),
         });
         const data = await res.json();
         if (res.status === 429) {
@@ -8078,7 +8313,93 @@
         if (notesField) notesField.value = saved.extraNotes;
       }
       updateDesignGateState();
-      showToast('✨ Picked up right where you left off');
+      showDesignSummary(saved);
+    }
+
+    // Populates and shows the compact post-sign-in summary, hiding the
+    // real form underneath it (fields are still populated on the hidden
+    // form — Generate just submits that same form via requestSubmit(),
+    // so none of the existing validation/submission logic needs to
+    // change, only what the customer SEES before that happens).
+    // Tracks whether this tab's "what to show" question has been settled
+    // for the current session — set true the moment a real summary gets
+    // shown. Needed because switchTab() (which decides whether to show
+    // the "go to landing" prompt) runs BEFORE restoreLandingDesignInputs()
+    // in every sign-in success handler, not after — so on first arrival
+    // the prompt may flash briefly before the summary replaces it a
+    // moment later. Harmless (self-correcting, no data at risk), just
+    // worth this comment existing so a future edit doesn't "fix" the
+    // ordering assuming it was a bug rather than a known, accepted
+    // tradeoff against a riskier reordering of several sign-in call sites.
+    let designEntryResolved = false;
+
+    function showDesignSummary(saved) {
+      const card = document.getElementById('designSummaryCard');
+      const content = document.getElementById('designSummaryContent');
+      const form = document.getElementById('designForm');
+      const noticeCard = document.getElementById('designNoGoToLanding');
+      if (!card || !content || !form) return;
+      designEntryResolved = true;
+      if (noticeCard) noticeCard.style.display = 'none';
+
+      const rows = [];
+      const dt = saved.dressType === 'Other' && saved.dressTypeOther ? saved.dressTypeOther : saved.dressType;
+      if (dt) rows.push(`<div><strong>Dress Type:</strong> ${escapeHtml(dt)}</div>`);
+      if (saved.occasion) rows.push(`<div><strong>Occasion:</strong> ${escapeHtml(saved.occasion)}</div>`);
+      if (Array.isArray(saved.tags) && saved.tags.length > 0) rows.push(`<div><strong>Picked:</strong> ${saved.tags.map(escapeHtml).join(', ')}</div>`);
+      if (saved.description && saved.description.trim()) rows.push(`<div style="margin-top:6px;"><strong>Description:</strong><br>${escapeHtml(saved.description)}</div>`);
+      if (saved.extraNotes && saved.extraNotes.trim()) rows.push(`<div style="margin-top:6px;"><strong>Also noted:</strong> ${escapeHtml(saved.extraNotes)}</div>`);
+      content.innerHTML = rows.join('') || '<div style="color:var(--text-muted);">Nothing picked yet — head into the form below directly.</div>';
+
+      form.style.display = 'none';
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Clears the #design form's own fields — used by startOverFromSummary
+    // so stale selections from a previous attempt can't linger and
+    // confuse things if the customer navigates back to this tab directly
+    // later, without going through the landing page again.
+    function resetDesignFormFields() {
+      const dressTypeSel = document.getElementById('dressType');
+      if (dressTypeSel) { dressTypeSel.value = ''; if (typeof handleDressTypeChange === 'function') handleDressTypeChange(); }
+      const otherInput = document.getElementById('dressTypeOther');
+      if (otherInput) otherInput.value = '';
+      const occasionSel = document.getElementById('occasion');
+      if (occasionSel) occasionSel.value = '';
+      document.querySelectorAll('#design .mood-tag-row .mood-tag.selected').forEach((btn) => btn.classList.remove('selected'));
+      const descField = document.getElementById('designDesc');
+      if (descField) descField.value = '';
+      const notesField = document.getElementById('designExtraNotes');
+      if (notesField) notesField.value = '';
+      updateDesignGateState();
+    }
+
+    function confirmAndGenerateFromSummary() {
+      const card = document.getElementById('designSummaryCard');
+      const form = document.getElementById('designForm');
+      if (card) card.style.display = 'none';
+      if (form) {
+        form.style.display = '';
+        form.requestSubmit(); // fires the existing onsubmit="submitDesign(event)" — same validation/generation path as clicking Generate directly ever used
+      }
+    }
+
+    // "Start over" doesn't open an edit view of THIS form — it sends the
+    // customer back to the landing page's own Try It card, reset to
+    // empty, since that's already a complete, familiar interface for
+    // making these choices. Building a second editable view just for
+    // this moment would be duplicate work for a rarely-used path.
+    function startOverFromSummary(event) {
+      if (event) event.preventDefault();
+      const card = document.getElementById('designSummaryCard');
+      const form = document.getElementById('designForm');
+      if (card) card.style.display = 'none';
+      if (form) form.style.display = '';
+      if (typeof resetDesignFormFields === 'function') resetDesignFormFields();
+      if (typeof resetLandingDesignPreview === 'function') resetLandingDesignPreview();
+      goToLandingPage(null);
+      document.getElementById('landingDesignPreview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
 
@@ -14351,6 +14672,7 @@
       initVoiceInput();
       initRateCardTeasers();
       loadPublicTrends();
+      setTryItLanguage(localStorage.getItem('gfTryItLang') || 'en'); // restore a returning visitor's language choice — was being saved but never read back
       // Set correct initial Sleeve/Length field visibility for both static
       // fabric calculators — default garment is Blouse, which should load
       // with Garment Length already hidden rather than only correcting
