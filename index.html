@@ -7699,31 +7699,6 @@
       });
     }
 
-    // "Shop by Occasion" chips — jump straight into AI Design Studio with
-    // the occasion pre-filled, if signed in; otherwise remember the choice
-    // and apply it once sign-in completes (see updateUI).
-    function startDesignForOccasion(value) {
-      if (authToken && currentUser && currentUser._id) {
-        document.getElementById('dashboard').classList.add('show');
-        document.getElementById('landingPage').classList.add('hidden');
-        switchTab(null, 'design');
-        const occ = document.getElementById('occasion');
-        if (occ) occ.value = value;
-        updateGoHomeLink();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        window.pendingOccasion = value;
-        showToast('✨ Sign in and we\'ll take you straight to designing this look');
-        toggleEmailAuthPanel();
-      }
-    }
-
-    function expandOccPanel(idx) {
-      document.querySelectorAll('.occ-panel').forEach(p => {
-        p.classList.toggle('active', p.dataset.occ === String(idx));
-      });
-    }
-
     function toggleFaq(btn) {
       const item = btn.closest('.faq-item');
       const wasOpen = item.classList.contains('open');
@@ -14710,16 +14685,6 @@
           maybeOpenQuickCash();
         }
         checkProfileNudge();
-
-        // If they clicked a "Shop by Occasion" chip before signing in,
-        // honor that now instead of dropping them on the default tab.
-        if (window.pendingOccasion) {
-          const occValue = window.pendingOccasion;
-          window.pendingOccasion = null;
-          switchTab(null, 'design');
-          const occ = document.getElementById('occasion');
-          if (occ) occ.value = occValue;
-        }
       } else {
         landingPage.classList.remove('hidden');
         dashboard.classList.remove('show');
