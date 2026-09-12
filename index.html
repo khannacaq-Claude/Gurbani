@@ -3634,18 +3634,19 @@
             <p style="text-align:center; margin-top:10px;"><a href="#" onclick="startOverFromSummary(event)" style="font-size:12.5px; color:var(--text-muted); text-decoration:underline;">✏️ Not quite right? Start over</a></p>
           </div>
 
-          <!-- Shown instead of the raw form for anyone who reaches this tab
-               with NO carried-over draft — arrived here directly rather
-               than through the landing page's Try It card. The form
-               itself is never the direct entry point anymore, even for
-               this case — describing an outfit always starts on landing,
-               whether or not the customer has signed in yet, so there's
-               one consistent starting place rather than two different
-               ones depending on how someone arrived. See
-               checkDesignTabEntryState(), called from switchTab()
-               whenever tabName is 'design', not just right after sign-in
-               — this needs to hold every time the tab is opened, not
-               only the first time. -->
+          <!-- Shown ONLY at the moment right after a fresh sign-in/sign-up
+               that has NO carried-over landing draft — set from within
+               restoreLandingDesignInputs() (called only by the sign-in
+               success handlers), never from switchTab() directly. That
+               distinction matters: an earlier version hooked this into
+               switchTab() so it re-checked on every visit to this tab,
+               which meant any ALREADY-signed-in customer clicking AI
+               Design normally to start a new design got permanently
+               bounced here instead of the real form — breaking ordinary
+               repeat usage. Scoping it to the sign-in moment only means a
+               later, normal tab click is completely unaffected: it just
+               shows the real form (or whatever the customer left it as),
+               same as it always did before any of this was added. -->
           <div id="designNoGoToLanding" class="card" style="display:none; max-width:520px; margin:0 auto 20px; padding:24px; text-align:center;">
             <h3 style="margin-bottom:8px;">✨ Let's start with what you're picturing</h3>
             <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">Describing your outfit happens on our AI Design Studio preview — no need to fill anything in here directly.</p>
@@ -7944,21 +7945,6 @@
       }
     }
 
-    // Called from switchTab() every time tabName is 'design' — decides
-    // between three states: summary already resolved (leave it alone),
-    // or nothing resolved yet (show the "go to landing" prompt, keep the
-    // real form hidden). The form itself is never shown directly by this
-    // function — see confirmAndGenerateFromSummary(), the only path that
-    // ever makes it visible, and even then only for the instant needed to
-    // call requestSubmit().
-    function checkDesignTabEntryState() {
-      if (designEntryResolved) return;
-      const form = document.getElementById('designForm');
-      const noticeCard = document.getElementById('designNoGoToLanding');
-      if (form) form.style.display = 'none';
-      if (noticeCard) noticeCard.style.display = 'block';
-    }
-
     function switchTab(event, tabName) {
       if (event) event.preventDefault();
       // Leaving Shop Suits with nothing added to cart - nudge toward AI Design Studio.
@@ -7978,7 +7964,6 @@
       activeBtn?.classList.add('active');
       activeBtn?.setAttribute('aria-selected', 'true');
       if (tabName === 'design' && typeof populateDesignFamilyProfileSelect === 'function') populateDesignFamilyProfileSelect();
-      if (tabName === 'design' && typeof checkDesignTabEntryState === 'function') checkDesignTabEntryState();
       // Funnel tracking, step 1 of 4: reached AI Design Studio. Fired once
       // per page load (not every tab-hop back and forth) so repeat visits
       // to this tab in one session don't inflate the count.
@@ -8303,7 +8288,26 @@
     // re-type anything they already did pre-sign-in.
     function restoreLandingDesignInputs() {
       const raw = localStorage.getItem('landingDesignDraft');
-      if (!raw) return;
+      if (!raw) {
+        // No carried-over draft — this is the actual right place for this
+        // check (was previously, incorrectly, hooked into switchTab()
+        // itself, which made it re-fire on EVERY visit to this tab, not
+        // just the moment right after sign-in — that broke normal repeat
+        // usage entirely, since any already-signed-in customer clicking
+        // the tab to make another design got permanently bounced to this
+        // notice instead of the real form). This function is only ever
+        // called from the sign-in success handlers, so showing the notice
+        // here naturally scopes it to "just signed in with nothing
+        // carried over" — a normal later tab click never reaches this
+        // function at all, so it can't re-trigger the notice.
+        const noticeCard = document.getElementById('designNoGoToLanding');
+        const form = document.getElementById('designForm');
+        if (noticeCard && form && !designEntryResolved) {
+          form.style.display = 'none';
+          noticeCard.style.display = 'block';
+        }
+        return;
+      }
       localStorage.removeItem('landingDesignDraft'); // one-time use — never re-apply on a later sign-in
       let saved;
       try { saved = JSON.parse(raw); } catch (e) { return; }
