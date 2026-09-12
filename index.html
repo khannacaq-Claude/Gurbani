@@ -3033,7 +3033,7 @@
                 <p style="font-size:11px; color:var(--text-muted); margin-top:6px;" data-i18n="trendSignInNudge">💡 Sign in and you can attach the actual trending photo itself as a visual reference for the AI — not just a description.</p>
               </div>
 
-              <div style="margin-top:14px;">
+              <div style="margin-top:14px;" id="landingExtraNotesBlock">
                 <div class="tryit-label" data-i18n="lblAnythingElse">Anything else to mention? <span style="font-weight:400; font-style:normal; font-size:11px; color:var(--text-muted);" data-i18n="optionalTag">(optional)</span></div>
                 <textarea id="landingExtraNotes" data-i18n-placeholder="phAnythingElse" placeholder="E.g., I'm petite, prefer not too tight-fitting, need it within 3 weeks..." style="min-height:52px; width:100%;"></textarea>
               </div>
@@ -8473,7 +8473,9 @@
       const draftBtn = document.getElementById('landingDraftBtn');
       const trendPicker = document.getElementById('landingTrendPicker');
       const trendPickerRow = document.getElementById('landingTrendPickerRow');
+      const extraNotesBlock = document.getElementById('landingExtraNotesBlock');
       if (draftBtn) draftBtn.style.display = hideDisplay;
+      if (extraNotesBlock) extraNotesBlock.style.display = hideDisplay; // redundant once the customer is writing their own full description directly — anything they'd put here can just go in that same box
       if (trendPicker) {
         if (simple) trendPicker.style.display = 'none';
         else if (trendPickerRow && trendPickerRow.innerHTML.trim() !== '') trendPicker.style.display = 'block';
