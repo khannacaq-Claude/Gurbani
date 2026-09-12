@@ -2850,7 +2850,13 @@
             </div>
           </div>
           <p data-i18n="tryItIntro" style="font-size:13px; color:var(--text-muted); margin-bottom:8px; max-width:560px;">Pick what you're picturing and we'll help you put it into words — right here, no sign-in needed. Sign in when you're ready to see 3 actual AI-generated <em>images</em> of it — that part needs an account, everything below comes with you.</p>
-          <button type="button" id="tryItSimpleModeToggle" onclick="toggleTryItSimpleMode()" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer; text-decoration:underline; padding:0 0 16px; display:block;">✏️ Prefer to just type your own description? Switch to Simple Mode</button>
+          <div style="background:var(--cream-card); border:1.5px solid var(--sand); border-radius:10px; padding:14px 16px; margin-bottom:20px;">
+            <div style="font-weight:700; font-size:13.5px; margin-bottom:10px; color:var(--ink);">How would you like to describe your outfit?</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" id="tryItModeChoiceVibes" onclick="setTryItMode('vibes')" style="flex:1; min-width:180px; padding:12px; border-radius:8px; border:2px solid var(--vivid); background:var(--vivid); color:white; font-weight:700; font-size:13px; cursor:pointer; text-align:center;">🎨 Help me build it<br><span style="font-weight:400; font-size:11px;">Pick style, color, mood &amp; more</span></button>
+              <button type="button" id="tryItModeChoiceSimple" onclick="setTryItMode('simple')" style="flex:1; min-width:180px; padding:12px; border-radius:8px; border:2px solid var(--vivid); background:white; color:var(--vivid); font-weight:700; font-size:13px; cursor:pointer; text-align:center;">✏️ I'll describe it myself<br><span style="font-weight:400; font-size:11px;">Skip straight to typing</span></button>
+            </div>
+          </div>
 
           <div class="tryit-grid">
             <div class="tryit-col-left">
@@ -8401,18 +8407,19 @@
       promptSignIn('AI Design Studio');
     }
 
-    // Escape hatch for anyone who finds the vibes/tags flow unnecessary —
-    // hides everything built around it (the 6 tag groups, the free 3-
-    // concept preview) leaving just Dress Type, Occasion, description, and
-    // Continue — the exact simple flow this card started as. Toggleable,
-    // not a one-way switch, since someone might still want to peek at
-    // vibes later. Uses existing data-group selectors rather than
-    // restructuring the HTML into a new wrapper, so nothing about how
-    // these sections were built needed to change for this to work.
-    let tryItSimpleMode = false;
-    function toggleTryItSimpleMode() {
-      tryItSimpleMode = !tryItSimpleMode;
-      const hideDisplay = tryItSimpleMode ? 'none' : '';
+    // An explicit choice between two ways to describe an outfit, not a
+    // single easy-to-miss toggle link — two clearly visible buttons, one
+    // of which is always shown as currently active. Defaults to "vibes"
+    // (tags visible on page load, unchanged from before) since that's the
+    // richer path; clicking "I'll describe it myself" hides the 6 tag
+    // groups and the free 3-concept preview, leaving Dress Type, Occasion,
+    // description, and Continue — the original simple flow. Switching
+    // back is just as easy, so this is a live choice, not a one-way exit.
+    let tryItMode = 'vibes';
+    function setTryItMode(mode) {
+      tryItMode = mode;
+      const simple = mode === 'simple';
+      const hideDisplay = simple ? 'none' : '';
       ['style', 'color', 'embellishment', 'neckline', 'fabricType', 'ageBracket'].forEach((g) => {
         const row = document.querySelector(`#landingDesignPreview .mood-tag-row[data-group="${g}"]`);
         if (row && row.parentElement) row.parentElement.style.display = hideDisplay;
@@ -8422,11 +8429,18 @@
       const conceptsResults = document.getElementById('landingConceptsResults');
       if (conceptsBtn) conceptsBtn.style.display = hideDisplay;
       if (conceptsNote) conceptsNote.style.display = hideDisplay;
-      if (conceptsResults && tryItSimpleMode) conceptsResults.style.display = 'none'; // don't force it back to 'block' on un-toggle if it was never populated
-      const toggleBtn = document.getElementById('tryItSimpleModeToggle');
-      if (toggleBtn) toggleBtn.textContent = tryItSimpleMode
-        ? '🎨 Switch back to the vibes-based builder'
-        : "✏️ Prefer to just type your own description? Switch to Simple Mode";
+      if (conceptsResults && simple) conceptsResults.style.display = 'none'; // don't force it back to 'block' on switching back if it was never populated
+
+      const vibesBtn = document.getElementById('tryItModeChoiceVibes');
+      const simpleBtn = document.getElementById('tryItModeChoiceSimple');
+      if (vibesBtn) {
+        vibesBtn.style.background = simple ? 'white' : 'var(--vivid)';
+        vibesBtn.style.color = simple ? 'var(--vivid)' : 'white';
+      }
+      if (simpleBtn) {
+        simpleBtn.style.background = simple ? 'var(--vivid)' : 'white';
+        simpleBtn.style.color = simple ? 'white' : 'var(--vivid)';
+      }
     }
 
     // visitor to sign in. Called both from the preview's own "Continue"
