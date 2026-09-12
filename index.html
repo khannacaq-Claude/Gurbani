@@ -8439,6 +8439,26 @@
       if (conceptsNote) conceptsNote.style.display = hideDisplay;
       if (conceptsResults && simple) conceptsResults.style.display = 'none'; // don't force it back to 'block' on switching back if it was never populated
 
+      // Draft It For Me and the trend picker are both "help me figure out
+      // what to write" prompts — genuinely useful in vibes mode, but
+      // directly contradicting someone who just explicitly chose "I'll
+      // describe it myself." Hiding these was missing before; simple mode
+      // still showed both, nudging AI assistance right after the customer
+      // declined it. The trend picker's own visibility is otherwise
+      // controlled by whether trend images actually exist (set once by
+      // loadPublicTrends() on page load) — restoring it on switching back
+      // to vibes mode checks for that same condition (real content already
+      // in the row) rather than blindly forcing it back to visible, so it
+      // doesn't reappear empty for a trend that was never populated.
+      const draftBtn = document.getElementById('landingDraftBtn');
+      const trendPicker = document.getElementById('landingTrendPicker');
+      const trendPickerRow = document.getElementById('landingTrendPickerRow');
+      if (draftBtn) draftBtn.style.display = hideDisplay;
+      if (trendPicker) {
+        if (simple) trendPicker.style.display = 'none';
+        else if (trendPickerRow && trendPickerRow.innerHTML.trim() !== '') trendPicker.style.display = 'block';
+      }
+
       const vibesBtn = document.getElementById('tryItModeChoiceVibes');
       const simpleBtn = document.getElementById('tryItModeChoiceSimple');
       if (vibesBtn) {
