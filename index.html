@@ -10887,7 +10887,7 @@
           ${results.map(r => `<div style="font-size:13px; margin-bottom:6px;">${r.ok ? '✅' : '❌'} <strong>${escapeHtml(r.name)}</strong> — ${escapeHtml(r.message)}</div>`).join('')}
           ${anyStitching ? '<p style="font-size:12px; color:var(--text-muted); margin-top:10px;">For anything you asked to be stitched, Sonia will follow up directly to confirm next steps.</p>' : ''}
           <div style="margin-top:16px; padding-top:12px; border-top:1px solid #eee;">
-            <a href="#" onclick="switchTab(event, 'design')" style="color:var(--vivid); font-weight:600; font-size:13px;">✨ Want something fully custom instead? Try AI Design Studio →</a>
+            <a href="#" onclick="event.preventDefault(); goToTryItCard();" style="color:var(--vivid); font-weight:600; font-size:13px;">✨ Want something fully custom instead? Try AI Design Studio →</a>
           </div>
         </div>`;
 
