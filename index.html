@@ -3576,7 +3576,7 @@
                 <div class="lens-content">
                   <h4>🎨 Create Design</h4>
                   <p>Describe what you want or upload a reference photo — get 3 AI concepts back, personalized with your own selfies, fabric and accessories.</p>
-                  <button onclick="event.stopPropagation(); switchTab(null, 'design')">✨ Start designing →</button>
+                  <button onclick="event.stopPropagation(); goToTryItCard()">✨ Start designing →</button>
                 </div>
               </div>
               <div class="lens-tile lens-2" data-lens="1" onclick="expandOverviewLens(1)">
@@ -7976,6 +7976,17 @@
       } else if (profiles.length === 1) {
         select.value = profiles[0]._id;
       }
+    }
+
+    // Small reusable helper — navigates directly to the landing page's Try
+    // It card. Used by entry points where the customer has already
+    // expressed clear intent to start designing (e.g. Overview's "Start
+    // designing" button) — going to the design tab's "go to landing"
+    // notice first and making them click again there would just be an
+    // extra, unnecessary step for someone who already said what they want.
+    function goToTryItCard() {
+      goToLandingPage(null);
+      document.getElementById('landingDesignPreview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function switchTab(event, tabName) {
