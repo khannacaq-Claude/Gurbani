@@ -3077,7 +3077,7 @@
                    above it is optional, not a gate. -->
               <div class="tryit-label" data-i18n="lblDescribeOutfit" style="margin-top:16px; margin-bottom:6px;">Describe Your Dream Outfit</div>
               <textarea id="landingDesignDesc" data-i18n-placeholder="phDescribeOutfit" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
-              <div class="voice-input-row" style="display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+              <div class="voice-input-row" id="landingVoiceInputRow" style="display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
                 <button type="button" id="landingVoiceInputBtn" class="voice-input-btn" onclick="toggleLandingVoiceInput()" aria-label="Describe by voice instead of typing">🎤 Speak instead</button>
                 <select id="landingVoiceInputLang" aria-label="Voice input language" style="font-size: 12px; padding: 4px 6px; width: auto;">
                   <option value="en-IN">English</option>
@@ -7286,10 +7286,13 @@
     function maybeAutoStartTour() {
       const landingPage = document.getElementById('landingPage');
       const onLandingPage = landingPage && !landingPage.classList.contains('hidden');
-      // Runs on every landing-page visit, not just the first — someone
-      // might not be back for months, and Skip is always right there
-      // if they don't need it this time. No tracking needed either way.
-      if (onLandingPage) {
+      // Once per session, not every visit — sessionStorage survives page
+      // refreshes/reloads within the same tab (it does NOT reset just from
+      // hitting refresh), only clearing when the tab/browser is actually
+      // closed. That's exactly the "don't repeat on every refresh, but do
+      // greet a genuinely new visit" behavior this was changed for.
+      if (onLandingPage && !sessionStorage.getItem('gfTourShownThisSession')) {
+        sessionStorage.setItem('gfTourShownThisSession', 'true');
         setTimeout(startTour, 900); // brief pause so the page settles first
       }
     }
@@ -8480,6 +8483,16 @@
         if (simple) trendPicker.style.display = 'none';
         else if (trendPickerRow && trendPickerRow.innerHTML.trim() !== '') trendPicker.style.display = 'block';
       }
+
+      // Voice input is the ONE element here that goes the opposite
+      // direction of everything else — it's a "describe it yourself"
+      // tool, same category as Draft It For Me and the trend picker, but
+      // since Vibes Mode's actual workflow is tags -> Draft It For Me ->
+      // light editing (not dictating from scratch), voice input has
+      // little role there. It stays visible only in Simple Mode, where
+      // typing or speaking a full description IS the primary interaction.
+      const voiceRow = document.getElementById('landingVoiceInputRow');
+      if (voiceRow) voiceRow.style.display = simple ? 'flex' : 'none';
 
       const vibesBtn = document.getElementById('tryItModeChoiceVibes');
       const simpleBtn = document.getElementById('tryItModeChoiceSimple');
