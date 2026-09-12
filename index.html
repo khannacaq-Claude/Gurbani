@@ -6626,7 +6626,16 @@
     // Which garments have a sleeve at all (lehenga is skirt-only)
     const FABRIC_CALC_HAS_SLEEVE = ['blouse', 'kurti', 'salwar', 'anarkali', 'gown', 'designerDress'];
     // Which garments have a meaningful "hemline" length choice
-    const FABRIC_CALC_HAS_LENGTH_CHOICE = ['kurti', 'anarkali', 'gown', 'designerDress'];
+    // Blouse is the one garment genuinely fixed at a short/waist length by
+    // definition — everything else here has real length variation that
+    // meaningfully changes fabric needed, so everything else gets the
+    // choice. Salwar and Lehenga were previously left out (kameez length
+    // and lehenga skirt length both actually vary — a short kameez vs a
+    // calf-length one, or a knee-length fusion lehenga vs full floor-
+    // length with train — same reasoning Anarkali and Gown already get,
+    // despite Anarkali/Lehenga both conventionally running floor-length
+    // most of the time). Added both for consistency.
+    const FABRIC_CALC_HAS_LENGTH_CHOICE = ['kurti', 'salwar', 'lehenga', 'anarkali', 'gown', 'designerDress'];
     // Flare-heavy garments benefit more from wider fabric (more panel
     // width per cut = less total length needed)
     const FABRIC_CALC_FLARE_HEAVY = ['anarkali', 'lehenga', 'gown', 'designerDress'];
