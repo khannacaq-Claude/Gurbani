@@ -3656,11 +3656,10 @@
             <h3 style="margin-bottom:4px;">✨ Here's what you're picturing</h3>
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Picked up from before you signed in — nothing to redo.</p>
             <div id="designSummaryContent" style="font-size:13.5px; line-height:1.7; margin-bottom:18px;"></div>
-            <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:8px; padding:12px 14px; margin-bottom:18px; font-size:12px; color:var(--text-muted); line-height:1.6;">
+            <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:8px; padding:12px 14px; margin-bottom:4px; font-size:12px; color:var(--text-muted); line-height:1.6;">
               💡 We'll generate 3 different design concepts from this — you'll pick a favourite and can ask for tweaks afterward, nothing here is final yet.<br>
-              💡 Want even more personalized results? You can attach reference photos (fabric, inspiration, a selfie) right after this.
+              💡 Want to add a reference photo (fabric, inspiration, a selfie)? Scroll down — that's still right below, ready before you hit Generate.
             </div>
-            <button type="button" class="btn-submit" onclick="confirmAndGenerateFromSummary()" style="width:100%;">✨ Generate My 3 Designs</button>
             <p style="text-align:center; margin-top:10px;"><a href="#" onclick="startOverFromSummary(event)" style="font-size:12.5px; color:var(--text-muted); text-decoration:underline;">✏️ Not quite right? Start over</a></p>
           </div>
 
@@ -3718,7 +3717,7 @@
                and branding emphasize women's wear — it quietly covers kids
                wear, gents wear, or anything else outside the usual lineup
                without needing a whole separate section built out. -->
-          <div class="card" style="padding:18px; margin-bottom:18px; background:var(--sand); border:1.5px solid var(--vivid);">
+          <div id="designStep1Card" class="card" style="padding:18px; margin-bottom:18px; background:var(--sand); border:1.5px solid var(--vivid);">
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
               <label style="font-weight:700; margin-bottom:4px; display:block;">Step 1 — Tell us what and when</label>
               <button type="button" onclick="resetDesignForm()" style="flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; padding:4px 0; white-space:nowrap;">↺ Reset</button>
@@ -3888,7 +3887,7 @@
           </div>
 
           <form onsubmit="submitDesign(event)" id="designForm">
-            <div class="form-group">
+            <div class="form-group" id="designDescriptionBlock">
               <label>📝 Describe Your Dream Outfit</label>
               <textarea id="designDesc" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." required oninput="validateDescriptionRealtime()"></textarea>
               <div class="voice-input-row" style="display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
@@ -8665,9 +8664,10 @@
     function showDesignSummary(saved) {
       const card = document.getElementById('designSummaryCard');
       const content = document.getElementById('designSummaryContent');
-      const formWrapper = document.getElementById('designFormWrapper');
+      const step1Card = document.getElementById('designStep1Card');
+      const descBlock = document.getElementById('designDescriptionBlock');
       const noticeCard = document.getElementById('designNoGoToLanding');
-      if (!card || !content || !formWrapper) return;
+      if (!card || !content) return;
       designEntryResolved = true;
       if (noticeCard) noticeCard.style.display = 'none';
 
@@ -8680,7 +8680,17 @@
       if (saved.extraNotes && saved.extraNotes.trim()) rows.push(`<div style="margin-top:6px;"><strong>Also noted:</strong> ${escapeHtml(saved.extraNotes)}</div>`);
       content.innerHTML = rows.join('') || '<div style="color:var(--text-muted);">Nothing picked yet — head into the form below directly.</div>';
 
-      formWrapper.style.display = 'none';
+      // Only these two sections hide — everything else in the form (photo
+      // upload, consent, the family-measurement-profile picker, and the
+      // real Generate button) stays fully visible and reachable right
+      // below this recap. That's the actual fix for photos/consent going
+      // missing: the earlier version hid the ENTIRE form here, which took
+      // those down with it even though they're still genuinely useful —
+      // signing in doesn't remove someone's ability to attach a fabric
+      // photo or an inspiration picture, it just means they don't need to
+      // re-type what they already told the landing page.
+      if (step1Card) step1Card.style.display = 'none';
+      if (descBlock) descBlock.style.display = 'none';
       card.style.display = 'block';
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -8704,17 +8714,6 @@
       updateDesignGateState();
     }
 
-    function confirmAndGenerateFromSummary() {
-      const card = document.getElementById('designSummaryCard');
-      const formWrapper = document.getElementById('designFormWrapper');
-      const form = document.getElementById('designForm');
-      if (card) card.style.display = 'none';
-      if (formWrapper) formWrapper.style.display = '';
-      if (form) {
-        form.requestSubmit(); // fires the existing onsubmit="submitDesign(event)" — same validation/generation path as clicking Generate directly ever used
-      }
-    }
-
     // "Start over" doesn't open an edit view of THIS form — it sends the
     // customer back to the landing page's own Try It card, reset to
     // empty, since that's already a complete, familiar interface for
@@ -8723,9 +8722,11 @@
     function startOverFromSummary(event) {
       if (event) event.preventDefault();
       const card = document.getElementById('designSummaryCard');
-      const formWrapper = document.getElementById('designFormWrapper');
+      const step1Card = document.getElementById('designStep1Card');
+      const descBlock = document.getElementById('designDescriptionBlock');
       if (card) card.style.display = 'none';
-      if (formWrapper) formWrapper.style.display = '';
+      if (step1Card) step1Card.style.display = ''; // undo showDesignSummary()'s selective hide, so a later normal visit to this tab isn't missing these
+      if (descBlock) descBlock.style.display = '';
       if (typeof resetDesignFormFields === 'function') resetDesignFormFields();
       if (typeof resetLandingDesignPreview === 'function') resetLandingDesignPreview();
       goToLandingPage(null);
