@@ -2344,6 +2344,22 @@
       header p.header-tagline { order: 2; font-size: 13px; margin-top: 4px; }
       .header-mini { order: 3; margin-top: 3px; }
 
+      /* Mobile header was running close to half the screen tall (logo +
+         tagline + a 7-item category list + a 4-item quick-link row, all
+         stacked, on a FIXED header eating into every scroll position on
+         every tab, not just the first view of landing). Cut to logo +
+         Sign In only, the two things actually needed on every screen —
+         the tagline, category list, and quick-links are either repeated
+         in the landing page's own body content or already reachable via
+         the nav bar, so nothing is genuinely lost, just no longer
+         duplicated permanently overhead. Desktop is untouched — these
+         three are still fully visible above 640px. */
+      header p.header-tagline,
+      .header-products,
+      .header-mini {
+        display: none !important;
+      }
+
       .header-products, .header-mini { justify-content: center; }
       .header-right { align-items: center; text-align: center; margin-left: 0; }
 
