@@ -2730,22 +2730,34 @@
                 <a href="#" onclick="event.preventDefault(); skipPhoneCapture();" style="font-size:11.5px; color:var(--text-muted); text-decoration:underline;">Skip this</a>
               </div>
             </div>
-            <div class="auth-modal-divider"><span>or sign in with email</span></div>
-            <div id="emailAuthAnchor"></div>
-            <div class="auth-field" id="emailAuthNameField" style="display:none;">
-              <div class="auth-field-row"><label>Name</label></div>
-              <input type="text" id="emailAuthName" placeholder="Your full name">
+            <!-- Email/password sign-in — collapsed by default behind a
+                 plain link, not shown as a second full "final step"
+                 alongside Google. Previously both were fully expanded at
+                 once (Google button + a complete email/password form with
+                 its own Sign In button), which read as two equally
+                 "finished" ways to sign in rather than one primary path
+                 and a fallback — people weren't sure which one they were
+                 supposed to actually use. Now only one path is visible
+                 as a real form at a time. -->
+            <p style="text-align:center; margin:14px 0;"><a href="#" id="emailAuthRevealLink" onclick="event.preventDefault(); revealEmailAuthForm();" style="font-size:12.5px; color:var(--text-muted); text-decoration:underline;">✉️ Prefer email? Sign in with email instead</a></p>
+            <div id="emailAuthFormSection" style="display:none;">
+              <div class="auth-modal-divider"><span>or sign in with email</span></div>
+              <div id="emailAuthAnchor"></div>
+              <div class="auth-field" id="emailAuthNameField" style="display:none;">
+                <div class="auth-field-row"><label>Name</label></div>
+                <input type="text" id="emailAuthName" placeholder="Your full name">
+              </div>
+              <div class="auth-field">
+                <div class="auth-field-row"><label>Email</label></div>
+                <input type="email" id="emailAuthEmail" placeholder="you@example.com">
+              </div>
+              <div class="auth-field">
+                <div class="auth-field-row"><label>Password</label><a href="#" onclick="showForgotPasswordPrompt(event)">Reset password</a></div>
+                <input type="password" id="emailAuthPassword" placeholder="Password">
+              </div>
+              <button type="button" class="btn-submit" onclick="submitEmailAuth()">Sign In</button>
+              <p class="auth-switch" id="emailAuthSwitchLine">Don't have an account? <a href="#" onclick="switchEmailAuthMode('signup'); return false;">Sign up</a></p>
             </div>
-            <div class="auth-field">
-              <div class="auth-field-row"><label>Email</label></div>
-              <input type="email" id="emailAuthEmail" placeholder="you@example.com">
-            </div>
-            <div class="auth-field">
-              <div class="auth-field-row"><label>Password</label><a href="#" onclick="showForgotPasswordPrompt(event)">Reset password</a></div>
-              <input type="password" id="emailAuthPassword" placeholder="Password">
-            </div>
-            <button type="button" class="btn-submit" onclick="submitEmailAuth()">Sign In</button>
-            <p class="auth-switch" id="emailAuthSwitchLine">Don't have an account? <a href="#" onclick="switchEmailAuthMode('signup'); return false;">Sign up</a></p>
           </div>
         </div>
         <div id="resetPasswordPanel" class="auth-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
@@ -10249,6 +10261,28 @@
       // (zero size at that moment), so re-render fresh every time the
       // modal actually opens, when signinArea genuinely has visible space.
       if (opening) renderGoogleSigninButton();
+      // Reset the email form back to collapsed on every fresh open, so a
+      // previous abandoned attempt (revealed the form, then closed
+      // without signing in) doesn't leave the NEXT opening looking
+      // different from what a first-time visitor would see.
+      if (opening) {
+        const link = document.getElementById('emailAuthRevealLink');
+        const section = document.getElementById('emailAuthFormSection');
+        if (link) link.style.display = '';
+        if (section) section.style.display = 'none';
+      }
+    }
+
+    // Reveals the email/password form, which starts collapsed behind the
+    // link this function is attached to — see the HTML comment at the
+    // email section for why (two simultaneously-visible "final" sign-in
+    // methods was the actual source of confusion being fixed here).
+    function revealEmailAuthForm() {
+      const link = document.getElementById('emailAuthRevealLink');
+      const section = document.getElementById('emailAuthFormSection');
+      if (link) link.style.display = 'none';
+      if (section) section.style.display = 'block';
+      document.getElementById('emailAuthEmail')?.focus();
     }
 
     function switchEmailAuthMode(mode) {
