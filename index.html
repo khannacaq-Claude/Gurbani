@@ -2958,6 +2958,7 @@
                   <button type="button" class="mood-tag" data-value="V-Neck" data-i18n="tagVNeck">V-Neck</button>
                   <button type="button" class="mood-tag" data-value="Boat Neck" data-i18n="tagBoatNeck">Boat Neck</button>
                   <button type="button" class="mood-tag" data-value="Sweetheart" data-i18n="tagSweetheart">Sweetheart</button>
+                  <button type="button" class="mood-tag" data-value="Deep Neck" data-i18n="tagDeepNeck">Deep Neck</button>
                   <button type="button" class="mood-tag" data-value="High Neck / Collar" data-i18n="tagHighNeck">High Neck / Collar</button>
                   <button type="button" class="mood-tag" data-value="Off-Shoulder" data-i18n="tagOffShoulder">Off-Shoulder</button>
                 </div>
@@ -3681,6 +3682,16 @@
             <a href="#" onclick="goToLandingPage(event)" class="btn-submit" style="display:inline-block; text-decoration:none;">Go to AI Design Studio →</a>
           </div>
 
+          <!-- Everything from here through the closing </form> below is the
+               ACTUAL design-creation UI — Step 1 through photo upload
+               through Generate. Wrapped in one div so showDesignSummary()/
+               checkDesignTabEntryState() can hide ALL of it in one place.
+               Previously only the <form> itself was hidden, but Step 1
+               (Dress Type/Occasion) and other cards sit BEFORE the <form>
+               tag opens, not inside it — hiding just the form left Step 1
+               visibly showing underneath the summary/notice cards, exactly
+               the bug in the screenshot that prompted this fix. -->
+          <div id="designFormWrapper">
           <div id="onBehalfOfBlock" class="card" style="display:none; padding:14px; margin-bottom:16px; border:1px solid var(--vivid);">
             <label style="font-size:12px; font-weight:600;">Already know who this is for? (optional — you can also just explore freely and attach a customer later when you finalize an order)</label>
             <input type="tel" id="onBehalfOfPhone" placeholder="Search by phone" style="margin-bottom:4px;" oninput="lookupOnBehalfOfCustomer()">
@@ -3836,6 +3847,7 @@
                 <button type="button" class="mood-tag" data-value="V-Neck">V-Neck</button>
                 <button type="button" class="mood-tag" data-value="Boat Neck">Boat Neck</button>
                 <button type="button" class="mood-tag" data-value="Sweetheart">Sweetheart</button>
+                <button type="button" class="mood-tag" data-value="Deep Neck">Deep Neck</button>
                 <button type="button" class="mood-tag" data-value="High Neck / Collar">High Neck / Collar</button>
                 <button type="button" class="mood-tag" data-value="Off-Shoulder">Off-Shoulder</button>
               </div>
@@ -3939,6 +3951,7 @@
 
             <button type="submit" class="btn-submit" id="generateBtn" disabled title="Please check the consent checkbox above first">✨ Generate My Designs</button>
           </form>
+          </div>
 
           <!-- DESIGNS DISPLAY WITH PERSONAL ANALYSIS -->
           <div id="designsContainer"></div>
@@ -6840,7 +6853,7 @@
         lblEmbellishment: 'Embellishment',
         tagMinimalLines: 'Minimal / Clean Lines', tagModerateDetail: 'Moderate Detailing', tagHeavyEmbroidery: 'Heavy Embroidery',
         lblNeckline: 'Neckline',
-        tagDecideAI: '✨ Decide by AI', tagRoundNeck: 'Round Neck', tagVNeck: 'V-Neck', tagBoatNeck: 'Boat Neck', tagSweetheart: 'Sweetheart', tagHighNeck: 'High Neck / Collar', tagOffShoulder: 'Off-Shoulder',
+        tagDecideAI: '✨ Decide by AI', tagRoundNeck: 'Round Neck', tagVNeck: 'V-Neck', tagBoatNeck: 'Boat Neck', tagSweetheart: 'Sweetheart', tagDeepNeck: 'Deep Neck', tagHighNeck: 'High Neck / Collar', tagOffShoulder: 'Off-Shoulder',
         lblFabricType: 'Fabric Type',
         tagSilk: 'Silk', tagCotton: 'Cotton', tagGeorgette: 'Georgette', tagChiffon: 'Chiffon', tagVelvet: 'Velvet', tagCrepe: 'Crepe',
         lblAgeBracket: 'Age Bracket', ageBracketHint: '(optional — helps pick colours & prints that suit you)',
@@ -6883,7 +6896,7 @@
         lblEmbellishment: 'एम्बेलिशमेंट',
         tagMinimalLines: 'मिनिमल / क्लीन लाइन्स', tagModerateDetail: 'मध्यम डिटेलिंग', tagHeavyEmbroidery: 'भारी कढ़ाई',
         lblNeckline: 'नेकलाइन',
-        tagDecideAI: '✨ AI तय करे', tagRoundNeck: 'राउंड नेक', tagVNeck: 'वी-नेक', tagBoatNeck: 'बोट नेक', tagSweetheart: 'स्वीटहार्ट', tagHighNeck: 'हाई नेक / कॉलर', tagOffShoulder: 'ऑफ-शोल्डर',
+        tagDecideAI: '✨ AI तय करे', tagRoundNeck: 'राउंड नेक', tagVNeck: 'वी-नेक', tagBoatNeck: 'बोट नेक', tagSweetheart: 'स्वीटहार्ट', tagDeepNeck: 'डीप नेक', tagHighNeck: 'हाई नेक / कॉलर', tagOffShoulder: 'ऑफ-शोल्डर',
         lblFabricType: 'फैब्रिक प्रकार',
         tagSilk: 'सिल्क', tagCotton: 'कॉटन', tagGeorgette: 'जॉर्जेट', tagChiffon: 'शिफॉन', tagVelvet: 'वेलवेट', tagCrepe: 'क्रेप',
         lblAgeBracket: 'आयु वर्ग', ageBracketHint: '(वैकल्पिक — आप पर सूट करने वाले रंग और प्रिंट चुनने में मदद करता है)',
@@ -8332,17 +8345,60 @@
       }
     }
 
+    let landingPreviewConcepts = []; // the 3 currently-shown free-preview concepts, kept so a box click knows which one it's for
+    let landingPreviewContext = {};  // dressType/occasion/etc. at the moment concepts were generated, saved alongside a clicked concept
+
     function renderLandingConcepts(concepts) {
       const container = document.getElementById('landingConceptsResults');
       if (!container) return;
+      landingPreviewConcepts = concepts;
+      landingPreviewContext = {
+        description: document.getElementById('landingDesignDesc')?.value.trim() || '',
+        occasion: document.getElementById('landingOccasion')?.value || '',
+        dressType: getLandingDressType(),
+        neckline: getLandingNeckline(),
+        fabricType: getLandingFabricType(),
+        ageBracket: getLandingAgeBracket(),
+        extraNotes: document.getElementById('landingExtraNotes')?.value.trim() || '',
+      };
       container.style.display = 'block';
-      container.innerHTML = concepts.map((c) => `
+      // Same box shape as the real signed-in results view (title/description
+      // editable, one click target per box to generate that box's image) —
+      // deliberately reused rather than a different-looking preview, so
+      // this already feels like "the real thing," not a lookalike teaser.
+      container.innerHTML = concepts.map((c, idx) => `
         <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:8px; padding:12px 14px; margin-bottom:8px;">
-          <div style="font-weight:700; color:var(--vivid); font-size:13.5px; margin-bottom:3px;">${escapeHtml(c.title)}</div>
-          <div style="font-size:12.5px; color:var(--text-ink); line-height:1.5; margin-bottom:4px;">${escapeHtml(c.description)}</div>
+          <div onclick="clickLandingPreviewBox(${idx})" style="aspect-ratio:3/4; max-width:220px; margin:0 auto 10px; border:1.5px dashed var(--sand); border-radius:6px; background:white; display:flex; align-items:center; justify-content:center; text-align:center; padding:14px; cursor:pointer;">
+            <div style="font-size:12.5px; color:var(--vivid); font-weight:600;">🔒 Sign in to generate<br>this design as an image</div>
+          </div>
+          <input type="text" id="landingPreviewTitle_${idx}" value="${escapeHtml(c.title)}" style="font-weight:700; color:var(--vivid); font-size:13.5px; margin-bottom:4px; width:100%; border:1px solid transparent; background:transparent; padding:2px 4px;" onfocus="this.style.borderColor='var(--sand)'" onblur="this.style.borderColor='transparent'">
+          <textarea id="landingPreviewDesc_${idx}" style="font-size:12.5px; color:var(--text-ink); line-height:1.5; margin-bottom:4px; width:100%; min-height:52px; border:1px solid transparent; background:transparent; padding:2px 4px;" onfocus="this.style.borderColor='var(--sand)'" onblur="this.style.borderColor='transparent'">${escapeHtml(c.description)}</textarea>
           <div style="font-size:11px; color:var(--text-muted);">₹${c.priceMin}–₹${c.priceMax} · ~${c.deliveryDays} days · ${escapeHtml(c.accessorySuggestion)}</div>
         </div>
-      `).join('') + `<p style="font-size:11.5px; color:var(--text-muted); text-align:center; margin-top:6px;">💡 Sign in to see actual AI-generated pictures of these — not just descriptions.</p>`;
+      `).join('') + `<p style="font-size:11.5px; color:var(--text-muted); text-align:center; margin-top:6px;">💡 Tap a design above, or edit the title/description first — sign in only takes you to that one design's image, the other two stay saved too.</p>`;
+    }
+
+    // A box's image placeholder was clicked — save which specific concept
+    // (with whatever edits were made to its title/description) alongside
+    // the other 2 and the full generation context, then open sign-in.
+    // Restored by restoreLandingDesignInputs() after a successful sign-in,
+    // which creates the real Design record from these exact 3 concepts
+    // (no second Claude call) and immediately generates only the one
+    // clicked — see resumeFreePreviewAfterSignIn() below.
+    function clickLandingPreviewBox(idx) {
+      const titleInput = document.getElementById(`landingPreviewTitle_${idx}`);
+      const descInput = document.getElementById(`landingPreviewDesc_${idx}`);
+      const concepts = landingPreviewConcepts.map((c, i) => {
+        if (i !== idx) return c;
+        return {
+          ...c,
+          title: titleInput ? titleInput.value.trim() || c.title : c.title,
+          description: descInput ? descInput.value.trim() || c.description : c.description,
+        };
+      });
+      const payload = { ...landingPreviewContext, concepts, clickedIndex: idx };
+      localStorage.setItem('landingPreviewClickedConcept', JSON.stringify(payload));
+      promptSignIn('AI Design Studio');
     }
 
     // visitor to sign in. Called both from the preview's own "Continue"
@@ -8438,6 +8494,22 @@
     // preview into the REAL form fields, so the visitor never has to
     // re-type anything they already did pre-sign-in.
     function restoreLandingDesignInputs() {
+      // Checked FIRST, before the plain-draft path below — a clicked
+      // preview box is a stronger, more specific signal ("I want THIS
+      // design") than a generic carried-over draft, and the two paths
+      // lead somewhere different (straight to that image generating, vs
+      // the compact text summary).
+      const clickedRaw = localStorage.getItem('landingPreviewClickedConcept');
+      if (clickedRaw) {
+        localStorage.removeItem('landingPreviewClickedConcept'); // one-time use, same as the draft below
+        let clickedSaved;
+        try { clickedSaved = JSON.parse(clickedRaw); } catch (e) { clickedSaved = null; }
+        if (clickedSaved && Array.isArray(clickedSaved.concepts)) {
+          resumeFreePreviewAfterSignIn(clickedSaved);
+          return;
+        }
+      }
+
       const raw = localStorage.getItem('landingDesignDraft');
       if (!raw) {
         // No carried-over draft — this is the actual right place for this
@@ -8452,9 +8524,9 @@
         // carried over" — a normal later tab click never reaches this
         // function at all, so it can't re-trigger the notice.
         const noticeCard = document.getElementById('designNoGoToLanding');
-        const form = document.getElementById('designForm');
-        if (noticeCard && form && !designEntryResolved) {
-          form.style.display = 'none';
+        const formWrapper = document.getElementById('designFormWrapper');
+        if (noticeCard && formWrapper && !designEntryResolved) {
+          formWrapper.style.display = 'none';
           noticeCard.style.display = 'block';
         }
         return;
@@ -8496,6 +8568,54 @@
       showDesignSummary(saved);
     }
 
+    // Completes the flow started by clickLandingPreviewBox() — creates the
+    // real Design record from the 3 already-shown concepts (no second
+    // Claude call), lands the customer on the exact same results view
+    // submitDesign() produces (displayDesigns(), fully reused), then
+    // immediately fires generateConceptImage() for the ONE box they
+    // actually clicked — completing the action they started before being
+    // asked to sign in, rather than making them click it again.
+    async function resumeFreePreviewAfterSignIn(saved) {
+      const summaryCard = document.getElementById('designSummaryCard');
+      const noticeCard = document.getElementById('designNoGoToLanding');
+      const formWrapper = document.getElementById('designFormWrapper');
+      if (summaryCard) summaryCard.style.display = 'none';
+      if (noticeCard) noticeCard.style.display = 'none';
+      if (formWrapper) formWrapper.style.display = 'none';
+      designEntryResolved = true;
+
+      setStatus('designStatus', '⏳ Setting up your designs...', 'info');
+      try {
+        const res = await fetch(`${API}/api/designs/from-free-preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(saved),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          setStatus('designStatus', '❌ ' + (data.error || 'Could not resume your preview — please describe your outfit again.'), 'error');
+          if (formWrapper) formWrapper.style.display = '';
+          return;
+        }
+        currentDesignId = data.design._id;
+        currentDesignDescription = saved.description || '';
+        displayDesigns(data.design.aiConcepts, null, saved.description, false, false, saved.dressType, { occasion: saved.occasion, neckline: saved.neckline, fabricType: saved.fabricType, ageBracket: saved.ageBracket });
+        updateBudget(data.trial);
+        setStatus('designStatus', '', 'info');
+        document.getElementById('designStatus')?.classList.remove('show');
+        // Auto-fires the exact box that was clicked before sign-in —
+        // generateConceptImage() itself handles its own loading state on
+        // that specific box, same as if the customer had just clicked it
+        // again now that they're signed in.
+        if (typeof saved.clickedIndex === 'number') {
+          generateConceptImage(saved.clickedIndex, false);
+        }
+      } catch (err) {
+        setStatus('designStatus', '❌ ' + err.message, 'error');
+        if (formWrapper) formWrapper.style.display = '';
+      }
+    }
+
     // Populates and shows the compact post-sign-in summary, hiding the
     // real form underneath it (fields are still populated on the hidden
     // form — Generate just submits that same form via requestSubmit(),
@@ -8516,9 +8636,9 @@
     function showDesignSummary(saved) {
       const card = document.getElementById('designSummaryCard');
       const content = document.getElementById('designSummaryContent');
-      const form = document.getElementById('designForm');
+      const formWrapper = document.getElementById('designFormWrapper');
       const noticeCard = document.getElementById('designNoGoToLanding');
-      if (!card || !content || !form) return;
+      if (!card || !content || !formWrapper) return;
       designEntryResolved = true;
       if (noticeCard) noticeCard.style.display = 'none';
 
@@ -8531,7 +8651,7 @@
       if (saved.extraNotes && saved.extraNotes.trim()) rows.push(`<div style="margin-top:6px;"><strong>Also noted:</strong> ${escapeHtml(saved.extraNotes)}</div>`);
       content.innerHTML = rows.join('') || '<div style="color:var(--text-muted);">Nothing picked yet — head into the form below directly.</div>';
 
-      form.style.display = 'none';
+      formWrapper.style.display = 'none';
       card.style.display = 'block';
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -8557,10 +8677,11 @@
 
     function confirmAndGenerateFromSummary() {
       const card = document.getElementById('designSummaryCard');
+      const formWrapper = document.getElementById('designFormWrapper');
       const form = document.getElementById('designForm');
       if (card) card.style.display = 'none';
+      if (formWrapper) formWrapper.style.display = '';
       if (form) {
-        form.style.display = '';
         form.requestSubmit(); // fires the existing onsubmit="submitDesign(event)" — same validation/generation path as clicking Generate directly ever used
       }
     }
@@ -8573,9 +8694,9 @@
     function startOverFromSummary(event) {
       if (event) event.preventDefault();
       const card = document.getElementById('designSummaryCard');
-      const form = document.getElementById('designForm');
+      const formWrapper = document.getElementById('designFormWrapper');
       if (card) card.style.display = 'none';
-      if (form) form.style.display = '';
+      if (formWrapper) formWrapper.style.display = '';
       if (typeof resetDesignFormFields === 'function') resetDesignFormFields();
       if (typeof resetLandingDesignPreview === 'function') resetLandingDesignPreview();
       goToLandingPage(null);
