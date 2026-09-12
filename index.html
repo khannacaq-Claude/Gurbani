@@ -3059,6 +3059,14 @@
                    above it is optional, not a gate. -->
               <div class="tryit-label" data-i18n="lblDescribeOutfit" style="margin-top:16px; margin-bottom:6px;">Describe Your Dream Outfit</div>
               <textarea id="landingDesignDesc" data-i18n-placeholder="phDescribeOutfit" placeholder="E.g., Pink embroidered anarkali with gold work for wedding ceremony..." style="min-height:96px; width:100%;"></textarea>
+              <div class="voice-input-row" style="display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+                <button type="button" id="landingVoiceInputBtn" class="voice-input-btn" onclick="toggleLandingVoiceInput()" aria-label="Describe by voice instead of typing">🎤 Speak instead</button>
+                <select id="landingVoiceInputLang" aria-label="Voice input language" style="font-size: 12px; padding: 4px 6px; width: auto;">
+                  <option value="en-IN">English</option>
+                  <option value="hi-IN">हिन्दी</option>
+                </select>
+                <span id="landingVoiceInputStatus" role="status" aria-live="polite" style="font-size: 12px; color: var(--text-muted);"></span>
+              </div>
 
               <!-- Free anonymous text-only preview — 3 real Claude-generated
                    concepts, no sign-in, no images (images stay the sign-in
@@ -15017,6 +15025,7 @@
       initSectionTabsObserver();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
+      initLandingVoiceInput();
       initRateCardTeasers();
       loadPublicTrends();
       setTryItLanguage(localStorage.getItem('gfTryItLang') || 'en'); // restore a returning visitor's language choice — was being saved but never read back
@@ -15146,6 +15155,8 @@
     // transcript stays fully editable in the textarea either way.
     let voiceRecognition = null;
     let voiceRecognizing = false;
+    let landingVoiceRecognition = null;
+    let landingVoiceRecognizing = false;
 
     function initVoiceInput() {
       const micBtn = document.getElementById('voiceInputBtn');
@@ -15230,6 +15241,91 @@
       } catch (err) {
         console.error('Voice input failed to start:', err);
         document.getElementById('voiceInputStatus').textContent = '⚠️ Could not start voice input';
+      }
+    }
+
+    // Parallel copy of initVoiceInput()/toggleVoiceInput() above, targeting
+    // the landing page's own textarea/state instead of the signed-in
+    // form's — built as a separate pair rather than generalizing the
+    // existing one, since that one is hardcoded to designDesc/
+    // validateDescriptionRealtime() in several places, and risking a
+    // regression on an already-working feature wasn't worth it just to
+    // avoid this small duplication.
+    function initLandingVoiceInput() {
+      const micBtn = document.getElementById('landingVoiceInputBtn');
+      const langSelect = document.getElementById('landingVoiceInputLang');
+      const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognitionCtor) {
+        if (micBtn) micBtn.style.display = 'none';
+        if (langSelect) langSelect.style.display = 'none';
+        return;
+      }
+
+      landingVoiceRecognition = new SpeechRecognitionCtor();
+      landingVoiceRecognition.continuous = true;
+      landingVoiceRecognition.interimResults = true;
+      landingVoiceRecognition.lang = langSelect.value;
+
+      let baseText = '';
+
+      landingVoiceRecognition.onstart = () => {
+        landingVoiceRecognizing = true;
+        baseText = document.getElementById('landingDesignDesc').value;
+        micBtn.textContent = '⏹️ Stop';
+        micBtn.classList.add('recording');
+        document.getElementById('landingVoiceInputStatus').textContent = '🎙️ Listening…';
+      };
+
+      landingVoiceRecognition.onresult = (event) => {
+        // Same full-rebuild approach as the signed-in version, for the
+        // same reason — immune to Chrome's continuous-mode result-index
+        // reset that otherwise re-types already-heard words.
+        let final = '';
+        let interim = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+        const textarea = document.getElementById('landingDesignDesc');
+        const needsSpace = baseText && !/[\s]$/.test(baseText);
+        textarea.value = (baseText + (needsSpace ? ' ' : '') + final + interim).trim();
+      };
+
+      landingVoiceRecognition.onerror = (event) => {
+        const statusEl = document.getElementById('landingVoiceInputStatus');
+        statusEl.textContent = event.error === 'not-allowed'
+          ? '🚫 Microphone permission denied — you can still type'
+          : '⚠️ Voice input hiccup — you can still type';
+      };
+
+      landingVoiceRecognition.onend = () => {
+        landingVoiceRecognizing = false;
+        micBtn.textContent = '🎤 Speak instead';
+        micBtn.classList.remove('recording');
+        document.getElementById('landingVoiceInputStatus').textContent = '';
+      };
+
+      langSelect.addEventListener('change', () => {
+        if (landingVoiceRecognition) landingVoiceRecognition.lang = langSelect.value;
+      });
+    }
+
+    function toggleLandingVoiceInput() {
+      if (!landingVoiceRecognition) return;
+      if (landingVoiceRecognizing) {
+        landingVoiceRecognition.stop();
+        return;
+      }
+      try {
+        landingVoiceRecognition.lang = document.getElementById('landingVoiceInputLang').value;
+        landingVoiceRecognition.start();
+      } catch (err) {
+        console.error('Landing voice input failed to start:', err);
+        document.getElementById('landingVoiceInputStatus').textContent = '⚠️ Could not start voice input';
       }
     }
 
