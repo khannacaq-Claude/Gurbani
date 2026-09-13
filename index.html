@@ -776,87 +776,109 @@
       text-align: left;
     }
 
-    /* ---------- Hero banner treatment (public landing page only) ----------
-       Confined to the hero card itself (id="heroBannerCard") rather than
-       the whole page — the earlier full-page-fixed version only ever
-       showed in the empty side margins on wide desktop screens and was
-       completely invisible on mobile (where the content column runs
-       full-width with no gutter at all). This version lives INSIDE the
-       hero card's own box, so it's full-width on every device, scrolls
-       normally with the page, and can't spill onto the shared <header>
-       (which also shows during the signed-in dashboard, so it must stay
-       plain) or any other card. A soft cream tint sits over the photo
-       mosaic so the existing dark headline/paragraph text keeps its
-       contrast — the mosaic itself is blurred and tiled with gaps
-       (rather than shown as sharp, hard-edged photo slivers) so it reads
-       as a deliberate soft texture, not a rendering glitch. */
-    .hero-banner-card { position: relative; overflow: hidden; }
-    .hero-banner-mosaic {
+    /* ---------- Hero full-bleed treatment (public landing page only) ----------
+       Breaks out of the centered <main> (max-width:1440px) to run edge-
+       to-edge, full viewport width — the standard "full-bleed inside a
+       constrained container" trick (100vw + negative side margins).
+       Modeled on brics2026.gov.in's hero: a rotating photo backdrop runs
+       full-width behind fixed headline text, with a dark tint over it
+       for contrast — here using real, customer-approved AI Design
+       Studio photos instead of stock video, since that's the real asset
+       this business actually has. Deliberately NOT a .card (no rounded
+       corners/border/shadow — a full-bleed banner reads as a banner,
+       not a floating card), and text colors inside are overridden to
+       light/white since they now sit on a dark photo backdrop instead
+       of the site's usual cream card background. Lives inside
+       #landingPage only — same reasoning as before: the shared <header>
+       and the signed-in dashboard both stay untouched. */
+    .hero-fullbleed {
+      position: relative;
+      left: 50%;
+      right: 50%;
+      width: 100vw;
+      margin-left: -50vw;
+      margin-right: -50vw;
+      margin-bottom: 20px;
+      overflow: hidden;
+      padding: 48px 20px 40px;
+    }
+    .hero-fullbleed-mosaic {
       position: absolute;
       inset: 0;
       z-index: 0;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 6px;
-      padding: 6px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
-    .hero-banner-mosaic-tile {
-      border-radius: 10px;
+    .hero-fullbleed-mosaic-tile {
       background-size: cover;
       background-position: center;
-      filter: blur(2.5px);
-      opacity: 0.42;
-      animation: heroBannerBreathe 19s ease-in-out infinite;
+      animation: heroFullbleedBreathe 20s ease-in-out infinite;
     }
-    .hero-banner-mosaic-tile:nth-child(odd) { animation-duration: 22s; animation-delay: -4s; }
-    .hero-banner-mosaic-tile:nth-child(3n) { animation-duration: 25s; animation-delay: -9s; }
-    @keyframes heroBannerBreathe {
-      0%, 100% { transform: scale(1); opacity: 0.36; }
-      50% { transform: scale(1.05); opacity: 0.52; }
+    .hero-fullbleed-mosaic-tile:nth-child(odd) { animation-duration: 24s; animation-delay: -5s; }
+    .hero-fullbleed-mosaic-tile:nth-child(3n) { animation-duration: 27s; animation-delay: -11s; }
+    @keyframes heroFullbleedBreathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
     }
-    .hero-banner-tint {
+    .hero-fullbleed-tint {
       position: absolute;
       inset: 0;
       z-index: 1;
-      background: linear-gradient(180deg, rgba(253,248,240,0.90), rgba(253,248,240,0.84) 55%, rgba(253,248,240,0.92));
+      background: linear-gradient(135deg, rgba(64,25,45,0.90), rgba(42,15,29,0.85));
       pointer-events: none;
     }
-    .hero-banner-sparkles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-    .hero-banner-sparkle {
+    .hero-fullbleed-sparkles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .hero-fullbleed-sparkle {
       position: absolute;
-      font-size: 20px;
-      opacity: 0.75;
+      font-size: 22px;
+      opacity: 0.85;
       color: var(--marigold);
-      animation: heroBannerDrift 13s ease-in-out infinite;
+      animation: heroFullbleedDrift 13s ease-in-out infinite;
     }
-    @keyframes heroBannerDrift {
+    @keyframes heroFullbleedDrift {
       0%, 100% { transform: translate(0, 0) rotate(0deg); }
       50% { transform: translate(10px, -16px) rotate(10deg); }
     }
-    .hero-banner-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; opacity: 0.35; pointer-events: none; }
-    .hero-banner-thread path {
+    .hero-fullbleed-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; opacity: 0.4; pointer-events: none; }
+    .hero-fullbleed-thread path {
       fill: none;
-      stroke: var(--vivid);
+      stroke: rgba(255,255,255,0.7);
       stroke-width: 1.4;
       stroke-dasharray: 3 3;
       vector-effect: non-scaling-stroke;
     }
-    .hero-banner-thread .hero-banner-needle { fill: var(--marigold); }
-    .hero-banner-content { position: relative; z-index: 3; }
+    .hero-fullbleed-thread .hero-fullbleed-needle { fill: var(--marigold); }
+    .hero-fullbleed-content {
+      position: relative;
+      z-index: 3;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    /* Text color overrides — the hero-eyebrow/hero-headline/paragraph
+       styles were designed for the site's usual light cream card
+       background; this block sits on a dark photo backdrop instead, so
+       these need to flip to light/white. Scoped to inside
+       .hero-fullbleed-content only — the shared .hero-headline etc.
+       classes aren't used anywhere else on the page (confirmed before
+       making this change), so this doesn't affect anything else. */
+    .hero-fullbleed-content .hero-eyebrow { color: rgba(255,255,255,0.88); }
+    .hero-fullbleed-content .hero-headline { color: #fff; }
+    .hero-fullbleed-content .hero-headline .accent { color: var(--marigold); }
+    .hero-fullbleed-content p { color: rgba(255,255,255,0.92); }
     /* Battery/CPU conservation while the tab isn't visible. */
-    .hero-banner-card.paused .hero-banner-mosaic-tile,
-    .hero-banner-card.paused .hero-banner-sparkle { animation-play-state: paused; }
+    .hero-fullbleed.paused .hero-fullbleed-mosaic-tile,
+    .hero-fullbleed.paused .hero-fullbleed-sparkle { animation-play-state: paused; }
 
     /* Respect a person's OS-level reduced-motion preference: skip the
        moving parts (reveal slide/count-up feel, hero crossfade, trend
-       auto-cycle, hero banner) rather than force motion on anyone who's
-       told their device they don't want it. Content itself is
-       unaffected — it just appears instantly instead of animating in. */
+       auto-cycle, hero banner breathing) rather than force motion on
+       anyone who's told their device they don't want it. Content itself
+       is unaffected — it just appears instantly instead of animating in. */
     @media (prefers-reduced-motion: reduce) {
       .reveal-section { transition: none; opacity: 1 !important; transform: none !important; }
       .hero-photo-strip img { transition: none; }
-      .hero-banner-mosaic-tile, .hero-banner-sparkle { animation: none; }
-      .hero-banner-needle { display: none; }
+      .hero-fullbleed-mosaic-tile, .hero-fullbleed-sparkle { animation: none; }
+      .hero-fullbleed-needle { display: none; }
     }
     .insta-frame-inner {
       background: var(--cream-card);
@@ -2946,25 +2968,25 @@
         <a href="#" onclick="closeGuidesDropdownAndJump('storySection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📖 Our Story</a>
         <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">📲 Stay in Loop</a>
       </div>
-      <div class="card hero-banner-card" id="heroBannerCard">
-        <!-- Hero banner background — mosaic of real, customer-approved
-             AI Design Studio photos (blurred + tiled with gaps so it
-             reads as a soft texture, not sharp photo fragments), a
-             cream tint on top to preserve the existing text's contrast,
-             drifting sparkles, and a meandering stitched-thread line —
-             all confined to this card's own box (see .hero-banner-card
-             CSS), so it's full-width on mobile too and never touches
-             the shared <header> or the signed-in dashboard. -->
-        <div class="hero-banner-mosaic" id="heroBannerMosaic" aria-hidden="true"></div>
-        <div class="hero-banner-tint" aria-hidden="true"></div>
-        <div class="hero-banner-sparkles" id="heroBannerSparkles" aria-hidden="true"></div>
-        <svg class="hero-banner-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <div class="hero-fullbleed" id="heroFullbleed">
+        <!-- Hero full-bleed background — mosaic of real, customer-approved
+             AI Design Studio photos filling the whole banner, a dark wine
+             tint over it for text contrast, drifting sparkles, and a
+             meandering stitched-thread line. Breaks out to edge-to-edge
+             width via .hero-fullbleed's negative-margin trick — see CSS —
+             so it's full-width on mobile too, and stays inside
+             #landingPage only, so it never touches the shared <header>
+             or the signed-in dashboard. -->
+        <div class="hero-fullbleed-mosaic" id="heroFullbleedMosaic" aria-hidden="true"></div>
+        <div class="hero-fullbleed-tint" aria-hidden="true"></div>
+        <div class="hero-fullbleed-sparkles" id="heroFullbleedSparkles" aria-hidden="true"></div>
+        <svg class="hero-fullbleed-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
-          <circle r="1.1" class="hero-banner-needle">
+          <circle r="1.1" class="hero-fullbleed-needle">
             <animateMotion dur="30s" repeatCount="indefinite" path="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
           </circle>
         </svg>
-        <div class="hero-banner-content">
+        <div class="hero-fullbleed-content">
         <div class="trust-badge" onclick="scrollToSection('landingDesignPreview')" style="cursor:pointer;"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
 
 
@@ -8175,8 +8197,8 @@
     async function loadFeaturedDesigns() {
       try {
         // Limit raised from 15 to 40 so this single fetch can now also
-        // stock the hero banner mosaic (see initHeroBannerMosaic) in
-        // addition to the 3 lens swatches and the hero photo strip —
+        // stock the hero full-bleed mosaic (see initHeroFullbleedMosaic)
+        // in addition to the 3 lens swatches and the hero photo strip —
         // one API call powers all three, rather than a separate fetch
         // per visual.
         const res = await fetch(`${API}/api/designs/featured?limit=40`);
@@ -8228,11 +8250,11 @@
         const heroPool = shuffled.length > 3 ? shuffled.slice(3, 8) : shuffled;
         initHeroPhotoStrip(heroPool);
 
-        // Hero banner mosaic gets whatever's left (or the full shuffled
-        // set if there aren't many designs yet — tiles repeat to fill
-        // the grid either way, see initHeroBannerMosaic).
+        // Hero full-bleed mosaic gets whatever's left (or the full
+        // shuffled set if there aren't many designs yet — tiles repeat
+        // to fill the grid either way, see initHeroFullbleedMosaic).
         const mosaicPool = shuffled.length > 8 ? shuffled.slice(8) : shuffled;
-        initHeroBannerMosaic(mosaicPool);
+        initHeroFullbleedMosaic(mosaicPool);
       } catch (err) {
         // no-op — illustrative placeholders stay as-is
       }
@@ -8240,27 +8262,27 @@
     loadFeaturedDesigns();
     setInterval(loadFeaturedDesigns, 2.5 * 60 * 60 * 1000); // ~every 2.5 hours, for anyone who leaves the tab open
 
-    // ---------- Hero banner treatment (public landing page only) ----------
+    // ---------- Hero full-bleed treatment (public landing page only) ----------
     // Mosaic of real, customer-approved design photos + drifting
-    // sparkles, confined entirely to the hero card's own box (see
-    // .hero-banner-card CSS) — NOT the whole page. Nested inside that
-    // one card, which is itself inside #landingPage, so it hides/shows
+    // sparkles + a meandering thread line, confined to the full-bleed
+    // hero band (see .hero-fullbleed CSS) — NOT the whole page and NOT
+    // the shared <header>. Nested inside #landingPage, so it hides/shows
     // automatically with the same .hidden toggle used for sign-in/out,
-    // and never touches the shared <header> or the signed-in dashboard.
-    function initHeroBannerMosaic(items) {
-      const mosaic = document.getElementById('heroBannerMosaic');
+    // and never appears behind the signed-in dashboard.
+    function initHeroFullbleedMosaic(items) {
+      const mosaic = document.getElementById('heroFullbleedMosaic');
       if (!mosaic) return;
       if (!items || items.length === 0) return; // no approved shared designs yet — banner still shows sparkles + thread, just no photo tiles
-      const TILE_COUNT = 12; // enough to fill the card without being a heavy, dense wall of images
+      const TILE_COUNT = 14; // enough to fill a wide banner without being a heavy, dense wall of images
       const tiles = [];
-      for (let i = 0; i < TILE_COUNT; i++) tiles.push(items[i % items.length]); // repeats the pool if fewer than 12 designs exist yet
+      for (let i = 0; i < TILE_COUNT; i++) tiles.push(items[i % items.length]); // repeats the pool if fewer than 14 designs exist yet
       mosaic.innerHTML = tiles.map((item) =>
-        `<div class="hero-banner-mosaic-tile" style="background-image:url('${item.imageUrl}');"></div>`
+        `<div class="hero-fullbleed-mosaic-tile" style="background-image:url('${item.imageUrl}');"></div>`
       ).join('');
     }
 
-    function initHeroBannerSparkles() {
-      const container = document.getElementById('heroBannerSparkles');
+    function initHeroFullbleedSparkles() {
+      const container = document.getElementById('heroFullbleedSparkles');
       if (!container) return;
       // Fixed, hand-placed positions rather than random each load — random
       // would look fine visually but would also mean a slightly different
@@ -8268,12 +8290,12 @@
       // deliberately scattered fixed set. Varied duration/delay per sparkle
       // (via index) keeps them from all breathing in sync.
       const positions = [
-        { top: '8%', left: '12%' }, { top: '20%', left: '80%' }, { top: '38%', left: '48%' },
-        { top: '55%', left: '8%' }, { top: '65%', left: '86%' }, { top: '78%', left: '32%' },
-        { top: '15%', left: '55%' }, { top: '48%', left: '20%' },
+        { top: '10%', left: '6%' }, { top: '18%', left: '85%' }, { top: '40%', left: '52%' },
+        { top: '60%', left: '4%' }, { top: '70%', left: '92%' }, { top: '82%', left: '30%' },
+        { top: '14%', left: '60%' }, { top: '52%', left: '18%' }, { top: '30%', left: '95%' },
       ];
       container.innerHTML = positions.map((p, i) =>
-        `<span class="hero-banner-sparkle" style="top:${p.top}; left:${p.left}; animation-duration:${12 + (i % 5) * 2}s; animation-delay:-${i * 1.3}s;">✨</span>`
+        `<span class="hero-fullbleed-sparkle" style="top:${p.top}; left:${p.left}; animation-duration:${12 + (i % 5) * 2}s; animation-delay:-${i * 1.3}s;">✨</span>`
       ).join('');
     }
 
@@ -8283,14 +8305,14 @@
     // animation-play-state doesn't reach SMIL). Registered once, not
     // per-render.
     document.addEventListener('visibilitychange', () => {
-      const card = document.getElementById('heroBannerCard');
-      if (!card) return;
-      const threadSvg = card.querySelector('.hero-banner-thread');
+      const band = document.getElementById('heroFullbleed');
+      if (!band) return;
+      const threadSvg = band.querySelector('.hero-fullbleed-thread');
       if (document.hidden) {
-        card.classList.add('paused');
+        band.classList.add('paused');
         if (threadSvg && threadSvg.pauseAnimations) threadSvg.pauseAnimations();
       } else {
-        card.classList.remove('paused');
+        band.classList.remove('paused');
         if (threadSvg && threadSvg.unpauseAnimations) threadSvg.unpauseAnimations();
       }
     });
@@ -15536,7 +15558,7 @@
     window.addEventListener('load', () => {
       initSectionTabsObserver();
       initScrollReveals();
-      initHeroBannerSparkles();
+      initHeroFullbleedSparkles();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initLandingVoiceInput();
