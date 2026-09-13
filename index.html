@@ -776,6 +776,69 @@
       text-align: left;
     }
 
+    /* ---------- Ambient background layer (public landing page only) ---------- */
+    .ambient-bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background: var(--cream);
+    }
+    .ambient-mosaic {
+      position: absolute;
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    }
+    .ambient-mosaic-tile {
+      background-size: cover;
+      background-position: center;
+      opacity: 0.16;
+      animation: ambientBreathe 18s ease-in-out infinite;
+    }
+    .ambient-mosaic-tile:nth-child(odd) { animation-duration: 21s; animation-delay: -4s; }
+    .ambient-mosaic-tile:nth-child(3n) { animation-duration: 24s; animation-delay: -10s; }
+    .ambient-mosaic-tile:nth-child(4n) { animation-duration: 15s; animation-delay: -2s; }
+    @keyframes ambientBreathe {
+      0%, 100% { transform: scale(1); opacity: 0.14; }
+      50% { transform: scale(1.06); opacity: 0.20; }
+    }
+    .ambient-sparkles { position: absolute; inset: 0; }
+    .ambient-sparkle {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0.55;
+      color: var(--marigold);
+      animation: ambientDrift 14s ease-in-out infinite;
+    }
+    @keyframes ambientDrift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(12px, -18px) rotate(12deg); }
+    }
+    .ambient-thread {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.24;
+    }
+    .ambient-thread path {
+      fill: none;
+      stroke: var(--vivid);
+      stroke-width: 1.4;
+      stroke-dasharray: 3 3;
+      vector-effect: non-scaling-stroke;
+    }
+    .ambient-thread .ambient-needle { fill: var(--marigold); }
+    /* Battery/CPU conservation while the tab isn't visible — toggled via
+       visibilitychange (see JS), same reasoning as the Trending/hero
+       auto-cycles pausing when hidden. */
+    .ambient-bg-layer.paused .ambient-mosaic-tile,
+    .ambient-bg-layer.paused .ambient-sparkle { animation-play-state: paused; }
+
     /* Respect a person's OS-level reduced-motion preference: skip the
        moving parts (reveal slide/count-up feel, hero crossfade, trend
        auto-cycle) rather than force motion on anyone who's told their
@@ -784,6 +847,8 @@
     @media (prefers-reduced-motion: reduce) {
       .reveal-section { transition: none; opacity: 1 !important; transform: none !important; }
       .hero-photo-strip img { transition: none; }
+      .ambient-mosaic-tile, .ambient-sparkle { animation: none; opacity: 0.14; }
+      .ambient-needle { display: none; }
     }
     .insta-frame-inner {
       background: var(--cream-card);
@@ -2843,6 +2908,32 @@
   <main>
     <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
+      <!-- AMBIENT BACKGROUND LAYER — public landing page only. Fixed,
+           z-index:-1, so it sits behind every card/section on this page
+           (all of which paint their own opaque background) and
+           automatically hides/shows together with #landingPage itself,
+           since it's nested inside it and .hidden just sets
+           display:none on the whole subtree — no separate JS toggle
+           needed for sign-in/sign-out, and it never appears behind the
+           signed-in admin/dashboard screens (those live outside this
+           container). Three parts: a slow-breathing mosaic of real,
+           customer-approved AI Design Studio photos (same
+           /api/designs/featured data as the hero strip and "Real
+           Designs" section — one shared fetch, no extra API calls);
+           drifting gold sparkles; and one long meandering stitched-
+           thread line echoing the needle animation in the hero headline
+           just below. pointer-events:none throughout so it never
+           intercepts a click meant for real content. -->
+      <div class="ambient-bg-layer" id="ambientBgLayer" aria-hidden="true">
+        <div class="ambient-mosaic" id="ambientMosaic"></div>
+        <div class="ambient-sparkles" id="ambientSparkles"></div>
+        <svg class="ambient-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
+          <circle r="1.1" class="ambient-needle">
+            <animateMotion dur="30s" repeatCount="indefinite" path="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
+          </circle>
+        </svg>
+      </div>
       <nav class="section-tabs" id="sectionTabs">
         <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
         <button type="button" data-target="landingDesignPreview" onclick="jumpToTab('landingDesignPreview', this)">✨ AI Design Studio</button>
@@ -8081,7 +8172,12 @@
     // every ~2.5 hours for anyone who leaves the tab open a long time.
     async function loadFeaturedDesigns() {
       try {
-        const res = await fetch(`${API}/api/designs/featured?limit=15`);
+        // Limit raised from 15 to 40 so this single fetch can now also
+        // stock the ambient background mosaic (see initAmbientMosaic)
+        // in addition to the 3 lens swatches and the hero photo strip —
+        // one API call powers all three, rather than a separate fetch
+        // per visual.
+        const res = await fetch(`${API}/api/designs/featured?limit=40`);
         const data = await res.json();
         if (!res.ok || !data.designs || data.designs.length === 0) return;
 
@@ -8129,12 +8225,74 @@
         // if there isn't even 1.
         const heroPool = shuffled.length > 3 ? shuffled.slice(3, 8) : shuffled;
         initHeroPhotoStrip(heroPool);
+
+        // Ambient mosaic gets whatever's left (or the full shuffled set
+        // if there aren't many designs yet — tiles repeat to fill the
+        // grid either way, see initAmbientMosaic).
+        const mosaicPool = shuffled.length > 8 ? shuffled.slice(8) : shuffled;
+        initAmbientMosaic(mosaicPool);
       } catch (err) {
         // no-op — illustrative placeholders stay as-is
       }
     }
     loadFeaturedDesigns();
     setInterval(loadFeaturedDesigns, 2.5 * 60 * 60 * 1000); // ~every 2.5 hours, for anyone who leaves the tab open
+
+    // ---------- Ambient background layer (public landing page only) ----------
+    // Mosaic of real, customer-approved design photos + drifting
+    // sparkles + a meandering thread line, all sitting behind the
+    // landing page content (see .ambient-bg-layer CSS). Nested inside
+    // #landingPage so it hides/shows automatically with the same
+    // .hidden toggle used for sign-in/out — no separate visibility
+    // logic needed here.
+    function initAmbientMosaic(items) {
+      const mosaic = document.getElementById('ambientMosaic');
+      if (!mosaic) return;
+      if (!items || items.length === 0) return; // no approved shared designs yet — layer still shows sparkles + thread, just no photo tiles
+      const TILE_COUNT = 12; // enough to fill a typical viewport without being a heavy, dense wall of images
+      const tiles = [];
+      for (let i = 0; i < TILE_COUNT; i++) tiles.push(items[i % items.length]); // repeats the pool if fewer than 12 designs exist yet
+      mosaic.innerHTML = tiles.map((item) =>
+        `<div class="ambient-mosaic-tile" style="background-image:url('${item.imageUrl}');"></div>`
+      ).join('');
+    }
+
+    function initAmbientSparkles() {
+      const container = document.getElementById('ambientSparkles');
+      if (!container) return;
+      // Fixed, hand-placed positions rather than random each load — random
+      // would look fine visually but would also mean a slightly different
+      // layout flashes on every refresh, which reads as sloppier than a
+      // deliberately scattered fixed set. Varied duration/delay per sparkle
+      // (via index) keeps them from all breathing in sync.
+      const positions = [
+        { top: '6%', left: '10%' }, { top: '18%', left: '82%' }, { top: '32%', left: '46%' },
+        { top: '44%', left: '6%' }, { top: '58%', left: '88%' }, { top: '68%', left: '30%' },
+        { top: '78%', left: '60%' }, { top: '12%', left: '55%' }, { top: '50%', left: '20%' },
+        { top: '86%', left: '12%' },
+      ];
+      container.innerHTML = positions.map((p, i) =>
+        `<span class="ambient-sparkle" style="top:${p.top}; left:${p.left}; animation-duration:${12 + (i % 5) * 2}s; animation-delay:-${i * 1.3}s;">✨</span>`
+      ).join('');
+    }
+
+    // Battery/CPU conservation while the tab is hidden — pauses the CSS
+    // breathing/drift animations, and separately pauses the thread's
+    // SMIL needle motion via the SVG's own pauseAnimations() API (CSS
+    // animation-play-state doesn't reach SMIL). Registered once, not
+    // per-render.
+    document.addEventListener('visibilitychange', () => {
+      const layer = document.getElementById('ambientBgLayer');
+      if (!layer) return;
+      const threadSvg = layer.querySelector('.ambient-thread');
+      if (document.hidden) {
+        layer.classList.add('paused');
+        if (threadSvg && threadSvg.pauseAnimations) threadSvg.pauseAnimations();
+      } else {
+        layer.classList.remove('paused');
+        if (threadSvg && threadSvg.unpauseAnimations) threadSvg.unpauseAnimations();
+      }
+    });
 
     // ---------- Hero photo strip — crossfading carousel of real,
     // customer-shared design photos, sitting near the top of the hero.
@@ -15377,6 +15535,7 @@
     window.addEventListener('load', () => {
       initSectionTabsObserver();
       initScrollReveals();
+      initAmbientSparkles();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initLandingVoiceInput();
