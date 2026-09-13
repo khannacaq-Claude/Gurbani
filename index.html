@@ -776,79 +776,87 @@
       text-align: left;
     }
 
-    /* ---------- Ambient background layer (public landing page only) ---------- */
-    .ambient-bg-layer {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      overflow: hidden;
-      pointer-events: none;
-      background: var(--cream);
-    }
-    .ambient-mosaic {
+    /* ---------- Hero banner treatment (public landing page only) ----------
+       Confined to the hero card itself (id="heroBannerCard") rather than
+       the whole page — the earlier full-page-fixed version only ever
+       showed in the empty side margins on wide desktop screens and was
+       completely invisible on mobile (where the content column runs
+       full-width with no gutter at all). This version lives INSIDE the
+       hero card's own box, so it's full-width on every device, scrolls
+       normally with the page, and can't spill onto the shared <header>
+       (which also shows during the signed-in dashboard, so it must stay
+       plain) or any other card. A soft cream tint sits over the photo
+       mosaic so the existing dark headline/paragraph text keeps its
+       contrast — the mosaic itself is blurred and tiled with gaps
+       (rather than shown as sharp, hard-edged photo slivers) so it reads
+       as a deliberate soft texture, not a rendering glitch. */
+    .hero-banner-card { position: relative; overflow: hidden; }
+    .hero-banner-mosaic {
       position: absolute;
-      inset: -6%;
-      width: 112%;
-      height: 112%;
+      inset: 0;
+      z-index: 0;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 6px;
+      padding: 6px;
     }
-    .ambient-mosaic-tile {
+    .hero-banner-mosaic-tile {
+      border-radius: 10px;
       background-size: cover;
       background-position: center;
-      opacity: 0.16;
-      animation: ambientBreathe 18s ease-in-out infinite;
+      filter: blur(2.5px);
+      opacity: 0.42;
+      animation: heroBannerBreathe 19s ease-in-out infinite;
     }
-    .ambient-mosaic-tile:nth-child(odd) { animation-duration: 21s; animation-delay: -4s; }
-    .ambient-mosaic-tile:nth-child(3n) { animation-duration: 24s; animation-delay: -10s; }
-    .ambient-mosaic-tile:nth-child(4n) { animation-duration: 15s; animation-delay: -2s; }
-    @keyframes ambientBreathe {
-      0%, 100% { transform: scale(1); opacity: 0.14; }
-      50% { transform: scale(1.06); opacity: 0.20; }
+    .hero-banner-mosaic-tile:nth-child(odd) { animation-duration: 22s; animation-delay: -4s; }
+    .hero-banner-mosaic-tile:nth-child(3n) { animation-duration: 25s; animation-delay: -9s; }
+    @keyframes heroBannerBreathe {
+      0%, 100% { transform: scale(1); opacity: 0.36; }
+      50% { transform: scale(1.05); opacity: 0.52; }
     }
-    .ambient-sparkles { position: absolute; inset: 0; }
-    .ambient-sparkle {
-      position: absolute;
-      font-size: 20px;
-      opacity: 0.55;
-      color: var(--marigold);
-      animation: ambientDrift 14s ease-in-out infinite;
-    }
-    @keyframes ambientDrift {
-      0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      50% { transform: translate(12px, -18px) rotate(12deg); }
-    }
-    .ambient-thread {
+    .hero-banner-tint {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.24;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(253,248,240,0.90), rgba(253,248,240,0.84) 55%, rgba(253,248,240,0.92));
+      pointer-events: none;
     }
-    .ambient-thread path {
+    .hero-banner-sparkles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .hero-banner-sparkle {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0.75;
+      color: var(--marigold);
+      animation: heroBannerDrift 13s ease-in-out infinite;
+    }
+    @keyframes heroBannerDrift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(10px, -16px) rotate(10deg); }
+    }
+    .hero-banner-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; opacity: 0.35; pointer-events: none; }
+    .hero-banner-thread path {
       fill: none;
       stroke: var(--vivid);
       stroke-width: 1.4;
       stroke-dasharray: 3 3;
       vector-effect: non-scaling-stroke;
     }
-    .ambient-thread .ambient-needle { fill: var(--marigold); }
-    /* Battery/CPU conservation while the tab isn't visible — toggled via
-       visibilitychange (see JS), same reasoning as the Trending/hero
-       auto-cycles pausing when hidden. */
-    .ambient-bg-layer.paused .ambient-mosaic-tile,
-    .ambient-bg-layer.paused .ambient-sparkle { animation-play-state: paused; }
+    .hero-banner-thread .hero-banner-needle { fill: var(--marigold); }
+    .hero-banner-content { position: relative; z-index: 3; }
+    /* Battery/CPU conservation while the tab isn't visible. */
+    .hero-banner-card.paused .hero-banner-mosaic-tile,
+    .hero-banner-card.paused .hero-banner-sparkle { animation-play-state: paused; }
 
     /* Respect a person's OS-level reduced-motion preference: skip the
        moving parts (reveal slide/count-up feel, hero crossfade, trend
-       auto-cycle) rather than force motion on anyone who's told their
-       device they don't want it. Content itself is unaffected — it just
-       appears instantly instead of animating in. */
+       auto-cycle, hero banner) rather than force motion on anyone who's
+       told their device they don't want it. Content itself is
+       unaffected — it just appears instantly instead of animating in. */
     @media (prefers-reduced-motion: reduce) {
       .reveal-section { transition: none; opacity: 1 !important; transform: none !important; }
       .hero-photo-strip img { transition: none; }
-      .ambient-mosaic-tile, .ambient-sparkle { animation: none; opacity: 0.14; }
-      .ambient-needle { display: none; }
+      .hero-banner-mosaic-tile, .hero-banner-sparkle { animation: none; }
+      .hero-banner-needle { display: none; }
     }
     .insta-frame-inner {
       background: var(--cream-card);
@@ -2908,32 +2916,6 @@
   <main>
     <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
-      <!-- AMBIENT BACKGROUND LAYER — public landing page only. Fixed,
-           z-index:-1, so it sits behind every card/section on this page
-           (all of which paint their own opaque background) and
-           automatically hides/shows together with #landingPage itself,
-           since it's nested inside it and .hidden just sets
-           display:none on the whole subtree — no separate JS toggle
-           needed for sign-in/sign-out, and it never appears behind the
-           signed-in admin/dashboard screens (those live outside this
-           container). Three parts: a slow-breathing mosaic of real,
-           customer-approved AI Design Studio photos (same
-           /api/designs/featured data as the hero strip and "Real
-           Designs" section — one shared fetch, no extra API calls);
-           drifting gold sparkles; and one long meandering stitched-
-           thread line echoing the needle animation in the hero headline
-           just below. pointer-events:none throughout so it never
-           intercepts a click meant for real content. -->
-      <div class="ambient-bg-layer" id="ambientBgLayer" aria-hidden="true">
-        <div class="ambient-mosaic" id="ambientMosaic"></div>
-        <div class="ambient-sparkles" id="ambientSparkles"></div>
-        <svg class="ambient-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
-          <circle r="1.1" class="ambient-needle">
-            <animateMotion dur="30s" repeatCount="indefinite" path="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
-          </circle>
-        </svg>
-      </div>
       <nav class="section-tabs" id="sectionTabs">
         <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
         <button type="button" data-target="landingDesignPreview" onclick="jumpToTab('landingDesignPreview', this)">✨ AI Design Studio</button>
@@ -2964,7 +2946,25 @@
         <a href="#" onclick="closeGuidesDropdownAndJump('storySection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; border-bottom:1px solid #eee;">📖 Our Story</a>
         <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">📲 Stay in Loop</a>
       </div>
-      <div class="card">
+      <div class="card hero-banner-card" id="heroBannerCard">
+        <!-- Hero banner background — mosaic of real, customer-approved
+             AI Design Studio photos (blurred + tiled with gaps so it
+             reads as a soft texture, not sharp photo fragments), a
+             cream tint on top to preserve the existing text's contrast,
+             drifting sparkles, and a meandering stitched-thread line —
+             all confined to this card's own box (see .hero-banner-card
+             CSS), so it's full-width on mobile too and never touches
+             the shared <header> or the signed-in dashboard. -->
+        <div class="hero-banner-mosaic" id="heroBannerMosaic" aria-hidden="true"></div>
+        <div class="hero-banner-tint" aria-hidden="true"></div>
+        <div class="hero-banner-sparkles" id="heroBannerSparkles" aria-hidden="true"></div>
+        <svg class="hero-banner-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
+          <circle r="1.1" class="hero-banner-needle">
+            <animateMotion dur="30s" repeatCount="indefinite" path="M -5 12 C 15 2, 25 28, 45 16 S 76 4, 90 22 S 58 54, 74 68 S 38 58, 24 84 S 54 96, 92 90" />
+          </circle>
+        </svg>
+        <div class="hero-banner-content">
         <div class="trust-badge" onclick="scrollToSection('landingDesignPreview')" style="cursor:pointer;"><span class="live-dot"></span>✨ AI-Powered Custom Design Studio</div>
 
 
@@ -2989,6 +2989,8 @@
              Stays hidden (display:none, set in CSS) until there are at
              least 2 real photos to show. -->
         <div class="hero-photo-strip" id="heroPhotoStrip"></div>
+        </div>
+      </div>
 
         <!-- PUBLIC PREVIEW OF THE DESIGN FLOW — moved right up here, above
              stats/lens/occasion sections, so it's visible with little to no
@@ -8173,8 +8175,8 @@
     async function loadFeaturedDesigns() {
       try {
         // Limit raised from 15 to 40 so this single fetch can now also
-        // stock the ambient background mosaic (see initAmbientMosaic)
-        // in addition to the 3 lens swatches and the hero photo strip —
+        // stock the hero banner mosaic (see initHeroBannerMosaic) in
+        // addition to the 3 lens swatches and the hero photo strip —
         // one API call powers all three, rather than a separate fetch
         // per visual.
         const res = await fetch(`${API}/api/designs/featured?limit=40`);
@@ -8226,11 +8228,11 @@
         const heroPool = shuffled.length > 3 ? shuffled.slice(3, 8) : shuffled;
         initHeroPhotoStrip(heroPool);
 
-        // Ambient mosaic gets whatever's left (or the full shuffled set
-        // if there aren't many designs yet — tiles repeat to fill the
-        // grid either way, see initAmbientMosaic).
+        // Hero banner mosaic gets whatever's left (or the full shuffled
+        // set if there aren't many designs yet — tiles repeat to fill
+        // the grid either way, see initHeroBannerMosaic).
         const mosaicPool = shuffled.length > 8 ? shuffled.slice(8) : shuffled;
-        initAmbientMosaic(mosaicPool);
+        initHeroBannerMosaic(mosaicPool);
       } catch (err) {
         // no-op — illustrative placeholders stay as-is
       }
@@ -8238,27 +8240,27 @@
     loadFeaturedDesigns();
     setInterval(loadFeaturedDesigns, 2.5 * 60 * 60 * 1000); // ~every 2.5 hours, for anyone who leaves the tab open
 
-    // ---------- Ambient background layer (public landing page only) ----------
+    // ---------- Hero banner treatment (public landing page only) ----------
     // Mosaic of real, customer-approved design photos + drifting
-    // sparkles + a meandering thread line, all sitting behind the
-    // landing page content (see .ambient-bg-layer CSS). Nested inside
-    // #landingPage so it hides/shows automatically with the same
-    // .hidden toggle used for sign-in/out — no separate visibility
-    // logic needed here.
-    function initAmbientMosaic(items) {
-      const mosaic = document.getElementById('ambientMosaic');
+    // sparkles, confined entirely to the hero card's own box (see
+    // .hero-banner-card CSS) — NOT the whole page. Nested inside that
+    // one card, which is itself inside #landingPage, so it hides/shows
+    // automatically with the same .hidden toggle used for sign-in/out,
+    // and never touches the shared <header> or the signed-in dashboard.
+    function initHeroBannerMosaic(items) {
+      const mosaic = document.getElementById('heroBannerMosaic');
       if (!mosaic) return;
-      if (!items || items.length === 0) return; // no approved shared designs yet — layer still shows sparkles + thread, just no photo tiles
-      const TILE_COUNT = 12; // enough to fill a typical viewport without being a heavy, dense wall of images
+      if (!items || items.length === 0) return; // no approved shared designs yet — banner still shows sparkles + thread, just no photo tiles
+      const TILE_COUNT = 12; // enough to fill the card without being a heavy, dense wall of images
       const tiles = [];
       for (let i = 0; i < TILE_COUNT; i++) tiles.push(items[i % items.length]); // repeats the pool if fewer than 12 designs exist yet
       mosaic.innerHTML = tiles.map((item) =>
-        `<div class="ambient-mosaic-tile" style="background-image:url('${item.imageUrl}');"></div>`
+        `<div class="hero-banner-mosaic-tile" style="background-image:url('${item.imageUrl}');"></div>`
       ).join('');
     }
 
-    function initAmbientSparkles() {
-      const container = document.getElementById('ambientSparkles');
+    function initHeroBannerSparkles() {
+      const container = document.getElementById('heroBannerSparkles');
       if (!container) return;
       // Fixed, hand-placed positions rather than random each load — random
       // would look fine visually but would also mean a slightly different
@@ -8266,13 +8268,12 @@
       // deliberately scattered fixed set. Varied duration/delay per sparkle
       // (via index) keeps them from all breathing in sync.
       const positions = [
-        { top: '6%', left: '10%' }, { top: '18%', left: '82%' }, { top: '32%', left: '46%' },
-        { top: '44%', left: '6%' }, { top: '58%', left: '88%' }, { top: '68%', left: '30%' },
-        { top: '78%', left: '60%' }, { top: '12%', left: '55%' }, { top: '50%', left: '20%' },
-        { top: '86%', left: '12%' },
+        { top: '8%', left: '12%' }, { top: '20%', left: '80%' }, { top: '38%', left: '48%' },
+        { top: '55%', left: '8%' }, { top: '65%', left: '86%' }, { top: '78%', left: '32%' },
+        { top: '15%', left: '55%' }, { top: '48%', left: '20%' },
       ];
       container.innerHTML = positions.map((p, i) =>
-        `<span class="ambient-sparkle" style="top:${p.top}; left:${p.left}; animation-duration:${12 + (i % 5) * 2}s; animation-delay:-${i * 1.3}s;">✨</span>`
+        `<span class="hero-banner-sparkle" style="top:${p.top}; left:${p.left}; animation-duration:${12 + (i % 5) * 2}s; animation-delay:-${i * 1.3}s;">✨</span>`
       ).join('');
     }
 
@@ -8282,14 +8283,14 @@
     // animation-play-state doesn't reach SMIL). Registered once, not
     // per-render.
     document.addEventListener('visibilitychange', () => {
-      const layer = document.getElementById('ambientBgLayer');
-      if (!layer) return;
-      const threadSvg = layer.querySelector('.ambient-thread');
+      const card = document.getElementById('heroBannerCard');
+      if (!card) return;
+      const threadSvg = card.querySelector('.hero-banner-thread');
       if (document.hidden) {
-        layer.classList.add('paused');
+        card.classList.add('paused');
         if (threadSvg && threadSvg.pauseAnimations) threadSvg.pauseAnimations();
       } else {
-        layer.classList.remove('paused');
+        card.classList.remove('paused');
         if (threadSvg && threadSvg.unpauseAnimations) threadSvg.unpauseAnimations();
       }
     });
@@ -15535,7 +15536,7 @@
     window.addEventListener('load', () => {
       initSectionTabsObserver();
       initScrollReveals();
-      initAmbientSparkles();
+      initHeroBannerSparkles();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initLandingVoiceInput();
