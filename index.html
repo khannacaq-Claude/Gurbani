@@ -2937,7 +2937,15 @@
             <img src="icon-192.png" alt="" class="auth-modal-mark">
             <h3 id="emailAuthHeading">Sign In</h3>
             <p class="auth-modal-sub" id="emailAuthSub">Welcome back! Please enter your details.</p>
-            <div id="signinArea" class="auth-modal-google"></div>
+            <div style="background:#fdf2f6; border:1px solid var(--vivid); border-radius:6px; padding:10px 12px; margin-bottom:14px;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; font-weight:normal; cursor:pointer;">
+                <input type="checkbox" id="termsAcceptCheckbox" style="width:16px; height:16px; min-width:16px; flex:0 0 16px; margin-top:2px;" onchange="handleTermsCheckboxChange()">
+                <span>I agree to the <a href="/terms-of-service.html" target="_blank" rel="noopener" style="color:var(--vivid); font-weight:bold;">Terms of Service</a> and <a href="/privacy-policy.html" target="_blank" rel="noopener" style="color:var(--vivid); font-weight:bold;">Privacy Policy</a>.</span>
+              </label>
+            </div>
+            <div id="signinAreaWrapper" style="opacity:0.5; pointer-events:none; transition:opacity 0.2s ease;">
+              <div id="signinArea" class="auth-modal-google"></div>
+            </div>
             <div class="auth-modal-divider"><span>Sign in with Google, or with email below</span></div>
             <!-- Optional lead capture — NOT a sign-in method. No OTP yet
                  (blocked on MSG91 + DLT registration, an external process),
@@ -10865,6 +10873,7 @@
       // (zero size at that moment), so re-render fresh every time the
       // modal actually opens, when signinArea genuinely has visible space.
       if (opening) renderGoogleSigninButton();
+      if (opening) initTermsCheckboxState();
       // Reset the email form back to collapsed on every fresh open, so a
       // previous abandoned attempt (revealed the form, then closed
       // without signing in) doesn't leave the NEXT opening looking
@@ -10875,6 +10884,41 @@
         if (link) link.style.display = '';
         if (section) section.style.display = 'none';
       }
+    }
+
+    // Terms/Privacy acceptance — gates both the Google button and the
+    // email/password submit button until checked. Pre-checked (and the
+    // buttons left enabled) if this same browser has already agreed
+    // before, so a returning visitor isn't asked again every time they
+    // open this modal — the actual authoritative record lives server-
+    // side (User.termsAcceptedAt), set once at account creation; this
+    // localStorage flag is just a same-browser convenience.
+    function initTermsCheckboxState() {
+      const cb = document.getElementById('termsAcceptCheckbox');
+      if (!cb) return;
+      cb.checked = localStorage.getItem('gfTermsAccepted') === 'true';
+      applyTermsGateState(cb.checked);
+    }
+
+    function handleTermsCheckboxChange() {
+      const checked = document.getElementById('termsAcceptCheckbox').checked;
+      applyTermsGateState(checked);
+      if (checked) localStorage.setItem('gfTermsAccepted', 'true');
+    }
+
+    function applyTermsGateState(checked) {
+      const wrapper = document.getElementById('signinAreaWrapper');
+      if (wrapper) {
+        wrapper.style.opacity = checked ? '1' : '0.5';
+        wrapper.style.pointerEvents = checked ? 'auto' : 'none';
+      }
+      const emailBtn = document.querySelector('#emailAuthFormSection .btn-submit');
+      if (emailBtn) emailBtn.disabled = !checked;
+    }
+
+    function getTermsCheckboxState() {
+      const cb = document.getElementById('termsAcceptCheckbox');
+      return cb ? cb.checked : false;
     }
 
     // Reveals the email/password form, which starts collapsed behind the
@@ -11006,9 +11050,13 @@
           showToast('❌ Name is required to sign up');
           return;
         }
+        if (emailAuthMode === 'signup' && !getTermsCheckboxState()) {
+          showToast('❌ Please agree to the Terms of Service and Privacy Policy first');
+          return;
+        }
         const endpoint = emailAuthMode === 'signup' ? '/api/auth/signup' : '/api/auth/signin';
         const body = emailAuthMode === 'signup'
-          ? { name, email, password, referralCode: getPendingReferralCode() }
+          ? { name, email, password, referralCode: getPendingReferralCode(), termsAccepted: getTermsCheckboxState() }
           : { email, password };
         const res = await fetch(`${API}${endpoint}`, {
           method: 'POST',
@@ -11141,6 +11189,7 @@
           body: JSON.stringify({
             idToken: token,
             referralCode: getPendingReferralCode(),
+            termsAccepted: getTermsCheckboxState(),
           }),
         })
         .then(r => r.json())
