@@ -16250,12 +16250,128 @@
           <div style="font-size:13px; line-height:1.6; max-width:480px; margin:0 auto; opacity:0.92;">${persona.desc}</div>
           <div style="margin-top:16px; font-size:11px; opacity:0.7; letter-spacing:0.5px;">GURBANI FASHION ✨ AI DESIGN STUDIO</div>
         </div>
-        <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:10px;">📱 Screenshot this to share your result!</p>
+        <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:10px;">Save your card and share it anywhere ✨</p>
         <div style="display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+          <button type="button" class="btn-submit" onclick="sharePersonaCard()">📥 Download / Share My Card</button>
           <button type="button" class="btn-submit" onclick="continuePersonaToDesign()">✨ Design This For Real →</button>
           <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="retakePersonaQuiz()">🔄 Retake Quiz</button>
         </div>
       `;
+    }
+
+    // Draws the persona result as an actual 1080x1080 PNG (not a DOM
+    // screenshot) — same gradient/colors/text as the on-screen card, but
+    // rendered fresh onto a canvas so the output is identical regardless
+    // of device, browser chrome, or scroll position. Mirrors the same
+    // canvas-drawing + toDataURL/download pattern already used for
+    // watermarked design downloads (see buildWatermarkedCanvas above).
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      const lines = [];
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+          lines.push(line.trim());
+          line = words[i] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line.trim());
+      lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+      return lines.length;
+    }
+
+    async function buildPersonaCardCanvas(persona, name) {
+      // Web fonts load asynchronously — waiting for this avoids a card
+      // occasionally rendering in a fallback font if generated very
+      // early in the page's life.
+      if (document.fonts && document.fonts.ready) {
+        try { await document.fonts.ready; } catch (e) { /* proceed regardless */ }
+      }
+
+      const W = 1080, H = 1080;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, W * 0.25, H);
+      grad.addColorStop(0, persona.palette[0]);
+      grad.addColorStop(1, persona.palette[1]);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+
+      ctx.font = `${Math.round(W * 0.13)}px sans-serif`;
+      ctx.fillText(persona.emoji, W / 2, H * 0.26);
+
+      const nameTrimmed = (name || '').trim();
+      const label = nameTrimmed ? `${nameTrimmed}'s Style Persona` : 'Your Style Persona';
+      ctx.globalAlpha = 0.85;
+      ctx.font = `italic 500 ${Math.round(W * 0.032)}px 'Playfair Display', Georgia, serif`;
+      ctx.fillText(label, W / 2, H * 0.35);
+      ctx.globalAlpha = 1;
+
+      ctx.font = `700 ${Math.round(W * 0.06)}px 'Playfair Display', Georgia, serif`;
+      wrapCanvasText(ctx, persona.name, W / 2, H * 0.43, W * 0.85, W * 0.068);
+
+      ctx.font = `600 ${Math.round(W * 0.03)}px Poppins, sans-serif`;
+      ctx.fillText(persona.tagline, W / 2, H * 0.54);
+
+      ctx.globalAlpha = 0.92;
+      ctx.font = `400 ${Math.round(W * 0.026)}px Poppins, sans-serif`;
+      wrapCanvasText(ctx, persona.desc, W / 2, H * 0.60, W * 0.72, W * 0.038);
+      ctx.globalAlpha = 1;
+
+      ctx.globalAlpha = 0.75;
+      ctx.font = `700 ${Math.round(W * 0.022)}px Poppins, sans-serif`;
+      ctx.fillText('GURBANI FASHION ✨ AI DESIGN STUDIO', W / 2, H * 0.93);
+      ctx.globalAlpha = 1;
+
+      return canvas;
+    }
+
+    // Generates the card image, then uses the native share sheet on
+    // mobile (direct-to-Instagram/WhatsApp) when available, falling
+    // back to a plain download everywhere else (desktop browsers mostly
+    // don't support sharing files this way yet).
+    async function sharePersonaCard() {
+      try {
+        showToast('🖼️ Preparing your card...');
+        const persona = pickPersona(personaQuizAnswers);
+        const nameInput = document.getElementById('personaNameInput');
+        const canvas = await buildPersonaCardCanvas(persona, nameInput ? nameInput.value : '');
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) { showToast('❌ Could not create the image — please try again.'); return; }
+          const file = new File([blob], 'my-style-persona.png', { type: 'image/png' });
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'My Style Persona',
+                text: 'Check out my Bridal Style Persona from Gurbani Fashion! ✨',
+              });
+              return;
+            } catch (shareErr) {
+              // Cancelled the share sheet, or sharing failed — fall through to a plain download instead.
+            }
+          }
+          const link = document.createElement('a');
+          link.download = 'my-style-persona.png';
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          showToast('✅ Saved! You can share it from your photos/downloads.');
+        }, 'image/png');
+      } catch (err) {
+        console.error('sharePersonaCard error:', err);
+        showToast('❌ Could not create your card right now — please try again.');
+      }
     }
 
     // Live-updates the card's "Your Style Persona" line to "{Name}'s
