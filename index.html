@@ -146,6 +146,32 @@
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); padding-top: var(--header-h, 330px); }
 
+    /* ---------- Global stitched-thread layer (every page, incl. admin) ----------
+       A single, subtle meandering thread + traveling needle-dot, fixed
+       to the viewport so it's present no matter how long the page is or
+       which screen (public site or signed-in dashboard) is showing.
+       Deliberately much lighter than the hero's mosaic/sparkles/tint —
+       just this one motif — so it reads as a quiet design touch behind
+       admin tables and forms rather than competing with real work. */
+    .global-thread-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .global-thread { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.28; }
+    .global-thread path {
+      fill: none;
+      stroke: var(--vivid);
+      stroke-width: 1.2;
+      stroke-dasharray: 3 4;
+      vector-effect: non-scaling-stroke;
+    }
+    .global-thread .global-needle { fill: var(--marigold); }
+    @media (prefers-reduced-motion: reduce) {
+      .global-needle { display: none; }
+    }
+
     /* Section jump-nav — NOT sticky. It was made sticky earlier today
        (to sit directly under the newly-pinned header), but its
        containing block is the entire landing page, which is very long —
@@ -2594,6 +2620,24 @@
   </style>
 </head>
 <body>
+  <!-- GLOBAL STITCHED-THREAD LAYER — appears on every page, including
+       the signed-in admin/dashboard screens (unlike the hero's photo
+       mosaic + sparkles + tint, which are deliberately hero-only — see
+       .hero-fullbleed). This is intentionally just the thread/needle
+       motif alone: much lighter and less visually busy than a photo
+       layer, so it doesn't compete with admin data tables/forms the way
+       a full mosaic would have. Fixed + z-index:-1 as a direct child of
+       <body> (not nested inside #landingPage or #dashboard), so it sits
+       behind literally everything, on every screen, without needing any
+       visibility toggle of its own. pointer-events:none throughout. -->
+  <div class="global-thread-layer" id="globalThreadLayer" aria-hidden="true">
+    <svg class="global-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M -5 8 C 18 -2, 30 22, 50 10 S 82 -4, 96 14 S 62 48, 78 62 S 42 52, 26 78 S 58 92, 98 84" />
+      <circle r="1.1" class="global-needle">
+        <animateMotion dur="32s" repeatCount="indefinite" path="M -5 8 C 18 -2, 30 22, 50 10 S 82 -4, 96 14 S 62 48, 78 62 S 42 52, 26 78 S 58 92, 98 84" />
+      </circle>
+    </svg>
+  </div>
   <div class="floating-nudge" id="floatingNudge">
     <button type="button" class="fn-signin" id="fnSigninBtn" onclick="handleFloatingNudgeClick()">✨ <span class="fn-label">Sign In &amp; Start Designing</span></button>
     <button type="button" class="fn-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Back to top" aria-label="Back to top">↑</button>
@@ -8314,6 +8358,20 @@
       } else {
         band.classList.remove('paused');
         if (threadSvg && threadSvg.unpauseAnimations) threadSvg.unpauseAnimations();
+      }
+    });
+
+    // Same battery-conservation pattern for the global thread layer
+    // (every page, including the signed-in dashboard) — separate from
+    // the hero's own thread above since this one exists regardless of
+    // which screen is showing.
+    document.addEventListener('visibilitychange', () => {
+      const globalThreadSvg = document.querySelector('.global-thread');
+      if (!globalThreadSvg) return;
+      if (document.hidden) {
+        if (globalThreadSvg.pauseAnimations) globalThreadSvg.pauseAnimations();
+      } else {
+        if (globalThreadSvg.unpauseAnimations) globalThreadSvg.unpauseAnimations();
       }
     });
 
