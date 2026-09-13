@@ -3062,8 +3062,6 @@
              Stays hidden (display:none, set in CSS) until there are at
              least 2 real photos to show. -->
         <div class="hero-photo-strip" id="heroPhotoStrip"></div>
-        </div>
-      </div>
 
         <!-- PUBLIC PREVIEW OF THE DESIGN FLOW — moved right up here, above
              stats/lens/occasion sections, so it's visible with little to no
@@ -3078,7 +3076,14 @@
              over automatically once they sign in, via localStorage +
              restoreLandingDesignInputs(). Widened + tightened vertically
              (Dress Type/Occasion side-by-side, smaller gaps throughout) so
-             it reads as one glance-able block instead of a long scroll. -->
+             it reads as one glance-able block instead of a long scroll.
+             Now nested INSIDE the hero-fullbleed banner (moved on
+             request) so the mosaic/tint/sparkles background extends
+             behind the Try It form too, not just the headline text —
+             the card itself keeps its own opaque white background
+             (.card), so the form stays fully legible, floating on top
+             of the photo backdrop rather than the backdrop stopping
+             right above it. -->
         <div class="card tryit-card" id="landingDesignPreview" style="max-width:980px; width:100%; margin:0 auto 18px; padding:24px 26px;">
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
             <h3 data-i18n="tryItTitle" style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
@@ -3336,6 +3341,8 @@
             </div>
           </div>
         </div>
+        </div>
+      </div>
 
         <!-- TRENDING THIS SEASON — real, researched current-season Indian
              fashion trends. Images are admin-managed (Photo Tools tab →
