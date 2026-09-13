@@ -166,7 +166,24 @@
       z-index: 50;
       pointer-events: none;
     }
-    .global-thread { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; }
+    .global-thread {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      /* Fades the whole thread+needle out right as the needle finishes
+         its lap (SMIL animateMotion below, same 32s duration, no
+         keyTimes so it loops by jumping straight back to the path's
+         start) — so instead of that jump being visible, the thread
+         disappears just before it happens and reappears exactly as the
+         next lap begins. Same duration as the needle's animateMotion so
+         the two stay in step. */
+      opacity: 0.55;
+      animation: globalThreadFade 32s linear infinite;
+    }
+    @keyframes globalThreadFade {
+      0%   { opacity: 0.55; }
+      88%  { opacity: 0.55; }
+      94%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
     .global-thread path {
       fill: none;
       stroke: var(--vivid);
@@ -175,8 +192,16 @@
       vector-effect: non-scaling-stroke;
     }
     .global-thread .global-needle { fill: var(--marigold); }
+    /* Keep the CSS fade paused in step with the SMIL needle motion
+       (see the visibilitychange handler in JS) — otherwise the fade
+       would keep running in a hidden tab while the needle motion pauses,
+       and they'd drift out of sync once the tab becomes visible again. */
+    .global-thread-layer.paused .global-thread { animation-play-state: paused; }
     @media (prefers-reduced-motion: reduce) {
       .global-needle { display: none; }
+      /* Reduced motion: skip the fade cycle too — the thread just stays
+         steadily visible instead of pulsing in and out. */
+      .global-thread { animation: none; opacity: 0.55; }
     }
 
     /* Section jump-nav — NOT sticky. It was made sticky earlier today
@@ -3344,6 +3369,34 @@
         </div>
       </div>
 
+        <!-- STYLE PERSONA QUIZ — shareable, no-photo alternative to a
+             selfie-based hook. Entirely client-side: 4 taps, scored
+             against a fixed list of persona archetypes below, no AI call
+             and no cost per visitor even if this goes properly viral.
+             The result card is designed to be screenshotted/shared
+             (the actual organic-growth mechanism), and "Design This For
+             Real" carries the quiz answers straight into the real Try It
+             form's dress type / occasion / mood / color fields. -->
+        <div class="snap-section reveal-section" id="personaQuizSection" style="margin-top: 48px;">
+          <div class="card" id="personaQuizCard" style="max-width:700px; margin:0 auto;">
+            <div id="personaIntro">
+              <div style="text-align:center;">
+                <div class="hero-eyebrow" style="text-align:center;">✨ 30-Second Quiz</div>
+                <h3 style="font-family:var(--font-display); font-size:24px; margin-bottom:8px;">What's Your Bridal Style Persona?</h3>
+                <p style="color:var(--text-muted); margin-bottom:18px; max-width:440px; margin-left:auto; margin-right:auto;">Answer 4 quick taps — no photo, no sign-in needed — and get a shareable style persona card.</p>
+                <button type="button" class="btn-submit" onclick="startPersonaQuiz()">✨ Take the Quiz</button>
+              </div>
+            </div>
+
+            <div id="personaQuizFlow" style="display:none;">
+              <div id="personaProgressDots" style="display:flex; justify-content:center; gap:6px; margin-bottom:16px;"></div>
+              <div id="personaQuestionArea"></div>
+            </div>
+
+            <div id="personaResultArea" style="display:none;"></div>
+          </div>
+        </div>
+
         <!-- TRENDING THIS SEASON — real, researched current-season Indian
              fashion trends. Images are admin-managed (Photo Tools tab →
              generated via Replicate, reviewed, and explicitly kept before
@@ -4190,10 +4243,10 @@
                 <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 13px; font-weight: normal; cursor: pointer;">
                   <input type="checkbox" id="photoConsentCheckbox" style="width: 18px; height: 18px; min-width: 18px; flex: 0 0 18px; margin-top: 2px;" onchange="handleConsentChange()">
                   <span style="flex: 1 1 auto; min-width: 0;">
-                    I consent to Gurbani Fashion using my uploaded photos to generate AI design previews (processed via Anthropic Claude and Replicate AI services). Selfies are used only for personalized style suggestions and are never used to generate design images.
+                    I consent to Gurbani Fashion using my uploaded photos to generate AI design previews (processed via Anthropic Claude and Replicate AI services). Selfies are used only for personalized style suggestions and are never used to generate design images. <strong>If I upload a selfie or any photo of a person, I confirm it is a genuine photo of myself, and that I have the right to use it here.</strong>
                     <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">Read full Privacy Notice</a>.
                     <br><br>
-                    मैं सहमति देता/देती हूं कि गुरबानी फैशन मेरी अपलोड की गई तस्वीरों का उपयोग AI डिज़ाइन प्रीव्यू बनाने के लिए करे (Anthropic Claude और Replicate AI सेवाओं के माध्यम से प्रोसेस किया गया)। सेल्फी का उपयोग केवल व्यक्तिगत स्टाइल सुझावों के लिए किया जाता है और इनका उपयोग कभी भी डिज़ाइन इमेज बनाने के लिए नहीं किया जाता।
+                    मैं सहमति देता/देती हूं कि गुरबानी फैशन मेरी अपलोड की गई तस्वीरों का उपयोग AI डिज़ाइन प्रीव्यू बनाने के लिए करे (Anthropic Claude और Replicate AI सेवाओं के माध्यम से प्रोसेस किया गया)। सेल्फी का उपयोग केवल व्यक्तिगत स्टाइल सुझावों के लिए किया जाता है और इनका उपयोग कभी भी डिज़ाइन इमेज बनाने के लिए नहीं किया जाता। <strong>यदि मैं कोई सेल्फी या किसी व्यक्ति की तस्वीर अपलोड करता/करती हूं, तो मैं पुष्टि करता/करती हूं कि यह वास्तव में मेरी अपनी तस्वीर है, और मुझे इसका उपयोग करने का अधिकार है।</strong>
                     <a href="#" onclick="openPrivacyModal(event)" style="color: var(--vivid); font-weight: bold;">पूरी गोपनीयता सूचना पढ़ें</a>।
                   </span>
                 </label>
@@ -8373,14 +8426,21 @@
     // Same battery-conservation pattern for the global thread layer
     // (every page, including the signed-in dashboard) — separate from
     // the hero's own thread above since this one exists regardless of
-    // which screen is showing.
+    // which screen is showing. Also toggles .paused on the layer so the
+    // CSS fade cycle (see .global-thread-layer.paused rule) pauses in
+    // step with the SMIL needle motion — otherwise the fade would keep
+    // running while hidden and drift out of sync with the needle once
+    // the tab is visible again.
     document.addEventListener('visibilitychange', () => {
+      const globalThreadLayer = document.getElementById('globalThreadLayer');
       const globalThreadSvg = document.querySelector('.global-thread');
       if (!globalThreadSvg) return;
       if (document.hidden) {
         if (globalThreadSvg.pauseAnimations) globalThreadSvg.pauseAnimations();
+        if (globalThreadLayer) globalThreadLayer.classList.add('paused');
       } else {
         if (globalThreadSvg.unpauseAnimations) globalThreadSvg.unpauseAnimations();
+        if (globalThreadLayer) globalThreadLayer.classList.remove('paused');
       }
     });
 
@@ -15930,6 +15990,230 @@
         console.error('Landing voice input failed to start:', err);
         document.getElementById('landingVoiceInputStatus').textContent = '⚠️ Could not start voice input';
       }
+    }
+
+    // ---------- Style Persona Quiz (public landing, no photo, no AI call) ----------
+    // 4 tap-questions -> scored against a fixed list of persona archetypes
+    // -> a shareable result card. Entirely client-side and free to run
+    // regardless of traffic volume. Reuses the exact same value strings
+    // as the real Try It form's dress type / occasion / style / color
+    // fields, so "Design This For Real" can pre-fill them directly with
+    // no mapping step.
+    const PERSONA_QUIZ_QUESTIONS = [
+      {
+        key: 'occasion',
+        label: 'What occasion are you dressing for?',
+        options: [
+          { label: '💍 Wedding Function', value: 'wedding-general', category: 'wedding' },
+          { label: '💃 Sangeet / Mehendi', value: 'sangeet', category: 'sangeet' },
+          { label: '🪔 Festival / Pooja', value: 'festival-general', category: 'festival' },
+          { label: '☀️ Everyday, Elevated', value: 'everyday-general', category: 'everyday' },
+        ],
+      },
+      {
+        key: 'mood',
+        label: 'Pick a mood that feels like you',
+        options: [
+          { label: 'Elegant', value: 'Elegant' },
+          { label: 'Bold & Statement', value: 'Bold & Statement' },
+          { label: 'Minimal & Clean', value: 'Minimal & Clean' },
+          { label: 'Traditional & Regal', value: 'Traditional & Regal' },
+          { label: 'Playful & Fun', value: 'Playful & Fun' },
+          { label: 'Romantic & Soft', value: 'Romantic & Soft' },
+        ],
+      },
+      {
+        key: 'dressType',
+        label: 'Which silhouette calls to you?',
+        options: [
+          { label: 'Lehenga', value: 'Lehenga' },
+          { label: 'Saree', value: 'Saree' },
+          { label: 'Anarkali', value: 'Anarkali' },
+          { label: 'Gown', value: 'Gown' },
+          { label: 'Kurti', value: 'Kurti' },
+        ],
+      },
+      {
+        key: 'color',
+        label: 'Choose a color palette',
+        options: [
+          { label: 'Pastel & Soft', value: 'Pastel & Soft' },
+          { label: 'Rich & Jewel-toned', value: 'Rich & Jewel-toned' },
+          { label: 'Neutral & Earthy', value: 'Neutral & Earthy' },
+          { label: 'Bright & Vibrant', value: 'Bright & Vibrant' },
+          { label: 'Classic Black, White or Gold', value: 'Classic Black, White or Gold' },
+        ],
+      },
+    ];
+
+    // Each persona scores points against the quiz answers (see
+    // scorePersonaMatch below); highest score wins, first-defined wins a
+    // tie. Palette is [start, end] hex for the result card's background
+    // gradient — always dark/mid-toned enough for white text on top.
+    const STYLE_PERSONAS = [
+      { id: 'maharani', emoji: '👑', name: 'The Modern Maharani', tagline: 'Regal, radiant, unmistakably you.',
+        desc: 'You gravitate toward rich fabrics and bold silhouettes that make an entrance — think heavy zardozi, deep jewel tones, and pieces that feel like heirlooms in the making.',
+        moods: ['Traditional & Regal', 'Bold & Statement'], colors: ['Rich & Jewel-toned', 'Classic Black, White or Gold'],
+        dressTypes: ['Lehenga', 'Anarkali'], occasions: ['wedding', 'sangeet'], palette: ['#5a1030', '#2b0a1a'] },
+
+      { id: 'enchantress', emoji: '🌙', name: 'The Effortless Enchantress', tagline: 'Quiet confidence, impossible to look away from.',
+        desc: 'Clean lines, understated luxury, and a silhouette that does the talking. You would rather be remembered for how you carried it than how much sparkle it had.',
+        moods: ['Elegant', 'Minimal & Clean'], colors: ['Classic Black, White or Gold', 'Neutral & Earthy'],
+        dressTypes: ['Gown', 'Saree'], occasions: ['everyday', 'wedding'], palette: ['#565a63', '#232329'] },
+
+      { id: 'showstopper', emoji: '💃', name: 'The Sangeet Showstopper', tagline: 'Dance-floor-ready, camera-ready, always ready.',
+        desc: 'You want color, movement, and a little drama — an outfit that photographs beautifully mid-twirl and does not take itself too seriously.',
+        moods: ['Bold & Statement', 'Playful & Fun'], colors: ['Bright & Vibrant'],
+        dressTypes: ['Lehenga', 'Kurti'], occasions: ['sangeet', 'festival'], palette: ['#c9184a', '#e07a1f'] },
+
+      { id: 'traditionalist', emoji: '🪔', name: 'The Timeless Traditionalist', tagline: 'Some things never go out of style — you are proof.',
+        desc: 'You lean into heritage — real zari, real craftsmanship, the kind of piece that gets asked about at every family function for years to come.',
+        moods: ['Traditional & Regal', 'Elegant'], colors: ['Rich & Jewel-toned', 'Classic Black, White or Gold'],
+        dressTypes: ['Saree', 'Anarkali'], occasions: ['wedding', 'festival'], palette: ['#7a1520', '#3d0f14'] },
+
+      { id: 'boho', emoji: '🌸', name: 'The Boho Romantic', tagline: 'Soft edges, big heart, effortless charm.',
+        desc: 'Flowy silhouettes, delicate detailing, and a palette that feels like golden hour. You are drawn to pretty over powerful, always.',
+        moods: ['Romantic & Soft', 'Playful & Fun'], colors: ['Pastel & Soft'],
+        dressTypes: ['Gown', 'Kurti'], occasions: ['everyday', 'festival'], palette: ['#c98fa3', '#8a5468'] },
+
+      { id: 'classic', emoji: '⚪', name: 'The Contemporary Classic', tagline: 'Sharp, modern, quietly unforgettable.',
+        desc: 'You want something that feels current — fewer motifs, better tailoring, a silhouette that could walk into any room, any decade.',
+        moods: ['Minimal & Clean', 'Elegant'], colors: ['Neutral & Earthy', 'Classic Black, White or Gold'],
+        dressTypes: ['Gown', 'Kurti'], occasions: ['everyday', 'sangeet'], palette: ['#4a4a52', '#1e1e23'] },
+
+      { id: 'trendsetter', emoji: '🎨', name: 'The Vibrant Trendsetter', tagline: 'Rules are optional. Color is not.',
+        desc: 'You are the one who tries the shade nobody else would, and somehow it works. Bold color-blocking and unexpected combinations are your love language.',
+        moods: ['Playful & Fun', 'Bold & Statement'], colors: ['Bright & Vibrant'],
+        dressTypes: ['Kurti', 'Lehenga'], occasions: ['festival', 'everyday'], palette: ['#e63946', '#e0982a'] },
+
+      { id: 'regal-romantic', emoji: '💜', name: 'The Regal Romantic', tagline: 'Soft heart, grand vision.',
+        desc: 'You want the fairytale — layers of dupatta, delicate embroidery, a silhouette that feels like it was made for a love story.',
+        moods: ['Romantic & Soft', 'Traditional & Regal'], colors: ['Rich & Jewel-toned', 'Pastel & Soft'],
+        dressTypes: ['Lehenga', 'Anarkali'], occasions: ['wedding', 'sangeet'], palette: ['#8a3d7a', '#4a2050'] },
+    ];
+
+    let personaQuizAnswers = {};
+    let personaQuizStep = 0;
+
+    function startPersonaQuiz() {
+      personaQuizAnswers = {};
+      personaQuizStep = 0;
+      const intro = document.getElementById('personaIntro');
+      const flow = document.getElementById('personaQuizFlow');
+      const result = document.getElementById('personaResultArea');
+      if (intro) intro.style.display = 'none';
+      if (result) result.style.display = 'none';
+      if (flow) flow.style.display = 'block';
+      renderPersonaQuestion();
+    }
+
+    function renderPersonaDots() {
+      const dots = document.getElementById('personaProgressDots');
+      if (!dots) return;
+      dots.innerHTML = PERSONA_QUIZ_QUESTIONS.map((_, i) =>
+        `<span style="width:8px; height:8px; border-radius:50%; background:${i <= personaQuizStep ? 'var(--vivid)' : '#e5d9c8'}; transition:background 0.3s;"></span>`
+      ).join('');
+    }
+
+    function renderPersonaQuestion() {
+      renderPersonaDots();
+      const q = PERSONA_QUIZ_QUESTIONS[personaQuizStep];
+      const area = document.getElementById('personaQuestionArea');
+      if (!area) return;
+      area.innerHTML = `
+        <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:14px;">${q.label}</div>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
+          ${q.options.map((opt, i) => `<button type="button" class="mood-tag" style="font-size:14px; padding:10px 16px;" onclick="answerPersonaQuestion(${personaQuizStep}, ${i})">${opt.label}</button>`).join('')}
+        </div>
+      `;
+    }
+
+    function answerPersonaQuestion(stepIndex, optionIndex) {
+      const q = PERSONA_QUIZ_QUESTIONS[stepIndex];
+      const opt = q.options[optionIndex];
+      personaQuizAnswers[q.key] = opt.value;
+      if (q.key === 'occasion') personaQuizAnswers.occasionCategory = opt.category;
+      personaQuizStep++;
+      if (personaQuizStep < PERSONA_QUIZ_QUESTIONS.length) {
+        renderPersonaQuestion();
+      } else {
+        showPersonaResult();
+      }
+    }
+
+    function scorePersonaMatch(persona, answers) {
+      let score = 0;
+      if (persona.moods.includes(answers.mood)) score += 3;
+      if (persona.colors.includes(answers.color)) score += 3;
+      if (persona.dressTypes.includes(answers.dressType)) score += 2;
+      if (persona.occasions.includes(answers.occasionCategory)) score += 1;
+      return score;
+    }
+
+    function pickPersona(answers) {
+      let best = STYLE_PERSONAS[0];
+      let bestScore = -1;
+      STYLE_PERSONAS.forEach((p) => {
+        const s = scorePersonaMatch(p, answers);
+        if (s > bestScore) { bestScore = s; best = p; }
+      });
+      return best;
+    }
+
+    function showPersonaResult() {
+      const persona = pickPersona(personaQuizAnswers);
+      personaQuizAnswers._resultPersonaId = persona.id; // kept for reference only, not sent anywhere
+      const flow = document.getElementById('personaQuizFlow');
+      const area = document.getElementById('personaResultArea');
+      if (flow) flow.style.display = 'none';
+      if (!area) return;
+      area.style.display = 'block';
+      area.innerHTML = `
+        <div id="personaResultCard" style="text-align:center; padding:28px 20px; border-radius:16px; background:linear-gradient(160deg, ${persona.palette[0]}, ${persona.palette[1]}); color:#fff;">
+          <div style="font-size:40px; margin-bottom:6px;">${persona.emoji}</div>
+          <div style="font-family:var(--font-display); font-style:italic; font-size:14px; opacity:0.85; margin-bottom:4px;">Your Style Persona</div>
+          <div style="font-family:var(--font-display); font-size:26px; font-weight:700; margin-bottom:10px;">${persona.name}</div>
+          <div style="font-size:14px; font-weight:600; margin-bottom:12px; opacity:0.95;">${persona.tagline}</div>
+          <div style="font-size:13px; line-height:1.6; max-width:480px; margin:0 auto; opacity:0.92;">${persona.desc}</div>
+          <div style="margin-top:16px; font-size:11px; opacity:0.7; letter-spacing:0.5px;">GURBANI FASHION ✨ AI DESIGN STUDIO</div>
+        </div>
+        <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:10px;">📱 Screenshot this to share your result!</p>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+          <button type="button" class="btn-submit" onclick="continuePersonaToDesign()">✨ Design This For Real →</button>
+          <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="retakePersonaQuiz()">🔄 Retake Quiz</button>
+        </div>
+      `;
+    }
+
+    function retakePersonaQuiz() {
+      const result = document.getElementById('personaResultArea');
+      if (result) result.style.display = 'none';
+      startPersonaQuiz();
+    }
+
+    // Hands the quiz answers straight into the real Try It form — same
+    // field IDs/value strings, no mapping needed — then scrolls there.
+    function continuePersonaToDesign() {
+      const dressTypeSelect = document.getElementById('landingDressType');
+      if (dressTypeSelect && personaQuizAnswers.dressType) {
+        dressTypeSelect.value = personaQuizAnswers.dressType;
+        if (typeof handleLandingDressTypeChange === 'function') handleLandingDressTypeChange();
+      }
+      const occasionSelect = document.getElementById('landingOccasion');
+      if (occasionSelect && personaQuizAnswers.occasion) {
+        occasionSelect.value = personaQuizAnswers.occasion;
+      }
+      if (personaQuizAnswers.mood) {
+        const styleBtn = document.querySelector(`#landingDesignPreview .mood-tag-row[data-group="style"] .mood-tag[data-value="${CSS.escape(personaQuizAnswers.mood)}"]`);
+        if (styleBtn) styleBtn.classList.add('selected');
+      }
+      if (personaQuizAnswers.color) {
+        document.querySelectorAll('#landingDesignPreview .mood-tag-row[data-group="color"] .mood-tag.selected').forEach((t) => t.classList.remove('selected'));
+        const colorBtn = document.querySelector(`#landingDesignPreview .mood-tag-row[data-group="color"] .mood-tag[data-value="${CSS.escape(personaQuizAnswers.color)}"]`);
+        if (colorBtn) colorBtn.classList.add('selected');
+      }
+      if (typeof updateLandingDraftButtonState === 'function') updateLandingDraftButtonState();
+      scrollToSection('landingDesignPreview');
     }
 
     // ---------- Mood/style tag picker -> AI-drafted description ----------
