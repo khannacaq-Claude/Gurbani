@@ -156,7 +156,14 @@
     .global-thread-layer {
       position: fixed;
       inset: 0;
-      z-index: -1;
+      /* Foreground now, not background — sits above ordinary page
+         content (cards, photos, header, nav) so the thread/needle
+         genuinely crosses over things rather than hiding behind opaque
+         backgrounds. Still well below every real modal/overlay (the
+         lowest of those is z-index:1000), so opening any dialog still
+         correctly covers it. pointer-events:none means it never blocks
+         a click even while visually on top. */
+      z-index: 50;
       pointer-events: none;
     }
     .global-thread { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; }
@@ -215,6 +222,11 @@
     }
 
     header {
+      /* Explicit z-index so this stays above the global thread layer
+         (z-index:50, moved to the foreground per request) — the header
+         is core navigation chrome (logo, Sign In, nav), so it should
+         never get a decorative line crossing over it. */
+      z-index: 70;
       background:
         radial-gradient(ellipse 900px 260px at center, rgba(242,169,59,0.14), transparent 65%),
         linear-gradient(135deg, var(--vivid), var(--vivid-deep));
@@ -819,6 +831,14 @@
        and the signed-in dashboard both stay untouched. */
     .hero-fullbleed {
       position: relative;
+      /* Establishes its own stacking context (position + z-index
+         together) so its internal layers (mosaic/tint/sparkles/thread/
+         content, z-index 0-3 below) stay self-contained as a unit that
+         sits ABOVE the global thread layer (z-index:50) as a whole —
+         otherwise the global thread would now cross visibly over the
+         hero's own white text and its own matching white thread, since
+         the global thread was moved to the foreground. */
+      z-index: 60;
       left: 50%;
       right: 50%;
       width: 100vw;
