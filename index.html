@@ -2754,7 +2754,7 @@
        external cropper library) so it has no CDN dependency. -->
   <!-- IMAGE LIGHTBOX — tap any generated design image to see it full-size.
        Generic/reusable: openImageLightbox(url) works from anywhere. -->
-  <!-- DESIGNS GALLERY MODAL — opened from the "Design Requests" stat box.
+  <!-- DESIGNS GALLERY MODAL — opened from the "Real Designs to Explore" stat box.
        Shows publicly-safe featured designs only (same source the AI
        Design Studio preview already pulls from), paginated via "Show
        More" instead of ever fetching everything at once. -->
@@ -6577,7 +6577,7 @@
     // designsGenerated stays lower since it's tied to the newer AI Design
     // Studio feature specifically, which backdated historical customers
     // wouldn't have used — it grows organically, not from backdating.
-    const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50, aiDesignOrders: 10 };
+    const STATS_THRESHOLDS = { designsGenerated: 25, ordersCompleted: 30, customersServed: 50, aiDesignOrders: 10, designsShowcased: 3 };
 
     // Admin-editable promo message — shown wherever AI Design Studio's free
     // trial gets mentioned (dashboard banner, landing lens panel, design
@@ -6797,6 +6797,7 @@
         // to a big backdated one.
         const items = [
           { num: s.designsGenerated, label: 'Design Requests', threshold: STATS_THRESHOLDS.designsGenerated },
+          { num: s.designsShowcased, label: 'Real Designs to Explore', threshold: STATS_THRESHOLDS.designsShowcased, tapToView: true },
           { num: s.ordersCompleted, label: 'Orders Delivered', threshold: STATS_THRESHOLDS.ordersCompleted },
           { num: s.customersServed, label: 'Customers Served', threshold: STATS_THRESHOLDS.customersServed },
           { num: s.aiDesignOrders, label: 'Orders from AI Designs', threshold: STATS_THRESHOLDS.aiDesignOrders },
@@ -6805,10 +6806,10 @@
         if (items.length === 0) return; // nothing meaningful yet — stays hidden
 
         row.innerHTML = items.map(i => `
-          <div class="stat-box" ${i.label === 'Design Requests' ? 'onclick="openDesignsGalleryModal()" style="cursor:pointer; position:relative;" title="Tap to see designs we\'ve created"' : ''}>
+          <div class="stat-box" ${i.tapToView ? 'onclick="openDesignsGalleryModal()" style="cursor:pointer; position:relative;" title="Tap to see designs we\'ve created"' : ''}>
             <div class="stat-num" data-final="${i.num}">0</div>
             <div class="stat-label">${i.label}</div>
-            ${i.label === 'Design Requests' ? '<div style="font-size:9.5px; font-weight:700; color:var(--marigold); opacity:0.75; margin-top:3px; letter-spacing:0.3px;">TAP TO VIEW ↗</div>' : ''}
+            ${i.tapToView ? '<div style="font-size:9.5px; font-weight:700; color:var(--marigold); opacity:0.75; margin-top:3px; letter-spacing:0.3px;">TAP TO VIEW ↗</div>' : ''}
           </div>
         `).join('');
         section.style.display = 'block';
