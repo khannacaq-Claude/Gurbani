@@ -3096,6 +3096,43 @@
         <div class="hero-photo-strip" id="heroPhotoStrip"></div>
         </div>
 
+        <!-- STYLE PERSONA QUIZ — moved here (was after the Try It card,
+             now before it) so this fun, low-effort hook comes first,
+             warming visitors up before the bigger-commitment design
+             form below it. Shareable, no-photo alternative to a
+             selfie-based hook. Entirely client-side: 4 taps, scored
+             against a fixed list of persona archetypes below, no AI call
+             and no cost per visitor even if this goes properly viral.
+             The result card is designed to be screenshotted/shared
+             (the actual organic-growth mechanism), and "Design This For
+             Real" carries the quiz answers straight into the real Try It
+             form's dress type / occasion / mood / color fields.
+             Sits directly inside .hero-fullbleed (like the Try It card
+             below it), so it needs the same position:relative + z-index
+             treatment to render above the mosaic/tint layers instead of
+             getting washed out behind them — see the Try It card's own
+             comment further down for the fuller explanation of that
+             stacking issue and its fix. -->
+        <div class="snap-section reveal-section" id="personaQuizSection" style="margin-top: 32px; margin-bottom: 32px; position: relative; z-index: 3;">
+          <div class="card" id="personaQuizCard" style="max-width:700px; margin:0 auto;">
+            <div id="personaIntro">
+              <div style="text-align:center;">
+                <div class="hero-eyebrow" style="text-align:center;">✨ 30-Second Quiz</div>
+                <h3 style="font-family:var(--font-display); font-size:24px; margin-bottom:8px;">What's Your Bridal Style Persona?</h3>
+                <p style="color:var(--text-muted); margin-bottom:18px; max-width:440px; margin-left:auto; margin-right:auto;">Answer 4 quick taps — no photo, no sign-in needed — and get a shareable style persona card.</p>
+                <button type="button" class="btn-submit" onclick="startPersonaQuiz()">✨ Take the Quiz</button>
+              </div>
+            </div>
+
+            <div id="personaQuizFlow" style="display:none;">
+              <div id="personaProgressDots" style="display:flex; justify-content:center; gap:6px; margin-bottom:16px;"></div>
+              <div id="personaQuestionArea"></div>
+            </div>
+
+            <div id="personaResultArea" style="display:none;"></div>
+          </div>
+        </div>
+
         <!-- PUBLIC PREVIEW OF THE DESIGN FLOW — moved right up here, above
              stats/lens/occasion sections, so it's visible with little to no
              scrolling on a fresh landing. Step 1 (Dress Type + Occasion),
@@ -3375,34 +3412,6 @@
           </div>
         </div>
       </div>
-
-        <!-- STYLE PERSONA QUIZ — shareable, no-photo alternative to a
-             selfie-based hook. Entirely client-side: 4 taps, scored
-             against a fixed list of persona archetypes below, no AI call
-             and no cost per visitor even if this goes properly viral.
-             The result card is designed to be screenshotted/shared
-             (the actual organic-growth mechanism), and "Design This For
-             Real" carries the quiz answers straight into the real Try It
-             form's dress type / occasion / mood / color fields. -->
-        <div class="snap-section reveal-section" id="personaQuizSection" style="margin-top: 48px;">
-          <div class="card" id="personaQuizCard" style="max-width:700px; margin:0 auto;">
-            <div id="personaIntro">
-              <div style="text-align:center;">
-                <div class="hero-eyebrow" style="text-align:center;">✨ 30-Second Quiz</div>
-                <h3 style="font-family:var(--font-display); font-size:24px; margin-bottom:8px;">What's Your Bridal Style Persona?</h3>
-                <p style="color:var(--text-muted); margin-bottom:18px; max-width:440px; margin-left:auto; margin-right:auto;">Answer 4 quick taps — no photo, no sign-in needed — and get a shareable style persona card.</p>
-                <button type="button" class="btn-submit" onclick="startPersonaQuiz()">✨ Take the Quiz</button>
-              </div>
-            </div>
-
-            <div id="personaQuizFlow" style="display:none;">
-              <div id="personaProgressDots" style="display:flex; justify-content:center; gap:6px; margin-bottom:16px;"></div>
-              <div id="personaQuestionArea"></div>
-            </div>
-
-            <div id="personaResultArea" style="display:none;"></div>
-          </div>
-        </div>
 
         <!-- PUBLIC POLL — "is Virtual Try-On actually a need?" Fully
              public in both directions: anyone can vote without signing
