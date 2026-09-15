@@ -2785,9 +2785,7 @@
       <h3 style="margin-bottom:4px;">🎨 Designs We've Created</h3>
       <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">A few of the custom designs made through AI Design Studio, shared with each customer's permission.</p>
       <div id="designsGalleryGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px;"></div>
-      <div style="text-align:center; margin-top:20px;">
-        <button type="button" id="designsGalleryShowMoreBtn" onclick="loadDesignsGallery(true)" class="admin-filter-btn" style="display:none;">Show More</button>
-      </div>
+      <div id="designsGalleryPagination" style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:20px; flex-wrap:wrap;"></div>
     </div>
   </div>
 
@@ -6861,12 +6859,14 @@
     }
 
     // ---------- Designs gallery modal (opened from the stat box) ----------
-    let designsGalleryLimit = 6;
+    let designsGalleryAllItems = [];
+    let designsGalleryPage = 1;
+    const DESIGNS_GALLERY_PAGE_SIZE = 6;
 
     function openDesignsGalleryModal() {
-      designsGalleryLimit = 6;
+      designsGalleryPage = 1;
       document.getElementById('designsGalleryModal').style.display = 'flex';
-      loadDesignsGallery(false);
+      loadDesignsGallery();
       history.pushState({ designsGalleryOpen: true }, '');
     }
 
@@ -6891,41 +6891,82 @@
       }
     });
 
-    async function loadDesignsGallery(loadMore) {
+    // Fetches the full featured-designs list ONCE (up to the backend's own
+    // cap), then paginates client-side from there — real page-number
+    // navigation (6 per page, prev/next, jump to any page), rather than
+    // the old "Show More" pattern that re-fetched an ever-growing limit
+    // from scratch on every click.
+    async function loadDesignsGallery() {
       const grid = document.getElementById('designsGalleryGrid');
-      const moreBtn = document.getElementById('designsGalleryShowMoreBtn');
-      if (loadMore) {
-        designsGalleryLimit += 6;
-        moreBtn.textContent = 'Loading...';
-        moreBtn.disabled = true;
-      } else {
-        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Loading...</p>';
-      }
+      grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Loading...</p>';
       try {
-        const res = await fetch(`${API}/api/designs/featured?limit=${designsGalleryLimit}`);
+        const res = await fetch(`${API}/api/designs/featured?limit=500`);
         const data = await res.json();
         if (!res.ok || !data.success) {
           grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
           return;
         }
-        window.currentGalleryDesigns = data.designs; // looked up by index when a card is tapped
-        grid.innerHTML = data.designs.map((d, i) => `
-          <div style="border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(20,10,20,0.12); cursor:pointer;" onclick="openDesignDetail(${i})">
+        designsGalleryAllItems = data.designs;
+        window.currentGalleryDesigns = designsGalleryAllItems; // looked up by index when a card is tapped
+        renderDesignsGalleryPage();
+      } catch (err) {
+        console.error('loadDesignsGallery error:', err);
+        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
+      }
+    }
+
+    function renderDesignsGalleryPage() {
+      const grid = document.getElementById('designsGalleryGrid');
+      const totalPages = Math.max(1, Math.ceil(designsGalleryAllItems.length / DESIGNS_GALLERY_PAGE_SIZE));
+      if (designsGalleryPage > totalPages) designsGalleryPage = totalPages;
+      const start = (designsGalleryPage - 1) * DESIGNS_GALLERY_PAGE_SIZE;
+      const pageItems = designsGalleryAllItems.slice(start, start + DESIGNS_GALLERY_PAGE_SIZE);
+
+      grid.innerHTML = pageItems.map((d, i) => {
+        const globalIndex = start + i; // index into the FULL list, so openDesignDetail keeps working across pages
+        return `
+          <div style="border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(20,10,20,0.12); cursor:pointer;" onclick="openDesignDetail(${globalIndex})">
             <img src="${d.imageUrl}" alt="${escapeHtml(d.title)}" style="width:100%; height:150px; object-fit:cover; display:block;">
             <div style="padding:8px 10px;">
               <div style="font-size:12px; font-weight:600; color:var(--ink);">${escapeHtml(d.title)}</div>
               ${d.publicId ? `<div style="font-size:10.5px; color:var(--marigold); font-weight:700; margin-top:2px;">#${d.publicId}</div>` : ''}
             </div>
           </div>
-        `).join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No designs to show yet.</p>';
+        `;
+      }).join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No designs to show yet.</p>';
 
-        moreBtn.style.display = data.hasMore ? 'inline-block' : 'none';
-        moreBtn.textContent = 'Show More';
-        moreBtn.disabled = false;
-      } catch (err) {
-        console.error('loadDesignsGallery error:', err);
-        grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Couldn\'t load designs right now — please try again shortly.</p>';
+      renderDesignsGalleryPagination(totalPages);
+    }
+
+    function renderDesignsGalleryPagination(totalPages) {
+      const container = document.getElementById('designsGalleryPagination');
+      if (!container) return;
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+      const pageBtnStyle = (active) =>
+        `width:32px; height:32px; border-radius:7px; border:1.5px solid ${active ? 'var(--vivid)' : '#e5dcc8'}; background:white; color:${active ? 'var(--vivid)' : 'var(--ink)'}; font-weight:${active ? '700' : '500'}; font-size:13px; cursor:pointer;`;
+
+      let pageButtons = '';
+      for (let p = 1; p <= totalPages; p++) {
+        pageButtons += `<button type="button" onclick="goToDesignsGalleryPage(${p})" style="${pageBtnStyle(p === designsGalleryPage)}">${p}</button>`;
       }
+
+      const navBtnStyle = (disabled) =>
+        `width:32px; height:32px; border-radius:7px; border:1.5px solid #e5dcc8; background:white; color:${disabled ? '#ccc' : 'var(--ink)'}; font-size:14px; cursor:${disabled ? 'default' : 'pointer'};`;
+
+      container.innerHTML = `
+        <button type="button" onclick="goToDesignsGalleryPage(${designsGalleryPage - 1})" ${designsGalleryPage === 1 ? 'disabled' : ''} style="${navBtnStyle(designsGalleryPage === 1)}">‹</button>
+        ${pageButtons}
+        <button type="button" onclick="goToDesignsGalleryPage(${designsGalleryPage + 1})" ${designsGalleryPage === totalPages ? 'disabled' : ''} style="${navBtnStyle(designsGalleryPage === totalPages)}">›</button>
+      `;
+    }
+
+    function goToDesignsGalleryPage(p) {
+      const totalPages = Math.max(1, Math.ceil(designsGalleryAllItems.length / DESIGNS_GALLERY_PAGE_SIZE));
+      if (p < 1 || p > totalPages) return;
+      designsGalleryPage = p;
+      renderDesignsGalleryPage();
+      document.getElementById('designsGalleryGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // ---------- Design detail modal: use-as-inspiration / order-directly ----------
