@@ -4598,19 +4598,23 @@
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
         <div id="admin" class="tab-content">
           <!-- SITE VISITOR COUNTER — quick-glance companion to GA4, not a
-               replacement for it. See loadVisitorStats() for what's
-               actually excluded (only own-admin-session visits) vs what
-               isn't (anonymous browsing while signed out — that needs
-               GA4's IP-based Internal Traffic filter instead). -->
+               replacement for it. Excludes: signed-in sessions under the
+               admin role or any of EXCLUDED_TEST_EMAILS, AND any device
+               explicitly marked via "Don't count my visits from this
+               device" below (covers anonymous/signed-out browsing from
+               that same device too). See trackSiteVisit()/excludeThisDeviceFromStats(). -->
           <div class="card" style="padding:16px; margin-bottom:20px;">
             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-              <h4 style="margin:0;">👀 Site Visitors <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(your own admin visits excluded)</span></h4>
-              <!-- Jumps straight into the Gurbani Fashion GA4 property (Property
-                   ID 547786470), skipping the property-picker step. Lands on
-                   the reports home — from there it's 2 clicks to User >
-                   User attributes > Demographic details for the country/city
-                   breakdown this quick counter above doesn't show. -->
-              <a href="https://analytics.google.com/analytics/web/#/p547786470/reports/reportinghub" target="_blank" rel="noopener" style="font-size:12px; font-weight:600; color:var(--vivid); text-decoration:none; white-space:nowrap;">🌍 View in Google Analytics →</a>
+              <h4 style="margin:0;">👀 Site Visitors <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(your own admin/test visits excluded)</span></h4>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <button type="button" onclick="excludeThisDeviceFromStats()" style="font-size:11.5px; font-weight:600; color:var(--text-muted); background:none; border:1px solid #e5dcc8; border-radius:6px; padding:4px 9px; cursor:pointer; white-space:nowrap;" title="Stop counting visits from this specific browser/device, including past ones already logged">🚫 Don't count this device</button>
+                <!-- Jumps straight into the Gurbani Fashion GA4 property (Property
+                     ID 547786470), skipping the property-picker step. Lands on
+                     the reports home — from there it's 2 clicks to User >
+                     User attributes > Demographic details for the country/city
+                     breakdown this quick counter above doesn't show. -->
+                <a href="https://analytics.google.com/analytics/web/#/p547786470/reports/reportinghub" target="_blank" rel="noopener" style="font-size:12px; font-weight:600; color:var(--vivid); text-decoration:none; white-space:nowrap;">🌍 View in Google Analytics →</a>
+              </div>
             </div>
             <div id="visitorStatsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">Loading...</div>
           </div>
@@ -15880,14 +15884,58 @@
       return visitorId;
     }
 
+    // Site owner's own accounts — signing in under any of these skips
+    // visit tracking entirely, same as the admin-role check below, since
+    // not every one of these is necessarily flagged with the admin role
+    // on the account itself (e.g. a secondary personal email used only
+    // for occasional testing).
+    const EXCLUDED_TEST_EMAILS = [
+      'khannacaq@gmail.com',
+      'khannaca.in@gmail.com',
+      'admin@gurbanifashion.com',
+      'pssupplier.in@gmail.com',
+    ];
+
     function trackSiteVisit() {
-      if (currentUser && currentUser.role === 'admin') return;
+      if (currentUser && (currentUser.role === 'admin' || EXCLUDED_TEST_EMAILS.includes((currentUser.email || '').toLowerCase()))) return;
+      // Covers casual anonymous browsing from an already-excluded device
+      // (signed out, or never signed in at all) — set once via "Don't
+      // count my visits from this device" in the admin dashboard.
+      if (localStorage.getItem('gfExcludeFromVisitorStats') === 'true') return;
       const visitorId = getOrCreateVisitorId();
       fetch(`${API}/api/visitors/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ visitorId, path: window.location.pathname }),
       }).catch(() => {}); // never let a tracking failure be visible to a real visitor
+    }
+
+    // "Don't count my visits from this device" — admin-only action.
+    // Marks this browser's persistent visitorId as excluded server-side
+    // (so future calls are silently skipped even after signing out) AND
+    // deletes that visitorId's past log entries, so historical stats get
+    // corrected too, not just going forward.
+    async function excludeThisDeviceFromStats() {
+      if (!confirm('Stop counting visits from this device/browser in Site Visitors stats — including past visits already logged? This can\'t be undone.')) return;
+      const visitorId = getOrCreateVisitorId();
+      try {
+        const res = await fetch(`${API}/api/visitors/exclude-me`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ visitorId }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          localStorage.setItem('gfExcludeFromVisitorStats', 'true');
+          showToast(`✅ This device is now excluded — removed ${data.deletedCount} past visit(s) from the count.`);
+          loadVisitorStats();
+        } else {
+          showToast('❌ Could not exclude this device — please try again.');
+        }
+      } catch (err) {
+        console.error('excludeThisDeviceFromStats error:', err);
+        showToast('❌ Could not exclude this device — please try again.');
+      }
     }
 
     async function loadVisitorStats() {
