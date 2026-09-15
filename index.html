@@ -16329,21 +16329,35 @@
       return best;
     }
 
+    let personaPhotoDataUrl = null; // never uploaded anywhere — read straight from the device, used only to draw the local card preview/download
+
     function showPersonaResult() {
       const persona = pickPersona(personaQuizAnswers);
       personaQuizAnswers._resultPersonaId = persona.id; // kept for reference only, not sent anywhere
+      personaPhotoDataUrl = null;
       const flow = document.getElementById('personaQuizFlow');
       const area = document.getElementById('personaResultArea');
       if (flow) flow.style.display = 'none';
       if (!area) return;
       area.style.display = 'block';
       area.innerHTML = `
-        <div style="max-width:340px; margin:0 auto 14px;">
+        <div style="max-width:340px; margin:0 auto 10px;">
           <label for="personaNameInput" style="display:block; font-size:12.5px; font-weight:600; color:var(--text-muted); margin-bottom:5px; text-align:center;">✨ Want your name on the card? (optional)</label>
           <input type="text" id="personaNameInput" placeholder="E.g., Priya" maxlength="30" oninput="updatePersonaCardName(this.value)" style="width:100%; padding:9px 12px; border-radius:8px; border:1.5px solid #E5DCC8; font-size:14px; text-align:center;">
         </div>
+        <div style="max-width:340px; margin:0 auto 14px;">
+          <label for="personaPhotoInput" style="display:block; font-size:12.5px; font-weight:600; color:var(--text-muted); margin-bottom:5px; text-align:center;">📸 Add your photo to the card? (optional)</label>
+          <input type="file" id="personaPhotoInput" accept="image/*" capture="user" onchange="handlePersonaPhotoSelect(event)" style="width:100%; font-size:12.5px;">
+          <p style="font-size:10.5px; color:var(--text-muted); text-align:center; margin-top:4px;">Stays on your device only — never uploaded, never saved anywhere.</p>
+          <div id="personaPhotoConsentRow" style="display:none; margin-top:8px; text-align:left; background:#fdf2f6; border:1px solid var(--vivid); border-radius:6px; padding:8px 10px;">
+            <label style="display:flex; align-items:flex-start; gap:7px; font-size:11.5px; font-weight:normal; cursor:pointer;">
+              <input type="checkbox" id="personaPhotoConsentCheckbox" style="width:15px; height:15px; min-width:15px; flex:0 0 15px; margin-top:1px;" onchange="updatePersonaShareButtonState()">
+              <span>I confirm this is a genuine photo of myself, and I have the right to use it here.</span>
+            </label>
+          </div>
+        </div>
         <div id="personaResultCard" style="text-align:center; padding:28px 20px; border-radius:16px; background:linear-gradient(160deg, ${persona.palette[0]}, ${persona.palette[1]}); color:#fff;">
-          <div style="font-size:40px; margin-bottom:6px;">${persona.emoji}</div>
+          <div id="personaPhotoSlot" style="margin-bottom:6px;"><span id="personaEmojiDisplay" style="font-size:40px;">${persona.emoji}</span></div>
           <div style="font-family:var(--font-display); font-style:italic; font-size:14px; opacity:0.85; margin-bottom:4px;" id="personaCardNameLabel">Your Style Persona</div>
           <div style="font-family:var(--font-display); font-size:26px; font-weight:700; margin-bottom:10px;">${persona.name}</div>
           <div style="font-size:14px; font-weight:600; margin-bottom:12px; opacity:0.95;">${persona.tagline}</div>
@@ -16352,11 +16366,54 @@
         </div>
         <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:10px;">Save your card and share it anywhere ✨</p>
         <div style="display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
-          <button type="button" class="btn-submit" onclick="sharePersonaCard()">📥 Download / Share My Card</button>
+          <button type="button" class="btn-submit" id="personaShareBtn" onclick="sharePersonaCard()">📥 Download / Share My Card</button>
           <button type="button" class="btn-submit" onclick="continuePersonaToDesign()">✨ Design This For Real →</button>
           <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="retakePersonaQuiz()">🔄 Retake Quiz</button>
         </div>
       `;
+    }
+
+    // Reads the chosen photo entirely client-side via FileReader — it
+    // never touches fetch/XHR, so there is no network request carrying
+    // it anywhere, ever. Only used to (a) show a live circular preview
+    // on the on-screen card, and (b) draw into the downloadable/
+    // shareable canvas in buildPersonaCardCanvas. Requires the
+    // ownership/identity confirmation checkbox before the share button
+    // will work, same wording as the main photo-upload consent
+    // elsewhere on the site.
+    function handlePersonaPhotoSelect(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        personaPhotoDataUrl = reader.result;
+        const slot = document.getElementById('personaPhotoSlot');
+        const persona = pickPersona(personaQuizAnswers);
+        if (slot) {
+          slot.innerHTML = `
+            <div style="position:relative; width:96px; height:96px; margin:0 auto;">
+              <img src="${personaPhotoDataUrl}" style="width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid rgba(255,255,255,0.85); display:block;">
+              <span style="position:absolute; bottom:-4px; right:-4px; font-size:20px; background:rgba(0,0,0,0.28); border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">${persona.emoji}</span>
+            </div>
+          `;
+        }
+        const consentRow = document.getElementById('personaPhotoConsentRow');
+        if (consentRow) consentRow.style.display = 'block';
+        updatePersonaShareButtonState();
+      };
+      reader.readAsDataURL(file); // local only — nothing here ever leaves the browser
+    }
+
+    // Disables the share/download button only while a photo has been
+    // added but the ownership confirmation hasn't been checked yet — no
+    // gating at all if no photo was chosen.
+    function updatePersonaShareButtonState() {
+      const btn = document.getElementById('personaShareBtn');
+      if (!btn) return;
+      const consentCheckbox = document.getElementById('personaPhotoConsentCheckbox');
+      const needsConsent = !!personaPhotoDataUrl;
+      const hasConsent = consentCheckbox ? consentCheckbox.checked : false;
+      btn.disabled = needsConsent && !hasConsent;
     }
 
     // Draws the persona result as an actual 1080x1080 PNG (not a DOM
@@ -16383,7 +16440,19 @@
       return lines.length;
     }
 
-    async function buildPersonaCardCanvas(persona, name) {
+    // Loads a data URL into an Image element — used to draw the user's
+    // own local photo onto the canvas. Purely local: an Image element
+    // pointed at a data: URL never makes a network request.
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function buildPersonaCardCanvas(persona, name, photoDataUrl) {
       // Web fonts load asynchronously — waiting for this avoids a card
       // occasionally rendering in a fallback font if generated very
       // early in the page's life.
@@ -16406,8 +16475,46 @@
       ctx.textAlign = 'center';
       ctx.fillStyle = '#ffffff';
 
-      ctx.font = `${Math.round(W * 0.13)}px sans-serif`;
-      ctx.fillText(persona.emoji, W / 2, H * 0.26);
+      const photoCenterY = H * 0.22;
+      if (photoDataUrl) {
+        try {
+          const img = await loadImage(photoDataUrl);
+          const r = W * 0.11; // circle radius
+          // Cover-fit crop so the photo fills the circle without distortion
+          const srcSize = Math.min(img.width, img.height);
+          const sx = (img.width - srcSize) / 2;
+          const sy = (img.height - srcSize) / 2;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(W / 2, photoCenterY, r, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, sx, sy, srcSize, srcSize, W / 2 - r, photoCenterY - r, r * 2, r * 2);
+          ctx.restore();
+          // Ring border
+          ctx.beginPath();
+          ctx.arc(W / 2, photoCenterY, r, 0, Math.PI * 2);
+          ctx.lineWidth = W * 0.006;
+          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+          ctx.stroke();
+          // Small emoji badge, bottom-right of the circle
+          ctx.font = `${Math.round(W * 0.045)}px sans-serif`;
+          ctx.fillStyle = 'rgba(0,0,0,0.28)';
+          ctx.beginPath();
+          ctx.arc(W / 2 + r * 0.75, photoCenterY + r * 0.75, W * 0.035, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(persona.emoji, W / 2 + r * 0.75, photoCenterY + r * 0.75 + W * 0.015);
+        } catch (imgErr) {
+          console.error('persona card photo draw error:', imgErr);
+          ctx.font = `${Math.round(W * 0.13)}px sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(persona.emoji, W / 2, H * 0.26); // graceful fallback to plain emoji if the photo fails to draw
+        }
+      } else {
+        ctx.font = `${Math.round(W * 0.13)}px sans-serif`;
+        ctx.fillText(persona.emoji, W / 2, H * 0.26);
+      }
 
       const nameTrimmed = (name || '').trim();
       const label = nameTrimmed ? `${nameTrimmed}'s Style Persona` : 'Your Style Persona';
@@ -16440,11 +16547,18 @@
     // back to a plain download everywhere else (desktop browsers mostly
     // don't support sharing files this way yet).
     async function sharePersonaCard() {
+      if (personaPhotoDataUrl) {
+        const consentCheckbox = document.getElementById('personaPhotoConsentCheckbox');
+        if (!consentCheckbox || !consentCheckbox.checked) {
+          showToast('❌ Please confirm the photo is genuinely yours first');
+          return;
+        }
+      }
       try {
         showToast('🖼️ Preparing your card...');
         const persona = pickPersona(personaQuizAnswers);
         const nameInput = document.getElementById('personaNameInput');
-        const canvas = await buildPersonaCardCanvas(persona, nameInput ? nameInput.value : '');
+        const canvas = await buildPersonaCardCanvas(persona, nameInput ? nameInput.value : '', personaPhotoDataUrl);
 
         canvas.toBlob(async (blob) => {
           if (!blob) { showToast('❌ Could not create the image — please try again.'); return; }
@@ -16488,6 +16602,7 @@
     }
 
     function retakePersonaQuiz() {
+      personaPhotoDataUrl = null;
       const result = document.getElementById('personaResultArea');
       if (result) result.style.display = 'none';
       startPersonaQuiz();
@@ -16797,7 +16912,7 @@
         <p><strong>Selfies:</strong> used only to generate a written personalized style analysis (e.g. suggestions on necklines, colors, and fits) via Anthropic Claude. Selfies are never used to generate design images and are never shared with our image-generation provider. The photo itself is not stored — it is discarded immediately after that one-time analysis; only the resulting text write-up is kept. If you upload a selfie or any photo of a person, you're confirming at the time of upload that it's a genuine photo of yourself and that you have the right to use it.</p>
 
         <h3>Public Polls & Interactive Quizzes</h3>
-        <p>Our landing page includes optional interactive features like the Style Persona quiz and feature-interest polls. Quiz answers and any name you optionally add to a shareable result card are processed entirely in your browser and are never sent to or stored on our servers. Poll votes are recorded using an anonymous, randomly generated identifier stored in your browser (not linked to your name, phone number, or account) — this is used only to prevent the same browser from voting twice on the same poll. Poll results themselves (vote totals) are public and visible to anyone who views that poll.</p>
+        <p>Our landing page includes optional interactive features like the Style Persona quiz and feature-interest polls. Quiz answers and any name you optionally add to a shareable result card are processed entirely in your browser and are never sent to or stored on our servers. If you choose to add your own photo to a shareable Style Persona card, that photo is also handled entirely in your browser — it is read directly from your device to draw the card, never uploaded to us, and never stored anywhere. Poll votes are recorded using an anonymous, randomly generated identifier stored in your browser (not linked to your name, phone number, or account) — this is used only to prevent the same browser from voting twice on the same poll. Poll results themselves (vote totals) are public and visible to anyone who views that poll.</p>
 
         <h3>Who We Share Data With</h3>
         <p><strong>Anthropic (Claude AI)</strong> — processes text and photos to generate design concepts and style analysis.<br>
