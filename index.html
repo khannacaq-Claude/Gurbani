@@ -824,9 +824,10 @@
       height: 100%;
       object-fit: cover;
       opacity: 0;
+      pointer-events: none;
       transition: opacity 1.1s ease;
     }
-    .hero-photo-strip img.active { opacity: 1; }
+    .hero-photo-strip img.active { opacity: 1; pointer-events: auto; cursor: zoom-in; }
     .hero-photo-caption {
       position: absolute;
       left: 0; right: 0; bottom: 0;
@@ -2764,7 +2765,7 @@
   <div id="designDetailModal" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.8); z-index:3450; align-items:center; justify-content:center; padding:20px; overflow-y:auto;" onclick="if(event.target===this) closeDesignDetailModal()">
     <div style="background:#fff; border-radius:14px; max-width:420px; width:100%; padding:0; position:relative; overflow:hidden;">
       <button type="button" onclick="closeDesignDetailModal()" style="position:absolute; top:12px; right:14px; background:rgba(0,0,0,0.45); color:#fff; border:none; border-radius:50%; width:30px; height:30px; font-size:18px; cursor:pointer; z-index:2;">×</button>
-      <img id="designDetailImg" src="" alt="" style="width:100%; max-height:50vh; object-fit:cover; display:block;">
+      <img id="designDetailImg" src="" alt="" style="width:100%; max-height:50vh; object-fit:cover; display:block; cursor:zoom-in;" onclick="openImageLightbox(designDetailCurrentUrl())">
       <div style="padding:20px;">
         <div style="font-size:11px; font-weight:700; color:var(--marigold); letter-spacing:0.4px; margin-bottom:4px;">DESIGN <span id="designDetailNumber"></span></div>
         <h4 id="designDetailTitle" style="margin:0 0 8px;"></h4>
@@ -2789,7 +2790,7 @@
     </div>
   </div>
 
-  <div id="imageLightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.88); z-index:3300; align-items:center; justify-content:center; padding:24px;" onclick="closeImageLightbox()">
+  <div id="imageLightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.88); z-index:3900; align-items:center; justify-content:center; padding:24px;" onclick="closeImageLightbox()">
     <span onclick="closeImageLightbox()" style="position:absolute; top:18px; right:24px; color:#fff; font-size:32px; cursor:pointer; line-height:1; z-index:3301;">×</span>
     <div style="max-width:100%; max-height:90vh; display:flex; flex-direction:column; align-items:center; gap:14px;" onclick="event.stopPropagation()">
       <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:78vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="closeImageLightbox()">
@@ -7417,7 +7418,7 @@
           const defaultView = availableViews[0] || null;
           return `
           <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden; scroll-snap-align: start;" ${availableViews.length > 1 ? `onmouseenter="stopTrendCycle('${t.trendKey}')" onmouseleave="startTrendCycle('${t.trendKey}', trendAvailableViews['${t.trendKey}'])"` : ''}>
-            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${t.images[defaultView]}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block;">` : ''}
+            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${t.images[defaultView]}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block; cursor:zoom-in;" onclick="openImageLightbox(this.src)">` : ''}
             ${availableViews.length > 1 ? `
               <div id="trendTabs-${t.trendKey}" style="display:flex; gap:4px; padding:8px 8px 0;">
                 ${availableViews.map((v) => `<button type="button" onclick="manualSwitchTrendView('${t.trendKey}','${v}')" data-view="${v}" style="flex:1; font-size:10px; font-weight:700; text-transform:uppercase; padding:4px; border-radius:4px; border:1px solid var(--sand); background:${v === defaultView ? 'var(--vivid)' : 'white'}; color:${v === defaultView ? 'white' : 'var(--text-muted)'}; cursor:pointer;">${VIEW_LABELS[v]}</button>`).join('')}
@@ -8545,7 +8546,7 @@
 
       heroCycleIndex = 0;
       strip.innerHTML = items.map((item, i) => `
-        <img src="${item.imageUrl}" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer">
+        <img src="${item.imageUrl}" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer" onclick="openImageLightbox(this.src)">
       `).join('') + `<div class="hero-photo-caption">✨ Real designs, created for real customers</div>`;
       strip.style.display = 'block';
 
