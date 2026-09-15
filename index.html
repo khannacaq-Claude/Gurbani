@@ -146,64 +146,6 @@
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); padding-top: var(--header-h, 330px); }
 
-    /* ---------- Global stitched-thread layer (every page, incl. admin) ----------
-       A single, subtle meandering thread + traveling needle-dot, fixed
-       to the viewport so it's present no matter how long the page is or
-       which screen (public site or signed-in dashboard) is showing.
-       Deliberately much lighter than the hero's mosaic/sparkles/tint —
-       just this one motif — so it reads as a quiet design touch behind
-       admin tables and forms rather than competing with real work. */
-    .global-thread-layer {
-      position: fixed;
-      inset: 0;
-      /* Foreground now, not background — sits above ordinary page
-         content (cards, photos, header, nav) so the thread/needle
-         genuinely crosses over things rather than hiding behind opaque
-         backgrounds. Still well below every real modal/overlay (the
-         lowest of those is z-index:1000), so opening any dialog still
-         correctly covers it. pointer-events:none means it never blocks
-         a click even while visually on top. */
-      z-index: 50;
-      pointer-events: none;
-    }
-    .global-thread {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      /* Fades the whole thread+needle out right as the needle finishes
-         its lap (SMIL animateMotion below, same 32s duration, no
-         keyTimes so it loops by jumping straight back to the path's
-         start) — so instead of that jump being visible, the thread
-         disappears just before it happens and reappears exactly as the
-         next lap begins. Same duration as the needle's animateMotion so
-         the two stay in step. */
-      opacity: 0.55;
-      animation: globalThreadFade 32s linear infinite;
-    }
-    @keyframes globalThreadFade {
-      0%   { opacity: 0.55; }
-      88%  { opacity: 0.55; }
-      94%  { opacity: 0; }
-      100% { opacity: 0; }
-    }
-    .global-thread path {
-      fill: none;
-      stroke: var(--vivid);
-      stroke-width: 2.2;
-      stroke-dasharray: 4 5;
-      vector-effect: non-scaling-stroke;
-    }
-    .global-thread .global-needle { fill: var(--marigold); }
-    /* Keep the CSS fade paused in step with the SMIL needle motion
-       (see the visibilitychange handler in JS) — otherwise the fade
-       would keep running in a hidden tab while the needle motion pauses,
-       and they'd drift out of sync once the tab becomes visible again. */
-    .global-thread-layer.paused .global-thread { animation-play-state: paused; }
-    @media (prefers-reduced-motion: reduce) {
-      .global-needle { display: none; }
-      /* Reduced motion: skip the fade cycle too — the thread just stays
-         steadily visible instead of pulsing in and out. */
-      .global-thread { animation: none; opacity: 0.55; }
-    }
-
     /* Section jump-nav — NOT sticky. It was made sticky earlier today
        (to sit directly under the newly-pinned header), but its
        containing block is the entire landing page, which is very long —
@@ -2656,24 +2598,6 @@
   </style>
 </head>
 <body>
-  <!-- GLOBAL STITCHED-THREAD LAYER — appears on every page, including
-       the signed-in admin/dashboard screens (unlike the hero's photo
-       mosaic + sparkles + tint, which are deliberately hero-only — see
-       .hero-fullbleed). This is intentionally just the thread/needle
-       motif alone: much lighter and less visually busy than a photo
-       layer, so it doesn't compete with admin data tables/forms the way
-       a full mosaic would have. Fixed + z-index:-1 as a direct child of
-       <body> (not nested inside #landingPage or #dashboard), so it sits
-       behind literally everything, on every screen, without needing any
-       visibility toggle of its own. pointer-events:none throughout. -->
-  <div class="global-thread-layer" id="globalThreadLayer" aria-hidden="true">
-    <svg class="global-thread" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M -5 8 C 18 -2, 30 22, 50 10 S 82 -4, 96 14 S 62 48, 78 62 S 42 52, 26 78 S 58 92, 98 84" />
-      <circle r="1.8" class="global-needle">
-        <animateMotion dur="32s" repeatCount="indefinite" path="M -5 8 C 18 -2, 30 22, 50 10 S 82 -4, 96 14 S 62 48, 78 62 S 42 52, 26 78 S 58 92, 98 84" />
-      </circle>
-    </svg>
-  </div>
   <div class="floating-nudge" id="floatingNudge">
     <button type="button" class="fn-signin" id="fnSigninBtn" onclick="handleFloatingNudgeClick()">✨ <span class="fn-label">Sign In &amp; Start Designing</span></button>
     <button type="button" class="fn-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Back to top" aria-label="Back to top">↑</button>
@@ -4606,6 +4530,22 @@
 
         <!-- ADMIN TAB (only visible/loaded for role === 'admin') -->
         <div id="admin" class="tab-content">
+          <!-- DAILY DIGEST — admin-only preview/test-send controls. The
+               real scheduled send happens server-side via node-cron
+               (server.js), 9 AM IST daily — this card is just for
+               checking the numbers and confirming delivery actually
+               works, not the trigger itself. -->
+          <div class="card" style="padding:16px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+              <h4 style="margin:0;">📱 Daily Digest <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(sends automatically at 9 AM daily — real WhatsApp if set up, SMS otherwise)</span></h4>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <button type="button" onclick="previewDailyDigest()" style="font-size:11.5px; font-weight:600; color:var(--vivid); background:none; border:1px solid var(--vivid); border-radius:6px; padding:5px 10px; cursor:pointer;">👁️ Preview</button>
+                <button type="button" onclick="sendDailyDigestNow()" style="font-size:11.5px; font-weight:600; color:white; background:var(--vivid); border:none; border-radius:6px; padding:5px 10px; cursor:pointer;">📤 Send Test Now</button>
+              </div>
+            </div>
+            <div id="digestPreviewArea" style="font-size:13px; color:var(--text-muted);">Click "Preview" to see what today's digest would say, without sending anything.</div>
+          </div>
+
           <!-- SITE VISITOR COUNTER — quick-glance companion to GA4, not a
                replacement for it. Excludes: signed-in sessions under the
                admin role or any of EXCLUDED_TEST_EMAILS, AND any device
@@ -7500,6 +7440,13 @@
     // intent across the redirect, which would be a lot of fragile state-
     // passing for a nice-to-have feature.
     async function useTrendAsInspiration(trendKey) {
+      // Fire-and-forget tap tracking — counts even for a signed-out
+      // visitor who gets redirected to sign in below, since the tap
+      // itself is still a genuine signal of interest. Never awaited,
+      // never blocks the actual flow, never shown to the visitor even
+      // if it fails.
+      fetch(`${API}/api/trends/${trendKey}/tap`, { method: 'POST' }).catch(() => {});
+
       if (!currentUser) {
         showToast('✨ Sign in to use this as inspiration for your own design');
         document.getElementById('signinTrigger')?.click();
@@ -8503,27 +8450,6 @@
         band.classList.add('paused');
       } else {
         band.classList.remove('paused');
-      }
-    });
-
-    // Same battery-conservation pattern for the global thread layer
-    // (every page, including the signed-in dashboard) — separate from
-    // the hero's own thread above since this one exists regardless of
-    // which screen is showing. Also toggles .paused on the layer so the
-    // CSS fade cycle (see .global-thread-layer.paused rule) pauses in
-    // step with the SMIL needle motion — otherwise the fade would keep
-    // running while hidden and drift out of sync with the needle once
-    // the tab is visible again.
-    document.addEventListener('visibilitychange', () => {
-      const globalThreadLayer = document.getElementById('globalThreadLayer');
-      const globalThreadSvg = document.querySelector('.global-thread');
-      if (!globalThreadSvg) return;
-      if (document.hidden) {
-        if (globalThreadSvg.pauseAnimations) globalThreadSvg.pauseAnimations();
-        if (globalThreadLayer) globalThreadLayer.classList.add('paused');
-      } else {
-        if (globalThreadSvg.unpauseAnimations) globalThreadSvg.unpauseAnimations();
-        if (globalThreadLayer) globalThreadLayer.classList.remove('paused');
       }
     });
 
@@ -15944,6 +15870,52 @@
       } catch (err) {
         console.error('excludeThisDeviceFromStats error:', err);
         showToast('❌ Could not exclude this device — please try again.');
+      }
+    }
+
+    // Shows what today's digest WOULD say, without sending anything or
+    // affecting tomorrow's scheduled send — safe to click as often as
+    // you like while checking the numbers look right.
+    async function previewDailyDigest() {
+      const area = document.getElementById('digestPreviewArea');
+      if (area) area.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${API}/api/digest/preview`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.message) {
+          if (area) area.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit; background:#fdf8f0; border-radius:8px; padding:10px 12px; margin:0;">${escapeHtml(data.message)}</pre>`;
+        } else {
+          if (area) area.textContent = 'Could not load preview — please try again.';
+        }
+      } catch (err) {
+        console.error('previewDailyDigest error:', err);
+        if (area) area.textContent = 'Could not load preview — please try again.';
+      }
+    }
+
+    // Actually sends the digest right now (real WhatsApp if configured,
+    // SMS fallback otherwise) AND advances the snapshot, exactly like
+    // the real scheduled 9 AM send would — this is for confirming
+    // delivery genuinely works, not just previewing the numbers.
+    async function sendDailyDigestNow() {
+      if (!confirm('Send the real digest right now, to whoever is configured in DIGEST_RECIPIENT_PHONES? This also resets the "since last time" counter, same as the real scheduled send.')) return;
+      showToast('📤 Sending digest...');
+      try {
+        const res = await fetch(`${API}/api/digest/send-now`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast('✅ Digest sent — check your phone, and check the Railway logs if it doesn\'t arrive (shows which channel it went out on).');
+        } else {
+          showToast('❌ Could not send the digest — please try again.');
+        }
+      } catch (err) {
+        console.error('sendDailyDigestNow error:', err);
+        showToast('❌ Could not send the digest — please try again.');
       }
     }
 
