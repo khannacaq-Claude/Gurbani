@@ -1357,6 +1357,18 @@
     }
     .mood-tag.selected { background:var(--vivid); color:#fff; border-color:var(--vivid); }
 
+    /* Same visual styling as .mood-tag, but deliberately a SEPARATE class
+       — the Quick Quizzes buttons below need this look without also
+       picking up the global .mood-tag click handler (which toggles a
+       persistent "selected" state meant for the Try It form's style/
+       color pickers, not a quiz answer button that should just fire its
+       own onclick and move on). */
+    .quiz-tag {
+      background:#fff; color:var(--ink); border:1.5px solid #ddd; border-radius:16px;
+      padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer;
+    }
+    .quiz-tag:hover { border-color: var(--vivid); }
+
     .guide-card {
       display: block;
       background: #fff;
@@ -3372,6 +3384,26 @@
           <p style="text-align:center; font-size:12px; color:var(--text-muted); max-width:520px; margin:6px auto 20px;">What's actually moving in Indian ethnic wear right now — worth a look if you're still deciding what to describe above.</p>
           <div id="trendingGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px; max-width:980px; margin:0 auto;">
             <div style="grid-column:1/-1; text-align:center; font-size:12px; color:var(--text-muted);">Loading...</div>
+          </div>
+        </div>
+
+        <!-- QUICK QUIZZES — a shared picker menu (not three separate full
+             sections, to keep the page from ballooning) leading into one
+             generic quiz engine (see QUIZZES object in JS). Two question
+             styles: 'myth-fact' (immediate per-question feedback + score
+             tally) and 'scored' (answer through, then a picked result) —
+             the AI myth/fact quiz uses the former, Fabric Match and
+             Wedding Countdown use the latter with their own pickResult
+             logic. Entirely client-side, same no-server-call spirit as
+             the Style Persona quiz. -->
+        <div class="snap-section reveal-section" id="quizzesSection" style="margin-top: 48px;">
+          <div class="card" style="max-width:900px; margin:0 auto;">
+            <div id="quizzesPicker">
+              <h3 style="text-align:center; font-family:var(--font-display); font-size:22px; margin-bottom:4px;">🎯 Quick Quizzes</h3>
+              <p style="text-align:center; color:var(--text-muted); margin-bottom:18px;">A minute of fun — genuinely useful either way.</p>
+              <div id="quizPickerCards" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;"></div>
+            </div>
+            <div id="quizActiveArea" style="display:none;"></div>
           </div>
         </div>
 
@@ -15737,6 +15769,7 @@
       initScrollReveals();
       initHeroFullbleedSparkles();
       loadPoll();
+      renderQuizPickerCards();
       renderUpcomingFeaturesTeaser();
       initVoiceInput();
       initLandingVoiceInput();
@@ -16603,6 +16636,324 @@
       }
       if (typeof updateLandingDraftButtonState === 'function') updateLandingDraftButtonState();
       scrollToSection('landingDesignPreview');
+    }
+
+    // ---------- Quick Quizzes (shared engine, 3 quizzes) ----------
+    // One generic engine drives all three quizzes rather than
+    // duplicating the question-flow UI three times. Two question
+    // styles: 'myth-fact' (immediate per-question feedback + a running
+    // score, used by the AI awareness quiz) and 'scored' (answer
+    // through all questions, then a result is picked — via weighted
+    // matching for Fabric Match, or explicit rule logic for Wedding
+    // Countdown). Entirely client-side, same no-server-call approach as
+    // the Style Persona quiz — nothing here is ever sent anywhere.
+    const QUIZZES = {
+      'ai-myth-fact': {
+        icon: '🤖',
+        title: 'AI Myth or Fact?',
+        subtitle: 'Test what you actually know about AI Design Studio',
+        type: 'myth-fact',
+        questions: [
+          { text: 'AI can use a photo of YOUR own fabric to shape your design.', answer: true,
+            explain: 'True! Upload a fabric photo and the AI generates your design using that actual color, pattern and texture — not a generic guess.' },
+          { text: 'AI reads your selfie and designs an outfit to match your face.', answer: false,
+            explain: 'Myth. Selfies are only ever used for a written style/fit suggestion — never to generate design images, and the photo itself is never stored.' },
+          { text: 'You need to already know exactly what you want before starting.', answer: false,
+            explain: 'Myth. "Help Me Build It" walks you through style, color and mood with simple taps — no fashion vocabulary needed.' },
+          { text: 'AI Design Studio works with just a text description, no photo at all.', answer: true,
+            explain: 'True! A good description alone is enough to get 3 real concepts — photos are optional, not required.' },
+          { text: "Once you generate a design, you're locked into ordering it.", answer: false,
+            explain: 'Myth. Generating concepts is completely free with zero obligation — you only pay when you actually place a stitching order.' },
+        ],
+      },
+      'fabric-match': {
+        icon: '🧵',
+        title: 'Find Your Fabric',
+        subtitle: '4 quick taps to find what actually suits you',
+        type: 'scored',
+        questions: [
+          { key: 'occasion', label: "What's the occasion?", options: [
+            { label: '💍 Wedding / Bridal', value: 'wedding' },
+            { label: '🪔 Festival / Pooja', value: 'festival' },
+            { label: '☀️ Everyday, Elevated', value: 'everyday' },
+            { label: '🥂 Party / Reception', value: 'party' },
+          ]},
+          { key: 'climate', label: "What's your climate like?", options: [
+            { label: '🔥 Hot & Humid', value: 'hot' },
+            { label: '🌤️ Pleasant / Moderate', value: 'moderate' },
+            { label: '❄️ Cold / Winter', value: 'cold' },
+          ]},
+          { key: 'maintenance', label: 'How much upkeep are you up for?', options: [
+            { label: '✨ Dry-clean, no problem', value: 'high' },
+            { label: '🧺 Wash-and-wear, please', value: 'low' },
+            { label: '🤷 Somewhere in between', value: 'medium' },
+          ]},
+          { key: 'priority', label: 'What matters more to you?', options: [
+            { label: '🪶 Breathable & lightweight', value: 'comfort' },
+            { label: '✨ Rich look, heavy embellishment', value: 'richness' },
+            { label: '⚖️ A bit of both', value: 'balance' },
+          ]},
+        ],
+        pickResult: pickFabricResult,
+      },
+      'wedding-readiness': {
+        icon: '💍',
+        title: 'Wedding Countdown Check',
+        subtitle: 'Are you actually on track? 3 quick questions',
+        type: 'scored',
+        questions: [
+          { key: 'timeline', label: 'How far away is the big day?', options: [
+            { label: '📅 More than 6 months', value: 'far' },
+            { label: '🗓️ 3–6 months', value: 'medium' },
+            { label: '⏰ 1–3 months', value: 'soon' },
+            { label: '🚨 Less than a month', value: 'urgent' },
+          ]},
+          { key: 'outfitsNeeded', label: 'How many outfits do you still need?', options: [
+            { label: '1', value: 'one' },
+            { label: '2–3', value: 'few' },
+            { label: '4+', value: 'many' },
+            { label: 'Not sure yet', value: 'unsure' },
+          ]},
+          { key: 'started', label: 'Have you started any of them yet?', options: [
+            { label: '✅ Yes, in progress', value: 'started' },
+            { label: '🤏 Just one or two', value: 'partial' },
+            { label: '❌ Not yet', value: 'none' },
+          ]},
+        ],
+        pickResult: pickWeddingVerdict,
+      },
+    };
+
+    const FABRIC_RESULTS = [
+      { name: 'Georgette', tagline: 'Light, flowy, and effortlessly elegant.',
+        desc: 'Soft drape, breathable, and forgiving in heat — a go-to for flowing anarkalis and gowns that still photograph beautifully.',
+        match: { occasion: ['everyday', 'party'], climate: ['hot', 'moderate'], maintenance: ['low', 'medium'], priority: ['comfort', 'balance'] } },
+      { name: 'Chiffon', tagline: 'Featherlight and romantic.',
+        desc: 'Sheer, airy, and wonderfully comfortable even in peak summer — ideal for layered dupattas and soft silhouettes.',
+        match: { occasion: ['everyday', 'festival'], climate: ['hot'], maintenance: ['low', 'medium'], priority: ['comfort'] } },
+      { name: 'Banarasi Silk', tagline: 'Rich, regal, unmistakably bridal.',
+        desc: 'Heavy zari work and real weight in hand — the fabric of heirlooms, built for the moments that call for maximum presence.',
+        match: { occasion: ['wedding'], climate: ['moderate', 'cold'], maintenance: ['high'], priority: ['richness'] } },
+      { name: 'Velvet', tagline: 'Deep, plush, made for winter drama.',
+        desc: 'Rich texture and warmth that photographs stunning under any light — a natural fit for winter weddings and evening events.',
+        match: { occasion: ['wedding', 'party'], climate: ['cold'], maintenance: ['high'], priority: ['richness', 'balance'] } },
+      { name: 'Cotton Silk', tagline: 'The practical everyday favorite.',
+        desc: 'A comfortable middle ground — enough structure to look put-together, easy enough to actually wear and wash often.',
+        match: { occasion: ['everyday', 'festival'], climate: ['moderate', 'hot'], maintenance: ['low'], priority: ['comfort', 'balance'] } },
+      { name: 'Organza', tagline: 'Crisp, structured, quietly striking.',
+        desc: 'Holds its shape beautifully for statement sleeves and voluminous silhouettes, with a subtle sheen that catches the light.',
+        match: { occasion: ['party', 'festival'], climate: ['moderate'], maintenance: ['high', 'medium'], priority: ['richness', 'balance'] } },
+    ];
+
+    function pickFabricResult(answers) {
+      let best = FABRIC_RESULTS[0];
+      let bestScore = -1;
+      FABRIC_RESULTS.forEach((r) => {
+        let score = 0;
+        if (r.match.occasion.includes(answers.occasion)) score += 3;
+        if (r.match.climate.includes(answers.climate)) score += 3;
+        if (r.match.maintenance.includes(answers.maintenance)) score += 2;
+        if (r.match.priority.includes(answers.priority)) score += 2;
+        if (score > bestScore) { bestScore = score; best = r; }
+      });
+      return {
+        emoji: '🧵',
+        name: best.name,
+        tagline: best.tagline,
+        desc: best.desc,
+        ctaHtml: `<button type="button" class="btn-submit" onclick="useFabricInDesign('${best.name.replace(/'/g, "\\'")}')">✨ Design Something in This Fabric →</button>`,
+      };
+    }
+
+    // Adds the recommended fabric as a note in the Try It form's free-text
+    // field, rather than a dedicated fabric dropdown (none exists there)
+    // — appended to whatever's already typed, not overwriting it.
+    function useFabricInDesign(fabricName) {
+      const notes = document.getElementById('landingExtraNotes');
+      if (notes) {
+        const existing = notes.value.trim();
+        const addition = `I'd love this in ${fabricName}.`;
+        notes.value = existing ? `${existing} ${addition}` : addition;
+      }
+      exitQuiz();
+      scrollToSection('landingDesignPreview');
+    }
+
+    const WEDDING_VERDICTS = {
+      perfectTiming: { emoji: '🌟', name: 'Perfect Timing', tagline: "You're right on schedule.",
+        desc: "6+ months out and nothing started yet is honestly the ideal window — plenty of time for thoughtful design, fittings, and alterations, no last-minute stress." },
+      onTrack: { emoji: '✅', name: "You're On Track", tagline: 'Keep the momentum going.',
+        desc: "You've already got things moving — stay on this pace and you'll be in great shape well before the big day." },
+      startSoon: { emoji: '⏳', name: 'Time to Get Moving', tagline: "Still doable — but don't wait.",
+        desc: 'Stitching, fittings and alterations take real time. This is the week to actually start, not just think about it.' },
+      urgent: { emoji: '🚨', name: "Let's Talk Today", tagline: 'This calls for a direct conversation.',
+        desc: "With this little time left, the fastest path forward is messaging us directly so we can figure out what's genuinely possible." },
+    };
+
+    function pickWeddingVerdict(answers) {
+      const { timeline, outfitsNeeded, started } = answers;
+      const urgent = timeline === 'urgent' || (timeline === 'soon' && started === 'none' && outfitsNeeded !== 'one');
+      let verdict;
+      if (urgent) verdict = WEDDING_VERDICTS.urgent;
+      else if (started === 'started') verdict = WEDDING_VERDICTS.onTrack;
+      else if (timeline === 'far' && started === 'none') verdict = WEDDING_VERDICTS.perfectTiming;
+      else if ((timeline === 'medium' || timeline === 'soon') && started !== 'started') verdict = WEDDING_VERDICTS.startSoon;
+      else if (started === 'partial') verdict = WEDDING_VERDICTS.onTrack;
+      else verdict = WEDDING_VERDICTS.startSoon;
+
+      const ctaHtml = verdict === WEDDING_VERDICTS.urgent
+        ? `<a href="https://wa.me/919899810977?text=${encodeURIComponent("Hi! My event is coming up soon and I need help getting my outfits sorted quickly.")}" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">💬 WhatsApp Us Now</a>`
+        : `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Start Designing Now →</button>`;
+
+      return { ...verdict, ctaHtml };
+    }
+
+    let activeQuizId = null;
+    let activeQuizStep = 0;
+    let activeQuizAnswers = {};
+    let activeQuizScore = 0; // myth-fact quizzes only
+
+    function renderQuizPickerCards() {
+      const container = document.getElementById('quizPickerCards');
+      if (!container) return;
+      container.innerHTML = Object.entries(QUIZZES).map(([id, q]) => `
+        <div onclick="startQuiz('${id}')" style="cursor:pointer; border:1.5px solid #E5DCC8; border-radius:12px; padding:16px; text-align:center; transition:border-color 0.2s;" onmouseenter="this.style.borderColor='var(--vivid)'" onmouseleave="this.style.borderColor='#E5DCC8'">
+          <div style="font-size:32px; margin-bottom:8px;">${q.icon}</div>
+          <div style="font-weight:700; font-size:15px; margin-bottom:4px;">${q.title}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${q.subtitle}</div>
+        </div>
+      `).join('');
+    }
+
+    function startQuiz(quizId) {
+      activeQuizId = quizId;
+      activeQuizStep = 0;
+      activeQuizAnswers = {};
+      activeQuizScore = 0;
+      document.getElementById('quizzesPicker').style.display = 'none';
+      document.getElementById('quizActiveArea').style.display = 'block';
+      renderQuizQuestion();
+    }
+
+    function exitQuiz() {
+      activeQuizId = null;
+      document.getElementById('quizActiveArea').style.display = 'none';
+      document.getElementById('quizzesPicker').style.display = 'block';
+    }
+
+    function renderQuizProgressDots(total, current) {
+      return `<div style="display:flex; justify-content:center; gap:6px; margin-bottom:16px;">${Array.from({ length: total }, (_, i) =>
+        `<span style="width:8px; height:8px; border-radius:50%; background:${i <= current ? 'var(--vivid)' : '#e5d9c8'};"></span>`
+      ).join('')}</div>`;
+    }
+
+    function renderQuizQuestion() {
+      const quiz = QUIZZES[activeQuizId];
+      const area = document.getElementById('quizActiveArea');
+      const q = quiz.questions[activeQuizStep];
+      const total = quiz.questions.length;
+      const backBtn = `<button type="button" onclick="exitQuiz()" style="background:none; border:none; color:var(--text-muted); font-size:12px; cursor:pointer; margin-bottom:10px;">← Back to quizzes</button>`;
+
+      if (quiz.type === 'myth-fact') {
+        area.innerHTML = `
+          ${backBtn}
+          ${renderQuizProgressDots(total, activeQuizStep)}
+          <div style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Question ${activeQuizStep + 1} of ${total}</div>
+          <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:18px; max-width:480px; margin-left:auto; margin-right:auto;">${q.text}</div>
+          <div style="display:flex; gap:12px; justify-content:center;">
+            <button type="button" class="quiz-tag" style="padding:12px 28px; font-size:15px;" onclick="answerMythFact(true)">✅ Fact</button>
+            <button type="button" class="quiz-tag" style="padding:12px 28px; font-size:15px;" onclick="answerMythFact(false)">❌ Myth</button>
+          </div>
+          <div id="mythFactFeedback"></div>
+        `;
+      } else {
+        area.innerHTML = `
+          ${backBtn}
+          ${renderQuizProgressDots(total, activeQuizStep)}
+          <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:14px;">${q.label}</div>
+          <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
+            ${q.options.map((opt, i) => `<button type="button" class="quiz-tag" style="font-size:14px; padding:10px 16px;" onclick="answerScoredQuestion(${i})">${opt.label}</button>`).join('')}
+          </div>
+        `;
+      }
+    }
+
+    function answerMythFact(userSaysFact) {
+      const quiz = QUIZZES[activeQuizId];
+      const q = quiz.questions[activeQuizStep];
+      const correct = userSaysFact === q.answer;
+      if (correct) activeQuizScore++;
+      const feedback = document.getElementById('mythFactFeedback');
+      if (!feedback) return;
+      feedback.innerHTML = `
+        <div style="margin-top:16px; padding:12px 14px; border-radius:10px; background:${correct ? '#eafaf0' : '#fdf2f2'}; border:1px solid ${correct ? '#8fd4a8' : '#f0b8b8'};">
+          <div style="font-weight:700; font-size:13px; margin-bottom:4px; color:${correct ? '#1f7a3f' : '#a83a3a'};">${correct ? '✅ Correct!' : (q.answer ? '❌ Actually — Fact!' : '❌ Actually — Myth!')}</div>
+          <div style="font-size:13px; color:var(--ink);">${q.explain}</div>
+        </div>
+        <div style="text-align:center; margin-top:14px;">
+          <button type="button" class="btn-submit" onclick="advanceQuiz()">${activeQuizStep + 1 < quiz.questions.length ? 'Next →' : 'See My Score →'}</button>
+        </div>
+      `;
+    }
+
+    function answerScoredQuestion(optionIndex) {
+      const quiz = QUIZZES[activeQuizId];
+      const q = quiz.questions[activeQuizStep];
+      const opt = q.options[optionIndex];
+      activeQuizAnswers[q.key] = opt.value;
+      advanceQuiz();
+    }
+
+    function advanceQuiz() {
+      activeQuizStep++;
+      const quiz = QUIZZES[activeQuizId];
+      if (activeQuizStep < quiz.questions.length) {
+        renderQuizQuestion();
+      } else {
+        renderQuizResult();
+      }
+    }
+
+    function renderQuizResult() {
+      const quiz = QUIZZES[activeQuizId];
+      const area = document.getElementById('quizActiveArea');
+
+      if (quiz.type === 'myth-fact') {
+        const total = quiz.questions.length;
+        const pct = Math.round((activeQuizScore / total) * 100);
+        let verdict;
+        if (pct === 100) verdict = 'Perfect score! You clearly get what AI Design Studio can actually do. ✨';
+        else if (pct >= 60) verdict = "Pretty solid! A couple of surprises there, but you're mostly in the know.";
+        else verdict = 'Good news — there\'s more AI Design Studio can do than you thought!';
+
+        area.innerHTML = `
+          <div style="text-align:center; padding:24px 20px;">
+            <div style="font-size:40px; margin-bottom:8px;">🎯</div>
+            <div style="font-family:var(--font-display); font-size:24px; font-weight:700; margin-bottom:8px;">${activeQuizScore} / ${total}</div>
+            <div style="font-size:14px; color:var(--text-muted); max-width:420px; margin:0 auto 20px;">${verdict}</div>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Try It For Real →</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">🔄 Retake</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">← Other Quizzes</button>
+            </div>
+          </div>
+        `;
+      } else {
+        const result = quiz.pickResult(activeQuizAnswers);
+        area.innerHTML = `
+          <div style="text-align:center; padding:24px 20px;">
+            <div style="font-size:36px; margin-bottom:6px;">${result.emoji || quiz.icon}</div>
+            <div style="font-family:var(--font-display); font-size:24px; font-weight:700; margin-bottom:6px;">${result.name}</div>
+            <div style="font-size:14px; font-weight:600; color:var(--vivid); margin-bottom:10px;">${result.tagline}</div>
+            <div style="font-size:13.5px; line-height:1.6; max-width:460px; margin:0 auto 20px; color:var(--text-muted);">${result.desc}</div>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              ${result.ctaHtml}
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">🔄 Retake</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">← Other Quizzes</button>
+            </div>
+          </div>
+        `;
+      }
     }
 
     // ---------- Public poll (e.g. "is Virtual Try-On a need?") ----------
