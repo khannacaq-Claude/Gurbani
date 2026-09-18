@@ -142,19 +142,42 @@
        "proximity" rather than "mandatory" so normal scrolling through
        sections taller than one screen (FAQ, Rate Card) still works
        smoothly instead of trapping the scroll mid-section. */
-    html.snap-scroll { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+    /* REVERTED back to `proximity` (Sept 18 follow-up session) — the
+       `mandatory` switch below was tried to fix Trending/How-It-Works
+       cards cutting off mid-scroll, but real wheel-scroll testing showed
+       a worse regression: `mandatory`'s forced hard-snap on every wheel
+       tick was causing Chrome to intermittently drop the position:fixed
+       header entirely (confirmed via screenshot — header vanished,
+       leaving only the non-fixed .section-tabs bar pinned at the very
+       top). A vanishing header is worse than an imperfectly-snapped
+       card, so this reverts to `proximity` and instead relies on
+       scroll-padding-top (added below) to stop the header from
+       overlapping snapped content. The dense per-element anchors added
+       during the `mandatory` experiment are left in place — they still
+       help under `proximity`, just without forcing every scroll. If
+       cards still cut off under `proximity`, that's the next thing to
+       revisit, but not by going back to `mandatory` on the whole page. */
+    html.snap-scroll {
+      scroll-snap-type: y proximity;
+      scroll-behavior: smooth;
+      /* Reserves the fixed header's height so a snapped section's top
+         lands BELOW the header instead of underneath it. */
+      scroll-padding-top: var(--header-h, 330px);
+    }
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
-    /* Switched from `proximity` to `mandatory` — real testing showed
-       `proximity` wasn't reliably engaging for mouse-wheel or PgUp/PgDn
-       scrolling specifically (it's tuned more for touch/trackpad
-       momentum scrolling), even on sections that already had proper
-       snap-align anchors (Trending's cards, confirmed via screenshot —
-       anchors existed, still cut off mid-row). `mandatory` forces every
-       scroll gesture, regardless of input method, to land on a snap
-       point — no possible "dead zone" stop. This raises the importance
-       of having DENSE, evenly-spread anchors (a sparse set of anchors
-       under `mandatory` risks big, jarring jumps) — see the additions
-       below and on individual elements throughout the sections.
+    /* (History, kept for context) Previously switched from `proximity` to
+       `mandatory` — real testing showed `proximity` wasn't reliably
+       engaging for mouse-wheel or PgUp/PgDn scrolling specifically (it's
+       tuned more for touch/trackpad momentum scrolling), even on sections
+       that already had proper snap-align anchors (Trending's cards,
+       confirmed via screenshot — anchors existed, still cut off mid-row).
+       `mandatory` forced every scroll gesture, regardless of input
+       method, to land on a snap point — no possible "dead zone" stop.
+       That raised the importance of having DENSE, evenly-spread anchors
+       (a sparse set of anchors under `mandatory` risks big, jarring
+       jumps) — see the additions below and on individual elements
+       throughout the sections. Now reverted (see note above), but the
+       anchors themselves stayed, since they're harmless under proximity.
        These two are tall, content-heavy blocks near the top of the page
        (hero photo/mosaic + headline + photo strip; the Try It form with
        its reference-photo grid) that previously had NO snap anchor of
