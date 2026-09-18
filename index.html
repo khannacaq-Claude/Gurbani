@@ -144,6 +144,24 @@
        smoothly instead of trapping the scroll mid-section. */
     html.snap-scroll { scroll-snap-type: y proximity; scroll-behavior: smooth; }
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
+    /* These two are tall, content-heavy blocks near the top of the page
+       (hero photo/mosaic + headline + photo strip; the Try It form with
+       its reference-photo grid) that previously had NO snap anchor of
+       their own — the nearest one was personaQuizSection in between, or
+       the next .snap-section well past the tryit-card. That left a large
+       gap where a scroll gesture could settle anywhere mid-content
+       (photo half-visible, text half-visible) with nothing nearby to
+       snap to. Giving them their own start-anchor closes that gap. */
+    html.snap-scroll .hero-fullbleed,
+    html.snap-scroll .card.tryit-card { scroll-snap-align: start; }
+    /* 14 stacked FAQ items previously shared a single snap point (the
+       section top) for the whole list — scrolling into the list itself
+       had no further anchor until the section ended, the same "long
+       gap with nothing to snap to" problem. Each item is short and
+       reliably fits well within a viewport, so per-item anchors here
+       are a clean fit (unlike a wrapping grid, where multiple cards
+       share a row and per-item vertical anchors wouldn't help). */
+    html.snap-scroll .faq-item { scroll-snap-align: start; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); padding-top: var(--header-h, 330px); }
 
     /* Section jump-nav — NOT sticky. It was made sticky earlier today
