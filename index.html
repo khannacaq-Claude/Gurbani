@@ -142,16 +142,24 @@
        "proximity" rather than "mandatory" so normal scrolling through
        sections taller than one screen (FAQ, Rate Card) still works
        smoothly instead of trapping the scroll mid-section. */
-    html.snap-scroll { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+    html.snap-scroll { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
-    /* These two are tall, content-heavy blocks near the top of the page
+    /* Switched from `proximity` to `mandatory` — real testing showed
+       `proximity` wasn't reliably engaging for mouse-wheel or PgUp/PgDn
+       scrolling specifically (it's tuned more for touch/trackpad
+       momentum scrolling), even on sections that already had proper
+       snap-align anchors (Trending's cards, confirmed via screenshot —
+       anchors existed, still cut off mid-row). `mandatory` forces every
+       scroll gesture, regardless of input method, to land on a snap
+       point — no possible "dead zone" stop. This raises the importance
+       of having DENSE, evenly-spread anchors (a sparse set of anchors
+       under `mandatory` risks big, jarring jumps) — see the additions
+       below and on individual elements throughout the sections.
+       These two are tall, content-heavy blocks near the top of the page
        (hero photo/mosaic + headline + photo strip; the Try It form with
        its reference-photo grid) that previously had NO snap anchor of
        their own — the nearest one was personaQuizSection in between, or
-       the next .snap-section well past the tryit-card. That left a large
-       gap where a scroll gesture could settle anywhere mid-content
-       (photo half-visible, text half-visible) with nothing nearby to
-       snap to. Giving them their own start-anchor closes that gap. */
+       the next .snap-section well past the tryit-card. */
     html.snap-scroll .hero-fullbleed,
     html.snap-scroll .card.tryit-card { scroll-snap-align: start; }
     /* 14 stacked FAQ items previously shared a single snap point (the
@@ -162,6 +170,19 @@
        are a clean fit (unlike a wrapping grid, where multiple cards
        share a row and per-item vertical anchors wouldn't help). */
     html.snap-scroll .faq-item { scroll-snap-align: start; }
+    /* Same reasoning extended to every other repeating natural sub-block
+       across the remaining sections — lensSection (2 windows),
+       journeySection (1 window), processSection (4 steps), the guides
+       grid (9 cards — under `mandatory` this now genuinely helps, even
+       though multiple cards share a row: it gives the forced snap
+       something nearby to land on instead of jumping past all of them
+       to the next unrelated section), and the fabric calculator inside
+       the Rate Card section, which is large enough to be its own
+       landable chunk distinct from the Rate Card panels above it. */
+    html.snap-scroll .lens-window,
+    html.snap-scroll .process-step,
+    html.snap-scroll .guide-card,
+    html.snap-scroll #fabricCalcCard-pub { scroll-snap-align: start; }
     body { font-family: var(--font-body); background: var(--cream); color: var(--text-ink); padding-top: var(--header-h, 330px); }
 
     /* Section jump-nav — NOT sticky. It was made sticky earlier today
