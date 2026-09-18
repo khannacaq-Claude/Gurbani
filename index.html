@@ -3402,6 +3402,7 @@
               <h3 style="text-align:center; font-family:var(--font-display); font-size:22px; margin-bottom:4px;">🎯 Quick Quizzes</h3>
               <p style="text-align:center; color:var(--text-muted); margin-bottom:18px;">A minute of fun — genuinely useful either way.</p>
               <div id="quizPickerCards" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;"></div>
+              <div id="quizPickerControls" style="text-align:center; margin-top:14px;"></div>
             </div>
             <div id="quizActiveArea" style="display:none;"></div>
           </div>
@@ -16995,17 +16996,45 @@
     let activeQuizStep = 0;
     let activeQuizAnswers = {};
     let activeQuizScore = 0; // myth-fact quizzes only
+    let activeQuizQuestions = []; // shuffled copy for the current attempt — see startQuiz()
+    let quizPickerShowAll = false;
+
+    // Fisher-Yates — used both for question order and, for scored
+    // quizzes, each question's own option order. Always shuffles a
+    // COPY, never the original QUIZZES data, so the underlying
+    // definitions stay stable across attempts/sessions.
+    function shuffleCopy(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const QUIZ_PICKER_FEATURED_COUNT = 4;
 
     function renderQuizPickerCards() {
       const container = document.getElementById('quizPickerCards');
+      const controls = document.getElementById('quizPickerControls');
       if (!container) return;
-      container.innerHTML = Object.entries(QUIZZES).map(([id, q]) => `
+      const allEntries = Object.entries(QUIZZES);
+      const entries = quizPickerShowAll ? allEntries : shuffleCopy(allEntries).slice(0, QUIZ_PICKER_FEATURED_COUNT);
+
+      container.innerHTML = entries.map(([id, q]) => `
         <div onclick="startQuiz('${id}')" style="cursor:pointer; border:1.5px solid #E5DCC8; border-radius:12px; padding:16px; text-align:center; transition:border-color 0.2s;" onmouseenter="this.style.borderColor='var(--vivid)'" onmouseleave="this.style.borderColor='#E5DCC8'">
           <div style="font-size:32px; margin-bottom:8px;">${q.icon}</div>
           <div style="font-weight:700; font-size:15px; margin-bottom:4px;">${q.title}</div>
           <div style="font-size:12px; color:var(--text-muted);">${q.subtitle}</div>
         </div>
       `).join('');
+
+      if (controls) {
+        controls.innerHTML = quizPickerShowAll
+          ? `<button type="button" onclick="quizPickerShowAll=false; renderQuizPickerCards();" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer;">🔀 Show me a few, not all ${allEntries.length}</button>`
+          : `<button type="button" onclick="renderQuizPickerCards();" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer; margin-right:16px;">🔀 Show different quizzes</button>
+             <button type="button" onclick="quizPickerShowAll=true; renderQuizPickerCards();" style="background:none; border:none; color:var(--text-muted); font-size:12.5px; font-weight:600; cursor:pointer;">See all ${allEntries.length} quizzes →</button>`;
+      }
     }
 
     function startQuiz(quizId) {
@@ -17013,6 +17042,13 @@
       activeQuizStep = 0;
       activeQuizAnswers = {};
       activeQuizScore = 0;
+      // Fresh shuffle every attempt — question order, and for scored
+      // quizzes each question's own option order — so retaking a quiz
+      // (or a repeat visitor) doesn't see the identical sequence twice.
+      const quiz = QUIZZES[quizId];
+      activeQuizQuestions = shuffleCopy(quiz.questions).map((q) =>
+        q.options ? { ...q, options: shuffleCopy(q.options) } : q
+      );
       document.getElementById('quizzesPicker').style.display = 'none';
       document.getElementById('quizActiveArea').style.display = 'block';
       renderQuizQuestion();
@@ -17033,8 +17069,8 @@
     function renderQuizQuestion() {
       const quiz = QUIZZES[activeQuizId];
       const area = document.getElementById('quizActiveArea');
-      const q = quiz.questions[activeQuizStep];
-      const total = quiz.questions.length;
+      const q = activeQuizQuestions[activeQuizStep];
+      const total = activeQuizQuestions.length;
       const backBtn = `<button type="button" onclick="exitQuiz()" style="background:none; border:none; color:var(--text-muted); font-size:12px; cursor:pointer; margin-bottom:10px;">← Back to quizzes</button>`;
 
       if (quiz.type === 'myth-fact') {
@@ -17062,8 +17098,7 @@
     }
 
     function answerMythFact(userSaysFact) {
-      const quiz = QUIZZES[activeQuizId];
-      const q = quiz.questions[activeQuizStep];
+      const q = activeQuizQuestions[activeQuizStep];
       const correct = userSaysFact === q.answer;
       if (correct) activeQuizScore++;
       const feedback = document.getElementById('mythFactFeedback');
@@ -17074,14 +17109,13 @@
           <div style="font-size:13px; color:var(--ink);">${q.explain}</div>
         </div>
         <div style="text-align:center; margin-top:14px;">
-          <button type="button" class="btn-submit" onclick="advanceQuiz()">${activeQuizStep + 1 < quiz.questions.length ? 'Next →' : 'See My Score →'}</button>
+          <button type="button" class="btn-submit" onclick="advanceQuiz()">${activeQuizStep + 1 < activeQuizQuestions.length ? 'Next →' : 'See My Score →'}</button>
         </div>
       `;
     }
 
     function answerScoredQuestion(optionIndex) {
-      const quiz = QUIZZES[activeQuizId];
-      const q = quiz.questions[activeQuizStep];
+      const q = activeQuizQuestions[activeQuizStep];
       const opt = q.options[optionIndex];
       activeQuizAnswers[q.key] = opt.value;
       advanceQuiz();
@@ -17089,8 +17123,7 @@
 
     function advanceQuiz() {
       activeQuizStep++;
-      const quiz = QUIZZES[activeQuizId];
-      if (activeQuizStep < quiz.questions.length) {
+      if (activeQuizStep < activeQuizQuestions.length) {
         renderQuizQuestion();
       } else {
         renderQuizResult();
@@ -17102,7 +17135,7 @@
       const area = document.getElementById('quizActiveArea');
 
       if (quiz.type === 'myth-fact') {
-        const total = quiz.questions.length;
+        const total = activeQuizQuestions.length;
         const pct = Math.round((activeQuizScore / total) * 100);
         let verdict;
         if (pct === 100) verdict = "Perfect score! You clearly know your stuff here. ✨";
