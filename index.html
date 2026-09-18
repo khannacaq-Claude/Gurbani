@@ -16722,6 +16722,181 @@
         ],
         pickResult: pickWeddingVerdict,
       },
+
+      // ---- Guide-companion quizzes below (8) ----
+      // One per existing Guide, grounded directly in that guide's real
+      // content (read from the actual guide HTML files, not invented) —
+      // each links back to its full guide on the result screen via
+      // resultCtaHtml, rather than the default "Try It For Real", since
+      // the point here is driving people to actually read the guide,
+      // not straight into the design form.
+      'guide-ai-design': {
+        icon: '🎨',
+        title: 'How AI Fashion Design Really Works',
+        subtitle: 'What AI can (and honestly can\'t) do on its own',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/ai-fashion-design-explained.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'A generated AI image is basically a ready-to-cut sewing pattern.', answer: false,
+            explain: "Myth. A generated image is a picture of an idea, not a sewing pattern or bill of materials — genuine pattern-drafting (seam allowances, dart placement, grain lines) still needs skilled human work." },
+          { text: "Our AI Design Studio checks your chosen concept against fabric actually in stock.", answer: true,
+            explain: "True! That's the step most AI tools skip entirely — we check against Gurbani's actual physical inventory (fabric, lace, lining), not just what an AI image suggests." },
+          { text: 'You need design experience or fashion vocabulary to use AI Design Studio.', answer: false,
+            explain: 'Myth. Most people just describe what they\'re picturing in plain language — that\'s a completely normal, usable description.' },
+          { text: 'Once you use AI Design Studio, a real tailor still cuts and stitches your outfit.', answer: true,
+            explain: "True! The AI generates the vision; real fabric, real measurements, and Sonia's team turn that vision into an actual garment." },
+          { text: 'Using AI Design Studio is basically like ordering ready-made clothes online.', answer: false,
+            explain: "Myth. Every garment is still cut and stitched to your own measurements — it's custom stitching with an AI-assisted starting point, not e-commerce." },
+        ],
+      },
+      'guide-measurements': {
+        icon: '📏',
+        title: 'Measure Yourself Right',
+        subtitle: 'Test what you know before you pick up the tape',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/self-measurement-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'You should pull the measuring tape as tight as possible for accuracy.', answer: false,
+            explain: 'Myth. Keep it snug but not tight — pulling too tight (or holding your breath) gives an inaccurate, too-small measurement.' },
+          { text: 'Waist should be measured at your natural waistline, the narrowest part of your torso.', answer: true,
+            explain: "True! Usually just above your belly button — don't suck in, measure as you'd naturally stand." },
+          { text: 'A rigid (non-flexible) tape works just as well as a soft measuring tape.', answer: false,
+            explain: 'Myth. Use a soft measuring tape, not a rigid one, for accurate body measurements.' },
+          { text: 'Having a second person help usually gives more accurate results than measuring yourself alone.', answer: true,
+            explain: 'True! A second person helping usually beats solo self-measuring, per the guide.' },
+          { text: 'The measurement sanity-check tool confirms your numbers are anatomically correct for your body.', answer: false,
+            explain: "Myth. It only flags numbers that look implausible or inconsistent with each other — it can't confirm they're actually correct for you specifically." },
+        ],
+      },
+      'guide-fabric-care': {
+        icon: '🧵',
+        title: 'Fabric Care: Myth or Fact?',
+        subtitle: 'Washing, ironing, and storing your custom outfits right',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/fabric-care-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'Velvet should be folded for storage, just like most other fabrics.', answer: false,
+            explain: 'Myth. Velvet should be hung, never folded — folding creates permanent crease lines in the pile that are very hard to remove.' },
+          { text: 'Most silk garments should be dry cleaned, not home washed.', answer: true,
+            explain: "True! Home washing can damage silk's sheen and cause color bleeding — dry clean is the safer default." },
+          { text: 'Cotton is the most forgiving fabric here, machine washable in cold-to-warm water.', answer: true,
+            explain: 'True! Cotton handles regular washing well and is generally low-maintenance for storage too.' },
+          { text: 'You should iron velvet directly, same as any other fabric.', answer: false,
+            explain: 'Myth. Never iron velvet directly — steam from a distance instead, or use a velvet-specific brush.' },
+          { text: 'Chiffon can be safely washed together with your other clothes in one load.', answer: false,
+            explain: 'Myth. Hand wash chiffon separately — it can snag on zippers or rough fabric from other garments in the wash.' },
+        ],
+      },
+      'guide-occasion-fabric': {
+        icon: '🎉',
+        title: 'Right Fabric, Right Occasion',
+        subtitle: 'Climate and comfort matter as much as looks',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/occasion-fabric-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'Heavy fabrics like velvet and brocade are a good pick for a summer daytime wedding.', answer: false,
+            explain: 'Myth. Heavy, heat-trapping fabrics can genuinely ruin a summer daytime event — georgette, chiffon, cotton silk and organza are better picks.' },
+          { text: 'For pooja functions, fabric that resists creasing and allows easy movement matters more than in most other settings.', answer: true,
+            explain: 'True! Pooja functions often mean sitting on the floor for extended periods, so this genuinely matters more here.' },
+          { text: 'For evening party wear, fabrics with sheen or structure (satin, velvet) tend to stand out more under indoor lighting than flat, matte ones.', answer: true,
+            explain: 'True! Evening events are usually indoors under artificial lighting, where sheen and structure catch the light better.' },
+          { text: 'For everyday or office wear, delicate fabrics are worth prioritizing over easy-care ones.', answer: false,
+            explain: "Myth. For clothes you'll wash and wear regularly, low-maintenance fabrics that hold up to frequent washing are worth prioritizing over anything delicate." },
+        ],
+      },
+      'guide-fabric-glossary': {
+        icon: '🧾',
+        title: 'Fabric Glossary Check',
+        subtitle: 'Georgette vs chiffon vs crepe — do you actually know the difference?',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/fabric-glossary.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'Georgette has more texture and grip than chiffon, which is smoother and sheerer.', answer: true,
+            explain: 'True! Georgette holds embroidery a little more confidently; chiffon is more delicate and slippery, per our glossary.' },
+          { text: 'Net and organza are basically the same fabric.', answer: false,
+            explain: 'Myth. Net is an open mesh usually layered over something; organza is a solid (if sheer) weave that can stand on its own.' },
+          { text: 'Raw silk is smoother and glossier than pure/mulberry silk.', answer: false,
+            explain: "Myth — it's the other way around. Raw silk is textured and matte; pure silk is the smoother, glossier one." },
+          { text: 'Satin is defined by its weave, not the fiber it\'s made from.', answer: true,
+            explain: 'True! A tight weave that gives one glossy side and one matte side — that\'s about the weave technique, not a specific fiber.' },
+          { text: 'Crepe has a shiny, glossy finish.', answer: false,
+            explain: 'Myth. Crepe has a matte (non-shiny) finish with a distinctive fine, crinkled texture.' },
+        ],
+      },
+      'guide-blouse-neckline': {
+        icon: '👚',
+        title: 'Necklines, Sleeves & Backs',
+        subtitle: 'Know your options before your next fitting',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/blouse-neckline-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'A boat neck (bateau) is a deep V-shaped cut.', answer: false,
+            explain: 'Myth. A boat neck is a wide, shallow neckline running almost horizontally from shoulder to shoulder — not a V at all.' },
+          { text: 'Sleeveless is the most common default style for lehenga blouses.', answer: true,
+            explain: 'True! Clean and versatile — it puts more visual focus on the neckline and embellishment.' },
+          { text: 'A halter neck is typically paired with a backless or low-back design.', answer: true,
+            explain: 'True! Straps tie behind the neck rather than over the shoulders, often paired with a backless/low-back design for a striking look.' },
+          { text: 'Combining a neckline + sleeve + back style in your description helps both AI Design Studio and our tailors.', answer: true,
+            explain: 'True! E.g. "sweetheart neck, sleeveless, tasseled back" gives something much more specific to work from than "a nice blouse."' },
+        ],
+      },
+      'guide-embroidery': {
+        icon: '✨',
+        title: 'Know Your Embroidery',
+        subtitle: "Zardozi, gota patti, thread work — what's actually heavy vs light?",
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/embroidery-work-types-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'Zardozi is generally lighter in weight than gota patti.', answer: false,
+            explain: 'Myth. Zardozi is the heaviest — dense metallic-thread work, genuinely heavy both visually and in actual fabric weight. Gota patti is light-medium by comparison.' },
+          { text: 'Chikankari is traditionally done white-on-white or tone-on-tone.', answer: true,
+            explain: 'True! Delicate, subtle embroidery traditionally white-on-white, now also common in tone-on-tone pastels — a summer festive favorite.' },
+          { text: 'Sequin and stone work is popular for party wear specifically because it catches and reflects indoor light.', answer: true,
+            explain: "True! Built to catch and reflect light, which is exactly why it's so common under indoor evening lighting." },
+          { text: 'Zardozi embroidery typically takes just a day or two of hand-work.', answer: false,
+            explain: 'Myth. Zardozi can take weeks of hand-work alone, before stitching even begins — genuinely time-intensive.' },
+          { text: "Naming the specific technique (not just \"heavy work\") helps get a more honest cost and timeline estimate.", answer: true,
+            explain: 'True! It gives both the AI and our tailors a clearer starting point, and helps give a more honest read on timeline and cost upfront.' },
+        ],
+      },
+      'guide-fitting': {
+        icon: '📅',
+        title: 'Fitting Appointment Know-How',
+        subtitle: 'What actually happens, and how many rounds you\'ll need',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/fitting-appointment-faq.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'A friend or family member of similar size can be fitted on your behalf.', answer: false,
+            explain: "Myth. Fit can't be reliably transferred from someone else's body, even a similar size — measurements need to be taken on the actual person who'll wear the outfit." },
+          { text: 'Most outfits need just one fitting round near the end of stitching.', answer: true,
+            explain: 'True! Bridal and heavily embroidered pieces usually need 2-3 rounds; most other outfits need just one.' },
+          { text: "Booking ahead through your account guarantees a slot; walk-ins are only accepted if there's availability.", answer: true,
+            explain: 'True! Booking ahead lets us prep your order and measurements before you arrive — walk-ins are welcome only when we have availability.' },
+          { text: "It's better to wait until you've taken the outfit home to flag a fit issue.", answer: false,
+            explain: "Myth. Flagging it at the fitting, rather than after you've left with the outfit, is always the easiest way to fix it." },
+          { text: 'A straightforward fitting typically takes 20–30 minutes.', answer: true,
+            explain: "True! Bridal or heavily detailed outfits can take longer since there's more to check — drape, embellishment placement, overall balance." },
+        ],
+      },
+      'guide-booking-timeline': {
+        icon: '🪔',
+        title: 'Wedding Booking Timeline: Myth or Fact?',
+        subtitle: 'How far ahead you actually need to book, by outfit type',
+        type: 'myth-fact',
+        resultCtaHtml: '<a href="/wedding-season-booking-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        questions: [
+          { text: 'Bridal lehengas and heavily embroidered outfits should ideally be booked 3+ months ahead.', answer: true,
+            explain: 'True! Heavy zardozi and hand embroidery take real time — often several weeks of hand-work alone before stitching even begins — plus 2-3 fitting rounds.' },
+          { text: 'Sangeet, reception, mehendi and haldi outfits need the same 3+ month lead time as bridal wear.', answer: false,
+            explain: 'Myth. They typically need 6-8 weeks — enough time for a moderately-worked outfit without a bridal-level hand-embroidery timeline.' },
+          { text: 'Rush orders (1-2 weeks out) can usually accommodate heavy bridal embroidery if you ask.', answer: false,
+            explain: "Myth. Heavy embroidery or bridal work genuinely isn't realistic in that window — not unwillingness, but hand-work that can't be compressed without quality suffering." },
+          { text: 'October to February is wedding season in North India, and order books fill up fastest in this window.', answer: true,
+            explain: 'True! Booking at the earlier end of each timeframe gives real breathing room instead of a tight squeeze if your event falls in this window.' },
+          { text: "Fabric that's already in stock moves faster than fabric that needs sourcing.", answer: true,
+            explain: "True! Especially for guest outfits and simpler designs — flexibility on fabric choice helps speed things up at that stage." },
+        ],
+      },
     };
 
     const FABRIC_RESULTS = [
@@ -16801,9 +16976,17 @@
       else if (started === 'partial') verdict = WEDDING_VERDICTS.onTrack;
       else verdict = WEDDING_VERDICTS.startSoon;
 
-      const ctaHtml = verdict === WEDDING_VERDICTS.urgent
-        ? `<a href="https://wa.me/919899810977?text=${encodeURIComponent("Hi! My event is coming up soon and I need help getting my outfits sorted quickly.")}" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">💬 WhatsApp Us Now</a>`
-        : `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Start Designing Now →</button>`;
+      let ctaHtml;
+      if (verdict === WEDDING_VERDICTS.urgent) {
+        ctaHtml = `<a href="https://wa.me/919899810977?text=${encodeURIComponent("Hi! My event is coming up soon and I need help getting my outfits sorted quickly.")}" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">💬 WhatsApp Us Now</a>`;
+      } else if (verdict === WEDDING_VERDICTS.onTrack) {
+        // Already in motion — a guide (fitting prep, booking timeline)
+        // is more useful right now than another nudge to start
+        // designing, which they're already doing.
+        ctaHtml = `<button type="button" class="btn-submit" onclick="scrollToSection('guidesShowcaseSection'); exitQuiz();">📚 See Helpful Guides →</button>`;
+      } else {
+        ctaHtml = `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Start Designing Now →</button>`;
+      }
 
       return { ...verdict, ctaHtml };
     }
@@ -16922,9 +17105,11 @@
         const total = quiz.questions.length;
         const pct = Math.round((activeQuizScore / total) * 100);
         let verdict;
-        if (pct === 100) verdict = 'Perfect score! You clearly get what AI Design Studio can actually do. ✨';
+        if (pct === 100) verdict = "Perfect score! You clearly know your stuff here. ✨";
         else if (pct >= 60) verdict = "Pretty solid! A couple of surprises there, but you're mostly in the know.";
-        else verdict = 'Good news — there\'s more AI Design Studio can do than you thought!';
+        else verdict = "Good news — there's more useful stuff here than you thought!";
+
+        const ctaHtml = quiz.resultCtaHtml || `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Try It For Real →</button>`;
 
         area.innerHTML = `
           <div style="text-align:center; padding:24px 20px;">
@@ -16932,7 +17117,7 @@
             <div style="font-family:var(--font-display); font-size:24px; font-weight:700; margin-bottom:8px;">${activeQuizScore} / ${total}</div>
             <div style="font-size:14px; color:var(--text-muted); max-width:420px; margin:0 auto 20px;">${verdict}</div>
             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-              <button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Try It For Real →</button>
+              ${ctaHtml}
               <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">🔄 Retake</button>
               <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">← Other Quizzes</button>
             </div>
