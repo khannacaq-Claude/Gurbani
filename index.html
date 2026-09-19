@@ -142,42 +142,19 @@
        "proximity" rather than "mandatory" so normal scrolling through
        sections taller than one screen (FAQ, Rate Card) still works
        smoothly instead of trapping the scroll mid-section. */
-    /* REVERTED back to `proximity` (Sept 18 follow-up session) — the
-       `mandatory` switch below was tried to fix Trending/How-It-Works
-       cards cutting off mid-scroll, but real wheel-scroll testing showed
-       a worse regression: `mandatory`'s forced hard-snap on every wheel
-       tick was causing Chrome to intermittently drop the position:fixed
-       header entirely (confirmed via screenshot — header vanished,
-       leaving only the non-fixed .section-tabs bar pinned at the very
-       top). A vanishing header is worse than an imperfectly-snapped
-       card, so this reverts to `proximity` and instead relies on
-       scroll-padding-top (added below) to stop the header from
-       overlapping snapped content. The dense per-element anchors added
-       during the `mandatory` experiment are left in place — they still
-       help under `proximity`, just without forcing every scroll. If
-       cards still cut off under `proximity`, that's the next thing to
-       revisit, but not by going back to `mandatory` on the whole page. */
-    html.snap-scroll {
-      scroll-snap-type: y proximity;
-      scroll-behavior: smooth;
-      /* Reserves the fixed header's height so a snapped section's top
-         lands BELOW the header instead of underneath it. */
-      scroll-padding-top: var(--header-h, 330px);
-    }
+    html.snap-scroll { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
-    /* (History, kept for context) Previously switched from `proximity` to
-       `mandatory` — real testing showed `proximity` wasn't reliably
-       engaging for mouse-wheel or PgUp/PgDn scrolling specifically (it's
-       tuned more for touch/trackpad momentum scrolling), even on sections
-       that already had proper snap-align anchors (Trending's cards,
-       confirmed via screenshot — anchors existed, still cut off mid-row).
-       `mandatory` forced every scroll gesture, regardless of input
-       method, to land on a snap point — no possible "dead zone" stop.
-       That raised the importance of having DENSE, evenly-spread anchors
-       (a sparse set of anchors under `mandatory` risks big, jarring
-       jumps) — see the additions below and on individual elements
-       throughout the sections. Now reverted (see note above), but the
-       anchors themselves stayed, since they're harmless under proximity.
+    /* Switched from `proximity` to `mandatory` — real testing showed
+       `proximity` wasn't reliably engaging for mouse-wheel or PgUp/PgDn
+       scrolling specifically (it's tuned more for touch/trackpad
+       momentum scrolling), even on sections that already had proper
+       snap-align anchors (Trending's cards, confirmed via screenshot —
+       anchors existed, still cut off mid-row). `mandatory` forces every
+       scroll gesture, regardless of input method, to land on a snap
+       point — no possible "dead zone" stop. This raises the importance
+       of having DENSE, evenly-spread anchors (a sparse set of anchors
+       under `mandatory` risks big, jarring jumps) — see the additions
+       below and on individual elements throughout the sections.
        These two are tall, content-heavy blocks near the top of the page
        (hero photo/mosaic + headline + photo strip; the Try It form with
        its reference-photo grid) that previously had NO snap anchor of
@@ -3923,7 +3900,7 @@
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
         </div>
         <div class="tab-group-dropdown-panel" id="marketingGroupPanel">
-          <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory(); loadTrendsManagement();" style="display: none;">📸 Photo Tools</button>
+          <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory(); loadTrendsManagement(); loadCatalogueDesignsForAttach();" style="display: none;">📸 Photo Tools</button>
         </div>
         <div class="tab-group-dropdown-panel" id="helpGroupPanel">
           <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
@@ -5347,6 +5324,21 @@
               <option value="21:9">21:9 — ultra-wide (closest preset available — still far short of an 18ft strip's 12:1)</option>
             </select>
 
+            <!-- AI Photoshoot presets — one-click starting points for turning a
+                 plain finished-garment photo into a styled marketing shot.
+                 These just fill in the prompt box below; admin can still edit
+                 before running. "On a Model" uses an AI-generated model, not
+                 any real person's photo or likeness — deliberately separate
+                 from virtual try-on, which stays parked (customer-selfie
+                 privacy question, unrelated to this). -->
+            <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">✨ AI Photoshoot presets (optional — fills in the prompt below, edit as needed)</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+              <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); font-size:12.5px; padding:7px 12px;" onclick="applyPhotoshootPreset('studio')">🏢 Studio White</button>
+              <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); font-size:12.5px; padding:7px 12px;" onclick="applyPhotoshootPreset('outdoor')">🌳 Outdoor</button>
+              <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); font-size:12.5px; padding:7px 12px;" onclick="applyPhotoshootPreset('festive')">🪔 Festive Backdrop</button>
+              <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); font-size:12.5px; padding:7px 12px;" onclick="applyPhotoshootPreset('model')">🧍‍♀️ On a Model (AI, not a real person)</button>
+            </div>
+
             <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">3. Describe the edit</label>
             <textarea id="photoToolsPrompt" rows="4" placeholder="e.g. Replace the background with a soft cream-to-taupe studio gradient. Remove the pink watermark text near the hem, seamlessly restoring the fabric underneath." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:13px; font-family:var(--font-body); margin-bottom:14px;"></textarea>
 
@@ -5359,6 +5351,18 @@
               <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input type="text" id="photoToolsResultUrl" readonly style="flex:1; min-width:200px; font-size:12px; background:white; border:1px solid #e0d8d0; padding:8px; border-radius:6px;">
                 <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyPhotoToolsUrl()">📋 Copy Link</button>
+              </div>
+              <!-- Attach this result to a Marketplace/catalogue item — pulls
+                   the item's current images (GET /api/inventory/catalogue,
+                   already used elsewhere for admin catalogue management) and
+                   PUTs the new URL onto its images array. No new backend
+                   endpoint needed — this reuses the existing catalogue
+                   update route as-is. -->
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px solid #f0e6d6;">
+                <select id="photoToolsAttachSelect" style="flex:1; min-width:200px; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:13px;">
+                  <option value="">Attach to a catalogue item...</option>
+                </select>
+                <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="attachPhotoToolsResultToCatalogue()">📎 Attach</button>
               </div>
             </div>
           </div>
@@ -5804,6 +5808,79 @@
     }
 
     // ── Photo Tools (admin prompt-based photo editing via Replicate Kontext) ──
+
+    // AI Photoshoot presets — quick starting prompts for turning a plain
+    // finished-garment photo (mannequin/flat-lay, whatever Sonia shoots)
+    // into a styled marketing image. These just prefill the prompt
+    // textarea above; admin can edit before running, same as any other
+    // Photo Tools prompt. "model" deliberately says AI-generated, not a
+    // real person — keeps this clearly separate from virtual try-on
+    // (which uses an actual customer's own selfie and is still parked).
+    const PHOTOSHOOT_PRESETS = {
+      studio: 'Replace the background with a soft, elegant studio gradient (cream to taupe), professional boutique product-photography lighting. Keep the garment itself completely unchanged — same fabric, same colours, same embroidery, same silhouette.',
+      outdoor: 'Replace the background with a bright, softly blurred outdoor setting (garden or golden-hour courtyard), natural light. Keep the garment itself completely unchanged — same fabric, same colours, same embroidery, same silhouette.',
+      festive: 'Replace the background with a warm, softly lit festive Indian setting (diyas, marigold flowers, warm bokeh), elegant and celebratory mood. Keep the garment itself completely unchanged — same fabric, same colours, same embroidery, same silhouette.',
+      model: 'Show this exact garment being worn by an elegant AI-generated fashion model (not a real person, no specific identity), natural editorial pose, soft neutral studio background, flattering boutique lighting. Keep the garment itself — same fabric, same colours, same embroidery, same silhouette — completely unchanged.',
+    };
+    function applyPhotoshootPreset(key) {
+      const promptEl = document.getElementById('photoToolsPrompt');
+      if (promptEl && PHOTOSHOOT_PRESETS[key]) promptEl.value = PHOTOSHOOT_PRESETS[key];
+    }
+
+    // Catalogue items to attach a photoshoot result to — loaded once when
+    // the Photo Tools tab opens (see adminPhotoToolsTabBtn), reused by the
+    // attach dropdown. Reuses the existing GET /api/inventory/catalogue
+    // endpoint (already used by admin catalogue management elsewhere) —
+    // no new backend route needed for this.
+    let photoshootCatalogueDesigns = [];
+    async function loadCatalogueDesignsForAttach() {
+      const sel = document.getElementById('photoToolsAttachSelect');
+      try {
+        const res = await fetch(`${API}/api/inventory/catalogue`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        photoshootCatalogueDesigns = data.designs || [];
+        if (sel) {
+          sel.innerHTML = '<option value="">Attach to a catalogue item...</option>' +
+            photoshootCatalogueDesigns.map((d) => `<option value="${d._id}">${(d.name || 'Untitled').replace(/"/g, '&quot;')} (${d.code || ''})</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Could not load catalogue designs for attach:', err);
+      }
+    }
+
+    // Attaches the currently-shown result image to whichever catalogue
+    // item is picked in the dropdown — appends to that item's existing
+    // images array via the existing PUT /api/inventory/catalogue/:id
+    // route (findByIdAndUpdate with the new array; no new backend code).
+    async function attachPhotoToolsResultToCatalogue() {
+      const sel = document.getElementById('photoToolsAttachSelect');
+      const urlField = document.getElementById('photoToolsResultUrl');
+      const id = sel?.value;
+      const url = urlField?.value;
+      if (!id) { showToast('Pick a catalogue item first'); return; }
+      if (!url) { showToast('No image to attach'); return; }
+
+      const design = photoshootCatalogueDesigns.find((d) => d._id === id);
+      const existingImages = (design && design.images) || [];
+      if (existingImages.includes(url)) { showToast('Already attached to this item'); return; }
+
+      try {
+        const res = await fetch(`${API}/api/inventory/catalogue/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ images: [...existingImages, url] }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(`❌ ${data.error || 'Could not attach.'}`); return; }
+        if (design) design.images = [...existingImages, url]; // keep local cache in sync for this session
+        showToast(`✅ Attached to ${design ? design.name : 'catalogue item'}`);
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
     async function runPhotoToolsProcess() {
       const fileInput = document.getElementById('photoToolsFile');
       const promptEl = document.getElementById('photoToolsPrompt');
@@ -17074,7 +17151,7 @@
       return a;
     }
 
-    const QUIZ_PICKER_FEATURED_COUNT = 3;
+    const QUIZ_PICKER_FEATURED_COUNT = 4;
 
     function renderQuizPickerCards() {
       const container = document.getElementById('quizPickerCards');
