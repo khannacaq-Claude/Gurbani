@@ -137,24 +137,45 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; }
-    /* Section-by-section scroll on the landing page only (removed once
-       signed in / dashboard is showing — see toggles in JS). Using
-       "proximity" rather than "mandatory" so normal scrolling through
-       sections taller than one screen (FAQ, Rate Card) still works
-       smoothly instead of trapping the scroll mid-section. */
-    html.snap-scroll { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+    /* SCROLL-SNAP REMOVED ENTIRELY (Sept 18 follow-up) — after three
+       rounds of fighting this (missing anchors → proximity not
+       reliably engaging for wheel/PgDn → mandatory dropping the fixed
+       header on wheel-scroll → proximity STILL dropping the header on
+       a later re-test), the header-vanishing bug kept recurring across
+       every snap mode tried. Removed outright rather than tuned again:
+       scroll-snap-type is now `none`, so the page scrolls normally with
+       no stops of any kind. scroll-behavior:smooth and scroll-padding-top
+       are harmless left in place (smooth scroll has nothing to do with
+       the header bug; padding-top only matters when something snaps).
+       All the individual scroll-snap-align / scroll-snap-stop rules
+       below (.snap-section, .hero-fullbleed, .faq-item, .lens-window,
+       .process-step, .guide-card, #fabricCalcCard-pub) are now inert —
+       left in place rather than stripped from a dozen scattered spots,
+       since a property with no snap container to belong to does
+       nothing and costs nothing. If section-snapping is ever wanted
+       again, the fix is NOT to just flip this back to proximity/
+       mandatory — the fixed header itself is what breaks under any
+       snap mode; that needs solving first (e.g. scroll-snap container
+       scoped to a wrapper that excludes the header, not <html>). */
+    html.snap-scroll {
+      scroll-snap-type: none;
+      scroll-behavior: smooth;
+      scroll-padding-top: var(--header-h, 330px);
+    }
     html.snap-scroll .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
-    /* Switched from `proximity` to `mandatory` — real testing showed
-       `proximity` wasn't reliably engaging for mouse-wheel or PgUp/PgDn
-       scrolling specifically (it's tuned more for touch/trackpad
-       momentum scrolling), even on sections that already had proper
-       snap-align anchors (Trending's cards, confirmed via screenshot —
-       anchors existed, still cut off mid-row). `mandatory` forces every
-       scroll gesture, regardless of input method, to land on a snap
-       point — no possible "dead zone" stop. This raises the importance
-       of having DENSE, evenly-spread anchors (a sparse set of anchors
-       under `mandatory` risks big, jarring jumps) — see the additions
-       below and on individual elements throughout the sections.
+    /* (History, kept for context) Previously switched from `proximity` to
+       `mandatory` — real testing showed `proximity` wasn't reliably
+       engaging for mouse-wheel or PgUp/PgDn scrolling specifically (it's
+       tuned more for touch/trackpad momentum scrolling), even on sections
+       that already had proper snap-align anchors (Trending's cards,
+       confirmed via screenshot — anchors existed, still cut off mid-row).
+       `mandatory` forced every scroll gesture, regardless of input
+       method, to land on a snap point — no possible "dead zone" stop.
+       That raised the importance of having DENSE, evenly-spread anchors
+       (a sparse set of anchors under `mandatory` risks big, jarring
+       jumps) — see the additions below and on individual elements
+       throughout the sections. Now reverted (see note above), but the
+       anchors themselves stayed, since they're harmless under proximity.
        These two are tall, content-heavy blocks near the top of the page
        (hero photo/mosaic + headline + photo strip; the Try It form with
        its reference-photo grid) that previously had NO snap anchor of
@@ -2595,12 +2616,20 @@
          that used to push the entire dashboard below the fold). The
          old standalone Sign Out / Back to Home / Instagram links are
          hidden here too — all three now live inside the Account panel
-         itself, so there's nothing lost, just nothing duplicated. */
+         itself, so there's nothing lost, just nothing duplicated.
+         EXCEPT for admin accounts: openAccountFromHeader() deliberately
+         no-ops for them (admins use the admin tab set, not the customer
+         Account panel), so hiding the standalone Sign Out button here
+         left admins with literally no way to sign out on mobile. The
+         .is-admin-user class (set in updateUI()) keeps it visible for
+         them specifically. */
       body.signed-in .user-welcome { display: flex; justify-content: center; }
       body.signed-in .user-welcome-textcol { display: none; }
-      body.signed-in #signOutBtn,
       body.signed-in .header-follow,
       body.signed-in #goHomeLink {
+        display: none !important;
+      }
+      body.signed-in:not(.is-admin-user) #signOutBtn {
         display: none !important;
       }
 
@@ -15758,6 +15787,7 @@
         loadTabIcons();
         userWelcome.classList.add('show');
         document.body.classList.add('signed-in');
+        document.body.classList.toggle('is-admin-user', currentUser.role === 'admin');
         userWelcome.textContent = ''; // clear before rebuilding
         const initials = (currentUser.name || '?')
           .split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
@@ -15880,6 +15910,7 @@
         document.documentElement.classList.add('snap-scroll');
         userWelcome.classList.remove('show');
         document.body.classList.remove('signed-in');
+        document.body.classList.remove('is-admin-user');
         signOutBtn.style.display = 'none';
         document.getElementById('goHomeLink').style.display = 'none';
         renderGoogleSigninButton();
@@ -17151,7 +17182,7 @@
       return a;
     }
 
-    const QUIZ_PICKER_FEATURED_COUNT = 4;
+    const QUIZ_PICKER_FEATURED_COUNT = 3;
 
     function renderQuizPickerCards() {
       const container = document.getElementById('quizPickerCards');
