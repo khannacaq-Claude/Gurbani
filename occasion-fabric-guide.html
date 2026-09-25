@@ -34,6 +34,8 @@
   .cta a { display: inline-block; background: var(--vivid); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 30px; border-radius: 24px; margin-top: 12px; }
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -43,74 +45,152 @@
 </header>
 
 <main>
-  <h1>Which Fabric for Which Occasion? A Season & Event Guide</h1>
-  <p class="subtitle">Before you start designing, it helps to know which fabrics actually suit your occasion — comfort, climate, and formality all matter more than most people expect.</p>
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
+  </div>
 
-  <h2>☀️ Summer Weddings & Daytime Functions</h2>
-  <div class="occasion-card">
-    <h3>Prioritize breathability and lightness</h3>
-    <p>Heavy, heat-trapping fabrics can genuinely ruin a summer daytime event — comfort matters as much as how it looks in photos.</p>
-    <div class="fabric-tags">
-      <span class="fabric-tag">Georgette</span>
-      <span class="fabric-tag">Chiffon</span>
-      <span class="fabric-tag">Cotton Silk</span>
-      <span class="fabric-tag">Organza</span>
+  <div id="langEn">
+    <h1>Which Fabric for Which Occasion? A Season & Event Guide</h1>
+    <p class="subtitle">Before you start designing, it helps to know which fabrics actually suit your occasion — comfort, climate, and formality all matter more than most people expect.</p>
+
+    <h2>☀️ Summer Weddings & Daytime Functions</h2>
+    <div class="occasion-card">
+      <h3>Prioritize breathability and lightness</h3>
+      <p>Heavy, heat-trapping fabrics can genuinely ruin a summer daytime event — comfort matters as much as how it looks in photos.</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">Georgette</span>
+        <span class="fabric-tag">Chiffon</span>
+        <span class="fabric-tag">Cotton Silk</span>
+        <span class="fabric-tag">Organza</span>
+      </div>
+    </div>
+
+    <h2>❄️ Winter Weddings & Evening Functions</h2>
+    <div class="occasion-card">
+      <h3>Richer, heavier fabrics work beautifully</h3>
+      <p>Cooler weather is the right time for fabrics that would feel too heavy in summer — they also tend to photograph richly under evening/indoor lighting.</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">Velvet</span>
+        <span class="fabric-tag">Silk</span>
+        <span class="fabric-tag">Brocade</span>
+        <span class="fabric-tag">Raw Silk</span>
+      </div>
+    </div>
+
+    <h2>🪔 Festive Pooja & Religious Occasions</h2>
+    <div class="occasion-card">
+      <h3>Comfortable enough to sit and move in for long periods</h3>
+      <p>Pooja functions often mean sitting on the floor for extended periods — fabric that doesn't crease badly or restrict movement matters more here than in most other settings.</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">Cotton Silk</span>
+        <span class="fabric-tag">Chanderi</span>
+        <span class="fabric-tag">Georgette</span>
+      </div>
+    </div>
+
+    <h2>🎉 Parties & Evening Events</h2>
+    <div class="occasion-card">
+      <h3>Fabrics that catch the light and hold their shape</h3>
+      <p>Evening events are usually indoors under artificial lighting — fabrics with a bit of sheen or structure tend to stand out more than flat, matte ones.</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">Satin</span>
+        <span class="fabric-tag">Velvet</span>
+        <span class="fabric-tag">Net (with lining)</span>
+      </div>
+    </div>
+
+    <h2>👗 Everyday & Office Wear</h2>
+    <div class="occasion-card">
+      <h3>Easy care matters more than anything else</h3>
+      <p>For clothes you'll wash and wear regularly, low-maintenance fabrics that hold up to frequent washing are worth prioritizing over anything delicate.</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">Cotton</span>
+        <span class="fabric-tag">Cotton Blend</span>
+        <span class="fabric-tag">Linen</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Not sure which category your occasion falls into?</strong> Tell us what you're picturing in AI Design Studio, and we'll help match it against fabric that's actually appropriate for your event — not just what looks good in a photo.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Ready to design your outfit?</h2>
+      <p>Describe your occasion and vision, and get 3 AI-generated design concepts back — free to try.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
     </div>
   </div>
 
-  <h2>❄️ Winter Weddings & Evening Functions</h2>
-  <div class="occasion-card">
-    <h3>Richer, heavier fabrics work beautifully</h3>
-    <p>Cooler weather is the right time for fabrics that would feel too heavy in summer — they also tend to photograph richly under evening/indoor lighting.</p>
-    <div class="fabric-tags">
-      <span class="fabric-tag">Velvet</span>
-      <span class="fabric-tag">Silk</span>
-      <span class="fabric-tag">Brocade</span>
-      <span class="fabric-tag">Raw Silk</span>
+  <div id="langHi" style="display:none;">
+    <h1>कौन सा कपड़ा किस मौके के लिए? एक मौसम व समारोह गाइड</h1>
+    <p class="subtitle">डिज़ाइन शुरू करने से पहले, यह जानना मददगार है कि आपके मौके के लिए असल में कौन सा कपड़ा सही है — आराम, मौसम और औपचारिकता, यह सब आपकी सोच से ज़्यादा मायने रखते हैं।</p>
+
+    <h2>☀️ गर्मी की शादियां और दिन के समारोह</h2>
+    <div class="occasion-card">
+      <h3>हवादार और हल्के कपड़े को तरजीह दें</h3>
+      <p>भारी, गर्मी रोकने वाले कपड़े गर्मी के दिन के समारोह को सच में बिगाड़ सकते हैं — फोटो में कैसा दिखता है उतना ही आराम भी मायने रखता है।</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">जॉर्जेट</span>
+        <span class="fabric-tag">शिफॉन</span>
+        <span class="fabric-tag">कॉटन सिल्क</span>
+        <span class="fabric-tag">ऑर्गेंज़ा</span>
+      </div>
     </div>
-  </div>
 
-  <h2>🪔 Festive Pooja & Religious Occasions</h2>
-  <div class="occasion-card">
-    <h3>Comfortable enough to sit and move in for long periods</h3>
-    <p>Pooja functions often mean sitting on the floor for extended periods — fabric that doesn't crease badly or restrict movement matters more here than in most other settings.</p>
-    <div class="fabric-tags">
-      <span class="fabric-tag">Cotton Silk</span>
-      <span class="fabric-tag">Chanderi</span>
-      <span class="fabric-tag">Georgette</span>
+    <h2>❄️ सर्दी की शादियां और शाम के समारोह</h2>
+    <div class="occasion-card">
+      <h3>भारी, शानदार कपड़े खूबसूरती से काम करते हैं</h3>
+      <p>ठंडा मौसम उन कपड़ों के लिए सही समय है जो गर्मी में बहुत भारी लगेंगे — ये शाम/घर के अंदर की रोशनी में भी शानदार दिखते हैं।</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">वेलवेट</span>
+        <span class="fabric-tag">सिल्क</span>
+        <span class="fabric-tag">ब्रोकेड</span>
+        <span class="fabric-tag">रॉ सिल्क</span>
+      </div>
     </div>
-  </div>
 
-  <h2>🎉 Parties & Evening Events</h2>
-  <div class="occasion-card">
-    <h3>Fabrics that catch the light and hold their shape</h3>
-    <p>Evening events are usually indoors under artificial lighting — fabrics with a bit of sheen or structure tend to stand out more than flat, matte ones.</p>
-    <div class="fabric-tags">
-      <span class="fabric-tag">Satin</span>
-      <span class="fabric-tag">Velvet</span>
-      <span class="fabric-tag">Net (with lining)</span>
+    <h2>🪔 पूजा और धार्मिक समारोह</h2>
+    <div class="occasion-card">
+      <h3>लंबे समय तक बैठने और चलने-फिरने लायक आरामदायक</h3>
+      <p>पूजा समारोह में अक्सर लंबे समय तक ज़मीन पर बैठना होता है — ऐसा कपड़ा जो बुरी तरह सिलवट न पड़े या चलने-फिरने में रुकावट न डाले, यहां बाकी मौकों से ज़्यादा मायने रखता है।</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">कॉटन सिल्क</span>
+        <span class="fabric-tag">चंदेरी</span>
+        <span class="fabric-tag">जॉर्जेट</span>
+      </div>
     </div>
-  </div>
 
-  <h2>👗 Everyday & Office Wear</h2>
-  <div class="occasion-card">
-    <h3>Easy care matters more than anything else</h3>
-    <p>For clothes you'll wash and wear regularly, low-maintenance fabrics that hold up to frequent washing are worth prioritizing over anything delicate.</p>
-    <div class="fabric-tags">
-      <span class="fabric-tag">Cotton</span>
-      <span class="fabric-tag">Cotton Blend</span>
-      <span class="fabric-tag">Linen</span>
+    <h2>🎉 पार्टी और शाम के समारोह</h2>
+    <div class="occasion-card">
+      <h3>रोशनी पकड़ने वाले और आकार बनाए रखने वाले कपड़े</h3>
+      <p>शाम के समारोह आमतौर पर घर के अंदर कृत्रिम रोशनी में होते हैं — हल्की चमक या बनावट वाले कपड़े फीके कपड़ों से ज़्यादा उभरकर दिखते हैं।</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">साटन</span>
+        <span class="fabric-tag">वेलवेट</span>
+        <span class="fabric-tag">नेट (लाइनिंग के साथ)</span>
+      </div>
     </div>
-  </div>
 
-  <div class="callout">
-    <strong>Not sure which category your occasion falls into?</strong> Tell us what you're picturing in AI Design Studio, and we'll help match it against fabric that's actually appropriate for your event — not just what looks good in a photo.
-  </div>
+    <h2>👗 रोज़मर्रा और ऑफिस के पहनावे</h2>
+    <div class="occasion-card">
+      <h3>आसान देखभाल सबसे ज़्यादा मायने रखती है</h3>
+      <p>जो कपड़े आप बार-बार धोएंगी और पहनेंगी, उनके लिए बार-बार धुलाई झेलने वाले कम देखभाल वाले कपड़ों को नाज़ुक कपड़ों से ज़्यादा तरजीह देना बेहतर है।</p>
+      <div class="fabric-tags">
+        <span class="fabric-tag">कॉटन</span>
+        <span class="fabric-tag">कॉटन ब्लेंड</span>
+        <span class="fabric-tag">लिनन</span>
+      </div>
+    </div>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Ready to design your outfit?</h2>
-    <p>Describe your occasion and vision, and get 3 AI-generated design concepts back — free to try.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    <div class="callout">
+      <strong>तय नहीं कर पा रहीं कि आपका मौका किस श्रेणी में आता है?</strong> AI Design Studio में हमें बताएं आप क्या सोच रही हैं, और हम इसे उस कपड़े से मिलाने में मदद करेंगे जो आपके समारोह के लिए असल में सही है — सिर्फ फोटो में अच्छा दिखने वाला नहीं।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">अपना आउटफिट डिज़ाइन करने के लिए तैयार हैं?</h2>
+      <p>अपना मौका और विज़न बताएं, और 3 AI-जनरेटेड डिज़ाइन कॉन्सेप्ट पाएं — मुफ़्त में आज़माएं।</p>
+      <a href="https://gurbanifashion.com/#lensSection">AI Design Studio आज़माएं →</a>
+    </div>
   </div>
 </main>
 
@@ -118,6 +198,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>

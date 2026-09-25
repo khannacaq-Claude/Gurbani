@@ -33,6 +33,8 @@
   .cta a { display: inline-block; background: var(--vivid); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 30px; border-radius: 24px; margin-top: 12px; }
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -42,63 +44,130 @@
 </header>
 
 <main>
-  <h1>What to Expect at Your Fitting Appointment</h1>
-  <p class="subtitle">First time getting something custom-stitched? Here's a straight answer to the questions people usually have before their first fitting.</p>
-
-  <h2>Before You Come In</h2>
-
-  <div class="faq-item">
-    <h3>What should I wear to a fitting?</h3>
-    <p>Wear well-fitted clothing rather than loose layers — it makes it easier to check how the garment sits against your body, and easier for us to pin or mark any adjustments accurately.</p>
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <div class="faq-item">
-    <h3>Do I need to book in advance, or can I walk in?</h3>
-    <p>Booking ahead through your account (under Appointments) guarantees you a slot and lets us prep your order and measurements before you arrive. Walk-ins are welcome when we have availability, but booking avoids any wait.</p>
+  <div id="langEn">
+    <h1>What to Expect at Your Fitting Appointment</h1>
+    <p class="subtitle">First time getting something custom-stitched? Here's a straight answer to the questions people usually have before their first fitting.</p>
+
+    <h2>Before You Come In</h2>
+
+    <div class="faq-item">
+      <h3>What should I wear to a fitting?</h3>
+      <p>Wear well-fitted clothing rather than loose layers — it makes it easier to check how the garment sits against your body, and easier for us to pin or mark any adjustments accurately.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Do I need to book in advance, or can I walk in?</h3>
+      <p>Booking ahead through your account (under Appointments) guarantees you a slot and lets us prep your order and measurements before you arrive. Walk-ins are welcome when we have availability, but booking avoids any wait.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Can someone else be fitted on my behalf?</h3>
+      <p>The measurements need to be taken on the actual person who'll wear the outfit — fit can't be reliably transferred from someone else's body, even a similar size. If you can't come in person, our Self-Measurement Guide walks through taking accurate measurements at home instead.</p>
+    </div>
+
+    <h2>During the Appointment</h2>
+
+    <div class="faq-item">
+      <h3>How long does a fitting appointment take?</h3>
+      <p>A straightforward fitting usually takes 20–30 minutes. Bridal or heavily detailed outfits can take longer, since there's more to check — drape, embellishment placement, and overall balance, not just length and width.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>How many fitting rounds will I need?</h3>
+      <p>Most outfits need just one fitting near the end of stitching. Bridal and heavily embroidered pieces usually need 2–3 rounds, spaced out so adjustments can actually be made and rechecked properly rather than rushed.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>What happens if something doesn't fit right?</h3>
+      <p>That's exactly what the fitting appointment is for — we mark and adjust it on the spot where possible, or take it back for the tailoring team to correct before your next visit or delivery. Flagging it at the fitting, rather than after you've taken it home, is always the easiest way to fix it.</p>
+    </div>
+
+    <h2>After Your Fitting</h2>
+
+    <div class="faq-item">
+      <h3>Can I track where my order is after the fitting?</h3>
+      <p>Yes — sign in and check the Order &amp; Fitting Journey tracker to see exactly where things stand, from stitching through to ready-for-pickup.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>What if I want to change something after seeing the fitted piece?</h3>
+      <p>Small adjustments (length, fit, minor placement) are a normal part of the fitting process. Larger design changes at this stage may affect timeline or cost, since fabric may already be cut — it's always worth flagging preferences as early as possible, ideally at the design stage.</p>
+    </div>
+
+    <div class="callout">
+      <strong>Worth knowing:</strong> the earlier and more specifically you flag a concern — at the fitting, not after you've left with the outfit — the easier and faster it is for us to get it right.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Ready to book your fitting?</h2>
+      <p>Sign in and book a slot with Sonia directly, or start a design first in AI Design Studio.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Book or Start a Design →</a>
+    </div>
   </div>
 
-  <div class="faq-item">
-    <h3>Can someone else be fitted on my behalf?</h3>
-    <p>The measurements need to be taken on the actual person who'll wear the outfit — fit can't be reliably transferred from someone else's body, even a similar size. If you can't come in person, our Self-Measurement Guide walks through taking accurate measurements at home instead.</p>
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>आपकी फिटिंग अपॉइंटमेंट में क्या होता है</h1>
+    <p class="subtitle">पहली बार कुछ कस्टम-सिलवा रही हैं? यहां वे सवालों के सीधे जवाब हैं जो लोगों को अक्सर अपनी पहली फिटिंग से पहले होते हैं।</p>
 
-  <h2>During the Appointment</h2>
+    <h2>आने से पहले</h2>
 
-  <div class="faq-item">
-    <h3>How long does a fitting appointment take?</h3>
-    <p>A straightforward fitting usually takes 20–30 minutes. Bridal or heavily detailed outfits can take longer, since there's more to check — drape, embellishment placement, and overall balance, not just length and width.</p>
-  </div>
+    <div class="faq-item">
+      <h3>फिटिंग के लिए क्या पहनना चाहिए?</h3>
+      <p>ढीली लेयर की बजाय अच्छे से फिट कपड़े पहनें — इससे यह जांचना आसान होता है कि आउटफिट आपके शरीर पर कैसा बैठता है, और हमारे लिए किसी भी एडजस्टमेंट को सही तरीके से पिन या मार्क करना आसान होता है।</p>
+    </div>
 
-  <div class="faq-item">
-    <h3>How many fitting rounds will I need?</h3>
-    <p>Most outfits need just one fitting near the end of stitching. Bridal and heavily embroidered pieces usually need 2–3 rounds, spaced out so adjustments can actually be made and rechecked properly rather than rushed.</p>
-  </div>
+    <div class="faq-item">
+      <h3>क्या मुझे पहले से बुक करना होगा, या मैं बिना बुकिंग के आ सकती हूं?</h3>
+      <p>अपने अकाउंट के ज़रिए (Appointments के तहत) पहले से बुक करना आपको एक स्लॉट पक्का करता है और हमें आपके आने से पहले आपका ऑर्डर और माप तैयार करने देता है। जब हमारे पास जगह हो तो बिना बुकिंग आना भी स्वागत योग्य है, लेकिन बुकिंग से इंतज़ार नहीं करना पड़ता।</p>
+    </div>
 
-  <div class="faq-item">
-    <h3>What happens if something doesn't fit right?</h3>
-    <p>That's exactly what the fitting appointment is for — we mark and adjust it on the spot where possible, or take it back for the tailoring team to correct before your next visit or delivery. Flagging it at the fitting, rather than after you've taken it home, is always the easiest way to fix it.</p>
-  </div>
+    <div class="faq-item">
+      <h3>क्या कोई और मेरी जगह फिटिंग करवा सकता है?</h3>
+      <p>माप उसी व्यक्ति पर लेनी होती है जो असल में आउटफिट पहनेगा — फिट किसी और के शरीर से, भले ही साइज़ एक जैसा हो, भरोसे से ट्रांसफर नहीं हो सकता। अगर आप खुद आकर नहीं मिल सकतीं, तो हमारी Self-Measurement Guide घर पर सही माप लेने का तरीका बताती है।</p>
+    </div>
 
-  <h2>After Your Fitting</h2>
+    <h2>अपॉइंटमेंट के दौरान</h2>
 
-  <div class="faq-item">
-    <h3>Can I track where my order is after the fitting?</h3>
-    <p>Yes — sign in and check the Order &amp; Fitting Journey tracker to see exactly where things stand, from stitching through to ready-for-pickup.</p>
-  </div>
+    <div class="faq-item">
+      <h3>फिटिंग अपॉइंटमेंट में कितना समय लगता है?</h3>
+      <p>एक सीधी-सादी फिटिंग में आमतौर पर 20–30 मिनट लगते हैं। दुल्हन के या भारी डिटेल वाले आउटफिट में ज़्यादा समय लग सकता है, क्योंकि जांचने के लिए ज़्यादा चीज़ें होती हैं — ड्रेप, सजावट की जगह, और पूरा संतुलन, सिर्फ लंबाई और चौड़ाई नहीं।</p>
+    </div>
 
-  <div class="faq-item">
-    <h3>What if I want to change something after seeing the fitted piece?</h3>
-    <p>Small adjustments (length, fit, minor placement) are a normal part of the fitting process. Larger design changes at this stage may affect timeline or cost, since fabric may already be cut — it's always worth flagging preferences as early as possible, ideally at the design stage.</p>
-  </div>
+    <div class="faq-item">
+      <h3>मुझे कितनी फिटिंग राउंड चाहिए होंगी?</h3>
+      <p>ज़्यादातर आउटफिट को सिलाई खत्म होने के करीब सिर्फ एक फिटिंग चाहिए होती है। दुल्हन और भारी कढ़ाई वाले टुकड़ों को आमतौर पर 2–3 राउंड चाहिए होते हैं, ताकि एडजस्टमेंट असल में की जा सकें और ठीक से दोबारा जांची जा सकें, जल्दबाज़ी में नहीं।</p>
+    </div>
 
-  <div class="callout">
-    <strong>Worth knowing:</strong> the earlier and more specifically you flag a concern — at the fitting, not after you've left with the outfit — the easier and faster it is for us to get it right.
-  </div>
+    <div class="faq-item">
+      <h3>अगर कुछ सही फिट न हो तो क्या होता है?</h3>
+      <p>फिटिंग अपॉइंटमेंट बिल्कुल इसी के लिए है — जहां मुमकिन हो हम इसे वहीं मार्क और एडजस्ट कर देते हैं, या आपकी अगली विज़िट या डिलीवरी से पहले सुधार के लिए टेलरिंग टीम के पास ले जाते हैं। इसे घर ले जाने के बाद की बजाय फिटिंग पर ही बताना हमेशा इसे ठीक करने का सबसे आसान तरीका है।</p>
+    </div>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Ready to book your fitting?</h2>
-    <p>Sign in and book a slot with Sonia directly, or start a design first in AI Design Studio.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Book or Start a Design →</a>
+    <h2>आपकी फिटिंग के बाद</h2>
+
+    <div class="faq-item">
+      <h3>क्या फिटिंग के बाद मैं अपना ऑर्डर ट्रैक कर सकती हूं?</h3>
+      <p>हां — साइन इन करें और Order &amp; Fitting Journey ट्रैकर देखें, ताकि आपको ठीक-ठीक पता चले कि सिलाई से लेकर पिकअप के लिए तैयार होने तक चीज़ें कहां हैं।</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>अगर फिटेड टुकड़ा देखने के बाद मैं कुछ बदलना चाहूं तो?</h3>
+      <p>छोटे एडजस्टमेंट (लंबाई, फिट, मामूली प्लेसमेंट) फिटिंग प्रक्रिया का एक सामान्य हिस्सा हैं। इस स्टेज पर बड़े डिज़ाइन बदलाव समय या लागत पर असर डाल सकते हैं, क्योंकि कपड़ा पहले से कटा हो सकता है — जितनी जल्दी हो सके, आदर्श रूप से डिज़ाइन स्टेज पर ही, पसंद बता देना हमेशा बेहतर है।</p>
+    </div>
+
+    <div class="callout">
+      <strong>जानने लायक बात:</strong> आप जितनी जल्दी और जितने साफ तौर पर कोई चिंता बताती हैं — फिटिंग पर, आउटफिट लेकर जाने के बाद नहीं — हमारे लिए इसे सही करना उतना ही आसान और तेज़ होता है।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">अपनी फिटिंग बुक करने के लिए तैयार हैं?</h2>
+      <p>साइन इन करें और सीधे सोनिया के साथ स्लॉट बुक करें, या पहले AI Design Studio में एक डिज़ाइन शुरू करें।</p>
+      <a href="https://gurbanifashion.com/#lensSection">बुक करें या डिज़ाइन शुरू करें →</a>
+    </div>
   </div>
 </main>
 
@@ -106,6 +175,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>

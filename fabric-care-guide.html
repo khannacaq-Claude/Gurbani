@@ -34,6 +34,8 @@
   .cta a { display: inline-block; background: var(--vivid); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 30px; border-radius: 24px; margin-top: 12px; }
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -43,65 +45,134 @@
 </header>
 
 <main>
-  <h1>Fabric Care Guide: Washing, Ironing & Storing Your Custom Outfits</h1>
-  <p class="subtitle">The right care makes a real difference to how long a custom-stitched outfit stays looking new. Here's how to look after the fabrics we work with most.</p>
-
-  <div class="fabric-card">
-    <h2>🌸 Silk</h2>
-    <div class="tagline">Delicate, needs gentle handling</div>
-    <div class="care-row"><span class="icon">🧺</span> Dry clean only for most silk garments — home washing can damage the sheen and cause color bleeding.</div>
-    <div class="care-row"><span class="icon">🔥</span> If ironing is needed, use the lowest heat setting, and iron on the reverse side or with a thin cloth in between.</div>
-    <div class="care-row"><span class="icon">📦</span> Store folded in a breathable cotton bag, away from direct sunlight — plastic covers can trap moisture and cause yellowing over time.</div>
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <div class="fabric-card">
-    <h2>🌊 Georgette</h2>
-    <div class="tagline">Lightweight, flowy, prone to snagging</div>
-    <div class="care-row"><span class="icon">🧺</span> Hand wash in cold water with a mild detergent — avoid wringing, gently squeeze out excess water instead.</div>
-    <div class="care-row"><span class="icon">🔥</span> Iron on low heat while slightly damp for the best finish.</div>
-    <div class="care-row"><span class="icon">📦</span> Hang or fold loosely — georgette wrinkles easily if packed too tightly.</div>
+  <div id="langEn">
+    <h1>Fabric Care Guide: Washing, Ironing & Storing Your Custom Outfits</h1>
+    <p class="subtitle">The right care makes a real difference to how long a custom-stitched outfit stays looking new. Here's how to look after the fabrics we work with most.</p>
+
+    <div class="fabric-card">
+      <h2>🌸 Silk</h2>
+      <div class="tagline">Delicate, needs gentle handling</div>
+      <div class="care-row"><span class="icon">🧺</span> Dry clean only for most silk garments — home washing can damage the sheen and cause color bleeding.</div>
+      <div class="care-row"><span class="icon">🔥</span> If ironing is needed, use the lowest heat setting, and iron on the reverse side or with a thin cloth in between.</div>
+      <div class="care-row"><span class="icon">📦</span> Store folded in a breathable cotton bag, away from direct sunlight — plastic covers can trap moisture and cause yellowing over time.</div>
+    </div>
+
+    <div class="fabric-card">
+      <h2>🌊 Georgette</h2>
+      <div class="tagline">Lightweight, flowy, prone to snagging</div>
+      <div class="care-row"><span class="icon">🧺</span> Hand wash in cold water with a mild detergent — avoid wringing, gently squeeze out excess water instead.</div>
+      <div class="care-row"><span class="icon">🔥</span> Iron on low heat while slightly damp for the best finish.</div>
+      <div class="care-row"><span class="icon">📦</span> Hang or fold loosely — georgette wrinkles easily if packed too tightly.</div>
+    </div>
+
+    <div class="fabric-card">
+      <h2>☁️ Chiffon</h2>
+      <div class="tagline">Sheer and lightweight, needs a gentle touch</div>
+      <div class="care-row"><span class="icon">🧺</span> Hand wash separately in cold water — chiffon can snag on zippers or rough fabric from other garments in the wash.</div>
+      <div class="care-row"><span class="icon">🔥</span> Iron on the lowest setting, ideally with a pressing cloth to protect the delicate weave.</div>
+      <div class="care-row"><span class="icon">📦</span> Store flat or gently folded — avoid hanging heavier chiffon pieces for long periods, as the fabric can stretch under its own weight.</div>
+    </div>
+
+    <div class="fabric-card">
+      <h2>🍷 Velvet</h2>
+      <div class="tagline">Rich texture, needs careful handling to avoid crushing</div>
+      <div class="care-row"><span class="icon">🧺</span> Dry clean only — velvet's pile can be permanently crushed or damaged by home washing.</div>
+      <div class="care-row"><span class="icon">🔥</span> Never iron directly — steam from a distance instead, or use a velvet-specific brush to restore the pile.</div>
+      <div class="care-row"><span class="icon">📦</span> Hang, never fold — folding creates permanent crease lines in the pile that are very difficult to remove.</div>
+    </div>
+
+    <div class="fabric-card">
+      <h2>🌿 Cotton</h2>
+      <div class="tagline">Durable and easy-care, the most forgiving fabric here</div>
+      <div class="care-row"><span class="icon">🧺</span> Machine or hand wash in cold-to-warm water — cotton handles regular washing well.</div>
+      <div class="care-row"><span class="icon">🔥</span> Iron on medium-high heat while slightly damp for crisp results.</div>
+      <div class="care-row"><span class="icon">📦</span> Can be folded or hung — cotton is generally low-maintenance for storage.</div>
+    </div>
+
+    <div class="fabric-card">
+      <h2>🕸️ Net</h2>
+      <div class="tagline">Often used for dupattas and overlays, delicate mesh weave</div>
+      <div class="care-row"><span class="icon">🧺</span> Hand wash gently or dry clean, especially if embellished with embroidery or sequins.</div>
+      <div class="care-row"><span class="icon">🔥</span> Avoid ironing directly on embellishments — iron plain sections only, on low heat.</div>
+      <div class="care-row"><span class="icon">📦</span> Store flat in a box rather than folded tightly, to avoid the mesh catching or tearing.</div>
+    </div>
+
+    <div class="callout">
+      <strong>General rule of thumb:</strong> when in doubt, dry cleaning is the safer choice for anything heavily embellished, richly colored, or expensive — the cost of a dry clean is almost always less than the cost of a damaged outfit.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Not sure which fabric suits your occasion?</h2>
+      <p>Check our Occasion & Season Fabric Guide, or start designing directly with AI Design Studio.</p>
+      <a href="https://gurbanifashion.com/occasion-fabric-guide.html">See the Occasion Guide →</a>
+    </div>
   </div>
 
-  <div class="fabric-card">
-    <h2>☁️ Chiffon</h2>
-    <div class="tagline">Sheer and lightweight, needs a gentle touch</div>
-    <div class="care-row"><span class="icon">🧺</span> Hand wash separately in cold water — chiffon can snag on zippers or rough fabric from other garments in the wash.</div>
-    <div class="care-row"><span class="icon">🔥</span> Iron on the lowest setting, ideally with a pressing cloth to protect the delicate weave.</div>
-    <div class="care-row"><span class="icon">📦</span> Store flat or gently folded — avoid hanging heavier chiffon pieces for long periods, as the fabric can stretch under its own weight.</div>
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>फैब्रिक केयर गाइड: अपने कस्टम आउटफिट को धोना, इस्त्री करना और रखना</h1>
+    <p class="subtitle">सही देखभाल इस बात में बड़ा फर्क डालती है कि कस्टम-सिलाई आउटफिट कितने समय तक नया दिखता है। यहां बताया गया है कि हमारे सबसे ज़्यादा इस्तेमाल होने वाले कपड़ों की देखभाल कैसे करें।</p>
 
-  <div class="fabric-card">
-    <h2>🍷 Velvet</h2>
-    <div class="tagline">Rich texture, needs careful handling to avoid crushing</div>
-    <div class="care-row"><span class="icon">🧺</span> Dry clean only — velvet's pile can be permanently crushed or damaged by home washing.</div>
-    <div class="care-row"><span class="icon">🔥</span> Never iron directly — steam from a distance instead, or use a velvet-specific brush to restore the pile.</div>
-    <div class="care-row"><span class="icon">📦</span> Hang, never fold — folding creates permanent crease lines in the pile that are very difficult to remove.</div>
-  </div>
+    <div class="fabric-card">
+      <h2>🌸 सिल्क</h2>
+      <div class="tagline">नाज़ुक, कोमल देखभाल चाहिए</div>
+      <div class="care-row"><span class="icon">🧺</span> ज़्यादातर सिल्क के कपड़ों के लिए सिर्फ ड्राई-क्लीन — घर पर धोने से चमक खराब हो सकती है और रंग निकल सकता है।</div>
+      <div class="care-row"><span class="icon">🔥</span> अगर इस्त्री करनी हो, तो सबसे कम हीट पर करें, और कपड़े के उल्टे तरफ या बीच में पतला कपड़ा रखकर इस्त्री करें।</div>
+      <div class="care-row"><span class="icon">📦</span> सांस लेने वाले कॉटन बैग में मोड़कर रखें, सीधी धूप से दूर — प्लास्टिक कवर नमी रोक सकते हैं और समय के साथ पीलापन ला सकते हैं।</div>
+    </div>
 
-  <div class="fabric-card">
-    <h2>🌿 Cotton</h2>
-    <div class="tagline">Durable and easy-care, the most forgiving fabric here</div>
-    <div class="care-row"><span class="icon">🧺</span> Machine or hand wash in cold-to-warm water — cotton handles regular washing well.</div>
-    <div class="care-row"><span class="icon">🔥</span> Iron on medium-high heat while slightly damp for crisp results.</div>
-    <div class="care-row"><span class="icon">📦</span> Can be folded or hung — cotton is generally low-maintenance for storage.</div>
-  </div>
+    <div class="fabric-card">
+      <h2>🌊 जॉर्जेट</h2>
+      <div class="tagline">हल्का, बहने वाला, फंसने की संभावना</div>
+      <div class="care-row"><span class="icon">🧺</span> ठंडे पानी में हल्के डिटर्जेंट से हाथ से धोएं — निचोड़ने से बचें, हल्के हाथ से अतिरिक्त पानी निकालें।</div>
+      <div class="care-row"><span class="icon">🔥</span> सबसे अच्छी फिनिश के लिए हल्के गीले रहते हुए कम हीट पर इस्त्री करें।</div>
+      <div class="care-row"><span class="icon">📦</span> टांगें या ढीला मोड़ें — जॉर्जेट ज़्यादा कसकर रखने पर आसानी से सिलवट पड़ जाता है।</div>
+    </div>
 
-  <div class="fabric-card">
-    <h2>🕸️ Net</h2>
-    <div class="tagline">Often used for dupattas and overlays, delicate mesh weave</div>
-    <div class="care-row"><span class="icon">🧺</span> Hand wash gently or dry clean, especially if embellished with embroidery or sequins.</div>
-    <div class="care-row"><span class="icon">🔥</span> Avoid ironing directly on embellishments — iron plain sections only, on low heat.</div>
-    <div class="care-row"><span class="icon">📦</span> Store flat in a box rather than folded tightly, to avoid the mesh catching or tearing.</div>
-  </div>
+    <div class="fabric-card">
+      <h2>☁️ शिफॉन</h2>
+      <div class="tagline">पारदर्शी और हल्का, कोमल देखभाल चाहिए</div>
+      <div class="care-row"><span class="icon">🧺</span> ठंडे पानी में अलग से हाथ से धोएं — शिफॉन धुलाई में ज़िप या दूसरे कपड़ों के खुरदुरे हिस्से में फंस सकता है।</div>
+      <div class="care-row"><span class="icon">🔥</span> सबसे कम सेटिंग पर इस्त्री करें, बेहतर होगा प्रेसिंग कपड़े के साथ ताकि नाज़ुक बुनाई सुरक्षित रहे।</div>
+      <div class="care-row"><span class="icon">📦</span> सपाट रखें या हल्का मोड़ें — भारी शिफॉन के टुकड़ों को लंबे समय तक टांगने से बचें, क्योंकि कपड़ा अपने ही वज़न से खिंच सकता है।</div>
+    </div>
 
-  <div class="callout">
-    <strong>General rule of thumb:</strong> when in doubt, dry cleaning is the safer choice for anything heavily embellished, richly colored, or expensive — the cost of a dry clean is almost always less than the cost of a damaged outfit.
-  </div>
+    <div class="fabric-card">
+      <h2>🍷 वेलवेट</h2>
+      <div class="tagline">शानदार बनावट, दबने से बचाने के लिए सावधानी चाहिए</div>
+      <div class="care-row"><span class="icon">🧺</span> सिर्फ ड्राई-क्लीन — घर पर धोने से वेलवेट के रेशे स्थायी रूप से दब या खराब हो सकते हैं।</div>
+      <div class="care-row"><span class="icon">🔥</span> कभी सीधे इस्त्री न करें — दूर से भाप दें, या रेशों को वापस लाने के लिए वेलवेट के लिए बने ब्रश का इस्तेमाल करें।</div>
+      <div class="care-row"><span class="icon">📦</span> टांगें, कभी मोड़ें नहीं — मोड़ने से रेशों में स्थायी सिलवटें पड़ जाती हैं जिन्हें हटाना बहुत मुश्किल है।</div>
+    </div>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Not sure which fabric suits your occasion?</h2>
-    <p>Check our Occasion & Season Fabric Guide, or start designing directly with AI Design Studio.</p>
-    <a href="https://gurbanifashion.com/occasion-fabric-guide.html">See the Occasion Guide →</a>
+    <div class="fabric-card">
+      <h2>🌿 कॉटन</h2>
+      <div class="tagline">टिकाऊ और आसान देखभाल, यहां सबसे आसान कपड़ा</div>
+      <div class="care-row"><span class="icon">🧺</span> ठंडे से गुनगुने पानी में मशीन या हाथ से धोएं — कॉटन नियमित धुलाई अच्छे से झेलता है।</div>
+      <div class="care-row"><span class="icon">🔥</span> कड़क फिनिश के लिए हल्के गीले रहते हुए मध्यम-तेज़ हीट पर इस्त्री करें।</div>
+      <div class="care-row"><span class="icon">📦</span> मोड़ा या टांगा जा सकता है — कॉटन रखने में आमतौर पर कम देखभाल मांगता है।</div>
+    </div>
+
+    <div class="fabric-card">
+      <h2>🕸️ नेट</h2>
+      <div class="tagline">अक्सर दुपट्टे और ओवरले के लिए इस्तेमाल होता है, नाज़ुक जालीदार बुनाई</div>
+      <div class="care-row"><span class="icon">🧺</span> हल्के हाथ से हाथ धोएं या ड्राई-क्लीन कराएं, खासकर अगर कढ़ाई या सितारों से सजा हो।</div>
+      <div class="care-row"><span class="icon">🔥</span> सजावट पर सीधे इस्त्री करने से बचें — सिर्फ सादे हिस्सों पर, कम हीट पर इस्त्री करें।</div>
+      <div class="care-row"><span class="icon">📦</span> कसकर मोड़ने के बजाय बॉक्स में सपाट रखें, ताकि जाली फंसे या फटे नहीं।</div>
+    </div>
+
+    <div class="callout">
+      <strong>सामान्य नियम:</strong> संदेह होने पर, भारी सजावट वाले, गहरे रंग के, या महंगे कपड़ों के लिए ड्राई-क्लीन ज़्यादा सुरक्षित विकल्प है — ड्राई-क्लीन की लागत लगभग हमेशा खराब हुए आउटफिट की लागत से कम होती है।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">कौन सा कपड़ा आपके मौके के लिए सही है, तय नहीं कर पा रहीं?</h2>
+      <p>हमारी मौका व मौसम फैब्रिक गाइड देखें, या सीधे AI Design Studio से डिज़ाइन बनाना शुरू करें।</p>
+      <a href="https://gurbanifashion.com/occasion-fabric-guide.html">मौका गाइड देखें →</a>
+    </div>
   </div>
 </main>
 
@@ -109,6 +180,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>

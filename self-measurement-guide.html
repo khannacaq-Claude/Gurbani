@@ -50,6 +50,8 @@
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
   @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -59,69 +61,142 @@
 </header>
 
 <main>
-  <h1>How to Take Your Own Body Measurements for Custom Stitching</h1>
-  <p class="subtitle">Can't visit in person right now? Here's how to measure accurately at home — plus a quick tool to check your numbers make sense before you send them.</p>
-
-  <div class="callout">
-    <strong>Before you start:</strong> use a soft measuring tape (not a rigid one), wear well-fitted clothing (not loose or bulky layers), and stand naturally — don't hold your breath or pull the tape too tight. A second person helping usually gets more accurate results than measuring yourself alone.
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <h2>The measurements you'll need</h2>
+  <div id="langEn">
+    <h1>How to Take Your Own Body Measurements for Custom Stitching</h1>
+    <p class="subtitle">Can't visit in person right now? Here's how to measure accurately at home — plus a quick tool to check your numbers make sense before you send them.</p>
 
-  <div class="step-card">
-    <h3>1. Bust / Chest</h3>
-    <p>Wrap the tape around the fullest part of your chest, keeping it level and snug but not tight — the tape should sit flat all the way around, not dig in or sag.</p>
-  </div>
-
-  <div class="step-card">
-    <h3>2. Waist</h3>
-    <p>Measure around your natural waistline — the narrowest part of your torso, usually just above your belly button. Don't suck in; measure as you'd naturally stand.</p>
-  </div>
-
-  <div class="step-card">
-    <h3>3. Hip</h3>
-    <p>Measure around the fullest part of your hips, roughly 20cm below your waist for most body types — keep the tape level all the way around, not angled.</p>
-  </div>
-
-  <div class="step-card">
-    <h3>4. Shoulder Width</h3>
-    <p>Measure straight across your back from the edge of one shoulder to the other, where the shoulder meets the arm.</p>
-  </div>
-
-  <div class="step-card">
-    <h3>5. Sleeve Length</h3>
-    <p>From the shoulder edge, down the outside of your arm, to wherever you want the sleeve to end — wrist, elbow, or anywhere in between.</p>
-  </div>
-
-  <div class="step-card">
-    <h3>6. Garment Length</h3>
-    <p>From your shoulder (or wherever the garment starts) straight down to where you want the hemline to fall — knee, calf, or floor length.</p>
-  </div>
-
-  <h2>Check your numbers before sending them</h2>
-  <p>Common mistakes — a waist number that's larger than your bust, or a measurement that's just been mistyped — are easy to make and easy to catch. Enter your numbers below for a quick sanity check.</p>
-
-  <div class="tool-box">
-    <div class="form-row">
-      <div><label>Bust / Chest (cm)</label><input type="number" id="mBust" placeholder="e.g. 92"></div>
-      <div><label>Waist (cm)</label><input type="number" id="mWaist" placeholder="e.g. 76"></div>
+    <div class="callout">
+      <strong>Before you start:</strong> use a soft measuring tape (not a rigid one), wear well-fitted clothing (not loose or bulky layers), and stand naturally — don't hold your breath or pull the tape too tight. A second person helping usually gets more accurate results than measuring yourself alone.
     </div>
-    <div class="form-row">
-      <div><label>Hip (cm)</label><input type="number" id="mHip" placeholder="e.g. 98"></div>
-      <div><label>Shoulder (cm)</label><input type="number" id="mShoulder" placeholder="e.g. 38"></div>
+
+    <h2>The measurements you'll need</h2>
+
+    <div class="step-card">
+      <h3>1. Bust / Chest</h3>
+      <p>Wrap the tape around the fullest part of your chest, keeping it level and snug but not tight — the tape should sit flat all the way around, not dig in or sag.</p>
     </div>
-    <button type="button" onclick="checkMeasurements()">Check My Measurements</button>
-    <div id="measCheckResult"></div>
+
+    <div class="step-card">
+      <h3>2. Waist</h3>
+      <p>Measure around your natural waistline — the narrowest part of your torso, usually just above your belly button. Don't suck in; measure as you'd naturally stand.</p>
+    </div>
+
+    <div class="step-card">
+      <h3>3. Hip</h3>
+      <p>Measure around the fullest part of your hips, roughly 20cm below your waist for most body types — keep the tape level all the way around, not angled.</p>
+    </div>
+
+    <div class="step-card">
+      <h3>4. Shoulder Width</h3>
+      <p>Measure straight across your back from the edge of one shoulder to the other, where the shoulder meets the arm.</p>
+    </div>
+
+    <div class="step-card">
+      <h3>5. Sleeve Length</h3>
+      <p>From the shoulder edge, down the outside of your arm, to wherever you want the sleeve to end — wrist, elbow, or anywhere in between.</p>
+    </div>
+
+    <div class="step-card">
+      <h3>6. Garment Length</h3>
+      <p>From your shoulder (or wherever the garment starts) straight down to where you want the hemline to fall — knee, calf, or floor length.</p>
+    </div>
+
+    <h2>Check your numbers before sending them</h2>
+    <p>Common mistakes — a waist number that's larger than your bust, or a measurement that's just been mistyped — are easy to make and easy to catch. Enter your numbers below for a quick sanity check.</p>
+
+    <div class="tool-box">
+      <div class="form-row">
+        <div><label>Bust / Chest (cm)</label><input type="number" id="mBust" placeholder="e.g. 92"></div>
+        <div><label>Waist (cm)</label><input type="number" id="mWaist" placeholder="e.g. 76"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Hip (cm)</label><input type="number" id="mHip" placeholder="e.g. 98"></div>
+        <div><label>Shoulder (cm)</label><input type="number" id="mShoulder" placeholder="e.g. 38"></div>
+      </div>
+      <button type="button" onclick="checkMeasurements()">Check My Measurements</button>
+      <div id="measCheckResult"></div>
+    </div>
+
+    <div class="callout">
+      <strong>Worth knowing:</strong> this tool only flags numbers that look implausible — it can't confirm your measurements are actually correct for your body, only that they're at least self-consistent. When in doubt, a quick video call or an in-person visit is always more reliable than self-measuring.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Ready to start your design?</h2>
+      <p>Once you're confident in your measurements, head to AI Design Studio to describe your outfit and get 3 custom design concepts back — free to try.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    </div>
   </div>
 
-  <div class="callout">
-    <strong>Worth knowing:</strong> this tool only flags numbers that look implausible — it can't confirm your measurements are actually correct for your body, only that they're at least self-consistent. When in doubt, a quick video call or an in-person visit is always more reliable than self-measuring.
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>कस्टम सिलाई के लिए खुद की सही बॉडी माप कैसे लें</h1>
+    <p class="subtitle">अभी खुद आकर नहीं मिल सकतीं? यहां बताया गया है कि घर पर सही माप कैसे लें — साथ में एक तेज़ टूल जो भेजने से पहले आपके नंबरों को जांच लेगा।</p>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Ready to start your design?</h2>
-    <p>Once you're confident in your measurements, head to AI Design Studio to describe your outfit and get 3 custom design concepts back — free to try.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    <div class="callout">
+      <strong>शुरू करने से पहले:</strong> नरम मापने वाला टेप इस्तेमाल करें (सख्त नहीं), अच्छे से फिट कपड़े पहनें (ढीले या भारी लेयर नहीं), और स्वाभाविक रूप से खड़ी हों — सांस मत रोकिए या टेप बहुत कस के मत खींचिए। किसी और की मदद लेने से आमतौर पर अकेले माप लेने से बेहतर नतीजे मिलते हैं।
+    </div>
+
+    <h2>आपको जिन मापों की ज़रूरत होगी</h2>
+
+    <div class="step-card">
+      <h3>1. बस्ट / छाती</h3>
+      <p>टेप को अपनी छाती के सबसे भरे हिस्से के चारों ओर लपेटें, इसे सीधा और हल्का सा टाइट रखें पर ज़्यादा कस के नहीं — टेप पूरे रास्ते सपाट बैठना चाहिए, न धंसे न लटके।</p>
+    </div>
+
+    <div class="step-card">
+      <h3>2. कमर</h3>
+      <p>अपनी प्राकृतिक कमर रेखा के चारों ओर माप लें — धड़ का सबसे पतला हिस्सा, आमतौर पर नाभि से थोड़ा ऊपर। पेट अंदर मत खींचिए; जैसे आम तौर पर खड़ी होती हैं वैसे ही माप लें।</p>
+    </div>
+
+    <div class="step-card">
+      <h3>3. हिप</h3>
+      <p>अपने हिप के सबसे भरे हिस्से के चारों ओर माप लें, ज़्यादातर शरीर के लिए कमर से लगभग 20cm नीचे — टेप को पूरे रास्ते सीधा रखें, तिरछा नहीं।</p>
+    </div>
+
+    <div class="step-card">
+      <h3>4. कंधे की चौड़ाई</h3>
+      <p>अपनी पीठ के आर-पार सीधा माप लें, एक कंधे के किनारे से दूसरे तक, जहां कंधा बांह से मिलता है।</p>
+    </div>
+
+    <div class="step-card">
+      <h3>5. आस्तीन की लंबाई</h3>
+      <p>कंधे के किनारे से, बांह के बाहरी हिस्से से नीचे, जहां तक आप आस्तीन खत्म करना चाहती हैं — कलाई, कोहनी, या बीच में कहीं भी।</p>
+    </div>
+
+    <div class="step-card">
+      <h3>6. आउटफिट की लंबाई</h3>
+      <p>अपने कंधे से (या जहां से आउटफिट शुरू होता है) सीधा नीचे तक, जहां आप हेमलाइन चाहती हैं — घुटना, पिंडली, या फर्श तक।</p>
+    </div>
+
+    <h2>भेजने से पहले अपने नंबर जांच लें</h2>
+    <p>आम गलतियां — कमर का नंबर बस्ट से बड़ा होना, या माप गलत टाइप हो जाना — करना आसान है और पकड़ना भी आसान। नीचे अपने नंबर डालें एक तेज़ जांच के लिए।</p>
+
+    <div class="tool-box">
+      <div class="form-row">
+        <div><label>बस्ट / छाती (cm)</label><input type="number" id="mBustHi" placeholder="जैसे 92"></div>
+        <div><label>कमर (cm)</label><input type="number" id="mWaistHi" placeholder="जैसे 76"></div>
+      </div>
+      <div class="form-row">
+        <div><label>हिप (cm)</label><input type="number" id="mHipHi" placeholder="जैसे 98"></div>
+        <div><label>कंधा (cm)</label><input type="number" id="mShoulderHi" placeholder="जैसे 38"></div>
+      </div>
+      <button type="button" onclick="checkMeasurementsHi()">मेरी माप जांचें</button>
+      <div id="measCheckResultHi"></div>
+    </div>
+
+    <div class="callout">
+      <strong>जानने लायक बात:</strong> यह टूल सिर्फ उन नंबरों को चिन्हित करता है जो असंभव लगें — यह पक्के तौर पर नहीं बता सकता कि आपकी माप आपके शरीर के लिए सही है, सिर्फ यह कि वे आपस में मेल खाती हैं। संदेह होने पर, वीडियो कॉल या खुद आकर मिलना हमेशा खुद माप लेने से ज़्यादा भरोसेमंद है।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">अपना डिज़ाइन शुरू करने के लिए तैयार हैं?</h2>
+      <p>एक बार आप अपनी माप पर भरोसा कर लें, तो AI Design Studio पर जाकर अपना आउटफिट बताएं और 3 कस्टम डिज़ाइन कॉन्सेप्ट पाएं — मुफ़्त में आज़माएं।</p>
+      <a href="https://gurbanifashion.com/#lensSection">AI Design Studio आज़माएं →</a>
+    </div>
   </div>
 </main>
 
@@ -131,39 +206,92 @@
 </footer>
 
 <script>
-function checkMeasurements() {
-  const bust = parseFloat(document.getElementById('mBust').value);
-  const waist = parseFloat(document.getElementById('mWaist').value);
-  const hip = parseFloat(document.getElementById('mHip').value);
-  const shoulder = parseFloat(document.getElementById('mShoulder').value);
-  const resultBox = document.getElementById('measCheckResult');
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
 
-  if (!bust || !waist || !hip || !shoulder) {
-    resultBox.className = 'warn';
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = '⚠️ Please fill in all four measurements to check them.';
-    return;
+  function checkMeasurements() {
+    const bust = parseFloat(document.getElementById('mBust').value);
+    const waist = parseFloat(document.getElementById('mWaist').value);
+    const hip = parseFloat(document.getElementById('mHip').value);
+    const shoulder = parseFloat(document.getElementById('mShoulder').value);
+    const resultBox = document.getElementById('measCheckResult');
+
+    if (!bust || !waist || !hip || !shoulder) {
+      resultBox.className = 'warn';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '⚠️ Please fill in all four measurements to check them.';
+      return;
+    }
+
+    const warnings = [];
+    // Plausible human ranges — flags obvious typos/mistakes, not medical validation
+    if (bust < 60 || bust > 160) warnings.push('Bust measurement looks outside a typical range — please double-check.');
+    if (waist < 45 || waist > 150) warnings.push('Waist measurement looks outside a typical range — please double-check.');
+    if (hip < 60 || hip > 170) warnings.push('Hip measurement looks outside a typical range — please double-check.');
+    if (shoulder < 25 || shoulder > 60) warnings.push('Shoulder measurement looks outside a typical range — please double-check.');
+    if (waist > bust + 15) warnings.push('Your waist measurement is noticeably larger than your bust — this is uncommon, worth re-measuring both to confirm.');
+    if (bust > hip + 25) warnings.push('Your bust measurement is much larger than your hip — worth double-checking both.');
+
+    if (warnings.length === 0) {
+      resultBox.className = 'ok';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '✅ These numbers look consistent with each other. Feel free to share them with Sonia when you place your order.';
+    } else {
+      resultBox.className = 'warn';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '⚠️ ' + warnings.join('<br>⚠️ ');
+    }
   }
 
-  const warnings = [];
-  // Plausible human ranges — flags obvious typos/mistakes, not medical validation
-  if (bust < 60 || bust > 160) warnings.push('Bust measurement looks outside a typical range — please double-check.');
-  if (waist < 45 || waist > 150) warnings.push('Waist measurement looks outside a typical range — please double-check.');
-  if (hip < 60 || hip > 170) warnings.push('Hip measurement looks outside a typical range — please double-check.');
-  if (shoulder < 25 || shoulder > 60) warnings.push('Shoulder measurement looks outside a typical range — please double-check.');
-  if (waist > bust + 15) warnings.push('Your waist measurement is noticeably larger than your bust — this is uncommon, worth re-measuring both to confirm.');
-  if (bust > hip + 25) warnings.push('Your bust measurement is much larger than your hip — worth double-checking both.');
+  // Hindi-side duplicate of the same tool — separate input IDs (mBustHi
+  // etc.) since both language blocks exist in the DOM at once (one just
+  // hidden via display:none), so IDs must stay unique document-wide.
+  function checkMeasurementsHi() {
+    const bust = parseFloat(document.getElementById('mBustHi').value);
+    const waist = parseFloat(document.getElementById('mWaistHi').value);
+    const hip = parseFloat(document.getElementById('mHipHi').value);
+    const shoulder = parseFloat(document.getElementById('mShoulderHi').value);
+    const resultBox = document.getElementById('measCheckResultHi');
 
-  if (warnings.length === 0) {
-    resultBox.className = 'ok';
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = '✅ These numbers look consistent with each other. Feel free to share them with Sonia when you place your order.';
-  } else {
-    resultBox.className = 'warn';
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = '⚠️ ' + warnings.join('<br>⚠️ ');
+    if (!bust || !waist || !hip || !shoulder) {
+      resultBox.className = 'warn';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '⚠️ कृपया जांच के लिए चारों माप भरें।';
+      return;
+    }
+
+    const warnings = [];
+    if (bust < 60 || bust > 160) warnings.push('बस्ट माप सामान्य दायरे से बाहर लग रही है — कृपया दोबारा जांचें।');
+    if (waist < 45 || waist > 150) warnings.push('कमर की माप सामान्य दायरे से बाहर लग रही है — कृपया दोबारा जांचें।');
+    if (hip < 60 || hip > 170) warnings.push('हिप की माप सामान्य दायरे से बाहर लग रही है — कृपया दोबारा जांचें।');
+    if (shoulder < 25 || shoulder > 60) warnings.push('कंधे की माप सामान्य दायरे से बाहर लग रही है — कृपया दोबारा जांचें।');
+    if (waist > bust + 15) warnings.push('आपकी कमर की माप बस्ट से काफी बड़ी है — यह असामान्य है, दोनों दोबारा माप कर पक्का करें।');
+    if (bust > hip + 25) warnings.push('आपकी बस्ट माप हिप से काफी बड़ी है — दोनों दोबारा जांचना बेहतर होगा।');
+
+    if (warnings.length === 0) {
+      resultBox.className = 'ok';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '✅ ये नंबर आपस में मेल खाते हैं। ऑर्डर देते समय बेझिझक सोनिया के साथ शेयर करें।';
+    } else {
+      resultBox.className = 'warn';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '⚠️ ' + warnings.join('<br>⚠️ ');
+    }
   }
-}
 </script>
 
 </body>

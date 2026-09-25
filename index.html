@@ -3467,6 +3467,9 @@
         <div class="snap-section reveal-section" id="quizzesSection" style="margin-top: 48px;">
           <div class="card" style="max-width:900px; margin:0 auto;">
             <div id="quizzesPicker">
+              <div style="text-align:center; margin-bottom:8px;">
+                <button type="button" id="quizLangToggle" onclick="toggleSiteLang()" style="background:none; border:1.5px solid var(--vivid); border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; color:var(--vivid); cursor:pointer;">EN | हिं</button>
+              </div>
               <h3 style="text-align:center; font-family:var(--font-display); font-size:22px; margin-bottom:4px;">🎯 Quick Quizzes</h3>
               <p style="text-align:center; color:var(--text-muted); margin-bottom:18px;">A minute of fun — genuinely useful either way.</p>
               <div id="quizPickerCards" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;"></div>
@@ -16809,6 +16812,85 @@
       scrollToSection('landingDesignPreview');
     }
 
+    // ---------- Bilingual support (EN/HI) — quizzes + guide pages ----------
+    // One shared localStorage key so a language choice made on a quiz
+    // carries over to the guide pages (and vice versa) without needing
+    // an account or server round-trip. Defaults to English.
+    let siteLang = localStorage.getItem('gurbaniLang') || 'en';
+
+    function toggleSiteLang() {
+      siteLang = siteLang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', siteLang);
+      updateLangToggleLabel();
+      // Re-render whichever quiz screen is currently visible, if any,
+      // so the switch is instant rather than needing a page reload.
+      if (activeQuizId) {
+        const area = document.getElementById('quizActiveArea');
+        if (area && area.style.display !== 'none') {
+          // mythFactFeedback presence means we're mid-question with an
+          // answer already shown — re-rendering the result screen would
+          // be jarring, so just leave that one screen as-is until Next.
+          if (!document.getElementById('mythFactFeedback')?.innerHTML) {
+            renderQuizQuestion();
+          }
+        }
+      } else {
+        renderQuizPickerCards();
+      }
+    }
+
+    function updateLangToggleLabel() {
+      const btn = document.getElementById('quizLangToggle');
+      if (btn) btn.textContent = siteLang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+    }
+
+    // Picks the Hindi variant of a field (e.g. tq(quiz, 'title') looks for
+    // quiz.titleHi) when siteLang is 'hi' AND that field actually has a
+    // Hindi version — falls back to English otherwise so a quiz with only
+    // partial translation never shows a blank.
+    function tq(obj, field) {
+      if (!obj) return '';
+      if (siteLang === 'hi' && obj[field + 'Hi']) return obj[field + 'Hi'];
+      return obj[field];
+    }
+
+    // Fixed English UI chrome around the quiz engine (question counters,
+    // buttons, verdict sentences) — not part of QUIZZES data since these
+    // are shared across every quiz, not per-quiz content.
+    const UI_STRINGS = {
+      question: { en: 'Question', hi: 'सवाल' },
+      of: { en: 'of', hi: 'में से' },
+      fact: { en: '✅ Fact', hi: '✅ सच' },
+      myth: { en: '❌ Myth', hi: '❌ झूठ' },
+      correct: { en: '✅ Correct!', hi: '✅ सही!' },
+      actuallyFact: { en: '❌ Actually — Fact!', hi: '❌ असल में — सच!' },
+      actuallyMyth: { en: '❌ Actually — Myth!', hi: '❌ असल में — झूठ!' },
+      next: { en: 'Next →', hi: 'अगला →' },
+      seeScore: { en: 'See My Score →', hi: 'मेरा स्कोर देखें →' },
+      retake: { en: '🔄 Retake', hi: '🔄 फिर से लें' },
+      otherQuizzes: { en: '← Other Quizzes', hi: '← और क्विज़' },
+      backToQuizzes: { en: '← Back to quizzes', hi: '← क्विज़ पर वापस जाएं' },
+      showDifferent: { en: '🔀 Show different quizzes', hi: '🔀 अलग क्विज़ दिखाएं' },
+      seeAll: { en: (n) => `See all ${n} quizzes →`, hi: (n) => `सभी ${n} क्विज़ देखें →` },
+      showFew: { en: (n) => `🔀 Show me a few, not all ${n}`, hi: (n) => `🔀 कुछ दिखाएं, सभी ${n} नहीं` },
+      perfectScore: { en: 'Perfect score! You clearly know your stuff here. ✨', hi: 'पूरे नंबर! आप यहां सब कुछ अच्छे से जानती हैं। ✨' },
+      prettySolid: { en: "Pretty solid! A couple of surprises there, but you're mostly in the know.", hi: 'काफी अच्छा! कुछ बातें हैरान करने वाली थीं, लेकिन आप ज़्यादातर सही जानती हैं।' },
+      goodNews: { en: "Good news — there's more useful stuff here than you thought!", hi: 'अच्छी खबर — यहां आपकी सोच से ज़्यादा काम की बातें हैं!' },
+      tryItForReal: { en: '✨ Try It For Real →', hi: '✨ असल में आज़माएं →' },
+      readFullGuide: { en: '📖 Read the Full Guide →', hi: '📖 पूरी गाइड पढ़ें →' },
+      designInThis: { en: '✨ Design Something in This Fabric →', hi: '✨ इस कपड़े में डिज़ाइन बनाएं →' },
+      seeGuides: { en: '📚 See Helpful Guides →', hi: '📚 मददगार गाइड देखें →' },
+      startDesigning: { en: '✨ Start Designing Now →', hi: '✨ अभी डिज़ाइन शुरू करें →' },
+      whatsappNow: { en: '💬 WhatsApp Us Now', hi: '💬 अभी WhatsApp करें' },
+      whatsappMsg: { en: 'Hi! My event is coming up soon and I need help getting my outfits sorted quickly.', hi: 'नमस्ते! मेरा समारोह जल्दी आने वाला है और मुझे अपने आउटफिट जल्दी तैयार करवाने में मदद चाहिए।' },
+    };
+    function ui(key, ...args) {
+      const entry = UI_STRINGS[key];
+      if (!entry) return '';
+      const val = entry[siteLang] || entry.en;
+      return typeof val === 'function' ? val(...args) : val;
+    }
+
     // ---------- Quick Quizzes (shared engine, 3 quizzes) ----------
     // One generic engine drives all three quizzes rather than
     // duplicating the question-flow UI three times. Two question
@@ -16822,47 +16904,61 @@
       'ai-myth-fact': {
         icon: '🤖',
         title: 'Gurbani AI: Myth or Fact?',
+        titleHi: 'Gurbani AI: सच या झूठ?',
         subtitle: "Test what you actually know about Gurbani Fashion's own AI Design Studio",
+        subtitleHi: 'जानिए Gurbani Fashion के अपने AI Design Studio के बारे में आप असल में कितना जानती हैं',
         type: 'myth-fact',
         questions: [
           { text: 'Our AI Design Studio can use a photo of YOUR own fabric to shape your design.', answer: true,
-            explain: "True! Upload a fabric photo and it's fed directly into image generation — the AI picks up that photo's actual color, pattern and visual texture, not a generic guess. (It's reading what the photo shows, not physically sensing the fabric.)" },
+            textHi: 'हमारा AI Design Studio आपके अपने कपड़े की फोटो का इस्तेमाल करके डिज़ाइन बना सकता है।',
+            explain: "True! Upload a fabric photo and it's fed directly into image generation — the AI picks up that photo's actual color, pattern and visual texture, not a generic guess. (It's reading what the photo shows, not physically sensing the fabric.)",
+            explainHi: 'सच! कपड़े की फोटो अपलोड करें और वो सीधे इमेज जनरेशन में इस्तेमाल होती है — AI उस फोटो का असली रंग, पैटर्न और बनावट पकड़ता है, कोई अंदाज़ा नहीं लगाता। (यह फोटो में जो दिख रहा है वो पढ़ता है, कपड़े को छूकर महसूस नहीं करता।)' },
           { text: 'Our AI Design Studio reads your selfie and designs an outfit to match your face.', answer: false,
-            explain: "Myth — not because AI can't technically do this, but because we deliberately don't. Selfies are only ever used for a written style/fit suggestion, never to generate design images, and the photo itself is never stored." },
+            textHi: 'हमारा AI Design Studio आपकी सेल्फी देखकर आपके चेहरे से मेल खाता आउटफिट डिज़ाइन करता है।',
+            explain: "Myth — not because AI can't technically do this, but because we deliberately don't. Selfies are only ever used for a written style/fit suggestion, never to generate design images, and the photo itself is never stored.",
+            explainHi: 'झूठ — ऐसा नहीं कि AI तकनीकी रूप से यह नहीं कर सकता, बल्कि हम जानबूझकर ऐसा नहीं करते। सेल्फी का इस्तेमाल सिर्फ लिखित स्टाइल/फिट सुझाव के लिए होता है, कभी डिज़ाइन इमेज बनाने के लिए नहीं, और फोटो को कभी सेव नहीं किया जाता।' },
           { text: 'You need to already know exactly what you want before starting with us.', answer: false,
-            explain: 'Myth. "Help Me Build It" walks you through style, color and mood with simple taps — no fashion vocabulary needed.' },
+            textHi: 'हमारे साथ शुरू करने से पहले आपको बिल्कुल पता होना चाहिए कि आप क्या चाहती हैं।',
+            explain: 'Myth. "Help Me Build It" walks you through style, color and mood with simple taps — no fashion vocabulary needed.',
+            explainHi: 'झूठ। "Help Me Build It" आपको स्टाइल, रंग और मूड के ज़रिए आसान टैप्स में गाइड करता है — फैशन की शब्दावली जानने की ज़रूरत नहीं।' },
           { text: 'Our AI Design Studio works with just a text description, no photo at all.', answer: true,
-            explain: 'True! A good description alone is enough to get 3 real concepts from us — photos are optional, not required.' },
+            textHi: 'हमारा AI Design Studio सिर्फ टेक्स्ट विवरण से भी काम करता है, फोटो की ज़रूरत नहीं।',
+            explain: 'True! A good description alone is enough to get 3 real concepts from us — photos are optional, not required.',
+            explainHi: 'सच! एक अच्छा विवरण ही हमसे 3 असली कॉन्सेप्ट पाने के लिए काफी है — फोटो वैकल्पिक है, ज़रूरी नहीं।' },
           { text: "Once you generate a design with us, you're locked into ordering it.", answer: false,
-            explain: 'Myth. Generating concepts with us is completely free with zero obligation — you only pay when you actually place a stitching order.' },
+            textHi: 'एक बार हमारे साथ डिज़ाइन बना लेने पर, आपको उसे ऑर्डर करना ही पड़ता है।',
+            explain: 'Myth. Generating concepts with us is completely free with zero obligation — you only pay when you actually place a stitching order.',
+            explainHi: 'झूठ। हमारे साथ कॉन्सेप्ट बनाना पूरी तरह मुफ़्त है, कोई बाध्यता नहीं — भुगतान तभी होता है जब आप असल में सिलाई का ऑर्डर देती हैं।' },
         ],
       },
       'fabric-match': {
         icon: '🧵',
         title: 'Find Your Fabric',
+        titleHi: 'अपना कपड़ा खोजें',
         subtitle: '4 quick taps to find what actually suits you',
+        subtitleHi: '4 आसान टैप में जानिए आप पर असल में क्या सूट करता है',
         type: 'scored',
         questions: [
-          { key: 'occasion', label: "What's the occasion?", options: [
-            { label: '💍 Wedding / Bridal', value: 'wedding' },
-            { label: '🪔 Festival / Pooja', value: 'festival' },
-            { label: '☀️ Everyday, Elevated', value: 'everyday' },
-            { label: '🥂 Party / Reception', value: 'party' },
+          { key: 'occasion', label: "What's the occasion?", labelHi: 'मौका क्या है?', options: [
+            { label: '💍 Wedding / Bridal', labelHi: '💍 शादी / दुल्हन', value: 'wedding' },
+            { label: '🪔 Festival / Pooja', labelHi: '🪔 त्योहार / पूजा', value: 'festival' },
+            { label: '☀️ Everyday, Elevated', labelHi: '☀️ रोज़मर्रा, थोड़ा खास', value: 'everyday' },
+            { label: '🥂 Party / Reception', labelHi: '🥂 पार्टी / रिसेप्शन', value: 'party' },
           ]},
-          { key: 'climate', label: "What's your climate like?", options: [
-            { label: '🔥 Hot & Humid', value: 'hot' },
-            { label: '🌤️ Pleasant / Moderate', value: 'moderate' },
-            { label: '❄️ Cold / Winter', value: 'cold' },
+          { key: 'climate', label: "What's your climate like?", labelHi: 'आपके यहाँ मौसम कैसा है?', options: [
+            { label: '🔥 Hot & Humid', labelHi: '🔥 गर्म और उमस भरा', value: 'hot' },
+            { label: '🌤️ Pleasant / Moderate', labelHi: '🌤️ सुहाना / सामान्य', value: 'moderate' },
+            { label: '❄️ Cold / Winter', labelHi: '❄️ ठंडा / सर्दी', value: 'cold' },
           ]},
-          { key: 'maintenance', label: 'How much upkeep are you up for?', options: [
-            { label: '✨ Dry-clean, no problem', value: 'high' },
-            { label: '🧺 Wash-and-wear, please', value: 'low' },
-            { label: '🤷 Somewhere in between', value: 'medium' },
+          { key: 'maintenance', label: 'How much upkeep are you up for?', labelHi: 'आप कितनी देखभाल के लिए तैयार हैं?', options: [
+            { label: '✨ Dry-clean, no problem', labelHi: '✨ ड्राई-क्लीन, कोई दिक्कत नहीं', value: 'high' },
+            { label: '🧺 Wash-and-wear, please', labelHi: '🧺 धोकर पहनने वाला, प्लीज़', value: 'low' },
+            { label: '🤷 Somewhere in between', labelHi: '🤷 बीच का कुछ', value: 'medium' },
           ]},
-          { key: 'priority', label: 'What matters more to you?', options: [
-            { label: '🪶 Breathable & lightweight', value: 'comfort' },
-            { label: '✨ Rich look, heavy embellishment', value: 'richness' },
-            { label: '⚖️ A bit of both', value: 'balance' },
+          { key: 'priority', label: 'What matters more to you?', labelHi: 'आपके लिए क्या ज़्यादा मायने रखता है?', options: [
+            { label: '🪶 Breathable & lightweight', labelHi: '🪶 हवादार और हल्का', value: 'comfort' },
+            { label: '✨ Rich look, heavy embellishment', labelHi: '✨ भारी और शाही लुक', value: 'richness' },
+            { label: '⚖️ A bit of both', labelHi: '⚖️ दोनों का मिश्रण', value: 'balance' },
           ]},
         ],
         pickResult: pickFabricResult,
@@ -16870,25 +16966,27 @@
       'wedding-readiness': {
         icon: '💍',
         title: 'Wedding Countdown Check',
+        titleHi: 'शादी की उल्टी गिनती जांच',
         subtitle: 'Are you actually on track? 3 quick questions',
+        subtitleHi: 'क्या आप सच में सही रफ़्तार पर हैं? 3 आसान सवाल',
         type: 'scored',
         questions: [
-          { key: 'timeline', label: 'How far away is the big day?', options: [
-            { label: '📅 More than 6 months', value: 'far' },
-            { label: '🗓️ 3–6 months', value: 'medium' },
-            { label: '⏰ 1–3 months', value: 'soon' },
-            { label: '🚨 Less than a month', value: 'urgent' },
+          { key: 'timeline', label: 'How far away is the big day?', labelHi: 'बड़ा दिन कितनी दूर है?', options: [
+            { label: '📅 More than 6 months', labelHi: '📅 6 महीने से ज़्यादा', value: 'far' },
+            { label: '🗓️ 3–6 months', labelHi: '🗓️ 3–6 महीने', value: 'medium' },
+            { label: '⏰ 1–3 months', labelHi: '⏰ 1–3 महीने', value: 'soon' },
+            { label: '🚨 Less than a month', labelHi: '🚨 एक महीने से कम', value: 'urgent' },
           ]},
-          { key: 'outfitsNeeded', label: 'How many outfits do you still need?', options: [
-            { label: '1', value: 'one' },
-            { label: '2–3', value: 'few' },
-            { label: '4+', value: 'many' },
-            { label: 'Not sure yet', value: 'unsure' },
+          { key: 'outfitsNeeded', label: 'How many outfits do you still need?', labelHi: 'अभी और कितने आउटफिट चाहिए?', options: [
+            { label: '1', labelHi: '1', value: 'one' },
+            { label: '2–3', labelHi: '2–3', value: 'few' },
+            { label: '4+', labelHi: '4+', value: 'many' },
+            { label: 'Not sure yet', labelHi: 'अभी तय नहीं', value: 'unsure' },
           ]},
-          { key: 'started', label: 'Have you started any of them yet?', options: [
-            { label: '✅ Yes, in progress', value: 'started' },
-            { label: '🤏 Just one or two', value: 'partial' },
-            { label: '❌ Not yet', value: 'none' },
+          { key: 'started', label: 'Have you started any of them yet?', labelHi: 'क्या आपने अभी तक कोई शुरू किया है?', options: [
+            { label: '✅ Yes, in progress', labelHi: '✅ हाँ, चल रहा है', value: 'started' },
+            { label: '🤏 Just one or two', labelHi: '🤏 बस एक-दो', value: 'partial' },
+            { label: '❌ Not yet', labelHi: '❌ अभी नहीं', value: 'none' },
           ]},
         ],
         pickResult: pickWeddingVerdict,
@@ -16904,190 +17002,309 @@
       'guide-ai-design': {
         icon: '🎨',
         title: 'How AI Fashion Design Really Works',
+        titleHi: 'AI फैशन डिज़ाइन असल में कैसे काम करता है',
         subtitle: 'What AI can (and honestly can\'t) do on its own',
+        subtitleHi: 'AI अकेले क्या कर सकता है (और ईमानदारी से क्या नहीं)',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/ai-fashion-design-explained.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/ai-fashion-design-explained.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'A generated AI image is basically a ready-to-cut sewing pattern.', answer: false,
-            explain: "Myth. A generated image is a picture of an idea, not a sewing pattern or bill of materials — genuine pattern-drafting (seam allowances, dart placement, grain lines) still needs skilled human work." },
+            textHi: 'AI से बनी इमेज असल में सीधे काटने लायक सिलाई पैटर्न होती है।',
+            explain: "Myth. A generated image is a picture of an idea, not a sewing pattern or bill of materials — genuine pattern-drafting (seam allowances, dart placement, grain lines) still needs skilled human work.",
+            explainHi: 'झूठ। AI से बनी इमेज एक आइडिया की तस्वीर है, सिलाई पैटर्न या मटीरियल लिस्ट नहीं — असली पैटर्न बनाना (सीम एलाउंस, डार्ट प्लेसमेंट, ग्रेन लाइन) अभी भी कुशल इंसानी काम मांगता है।' },
           { text: "Our AI Design Studio checks your chosen concept against fabric actually in stock.", answer: true,
-            explain: "True! That's the step most AI tools skip entirely — we check against Gurbani's actual physical inventory (fabric, lace, lining), not just what an AI image suggests." },
+            textHi: 'हमारा AI Design Studio आपके चुने कॉन्सेप्ट को असल में मौजूद कपड़े के स्टॉक से मिलाकर जांचता है।',
+            explain: "True! That's the step most AI tools skip entirely — we check against Gurbani's actual physical inventory (fabric, lace, lining), not just what an AI image suggests.",
+            explainHi: 'सच! यह वो कदम है जो ज़्यादातर AI टूल्स पूरी तरह छोड़ देते हैं — हम Gurbani के असली भौतिक स्टॉक (कपड़ा, लेस, लाइनिंग) से मिलाकर जांचते हैं, सिर्फ AI इमेज के सुझाव पर नहीं जाते।' },
           { text: 'You need design experience or fashion vocabulary to use AI Design Studio.', answer: false,
-            explain: 'Myth. Most people just describe what they\'re picturing in plain language — that\'s a completely normal, usable description.' },
+            textHi: 'AI Design Studio इस्तेमाल करने के लिए आपको डिज़ाइन का अनुभव या फैशन की शब्दावली आनी चाहिए।',
+            explain: 'Myth. Most people just describe what they\'re picturing in plain language — that\'s a completely normal, usable description.',
+            explainHi: 'झूठ। ज़्यादातर लोग बस अपने मन में जो तस्वीर है उसे सीधी-सादी भाषा में बताते हैं — यही एक बिल्कुल सामान्य और काम का विवरण है।' },
           { text: 'Once you use AI Design Studio, a real tailor still cuts and stitches your outfit.', answer: true,
-            explain: "True! The AI generates the vision; real fabric, real measurements, and Sonia's team turn that vision into an actual garment." },
+            textHi: 'AI Design Studio इस्तेमाल करने के बाद भी, आपका आउटफिट एक असली दर्ज़ी ही काटता और सिलता है।',
+            explain: "True! The AI generates the vision; real fabric, real measurements, and Sonia's team turn that vision into an actual garment.",
+            explainHi: 'सच! AI विज़न बनाता है; असली कपड़ा, असली माप, और सोनिया की टीम उस विज़न को असली कपड़े में बदलते हैं।' },
           { text: 'Using AI Design Studio is basically like ordering ready-made clothes online.', answer: false,
-            explain: "Myth. Every garment is still cut and stitched to your own measurements — it's custom stitching with an AI-assisted starting point, not e-commerce." },
+            textHi: 'AI Design Studio इस्तेमाल करना असल में ऑनलाइन रेडीमेड कपड़े ऑर्डर करने जैसा है।',
+            explain: "Myth. Every garment is still cut and stitched to your own measurements — it's custom stitching with an AI-assisted starting point, not e-commerce.",
+            explainHi: 'झूठ। हर कपड़ा आपके अपने माप के हिसाब से ही काटा और सिला जाता है — यह AI की मदद से शुरू होने वाली कस्टम सिलाई है, ई-कॉमर्स नहीं।' },
         ],
       },
       'guide-measurements': {
         icon: '📏',
         title: 'Measure Yourself Right',
+        titleHi: 'खुद की सही माप लें',
         subtitle: 'Test what you know before you pick up the tape',
+        subtitleHi: 'टेप उठाने से पहले जांचें आप कितना जानती हैं',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/self-measurement-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/self-measurement-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'You should pull the measuring tape as tight as possible for accuracy.', answer: false,
-            explain: 'Myth. Keep it snug but not tight — pulling too tight (or holding your breath) gives an inaccurate, too-small measurement.' },
+            textHi: 'सटीकता के लिए मापने वाले टेप को जितना हो सके उतना कस के खींचना चाहिए।',
+            explain: 'Myth. Keep it snug but not tight — pulling too tight (or holding your breath) gives an inaccurate, too-small measurement.',
+            explainHi: 'झूठ। टेप को हल्का सा टाइट रखें, ज़्यादा कस के नहीं — ज़्यादा खींचने (या सांस रोकने) से माप गलत और छोटी आती है।' },
           { text: 'Waist should be measured at your natural waistline, the narrowest part of your torso.', answer: true,
-            explain: "True! Usually just above your belly button — don't suck in, measure as you'd naturally stand." },
+            textHi: 'कमर की माप आपकी प्राकृतिक कमर रेखा पर, धड़ के सबसे पतले हिस्से पर लेनी चाहिए।',
+            explain: "True! Usually just above your belly button — don't suck in, measure as you'd naturally stand.",
+            explainHi: 'सच! आमतौर पर नाभि से थोड़ा ऊपर — पेट अंदर मत खींचिए, जैसे आम तौर पर खड़ी होती हैं वैसे ही माप लें।' },
           { text: 'A rigid (non-flexible) tape works just as well as a soft measuring tape.', answer: false,
-            explain: 'Myth. Use a soft measuring tape, not a rigid one, for accurate body measurements.' },
+            textHi: 'सख्त (न मुड़ने वाला) टेप भी नरम मापने वाले टेप जितना ही अच्छा काम करता है।',
+            explain: 'Myth. Use a soft measuring tape, not a rigid one, for accurate body measurements.',
+            explainHi: 'झूठ। सही शरीर माप के लिए सख्त नहीं, नरम मापने वाला टेप ही इस्तेमाल करें।' },
           { text: 'Having a second person help usually gives more accurate results than measuring yourself alone.', answer: true,
-            explain: 'True! A second person helping usually beats solo self-measuring, per the guide.' },
+            textHi: 'किसी दूसरे व्यक्ति की मदद लेने से आमतौर पर अकेले माप लेने से बेहतर नतीजे मिलते हैं।',
+            explain: 'True! A second person helping usually beats solo self-measuring, per the guide.',
+            explainHi: 'सच! गाइड के अनुसार, किसी और की मदद अकेले माप लेने से बेहतर रहती है।' },
           { text: 'The measurement sanity-check tool confirms your numbers are anatomically correct for your body.', answer: false,
-            explain: "Myth. It only flags numbers that look implausible or inconsistent with each other — it can't confirm they're actually correct for you specifically." },
+            textHi: 'माप जांचने वाला टूल यह पक्का करता है कि आपके नंबर आपके शरीर के हिसाब से सही हैं।',
+            explain: "Myth. It only flags numbers that look implausible or inconsistent with each other — it can't confirm they're actually correct for you specifically.",
+            explainHi: 'झूठ। यह सिर्फ उन नंबरों को चिन्हित करता है जो असंभव या आपस में मेल न खाते लगें — यह पक्के तौर पर नहीं बता सकता कि वे आपके लिए सही हैं।' },
         ],
       },
       'guide-fabric-care': {
         icon: '🧵',
         title: 'Fabric Care: Myth or Fact?',
+        titleHi: 'कपड़े की देखभाल: सच या झूठ?',
         subtitle: 'Washing, ironing, and storing your custom outfits right',
+        subtitleHi: 'अपने कस्टम आउटफिट को सही तरीके से धोना, इस्त्री करना और रखना',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/fabric-care-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/fabric-care-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'Velvet should be folded for storage, just like most other fabrics.', answer: false,
-            explain: 'Myth. Velvet should be hung, never folded — folding creates permanent crease lines in the pile that are very hard to remove.' },
+            textHi: 'वेलवेट को रखने के लिए बाकी कपड़ों की तरह मोड़ना चाहिए।',
+            explain: 'Myth. Velvet should be hung, never folded — folding creates permanent crease lines in the pile that are very hard to remove.',
+            explainHi: 'झूठ। वेलवेट को हमेशा टांगना चाहिए, कभी मोड़ना नहीं — मोड़ने से उसके रेशों में स्थायी सिलवटें पड़ जाती हैं जो हटाना बहुत मुश्किल है।' },
           { text: 'Most silk garments should be dry cleaned, not home washed.', answer: true,
-            explain: "True! Home washing can damage silk's sheen and cause color bleeding — dry clean is the safer default." },
+            textHi: 'ज़्यादातर सिल्क के कपड़े ड्राई-क्लीन कराने चाहिए, घर पर नहीं धोने चाहिए।',
+            explain: "True! Home washing can damage silk's sheen and cause color bleeding — dry clean is the safer default.",
+            explainHi: 'सच! घर पर धोने से सिल्क की चमक खराब हो सकती है और रंग निकल सकता है — ड्राई-क्लीन ज़्यादा सुरक्षित है।' },
           { text: 'Cotton is the most forgiving fabric here, machine washable in cold-to-warm water.', answer: true,
-            explain: 'True! Cotton handles regular washing well and is generally low-maintenance for storage too.' },
+            textHi: 'कॉटन सबसे आसान कपड़ा है, ठंडे से गुनगुने पानी में मशीन में धोया जा सकता है।',
+            explain: 'True! Cotton handles regular washing well and is generally low-maintenance for storage too.',
+            explainHi: 'सच! कॉटन नियमित धुलाई अच्छे से झेलता है और रखने में भी आमतौर पर कम देखभाल मांगता है।' },
           { text: 'You should iron velvet directly, same as any other fabric.', answer: false,
-            explain: 'Myth. Never iron velvet directly — steam from a distance instead, or use a velvet-specific brush.' },
+            textHi: 'वेलवेट पर भी बाकी कपड़ों की तरह सीधे इस्त्री करनी चाहिए।',
+            explain: 'Myth. Never iron velvet directly — steam from a distance instead, or use a velvet-specific brush.',
+            explainHi: 'झूठ। वेलवेट पर कभी सीधे इस्त्री न करें — दूर से भाप दें, या वेलवेट के लिए बने ब्रश का इस्तेमाल करें।' },
           { text: 'Chiffon can be safely washed together with your other clothes in one load.', answer: false,
-            explain: 'Myth. Hand wash chiffon separately — it can snag on zippers or rough fabric from other garments in the wash.' },
+            textHi: 'शिफॉन को बाकी कपड़ों के साथ एक साथ धोना सुरक्षित है।',
+            explain: 'Myth. Hand wash chiffon separately — it can snag on zippers or rough fabric from other garments in the wash.',
+            explainHi: 'झूठ। शिफॉन को अलग से हाथ से धोएं — यह धुलाई में ज़िप या दूसरे खुरदुरे कपड़ों में फंस सकता है।' },
         ],
       },
       'guide-occasion-fabric': {
         icon: '🎉',
         title: 'Right Fabric, Right Occasion',
+        titleHi: 'सही कपड़ा, सही मौका',
         subtitle: 'Climate and comfort matter as much as looks',
+        subtitleHi: 'मौसम और आराम भी लुक जितने ही मायने रखते हैं',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/occasion-fabric-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/occasion-fabric-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'Heavy fabrics like velvet and brocade are a good pick for a summer daytime wedding.', answer: false,
-            explain: 'Myth. Heavy, heat-trapping fabrics can genuinely ruin a summer daytime event — georgette, chiffon, cotton silk and organza are better picks.' },
+            textHi: 'वेलवेट और ब्रोकेड जैसे भारी कपड़े गर्मी के दिन की शादी के लिए अच्छा विकल्प हैं।',
+            explain: 'Myth. Heavy, heat-trapping fabrics can genuinely ruin a summer daytime event — georgette, chiffon, cotton silk and organza are better picks.',
+            explainHi: 'झूठ। भारी, गर्मी रोकने वाले कपड़े गर्मी के दिन के समारोह को सच में बिगाड़ सकते हैं — जॉर्जेट, शिफॉन, कॉटन सिल्क और ऑर्गेंज़ा बेहतर विकल्प हैं।' },
           { text: 'For pooja functions, fabric that resists creasing and allows easy movement matters more than in most other settings.', answer: true,
-            explain: 'True! Pooja functions often mean sitting on the floor for extended periods, so this genuinely matters more here.' },
+            textHi: 'पूजा समारोह के लिए, बिना सिलवट पड़ने वाला और आसानी से चलने-फिरने देने वाला कपड़ा बाकी मौकों से ज़्यादा मायने रखता है।',
+            explain: 'True! Pooja functions often mean sitting on the floor for extended periods, so this genuinely matters more here.',
+            explainHi: 'सच! पूजा समारोह में अक्सर लंबे समय तक ज़मीन पर बैठना होता है, इसलिए यह यहां सच में ज़्यादा मायने रखता है।' },
           { text: 'For evening party wear, fabrics with sheen or structure (satin, velvet) tend to stand out more under indoor lighting than flat, matte ones.', answer: true,
-            explain: 'True! Evening events are usually indoors under artificial lighting, where sheen and structure catch the light better.' },
+            textHi: 'शाम की पार्टी के लिए, चमकदार या बनावट वाले कपड़े (साटन, वेलवेट) घर के अंदर की रोशनी में फीके कपड़ों से ज़्यादा उभरकर दिखते हैं।',
+            explain: 'True! Evening events are usually indoors under artificial lighting, where sheen and structure catch the light better.',
+            explainHi: 'सच! शाम के समारोह आमतौर पर घर के अंदर कृत्रिम रोशनी में होते हैं, जहां चमक और बनावट रोशनी को बेहतर पकड़ती है।' },
           { text: 'For everyday or office wear, delicate fabrics are worth prioritizing over easy-care ones.', answer: false,
-            explain: "Myth. For clothes you'll wash and wear regularly, low-maintenance fabrics that hold up to frequent washing are worth prioritizing over anything delicate." },
+            textHi: 'रोज़मर्रा या ऑफिस के पहनावे के लिए, नाज़ुक कपड़ों को आसान देखभाल वाले कपड़ों से ज़्यादा तरजीह देनी चाहिए।',
+            explain: "Myth. For clothes you'll wash and wear regularly, low-maintenance fabrics that hold up to frequent washing are worth prioritizing over anything delicate.",
+            explainHi: 'झूठ। जो कपड़े आप बार-बार धोएंगी और पहनेंगी, उनके लिए बार-बार धुलाई झेलने वाले कम देखभाल वाले कपड़ों को नाज़ुक कपड़ों से ज़्यादा तरजीह देना बेहतर है।' },
         ],
       },
       'guide-fabric-glossary': {
         icon: '🧾',
         title: 'Fabric Glossary Check',
+        titleHi: 'कपड़ा शब्दावली जांच',
         subtitle: 'Georgette vs chiffon vs crepe — do you actually know the difference?',
+        subtitleHi: 'जॉर्जेट बनाम शिफॉन बनाम क्रेप — क्या आप सच में फर्क जानती हैं?',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/fabric-glossary.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/fabric-glossary.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'Georgette has more texture and grip than chiffon, which is smoother and sheerer.', answer: true,
-            explain: 'True! Georgette holds embroidery a little more confidently; chiffon is more delicate and slippery, per our glossary.' },
+            textHi: 'जॉर्जेट में शिफॉन से ज़्यादा बनावट और पकड़ होती है, जबकि शिफॉन ज़्यादा चिकना और पारदर्शी होता है।',
+            explain: 'True! Georgette holds embroidery a little more confidently; chiffon is more delicate and slippery, per our glossary.',
+            explainHi: 'सच! जॉर्जेट कढ़ाई को थोड़ा बेहतर पकड़ता है; हमारी शब्दावली के अनुसार शिफॉन ज़्यादा नाज़ुक और फिसलन भरा होता है।' },
           { text: 'Net and organza are basically the same fabric.', answer: false,
-            explain: 'Myth. Net is an open mesh usually layered over something; organza is a solid (if sheer) weave that can stand on its own.' },
+            textHi: 'नेट और ऑर्गेंज़ा असल में एक ही कपड़ा हैं।',
+            explain: 'Myth. Net is an open mesh usually layered over something; organza is a solid (if sheer) weave that can stand on its own.',
+            explainHi: 'झूठ। नेट एक खुली जालीदार बुनाई है जो आमतौर पर किसी और चीज़ के ऊपर लगाई जाती है; ऑर्गेंज़ा एक ठोस (पारदर्शी होते हुए भी) बुनाई है जो खुद खड़ी रह सकती है।' },
           { text: 'Raw silk is smoother and glossier than pure/mulberry silk.', answer: false,
-            explain: "Myth — it's the other way around. Raw silk is textured and matte; pure silk is the smoother, glossier one." },
+            textHi: 'रॉ सिल्क शुद्ध/मलबरी सिल्क से ज़्यादा चिकना और चमकदार होता है।',
+            explain: "Myth — it's the other way around. Raw silk is textured and matte; pure silk is the smoother, glossier one.",
+            explainHi: 'झूठ — यह उल्टा है। रॉ सिल्क बनावट वाला और फीका होता है; शुद्ध सिल्क ज़्यादा चिकना और चमकदार होता है।' },
           { text: 'Satin is defined by its weave, not the fiber it\'s made from.', answer: true,
-            explain: 'True! A tight weave that gives one glossy side and one matte side — that\'s about the weave technique, not a specific fiber.' },
+            textHi: 'साटन की पहचान उसकी बुनाई से होती है, न कि किस रेशे से बना है उससे।',
+            explain: 'True! A tight weave that gives one glossy side and one matte side — that\'s about the weave technique, not a specific fiber.',
+            explainHi: 'सच! एक कसी हुई बुनाई जो एक तरफ चमकदार और दूसरी तरफ फीकी होती है — यह बुनाई की तकनीक की बात है, किसी खास रेशे की नहीं।' },
           { text: 'Crepe has a shiny, glossy finish.', answer: false,
-            explain: 'Myth. Crepe has a matte (non-shiny) finish with a distinctive fine, crinkled texture.' },
+            textHi: 'क्रेप की फिनिश चमकदार होती है।',
+            explain: 'Myth. Crepe has a matte (non-shiny) finish with a distinctive fine, crinkled texture.',
+            explainHi: 'झूठ। क्रेप की फिनिश फीकी (बिना चमक वाली) होती है, जिसमें एक खास बारीक, सिकुड़ी हुई बनावट होती है।' },
         ],
       },
       'guide-blouse-neckline': {
         icon: '👚',
         title: 'Necklines, Sleeves & Backs',
+        titleHi: 'नेकलाइन, आस्तीन और बैक डिज़ाइन',
         subtitle: 'Know your options before your next fitting',
+        subtitleHi: 'अगली फिटिंग से पहले अपने विकल्प जान लें',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/blouse-neckline-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/blouse-neckline-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'A boat neck (bateau) is a deep V-shaped cut.', answer: false,
-            explain: 'Myth. A boat neck is a wide, shallow neckline running almost horizontally from shoulder to shoulder — not a V at all.' },
+            textHi: 'बोट नेक (बातो) एक गहरा V-आकार का कट होता है।',
+            explain: 'Myth. A boat neck is a wide, shallow neckline running almost horizontally from shoulder to shoulder — not a V at all.',
+            explainHi: 'झूठ। बोट नेक एक चौड़ी, उथली नेकलाइन होती है जो लगभग सीधी कंधे से कंधे तक जाती है — यह बिल्कुल V नहीं है।' },
           { text: 'Sleeveless is the most common default style for lehenga blouses.', answer: true,
-            explain: 'True! Clean and versatile — it puts more visual focus on the neckline and embellishment.' },
+            textHi: 'स्लीवलेस लहंगा ब्लाउज़ की सबसे आम डिफॉल्ट स्टाइल है।',
+            explain: 'True! Clean and versatile — it puts more visual focus on the neckline and embellishment.',
+            explainHi: 'सच! साफ-सुथरी और बहुमुखी — यह नेकलाइन और कढ़ाई पर ज़्यादा ध्यान केंद्रित करती है।' },
           { text: 'A halter neck is typically paired with a backless or low-back design.', answer: true,
-            explain: 'True! Straps tie behind the neck rather than over the shoulders, often paired with a backless/low-back design for a striking look.' },
+            textHi: 'हॉल्टर नेक को आमतौर पर बैकलेस या लो-बैक डिज़ाइन के साथ जोड़ा जाता है।',
+            explain: 'True! Straps tie behind the neck rather than over the shoulders, often paired with a backless/low-back design for a striking look.',
+            explainHi: 'सच! पट्टियां कंधों के ऊपर से नहीं बल्कि गर्दन के पीछे बंधती हैं, अक्सर बैकलेस/लो-बैक डिज़ाइन के साथ एक शानदार लुक के लिए जोड़ी जाती हैं।' },
           { text: 'Combining a neckline + sleeve + back style in your description helps both AI Design Studio and our tailors.', answer: true,
-            explain: 'True! E.g. "sweetheart neck, sleeveless, tasseled back" gives something much more specific to work from than "a nice blouse."' },
+            textHi: 'अपने विवरण में नेकलाइन + आस्तीन + बैक स्टाइल एक साथ बताना AI Design Studio और हमारे दर्ज़ियों दोनों के लिए मददगार है।',
+            explain: 'True! E.g. "sweetheart neck, sleeveless, tasseled back" gives something much more specific to work from than "a nice blouse."',
+            explainHi: 'सच! जैसे "स्वीटहार्ट नेक, स्लीवलेस, टसल वाला बैक" — यह "एक अच्छा ब्लाउज़" कहने से कहीं ज़्यादा साफ जानकारी देता है।' },
         ],
       },
       'guide-embroidery': {
         icon: '✨',
         title: 'Know Your Embroidery',
+        titleHi: 'अपनी कढ़ाई को जानें',
         subtitle: "Zardozi, gota patti, thread work — what's actually heavy vs light?",
+        subtitleHi: 'ज़रदोज़ी, गोटा पट्टी, थ्रेड वर्क — असल में क्या भारी है और क्या हल्का?',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/embroidery-work-types-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/embroidery-work-types-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'Zardozi is generally lighter in weight than gota patti.', answer: false,
-            explain: 'Myth. Zardozi is the heaviest — dense metallic-thread work, genuinely heavy both visually and in actual fabric weight. Gota patti is light-medium by comparison.' },
+            textHi: 'ज़रदोज़ी आमतौर पर गोटा पट्टी से हल्की होती है।',
+            explain: 'Myth. Zardozi is the heaviest — dense metallic-thread work, genuinely heavy both visually and in actual fabric weight. Gota patti is light-medium by comparison.',
+            explainHi: 'झूठ। ज़रदोज़ी सबसे भारी होती है — घनी धातु-धागे की कढ़ाई, जो देखने में और कपड़े के वज़न दोनों में सच में भारी होती है। इसकी तुलना में गोटा पट्टी हल्की-मध्यम होती है।' },
           { text: 'Chikankari is traditionally done white-on-white or tone-on-tone.', answer: true,
-            explain: 'True! Delicate, subtle embroidery traditionally white-on-white, now also common in tone-on-tone pastels — a summer festive favorite.' },
+            textHi: 'चिकनकारी पारंपरिक रूप से सफेद-पर-सफेद या टोन-पर-टोन में की जाती है।',
+            explain: 'True! Delicate, subtle embroidery traditionally white-on-white, now also common in tone-on-tone pastels — a summer festive favorite.',
+            explainHi: 'सच! पारंपरिक रूप से सफेद-पर-सफेद नाज़ुक कढ़ाई, अब टोन-पर-टोन पेस्टल रंगों में भी आम है — गर्मी के त्योहारों की पसंदीदा।' },
           { text: 'Sequin and stone work is popular for party wear specifically because it catches and reflects indoor light.', answer: true,
-            explain: "True! Built to catch and reflect light, which is exactly why it's so common under indoor evening lighting." },
+            textHi: 'सीक्विन और स्टोन वर्क पार्टी वियर में खास तौर पर इसलिए लोकप्रिय है क्योंकि यह घर के अंदर की रोशनी को पकड़कर चमकाता है।',
+            explain: "True! Built to catch and reflect light, which is exactly why it's so common under indoor evening lighting.",
+            explainHi: 'सच! यह रोशनी पकड़ने और चमकाने के लिए बना होता है, इसलिए यह शाम की इनडोर रोशनी में इतना आम है।' },
           { text: 'Zardozi embroidery typically takes just a day or two of hand-work.', answer: false,
-            explain: 'Myth. Zardozi can take weeks of hand-work alone, before stitching even begins — genuinely time-intensive.' },
+            textHi: 'ज़रदोज़ी कढ़ाई में आमतौर पर सिर्फ एक-दो दिन का हाथ का काम लगता है।',
+            explain: 'Myth. Zardozi can take weeks of hand-work alone, before stitching even begins — genuinely time-intensive.',
+            explainHi: 'झूठ। ज़रदोज़ी में सिलाई शुरू होने से पहले ही हफ्तों का हाथ का काम लग सकता है — यह सच में बहुत समय लेने वाला काम है।' },
           { text: "Naming the specific technique (not just \"heavy work\") helps get a more honest cost and timeline estimate.", answer: true,
-            explain: 'True! It gives both the AI and our tailors a clearer starting point, and helps give a more honest read on timeline and cost upfront.' },
+            textHi: 'सिर्फ "भारी काम" कहने के बजाय खास तकनीक का नाम बताने से लागत और समय का ज़्यादा ईमानदार अनुमान मिलता है।',
+            explain: 'True! It gives both the AI and our tailors a clearer starting point, and helps give a more honest read on timeline and cost upfront.',
+            explainHi: 'सच! यह AI और हमारे दर्ज़ियों दोनों को एक साफ शुरुआती बिंदु देता है, और समय व लागत का पहले से ही ज़्यादा ईमानदार अंदाज़ा देने में मदद करता है।' },
         ],
       },
       'guide-fitting': {
         icon: '📅',
         title: 'Fitting Appointment Know-How',
+        titleHi: 'फिटिंग अपॉइंटमेंट की जानकारी',
         subtitle: 'What actually happens, and how many rounds you\'ll need',
+        subtitleHi: 'असल में क्या होता है, और आपको कितने राउंड चाहिए होंगे',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/fitting-appointment-faq.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/fitting-appointment-faq.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'A friend or family member of similar size can be fitted on your behalf.', answer: false,
-            explain: "Myth. Fit can't be reliably transferred from someone else's body, even a similar size — measurements need to be taken on the actual person who'll wear the outfit." },
+            textHi: 'आपकी जगह मिलते-जुलते साइज़ की सहेली या परिवार का सदस्य फिटिंग करवा सकता है।',
+            explain: "Myth. Fit can't be reliably transferred from someone else's body, even a similar size — measurements need to be taken on the actual person who'll wear the outfit.",
+            explainHi: 'झूठ। फिट किसी और के शरीर से, भले ही साइज़ मिलता-जुलता हो, भरोसे से ट्रांसफर नहीं हो सकता — माप उसी व्यक्ति की लेनी होती है जो आउटफिट पहनेगा।' },
           { text: 'Most outfits need just one fitting round near the end of stitching.', answer: true,
-            explain: 'True! Bridal and heavily embroidered pieces usually need 2-3 rounds; most other outfits need just one.' },
+            textHi: 'ज़्यादातर आउटफिट को सिलाई के आखिर में सिर्फ एक फिटिंग राउंड चाहिए होता है।',
+            explain: 'True! Bridal and heavily embroidered pieces usually need 2-3 rounds; most other outfits need just one.',
+            explainHi: 'सच! दुल्हन के और भारी कढ़ाई वाले कपड़ों को आमतौर पर 2-3 राउंड चाहिए होते हैं; बाकी ज़्यादातर आउटफिट को सिर्फ एक।' },
           { text: "Booking ahead through your account guarantees a slot; walk-ins are only accepted if there's availability.", answer: true,
-            explain: 'True! Booking ahead lets us prep your order and measurements before you arrive — walk-ins are welcome only when we have availability.' },
+            textHi: 'अपने अकाउंट से पहले से बुकिंग करने पर स्लॉट पक्का मिलता है; बिना अपॉइंटमेंट सिर्फ खाली स्लॉट होने पर ही मिलता है।',
+            explain: 'True! Booking ahead lets us prep your order and measurements before you arrive — walk-ins are welcome only when we have availability.',
+            explainHi: 'सच! पहले से बुकिंग करने से हम आपके आने से पहले ऑर्डर और माप तैयार रख सकते हैं — बिना अपॉइंटमेंट आना सिर्फ तभी संभव है जब जगह खाली हो।' },
           { text: "It's better to wait until you've taken the outfit home to flag a fit issue.", answer: false,
-            explain: "Myth. Flagging it at the fitting, rather than after you've left with the outfit, is always the easiest way to fix it." },
+            textHi: 'फिट की समस्या बताने के लिए आउटफिट घर ले जाने तक इंतज़ार करना बेहतर है।',
+            explain: "Myth. Flagging it at the fitting, rather than after you've left with the outfit, is always the easiest way to fix it.",
+            explainHi: 'झूठ। आउटफिट लेकर जाने के बाद की बजाय फिटिंग के समय ही बताना हमेशा ठीक करने का सबसे आसान तरीका है।' },
           { text: 'A straightforward fitting typically takes 20–30 minutes.', answer: true,
-            explain: "True! Bridal or heavily detailed outfits can take longer since there's more to check — drape, embellishment placement, overall balance." },
+            textHi: 'एक सीधी-सादी फिटिंग में आमतौर पर 20–30 मिनट लगते हैं।',
+            explain: "True! Bridal or heavily detailed outfits can take longer since there's more to check — drape, embellishment placement, overall balance.",
+            explainHi: 'सच! दुल्हन के या बारीक काम वाले आउटफिट में ज़्यादा समय लग सकता है क्योंकि जांचने के लिए और भी बातें होती हैं — ड्रेप, कढ़ाई की जगह, पूरा संतुलन।' },
         ],
       },
       'guide-booking-timeline': {
         icon: '🪔',
         title: 'Wedding Booking Timeline: Myth or Fact?',
+        titleHi: 'शादी बुकिंग समय-सीमा: सच या झूठ?',
         subtitle: 'How far ahead you actually need to book, by outfit type',
+        subtitleHi: 'आउटफिट के हिसाब से आपको असल में कितनी पहले बुकिंग करनी चाहिए',
         type: 'myth-fact',
         resultCtaHtml: '<a href="/wedding-season-booking-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 Read the Full Guide →</a>',
+        resultCtaHtmlHi: '<a href="/wedding-season-booking-guide.html" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">📖 पूरी गाइड पढ़ें →</a>',
         questions: [
           { text: 'Bridal lehengas and heavily embroidered outfits should ideally be booked 3+ months ahead.', answer: true,
-            explain: 'True! Heavy zardozi and hand embroidery take real time — often several weeks of hand-work alone before stitching even begins — plus 2-3 fitting rounds.' },
+            textHi: 'दुल्हन के लहंगे और भारी कढ़ाई वाले आउटफिट आदर्श रूप से 3+ महीने पहले बुक करने चाहिए।',
+            explain: 'True! Heavy zardozi and hand embroidery take real time — often several weeks of hand-work alone before stitching even begins — plus 2-3 fitting rounds.',
+            explainHi: 'सच! भारी ज़रदोज़ी और हाथ की कढ़ाई में असल में समय लगता है — अक्सर सिलाई शुरू होने से पहले ही हफ्तों का हाथ का काम, साथ ही 2-3 फिटिंग राउंड।' },
           { text: 'Sangeet, reception, mehendi and haldi outfits need the same 3+ month lead time as bridal wear.', answer: false,
-            explain: 'Myth. They typically need 6-8 weeks — enough time for a moderately-worked outfit without a bridal-level hand-embroidery timeline.' },
+            textHi: 'संगीत, रिसेप्शन, मेहंदी और हल्दी के आउटफिट को भी दुल्हन के कपड़ों जितना ही 3+ महीने पहले बुक करना चाहिए।',
+            explain: 'Myth. They typically need 6-8 weeks — enough time for a moderately-worked outfit without a bridal-level hand-embroidery timeline.',
+            explainHi: 'झूठ। इन्हें आमतौर पर 6-8 हफ्ते चाहिए होते हैं — मध्यम काम वाले आउटफिट के लिए काफी समय, बिना दुल्हन जैसी हाथ की कढ़ाई की समय-सीमा के।' },
           { text: 'Rush orders (1-2 weeks out) can usually accommodate heavy bridal embroidery if you ask.', answer: false,
-            explain: "Myth. Heavy embroidery or bridal work genuinely isn't realistic in that window — not unwillingness, but hand-work that can't be compressed without quality suffering." },
+            textHi: 'जल्दी वाले ऑर्डर (1-2 हफ्ते में) में पूछने पर आमतौर पर भारी दुल्हन कढ़ाई भी हो सकती है।',
+            explain: "Myth. Heavy embroidery or bridal work genuinely isn't realistic in that window — not unwillingness, but hand-work that can't be compressed without quality suffering.",
+            explainHi: 'झूठ। इतने कम समय में भारी कढ़ाई या दुल्हन का काम सच में संभव नहीं है — यह इच्छा की कमी नहीं, बल्कि हाथ का काम है जिसे गुणवत्ता खराब किए बिना छोटा नहीं किया जा सकता।' },
           { text: 'October to February is wedding season in North India, and order books fill up fastest in this window.', answer: true,
-            explain: 'True! Booking at the earlier end of each timeframe gives real breathing room instead of a tight squeeze if your event falls in this window.' },
+            textHi: 'उत्तर भारत में अक्टूबर से फरवरी शादी का मौसम है, और इस दौरान बुकिंग सबसे तेज़ी से भरती है।',
+            explain: "True! Booking at the earlier end of each timeframe gives real breathing room instead of a tight squeeze if your event falls in this window.",
+            explainHi: 'सच! अगर आपका समारोह इस दौरान है, तो हर समय-सीमा के शुरुआती हिस्से में बुकिंग करने से आराम रहता है, आखिरी समय की भागदौड़ नहीं होती।' },
           { text: "Fabric that's already in stock moves faster than fabric that needs sourcing.", answer: true,
-            explain: "True! Especially for guest outfits and simpler designs — flexibility on fabric choice helps speed things up at that stage." },
+            textHi: 'जो कपड़ा पहले से स्टॉक में है वह उस कपड़े से तेज़ी से आगे बढ़ता है जिसे मंगवाना पड़े।',
+            explain: 'True! Especially for guest outfits and simpler designs — flexibility on fabric choice helps speed things up at that stage.',
+            explainHi: 'सच! खासकर मेहमानों के आउटफिट और सरल डिज़ाइन के लिए — कपड़े के चुनाव में लचीलापन इस स्टेज पर काम तेज़ करने में मदद करता है।' },
         ],
       },
     };
 
     const FABRIC_RESULTS = [
-      { name: 'Georgette', tagline: 'Light, flowy, and effortlessly elegant.',
+      { name: 'Georgette', nameHi: 'जॉर्जेट', tagline: 'Light, flowy, and effortlessly elegant.', taglineHi: 'हल्का, बहता हुआ और सहज खूबसूरत।',
         desc: 'Soft drape, breathable, and forgiving in heat — a go-to for flowing anarkalis and gowns that still photograph beautifully.',
+        descHi: 'नरम ड्रेप, हवादार, और गर्मी में आरामदायक — बहते हुए अनारकली और गाउन के लिए पसंदीदा, जो फोटो में भी खूबसूरत लगते हैं।',
         match: { occasion: ['everyday', 'party'], climate: ['hot', 'moderate'], maintenance: ['low', 'medium'], priority: ['comfort', 'balance'] } },
-      { name: 'Chiffon', tagline: 'Featherlight and romantic.',
+      { name: 'Chiffon', nameHi: 'शिफॉन', tagline: 'Featherlight and romantic.', taglineHi: 'पंख जैसा हल्का और रोमांटिक।',
         desc: 'Sheer, airy, and wonderfully comfortable even in peak summer — ideal for layered dupattas and soft silhouettes.',
+        descHi: 'पारदर्शी, हवादार, और कड़ी गर्मी में भी शानदार आरामदायक — लेयर्ड दुपट्टे और नरम सिल्हूट के लिए बेहतरीन।',
         match: { occasion: ['everyday', 'festival'], climate: ['hot'], maintenance: ['low', 'medium'], priority: ['comfort'] } },
-      { name: 'Banarasi Silk', tagline: 'Rich, regal, unmistakably bridal.',
+      { name: 'Banarasi Silk', nameHi: 'बनारसी सिल्क', tagline: 'Rich, regal, unmistakably bridal.', taglineHi: 'शाही, भव्य, साफ तौर पर दुल्हन के लिए।',
         desc: 'Heavy zari work and real weight in hand — the fabric of heirlooms, built for the moments that call for maximum presence.',
+        descHi: 'भारी ज़री का काम और हाथ में असली वज़न — विरासत का कपड़ा, उन पलों के लिए जहां सबसे ज़्यादा शान चाहिए।',
         match: { occasion: ['wedding'], climate: ['moderate', 'cold'], maintenance: ['high'], priority: ['richness'] } },
-      { name: 'Velvet', tagline: 'Deep, plush, made for winter drama.',
+      { name: 'Velvet', nameHi: 'वेलवेट', tagline: 'Deep, plush, made for winter drama.', taglineHi: 'गहरा, मुलायम, सर्दी के जलवे के लिए बना।',
         desc: 'Rich texture and warmth that photographs stunning under any light — a natural fit for winter weddings and evening events.',
+        descHi: 'शानदार बनावट और गर्माहट जो किसी भी रोशनी में शानदार दिखती है — सर्दी की शादियों और शाम के समारोहों के लिए बिल्कुल सही।',
         match: { occasion: ['wedding', 'party'], climate: ['cold'], maintenance: ['high'], priority: ['richness', 'balance'] } },
-      { name: 'Cotton Silk', tagline: 'The practical everyday favorite.',
+      { name: 'Cotton Silk', nameHi: 'कॉटन सिल्क', tagline: 'The practical everyday favorite.', taglineHi: 'रोज़मर्रा के लिए व्यावहारिक पसंद।',
         desc: 'A comfortable middle ground — enough structure to look put-together, easy enough to actually wear and wash often.',
+        descHi: 'एक आरामदायक बीच का रास्ता — इतनी बनावट कि सजा-धजा लगे, और इतना आसान कि बार-बार पहना और धोया जा सके।',
         match: { occasion: ['everyday', 'festival'], climate: ['moderate', 'hot'], maintenance: ['low'], priority: ['comfort', 'balance'] } },
-      { name: 'Organza', tagline: 'Crisp, structured, quietly striking.',
+      { name: 'Organza', nameHi: 'ऑर्गेंज़ा', tagline: 'Crisp, structured, quietly striking.', taglineHi: 'कड़क, सुडौल, चुपचाप आकर्षक।',
         desc: 'Holds its shape beautifully for statement sleeves and voluminous silhouettes, with a subtle sheen that catches the light.',
+        descHi: 'स्टेटमेंट आस्तीन और भरे-पूरे सिल्हूट के लिए खूबसूरती से अपना आकार बनाए रखता है, हल्की चमक के साथ जो रोशनी को पकड़ती है।',
         match: { occasion: ['party', 'festival'], climate: ['moderate'], maintenance: ['high', 'medium'], priority: ['richness', 'balance'] } },
     ];
 
@@ -17104,10 +17321,10 @@
       });
       return {
         emoji: '🧵',
-        name: best.name,
-        tagline: best.tagline,
-        desc: best.desc,
-        ctaHtml: `<button type="button" class="btn-submit" onclick="useFabricInDesign('${best.name.replace(/'/g, "\\'")}')">✨ Design Something in This Fabric →</button>`,
+        name: tq(best, 'name'),
+        tagline: tq(best, 'tagline'),
+        desc: tq(best, 'desc'),
+        ctaHtml: `<button type="button" class="btn-submit" onclick="useFabricInDesign('${best.name.replace(/'/g, "\\'")}')">${ui('designInThis')}</button>`,
       };
     }
 
@@ -17126,14 +17343,18 @@
     }
 
     const WEDDING_VERDICTS = {
-      perfectTiming: { emoji: '🌟', name: 'Perfect Timing', tagline: "You're right on schedule.",
-        desc: "6+ months out and nothing started yet is honestly the ideal window — plenty of time for thoughtful design, fittings, and alterations, no last-minute stress." },
-      onTrack: { emoji: '✅', name: "You're On Track", tagline: 'Keep the momentum going.',
-        desc: "You've already got things moving — stay on this pace and you'll be in great shape well before the big day." },
-      startSoon: { emoji: '⏳', name: 'Time to Get Moving', tagline: "Still doable — but don't wait.",
-        desc: 'Stitching, fittings and alterations take real time. This is the week to actually start, not just think about it.' },
-      urgent: { emoji: '🚨', name: "Let's Talk Today", tagline: 'This calls for a direct conversation.',
-        desc: "With this little time left, the fastest path forward is messaging us directly so we can figure out what's genuinely possible." },
+      perfectTiming: { emoji: '🌟', name: 'Perfect Timing', nameHi: 'एकदम सही समय', tagline: "You're right on schedule.", taglineHi: 'आप बिल्कुल सही समय पर हैं।',
+        desc: "6+ months out and nothing started yet is honestly the ideal window — plenty of time for thoughtful design, fittings, and alterations, no last-minute stress.",
+        descHi: 'अभी 6+ महीने बाकी हैं और कुछ शुरू नहीं किया, यह ईमानदारी से आदर्श समय है — सोच-समझकर डिज़ाइन, फिटिंग और अल्टरेशन के लिए ढेर सारा समय, कोई आखिरी समय की भागदौड़ नहीं।' },
+      onTrack: { emoji: '✅', name: "You're On Track", nameHi: 'आप सही रफ़्तार पर हैं', tagline: 'Keep the momentum going.', taglineHi: 'यह रफ़्तार बनाए रखें।',
+        desc: "You've already got things moving — stay on this pace and you'll be in great shape well before the big day.",
+        descHi: 'आपने पहले ही काम शुरू कर दिया है — यही रफ़्तार बनाए रखें और बड़े दिन से काफी पहले सब तैयार हो जाएगा।' },
+      startSoon: { emoji: '⏳', name: 'Time to Get Moving', nameHi: 'अब शुरू करने का समय', tagline: "Still doable — but don't wait.", taglineHi: 'अभी भी हो सकता है — लेकिन इंतज़ार न करें।',
+        desc: 'Stitching, fittings and alterations take real time. This is the week to actually start, not just think about it.',
+        descHi: 'सिलाई, फिटिंग और अल्टरेशन में असल में समय लगता है। यह हफ्ता सोचने का नहीं, असल में शुरू करने का है।' },
+      urgent: { emoji: '🚨', name: "Let's Talk Today", nameHi: 'चलिए आज ही बात करते हैं', tagline: 'This calls for a direct conversation.', taglineHi: 'इसके लिए सीधी बातचीत ज़रूरी है।',
+        desc: "With this little time left, the fastest path forward is messaging us directly so we can figure out what's genuinely possible.",
+        descHi: 'इतना कम समय बचा है, आगे बढ़ने का सबसे तेज़ तरीका है सीधे हमें मैसेज करना ताकि हम समझ सकें कि असल में क्या संभव है।' },
     };
 
     function pickWeddingVerdict(answers) {
@@ -17149,17 +17370,23 @@
 
       let ctaHtml;
       if (verdict === WEDDING_VERDICTS.urgent) {
-        ctaHtml = `<a href="https://wa.me/919899810977?text=${encodeURIComponent("Hi! My event is coming up soon and I need help getting my outfits sorted quickly.")}" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">💬 WhatsApp Us Now</a>`;
+        ctaHtml = `<a href="https://wa.me/919899810977?text=${encodeURIComponent(ui('whatsappMsg'))}" target="_blank" rel="noopener" class="btn-submit" style="text-decoration:none; display:inline-block;">${ui('whatsappNow')}</a>`;
       } else if (verdict === WEDDING_VERDICTS.onTrack) {
         // Already in motion — a guide (fitting prep, booking timeline)
         // is more useful right now than another nudge to start
         // designing, which they're already doing.
-        ctaHtml = `<button type="button" class="btn-submit" onclick="scrollToSection('guidesShowcaseSection'); exitQuiz();">📚 See Helpful Guides →</button>`;
+        ctaHtml = `<button type="button" class="btn-submit" onclick="scrollToSection('guidesShowcaseSection'); exitQuiz();">${ui('seeGuides')}</button>`;
       } else {
-        ctaHtml = `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Start Designing Now →</button>`;
+        ctaHtml = `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">${ui('startDesigning')}</button>`;
       }
 
-      return { ...verdict, ctaHtml };
+      return {
+        emoji: verdict.emoji,
+        name: tq(verdict, 'name'),
+        tagline: tq(verdict, 'tagline'),
+        desc: tq(verdict, 'desc'),
+        ctaHtml,
+      };
     }
 
     let activeQuizId = null;
@@ -17194,17 +17421,18 @@
       container.innerHTML = entries.map(([id, q]) => `
         <div onclick="startQuiz('${id}')" style="cursor:pointer; border:1.5px solid #E5DCC8; border-radius:12px; padding:16px; text-align:center; transition:border-color 0.2s;" onmouseenter="this.style.borderColor='var(--vivid)'" onmouseleave="this.style.borderColor='#E5DCC8'">
           <div style="font-size:32px; margin-bottom:8px;">${q.icon}</div>
-          <div style="font-weight:700; font-size:15px; margin-bottom:4px;">${q.title}</div>
-          <div style="font-size:12px; color:var(--text-muted);">${q.subtitle}</div>
+          <div style="font-weight:700; font-size:15px; margin-bottom:4px;">${tq(q, 'title')}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${tq(q, 'subtitle')}</div>
         </div>
       `).join('');
 
       if (controls) {
         controls.innerHTML = quizPickerShowAll
-          ? `<button type="button" onclick="quizPickerShowAll=false; renderQuizPickerCards();" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer;">🔀 Show me a few, not all ${allEntries.length}</button>`
-          : `<button type="button" onclick="renderQuizPickerCards();" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer; margin-right:16px;">🔀 Show different quizzes</button>
-             <button type="button" onclick="quizPickerShowAll=true; renderQuizPickerCards();" style="background:none; border:none; color:var(--text-muted); font-size:12.5px; font-weight:600; cursor:pointer;">See all ${allEntries.length} quizzes →</button>`;
+          ? `<button type="button" onclick="quizPickerShowAll=false; renderQuizPickerCards();" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer;">${ui('showFew', allEntries.length)}</button>`
+          : `<button type="button" onclick="renderQuizPickerCards();" style="background:none; border:none; color:var(--vivid); font-size:12.5px; font-weight:600; cursor:pointer; margin-right:16px;">${ui('showDifferent')}</button>
+             <button type="button" onclick="quizPickerShowAll=true; renderQuizPickerCards();" style="background:none; border:none; color:var(--text-muted); font-size:12.5px; font-weight:600; cursor:pointer;">${ui('seeAll', allEntries.length)}</button>`;
       }
+      updateLangToggleLabel();
     }
 
     function startQuiz(quizId) {
@@ -17241,17 +17469,17 @@
       const area = document.getElementById('quizActiveArea');
       const q = activeQuizQuestions[activeQuizStep];
       const total = activeQuizQuestions.length;
-      const backBtn = `<button type="button" onclick="exitQuiz()" style="background:none; border:none; color:var(--text-muted); font-size:12px; cursor:pointer; margin-bottom:10px;">← Back to quizzes</button>`;
+      const backBtn = `<button type="button" onclick="exitQuiz()" style="background:none; border:none; color:var(--text-muted); font-size:12px; cursor:pointer; margin-bottom:10px;">${ui('backToQuizzes')}</button>`;
 
       if (quiz.type === 'myth-fact') {
         area.innerHTML = `
           ${backBtn}
           ${renderQuizProgressDots(total, activeQuizStep)}
-          <div style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:6px;">Question ${activeQuizStep + 1} of ${total}</div>
-          <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:18px; max-width:480px; margin-left:auto; margin-right:auto;">${q.text}</div>
+          <div style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:6px;">${ui('question')} ${activeQuizStep + 1} ${ui('of')} ${total}</div>
+          <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:18px; max-width:480px; margin-left:auto; margin-right:auto;">${tq(q, 'text')}</div>
           <div style="display:flex; gap:12px; justify-content:center;">
-            <button type="button" class="quiz-tag" style="padding:12px 28px; font-size:15px;" onclick="answerMythFact(true)">✅ Fact</button>
-            <button type="button" class="quiz-tag" style="padding:12px 28px; font-size:15px;" onclick="answerMythFact(false)">❌ Myth</button>
+            <button type="button" class="quiz-tag" style="padding:12px 28px; font-size:15px;" onclick="answerMythFact(true)">${ui('fact')}</button>
+            <button type="button" class="quiz-tag" style="padding:12px 28px; font-size:15px;" onclick="answerMythFact(false)">${ui('myth')}</button>
           </div>
           <div id="mythFactFeedback"></div>
         `;
@@ -17259,9 +17487,9 @@
         area.innerHTML = `
           ${backBtn}
           ${renderQuizProgressDots(total, activeQuizStep)}
-          <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:14px;">${q.label}</div>
+          <div style="text-align:center; font-weight:700; font-size:17px; margin-bottom:14px;">${tq(q, 'label')}</div>
           <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
-            ${q.options.map((opt, i) => `<button type="button" class="quiz-tag" style="font-size:14px; padding:10px 16px;" onclick="answerScoredQuestion(${i})">${opt.label}</button>`).join('')}
+            ${q.options.map((opt, i) => `<button type="button" class="quiz-tag" style="font-size:14px; padding:10px 16px;" onclick="answerScoredQuestion(${i})">${tq(opt, 'label')}</button>`).join('')}
           </div>
         `;
       }
@@ -17275,11 +17503,11 @@
       if (!feedback) return;
       feedback.innerHTML = `
         <div style="margin-top:16px; padding:12px 14px; border-radius:10px; background:${correct ? '#eafaf0' : '#fdf2f2'}; border:1px solid ${correct ? '#8fd4a8' : '#f0b8b8'};">
-          <div style="font-weight:700; font-size:13px; margin-bottom:4px; color:${correct ? '#1f7a3f' : '#a83a3a'};">${correct ? '✅ Correct!' : (q.answer ? '❌ Actually — Fact!' : '❌ Actually — Myth!')}</div>
-          <div style="font-size:13px; color:var(--ink);">${q.explain}</div>
+          <div style="font-weight:700; font-size:13px; margin-bottom:4px; color:${correct ? '#1f7a3f' : '#a83a3a'};">${correct ? ui('correct') : (q.answer ? ui('actuallyFact') : ui('actuallyMyth'))}</div>
+          <div style="font-size:13px; color:var(--ink);">${tq(q, 'explain')}</div>
         </div>
         <div style="text-align:center; margin-top:14px;">
-          <button type="button" class="btn-submit" onclick="advanceQuiz()">${activeQuizStep + 1 < activeQuizQuestions.length ? 'Next →' : 'See My Score →'}</button>
+          <button type="button" class="btn-submit" onclick="advanceQuiz()">${activeQuizStep + 1 < activeQuizQuestions.length ? ui('next') : ui('seeScore')}</button>
         </div>
       `;
     }
@@ -17308,11 +17536,11 @@
         const total = activeQuizQuestions.length;
         const pct = Math.round((activeQuizScore / total) * 100);
         let verdict;
-        if (pct === 100) verdict = "Perfect score! You clearly know your stuff here. ✨";
-        else if (pct >= 60) verdict = "Pretty solid! A couple of surprises there, but you're mostly in the know.";
-        else verdict = "Good news — there's more useful stuff here than you thought!";
+        if (pct === 100) verdict = ui('perfectScore');
+        else if (pct >= 60) verdict = ui('prettySolid');
+        else verdict = ui('goodNews');
 
-        const ctaHtml = quiz.resultCtaHtml || `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">✨ Try It For Real →</button>`;
+        const ctaHtml = (siteLang === 'hi' && quiz.resultCtaHtmlHi) || quiz.resultCtaHtml || `<button type="button" class="btn-submit" onclick="scrollToSection('landingDesignPreview'); exitQuiz();">${ui('tryItForReal')}</button>`;
 
         area.innerHTML = `
           <div style="text-align:center; padding:24px 20px;">
@@ -17321,8 +17549,8 @@
             <div style="font-size:14px; color:var(--text-muted); max-width:420px; margin:0 auto 20px;">${verdict}</div>
             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
               ${ctaHtml}
-              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">🔄 Retake</button>
-              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">← Other Quizzes</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">${ui('retake')}</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">${ui('otherQuizzes')}</button>
             </div>
           </div>
         `;
@@ -17336,8 +17564,8 @@
             <div style="font-size:13.5px; line-height:1.6; max-width:460px; margin:0 auto 20px; color:var(--text-muted);">${result.desc}</div>
             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
               ${result.ctaHtml}
-              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">🔄 Retake</button>
-              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">← Other Quizzes</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid var(--vivid); background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="startQuiz('${activeQuizId}')">${ui('retake')}</button>
+              <button type="button" style="padding:10px 18px; border-radius:10px; border:1.5px solid #ddd; background:white; color:var(--ink); font-weight:600; cursor:pointer;" onclick="exitQuiz()">${ui('otherQuizzes')}</button>
             </div>
           </div>
         `;

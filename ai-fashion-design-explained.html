@@ -106,6 +106,8 @@
     color: var(--text-muted);
   }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -115,59 +117,122 @@
 </header>
 
 <main>
-  <h1>How AI Fashion Design Actually Works — And Why Most of It Stops Short of a Real Garment</h1>
-  <p class="subtitle">A plain look at what AI fashion design tools actually do, where they fall short for custom stitching, and how Gurbani Fashion built AI Design Studio to close that gap in Faridabad, NCR.</p>
-
-  <h2>What "AI fashion design" actually means</h2>
-  <p>At its core, an AI fashion design tool takes a description or a reference photo and generates a photorealistic image of a garment. Type "a blush pink lehenga with pearl embroidery" or upload a fabric swatch you love, and within seconds you get back a visual — something that didn't exist a moment ago, rendered as if it were a professional product photograph.</p>
-  <p>This works using image-generation models (the same underlying technology behind tools like Midjourney or DALL-E, applied specifically to fashion). The model has learned from vast amounts of clothing imagery what garments, fabrics, embroidery, and draping actually look like, and it uses that understanding to generate something new based on your description.</p>
-
-  <h2>The part most AI fashion tools stop at</h2>
-  <p>Here's the honest limitation almost nobody talks about: a generated image is not a sewing pattern. It's not a bill of materials. It's not something a tailor can cut fabric from. It's a picture of an idea — genuinely useful for visualizing a concept, completely insufficient on its own for actually making the garment.</p>
-  <p>Most AI fashion generators — the ones built for brands, designers, and content creators — are concepting tools. They're excellent at generating lookbook images, testing color variations, or visualizing a design direction. But there's no built-in path from "here's an image" to "here's a finished piece of clothing in your hands," because that was never the tool's job. Genuine pattern-drafting — seam allowances, dart placement, grain lines, panel curves — remains skilled human work, and honestly, still an open research problem even for large fashion-tech companies with dedicated R&D.</p>
-
-  <h2>How Gurbani Fashion's AI Design Studio is different</h2>
-  <p>We built AI Design Studio specifically to bridge that gap — not by trying to automate pattern-making (we don't believe that's solved, and we're not going to pretend it is), but by connecting AI-generated design concepts to an actual, real-world stitching pipeline, run by a real boutique in Faridabad.</p>
-
-  <h3>1. Describe it, or show it</h3>
-  <p>Tell us what you're picturing in your own words, or upload a reference photo — a fabric swatch you love, an outfit that inspired you, even a rough sketch. You get back three distinct AI-generated design concepts, each with its own title and description, free to explore.</p>
-
-  <h3>2. Real fabric, checked against what's actually in stock</h3>
-  <p>This is the step most AI design tools skip entirely: we check your chosen concept against Gurbani Fashion's actual physical inventory — fabric, lace, lining — so you know immediately what's ready to go and what needs sourcing. An AI image can suggest "rose gold lace"; we can tell you whether we actually have rose gold lace on the shelf right now.</p>
-
-  <h3>3. A real tailor takes it from there</h3>
-  <p>Once you're happy with a design and your measurements are on file, it goes to Sonia and her team for actual cutting and stitching — the same skilled hand-tailoring process any custom boutique uses, just starting from an AI-assisted design instead of a hand-drawn sketch or a catalogue browse.</p>
-
-  <div class="callout">
-    <strong>The honest summary:</strong> the AI generates the <em>vision</em>. Real fabric, real measurements, and a real tailor turn that vision into a <em>garment</em>. Neither half works without the other — and that combination, not the AI generation alone, is what actually gets you a finished outfit.
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <h2>Frequently asked questions</h2>
+  <div id="langEn">
+    <h1>How AI Fashion Design Actually Works — And Why Most of It Stops Short of a Real Garment</h1>
+    <p class="subtitle">A plain look at what AI fashion design tools actually do, where they fall short for custom stitching, and how Gurbani Fashion built AI Design Studio to close that gap in Faridabad, NCR.</p>
 
-  <div class="faq-item">
-    <h3>Is AI fashion design the same as ordering ready-made clothes online?</h3>
-    <p>No — AI Design Studio generates a starting concept, but every garment is still cut and stitched to your own measurements, not pulled off a rack or a pre-made size chart. It's custom stitching with an AI-assisted starting point, not e-commerce.</p>
+    <h2>What "AI fashion design" actually means</h2>
+    <p>At its core, an AI fashion design tool takes a description or a reference photo and generates a photorealistic image of a garment. Type "a blush pink lehenga with pearl embroidery" or upload a fabric swatch you love, and within seconds you get back a visual — something that didn't exist a moment ago, rendered as if it were a professional product photograph.</p>
+    <p>This works using image-generation models (the same underlying technology behind tools like Midjourney or DALL-E, applied specifically to fashion). The model has learned from vast amounts of clothing imagery what garments, fabrics, embroidery, and draping actually look like, and it uses that understanding to generate something new based on your description.</p>
+
+    <h2>The part most AI fashion tools stop at</h2>
+    <p>Here's the honest limitation almost nobody talks about: a generated image is not a sewing pattern. It's not a bill of materials. It's not something a tailor can cut fabric from. It's a picture of an idea — genuinely useful for visualizing a concept, completely insufficient on its own for actually making the garment.</p>
+    <p>Most AI fashion generators — the ones built for brands, designers, and content creators — are concepting tools. They're excellent at generating lookbook images, testing color variations, or visualizing a design direction. But there's no built-in path from "here's an image" to "here's a finished piece of clothing in your hands," because that was never the tool's job. Genuine pattern-drafting — seam allowances, dart placement, grain lines, panel curves — remains skilled human work, and honestly, still an open research problem even for large fashion-tech companies with dedicated R&D.</p>
+
+    <h2>How Gurbani Fashion's AI Design Studio is different</h2>
+    <p>We built AI Design Studio specifically to bridge that gap — not by trying to automate pattern-making (we don't believe that's solved, and we're not going to pretend it is), but by connecting AI-generated design concepts to an actual, real-world stitching pipeline, run by a real boutique in Faridabad.</p>
+
+    <h3>1. Describe it, or show it</h3>
+    <p>Tell us what you're picturing in your own words, or upload a reference photo — a fabric swatch you love, an outfit that inspired you, even a rough sketch. You get back three distinct AI-generated design concepts, each with its own title and description, free to explore.</p>
+
+    <h3>2. Real fabric, checked against what's actually in stock</h3>
+    <p>This is the step most AI design tools skip entirely: we check your chosen concept against Gurbani Fashion's actual physical inventory — fabric, lace, lining — so you know immediately what's ready to go and what needs sourcing. An AI image can suggest "rose gold lace"; we can tell you whether we actually have rose gold lace on the shelf right now.</p>
+
+    <h3>3. A real tailor takes it from there</h3>
+    <p>Once you're happy with a design and your measurements are on file, it goes to Sonia and her team for actual cutting and stitching — the same skilled hand-tailoring process any custom boutique uses, just starting from an AI-assisted design instead of a hand-drawn sketch or a catalogue browse.</p>
+
+    <div class="callout">
+      <strong>The honest summary:</strong> the AI generates the <em>vision</em>. Real fabric, real measurements, and a real tailor turn that vision into a <em>garment</em>. Neither half works without the other — and that combination, not the AI generation alone, is what actually gets you a finished outfit.
+    </div>
+
+    <h2>Frequently asked questions</h2>
+
+    <div class="faq-item">
+      <h3>Is AI fashion design the same as ordering ready-made clothes online?</h3>
+      <p>No — AI Design Studio generates a starting concept, but every garment is still cut and stitched to your own measurements, not pulled off a rack or a pre-made size chart. It's custom stitching with an AI-assisted starting point, not e-commerce.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Do I need any design experience to use it?</h3>
+      <p>No. Most people just describe what they're picturing in plain language — "a mustard yellow anarkali with gold thread work for a Diwali function" is a completely normal, usable description.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Is AI-generated fashion design available in India, specifically for custom stitching?</h3>
+      <p>Gurbani Fashion's AI Design Studio is built exactly for this — Indian ethnic and western wear, generated as design concepts and then custom-stitched in Faridabad, NCR. Most AI fashion tools are built for brands and designers, not connected to an actual local tailoring service — this is the specific gap we built to fill.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Does using AI make the design less "mine"?</h3>
+      <p>The AI generates a starting concept from your own description or reference photos — it's guided entirely by what you tell it you want, not a generic template. And once it's ordered, the finished garment is cut and stitched specifically to your measurements, same as any custom piece.</p>
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">See it for yourself</h2>
+      <p>Free to try — describe your outfit, get 3 AI-generated design concepts back in minutes.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    </div>
   </div>
 
-  <div class="faq-item">
-    <h3>Do I need any design experience to use it?</h3>
-    <p>No. Most people just describe what they're picturing in plain language — "a mustard yellow anarkali with gold thread work for a Diwali function" is a completely normal, usable description.</p>
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>AI फैशन डिज़ाइन असल में कैसे काम करता है — और ज़्यादातर यह असली आउटफिट से पहले क्यों रुक जाता है</h1>
+    <p class="subtitle">AI फैशन डिज़ाइन टूल असल में क्या करते हैं, कस्टम सिलाई के लिए कहां कम पड़ते हैं, और Gurbani Fashion ने फरीदाबाद, NCR में इस कमी को पाटने के लिए AI Design Studio कैसे बनाया — इस पर एक सीधी नज़र।</p>
 
-  <div class="faq-item">
-    <h3>Is AI-generated fashion design available in India, specifically for custom stitching?</h3>
-    <p>Gurbani Fashion's AI Design Studio is built exactly for this — Indian ethnic and western wear, generated as design concepts and then custom-stitched in Faridabad, NCR. Most AI fashion tools are built for brands and designers, not connected to an actual local tailoring service — this is the specific gap we built to fill.</p>
-  </div>
+    <h2>"AI फैशन डिज़ाइन" का असल मतलब क्या है</h2>
+    <p>अपने मूल में, एक AI फैशन डिज़ाइन टूल विवरण या रेफरेंस फोटो लेकर एक आउटफिट की फोटोरियलिस्टिक इमेज बनाता है। "गुलाबी लहंगा मोती की कढ़ाई के साथ" टाइप करें या अपना पसंदीदा फैब्रिक स्वॉच अपलोड करें, और सेकंडों में आपको एक तस्वीर मिलती है — कुछ जो एक पल पहले मौजूद नहीं था, जैसे एक पेशेवर प्रोडक्ट फोटो हो।</p>
+    <p>यह इमेज-जनरेशन मॉडल्स (Midjourney या DALL-E जैसे टूल्स के पीछे वही मूल तकनीक, फैशन पर लागू) का इस्तेमाल करके काम करता है। मॉडल ने कपड़ों की बड़ी संख्या में इमेज से सीखा है कि आउटफिट, कपड़े, कढ़ाई और ड्रेप असल में कैसे दिखते हैं, और वह इस समझ का इस्तेमाल आपके विवरण के आधार पर कुछ नया बनाने के लिए करता है।</p>
 
-  <div class="faq-item">
-    <h3>Does using AI make the design less "mine"?</h3>
-    <p>The AI generates a starting concept from your own description or reference photos — it's guided entirely by what you tell it you want, not a generic template. And once it's ordered, the finished garment is cut and stitched specifically to your measurements, same as any custom piece.</p>
-  </div>
+    <h2>वह हिस्सा जहां ज़्यादातर AI फैशन टूल रुक जाते हैं</h2>
+    <p>यहां वह ईमानदार सीमा है जिसके बारे में लगभग कोई बात नहीं करता: बनी हुई इमेज कोई सिलाई पैटर्न नहीं है। यह मटीरियल की लिस्ट नहीं है। यह ऐसा कुछ नहीं जिससे दर्ज़ी कपड़ा काट सके। यह एक आइडिया की तस्वीर है — कॉन्सेप्ट को देखने के लिए सच में काम की, लेकिन असल में आउटफिट बनाने के लिए अकेले पूरी तरह नाकाफी।</p>
+    <p>ज़्यादातर AI फैशन जनरेटर — जो ब्रांड, डिज़ाइनर और कंटेंट क्रिएटर के लिए बने हैं — कॉन्सेप्ट बनाने वाले टूल हैं। वे लुकबुक इमेज बनाने, रंगों की भिन्नता जांचने, या एक डिज़ाइन दिशा को देखने में शानदार हैं। लेकिन "यहां एक इमेज है" से "यहां आपके हाथ में एक तैयार कपड़ा है" तक कोई बना-बनाया रास्ता नहीं है, क्योंकि यह कभी टूल का काम था ही नहीं। असली पैटर्न बनाना — सीम एलाउंस, डार्ट प्लेसमेंट, ग्रेन लाइन, पैनल कर्व — अभी भी कुशल इंसानी काम है, और ईमानदारी से, बड़ी फैशन-टेक कंपनियों के लिए भी, जिनके पास खुद की R&D है, अभी भी एक खुली रिसर्च समस्या है।</p>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">See it for yourself</h2>
-    <p>Free to try — describe your outfit, get 3 AI-generated design concepts back in minutes.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    <h2>Gurbani Fashion का AI Design Studio कैसे अलग है</h2>
+    <p>हमने AI Design Studio खासतौर पर इस कमी को पाटने के लिए बनाया — पैटर्न-मेकिंग को अपने आप करने की कोशिश करके नहीं (हमें नहीं लगता यह हल हो चुका है, और हम ऐसा दिखावा नहीं करेंगे), बल्कि AI-जनरेटेड डिज़ाइन कॉन्सेप्ट को फरीदाबाद की एक असली बुटीक द्वारा चलाई जाने वाली असली, असल-दुनिया की सिलाई प्रक्रिया से जोड़कर।</p>
+
+    <h3>1. बताएं, या दिखाएं</h3>
+    <p>अपने शब्दों में बताएं आप क्या सोच रही हैं, या एक रेफरेंस फोटो अपलोड करें — अपना पसंदीदा फैब्रिक स्वॉच, कोई आउटफिट जिसने आपको प्रेरित किया, यहां तक कि एक कच्चा स्केच। आपको तीन अलग-अलग AI-जनरेटेड डिज़ाइन कॉन्सेप्ट मिलते हैं, हर एक अपने खुद के शीर्षक और विवरण के साथ, मुफ़्त में देखने के लिए।</p>
+
+    <h3>2. असली कपड़ा, जो असल में स्टॉक में है उससे मिलाकर जांचा गया</h3>
+    <p>यह वह कदम है जो ज़्यादातर AI डिज़ाइन टूल पूरी तरह छोड़ देते हैं: हम आपके चुने कॉन्सेप्ट को Gurbani Fashion के असली भौतिक स्टॉक — कपड़ा, लेस, लाइनिंग — से मिलाकर जांचते हैं, ताकि आपको तुरंत पता चले क्या तैयार है और क्या मंगवाना पड़ेगा। एक AI इमेज "रोज़ गोल्ड लेस" सुझा सकती है; हम आपको बता सकते हैं कि क्या हमारे पास अभी असल में रोज़ गोल्ड लेस मौजूद है।</p>
+
+    <h3>3. एक असली दर्ज़ी वहां से आगे बढ़ाता है</h3>
+    <p>एक बार आप डिज़ाइन से खुश हो जाएं और आपकी माप रिकॉर्ड में हो, तो यह असली कटाई और सिलाई के लिए सोनिया और उनकी टीम के पास जाता है — वही कुशल हाथ-सिलाई प्रक्रिया जो कोई भी कस्टम बुटीक इस्तेमाल करती है, बस हाथ से बने स्केच या कैटलॉग देखने की बजाय AI-सहायता वाले डिज़ाइन से शुरू होकर।</p>
+
+    <div class="callout">
+      <strong>ईमानदार सारांश:</strong> AI <em>विज़न</em> बनाता है। असली कपड़ा, असली माप, और एक असली दर्ज़ी उस विज़न को <em>आउटफिट</em> में बदलते हैं। दोनों में से कोई भी आधा दूसरे के बिना काम नहीं करता — और यह मिश्रण, सिर्फ AI जनरेशन नहीं, वह है जो असल में आपको एक तैयार आउटफिट दिलाता है।
+    </div>
+
+    <h2>अक्सर पूछे जाने वाले सवाल</h2>
+
+    <div class="faq-item">
+      <h3>क्या AI फैशन डिज़ाइन ऑनलाइन रेडीमेड कपड़े ऑर्डर करने जैसा ही है?</h3>
+      <p>नहीं — AI Design Studio एक शुरुआती कॉन्सेप्ट बनाता है, लेकिन हर आउटफिट अभी भी आपके अपने माप के हिसाब से काटा और सिला जाता है, किसी रैक या पहले से बने साइज़ चार्ट से नहीं निकाला जाता। यह AI-सहायता वाली शुरुआत के साथ कस्टम सिलाई है, ई-कॉमर्स नहीं।</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>क्या इसे इस्तेमाल करने के लिए मुझे कोई डिज़ाइन अनुभव चाहिए?</h3>
+      <p>नहीं। ज़्यादातर लोग बस अपने मन में जो तस्वीर है उसे सीधी-सादी भाषा में बताते हैं — "दिवाली के समारोह के लिए सुनहरे धागे के काम वाला सरसों के रंग का अनारकली" एक बिल्कुल सामान्य, काम का विवरण है।</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>क्या AI-जनरेटेड फैशन डिज़ाइन भारत में, खासकर कस्टम सिलाई के लिए उपलब्ध है?</h3>
+      <p>Gurbani Fashion का AI Design Studio ठीक इसी के लिए बना है — भारतीय एथनिक और वेस्टर्न वेयर, डिज़ाइन कॉन्सेप्ट के रूप में बनाया गया और फिर फरीदाबाद, NCR में कस्टम-सिला गया। ज़्यादातर AI फैशन टूल ब्रांड और डिज़ाइनर के लिए बने हैं, किसी असली स्थानीय सिलाई सेवा से नहीं जुड़े — यही वह खास कमी है जिसे हमने पाटने के लिए बनाया है।</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>क्या AI इस्तेमाल करने से डिज़ाइन कम "मेरा" हो जाता है?</h3>
+      <p>AI आपके अपने विवरण या रेफरेंस फोटो से एक शुरुआती कॉन्सेप्ट बनाता है — यह पूरी तरह इस बात से निर्देशित होता है कि आपने क्या चाहा बताया, किसी सामान्य टेम्पलेट से नहीं। और एक बार ऑर्डर होने पर, तैयार आउटफिट खासतौर पर आपकी माप के हिसाब से काटा और सिला जाता है, किसी भी कस्टम टुकड़े की तरह।</p>
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">खुद देखें</h2>
+      <p>मुफ़्त में आज़माएं — अपना आउटफिट बताएं, मिनटों में 3 AI-जनरेटेड डिज़ाइन कॉन्सेप्ट पाएं।</p>
+      <a href="https://gurbanifashion.com/#lensSection">AI Design Studio आज़माएं →</a>
+    </div>
   </div>
 </main>
 
@@ -175,6 +240,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>

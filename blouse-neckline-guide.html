@@ -34,6 +34,8 @@
   .cta a { display: inline-block; background: var(--vivid); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 30px; border-radius: 24px; margin-top: 12px; }
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -43,89 +45,182 @@
 </header>
 
 <main>
-  <h1>Blouse Designs &amp; Neckline Styles for Sarees &amp; Lehengas</h1>
-  <p class="subtitle">The blouse is often the most customized part of an outfit — and the one people struggle most to describe. Here's a plain-language rundown of neckline, sleeve, and back styles to help you know what to ask for.</p>
-
-  <h2>Neckline Styles</h2>
-
-  <div class="style-card">
-    <h3>Sweetheart Neck</h3>
-    <p>A curved, heart-shaped dip at the center front — softens the neckline without being too deep. Works well for most body types and occasions.</p>
-    <div class="best-for">BEST FOR: receptions, parties, most saree blouses</div>
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <div class="style-card">
-    <h3>Boat Neck (Bateau)</h3>
-    <p>A wide, shallow neckline that runs almost horizontally from shoulder to shoulder. Elegant and structured — a classic choice for silk sarees and formal occasions.</p>
-    <div class="best-for">BEST FOR: silk sarees, formal/office-adjacent festive wear</div>
+  <div id="langEn">
+    <h1>Blouse Designs &amp; Neckline Styles for Sarees &amp; Lehengas</h1>
+    <p class="subtitle">The blouse is often the most customized part of an outfit — and the one people struggle most to describe. Here's a plain-language rundown of neckline, sleeve, and back styles to help you know what to ask for.</p>
+
+    <h2>Neckline Styles</h2>
+
+    <div class="style-card">
+      <h3>Sweetheart Neck</h3>
+      <p>A curved, heart-shaped dip at the center front — softens the neckline without being too deep. Works well for most body types and occasions.</p>
+      <div class="best-for">BEST FOR: receptions, parties, most saree blouses</div>
+    </div>
+
+    <div class="style-card">
+      <h3>Boat Neck (Bateau)</h3>
+      <p>A wide, shallow neckline that runs almost horizontally from shoulder to shoulder. Elegant and structured — a classic choice for silk sarees and formal occasions.</p>
+      <div class="best-for">BEST FOR: silk sarees, formal/office-adjacent festive wear</div>
+    </div>
+
+    <div class="style-card">
+      <h3>Deep V-Neck</h3>
+      <p>A sharp V cut that goes deeper than a standard round neck — modern and a little bold. Works best paired with the right inner lining/support for comfort.</p>
+      <div class="best-for">BEST FOR: parties, receptions, contemporary lehengas</div>
+    </div>
+
+    <div class="style-card">
+      <h3>Round / Collar Neck</h3>
+      <p>A simple, modest round cut, sometimes finished with a small stand collar. Comfortable and versatile, especially for pooja and daytime functions.</p>
+      <div class="best-for">BEST FOR: pooja functions, daytime festive wear, everyday kurtis</div>
+    </div>
+
+    <div class="style-card">
+      <h3>Halter Neck</h3>
+      <p>Straps that tie or fasten behind the neck rather than over the shoulders, often paired with a backless or low-back design. Striking and modern.</p>
+      <div class="best-for">BEST FOR: sangeet, reception, evening parties</div>
+    </div>
+
+    <div class="style-card">
+      <h3>High Neck</h3>
+      <p>Sits close to the base of the neck, often paired with full or 3/4th sleeves. A more covered, structured look that still reads as festive when paired with embellishment.</p>
+      <div class="best-for">BEST FOR: winter functions, more traditional or modest preferences</div>
+    </div>
+
+    <h2>Sleeve Styles</h2>
+
+    <div class="style-card">
+      <h3>Sleeveless</h3>
+      <p>Clean and versatile — puts more visual focus on the neckline and embellishment. The most common default for lehenga blouses.</p>
+    </div>
+
+    <div class="style-card">
+      <h3>Cap Sleeve</h3>
+      <p>A short sleeve that just covers the top of the shoulder — a small amount of coverage without the weight of a full sleeve.</p>
+    </div>
+
+    <div class="style-card">
+      <h3>3/4th or Full (Bell) Sleeve</h3>
+      <p>More coverage and often more embellishment surface — bell sleeves in particular add a flowy, dramatic silhouette. A popular choice for anarkalis and winter functions.</p>
+    </div>
+
+    <h2>Back Designs</h2>
+
+    <div class="style-card">
+      <h3>Deep-Back / Backless</h3>
+      <p>A low back cut, sometimes finished with a single string or tassel closure. Common for reception and sangeet blouses where the back becomes a design feature in its own right.</p>
+    </div>
+
+    <div class="style-card">
+      <h3>Tasseled or Knotted Back</h3>
+      <p>Ties, tassels, or a decorative knot at the back — turns the closure itself into a design element rather than hiding it.</p>
+    </div>
+
+    <div class="style-card">
+      <h3>Closed / Full Back</h3>
+      <p>A more covered back, usually with a zip or hook closure — the practical, comfortable default when the back isn't meant to be a focal point.</p>
+    </div>
+
+    <div class="callout">
+      <strong>How this helps your AI Design Studio request:</strong> instead of just "a nice blouse," try combining a neckline + sleeve + back style — e.g. "sweetheart neck, sleeveless, tasseled back" — it gives both the AI and our tailors something much more specific to work from.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Ready to design your blouse?</h2>
+      <p>Describe your combination of neckline, sleeve, and back style, and get 3 AI-generated design concepts back — free to try.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    </div>
   </div>
 
-  <div class="style-card">
-    <h3>Deep V-Neck</h3>
-    <p>A sharp V cut that goes deeper than a standard round neck — modern and a little bold. Works best paired with the right inner lining/support for comfort.</p>
-    <div class="best-for">BEST FOR: parties, receptions, contemporary lehengas</div>
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>साड़ी और लहंगे के लिए ब्लाउज़ डिज़ाइन और नेकलाइन स्टाइल</h1>
+    <p class="subtitle">ब्लाउज़ अक्सर आउटफिट का सबसे कस्टमाइज़्ड हिस्सा होता है — और वह जिसे समझाने में लोगों को सबसे ज़्यादा दिक्कत होती है। यहां नेकलाइन, आस्तीन और पीठ की स्टाइल की सीधी-सादी जानकारी है ताकि आप जान सकें क्या मांगना है।</p>
 
-  <div class="style-card">
-    <h3>Round / Collar Neck</h3>
-    <p>A simple, modest round cut, sometimes finished with a small stand collar. Comfortable and versatile, especially for pooja and daytime functions.</p>
-    <div class="best-for">BEST FOR: pooja functions, daytime festive wear, everyday kurtis</div>
-  </div>
+    <h2>नेकलाइन स्टाइल</h2>
 
-  <div class="style-card">
-    <h3>Halter Neck</h3>
-    <p>Straps that tie or fasten behind the neck rather than over the shoulders, often paired with a backless or low-back design. Striking and modern.</p>
-    <div class="best-for">BEST FOR: sangeet, reception, evening parties</div>
-  </div>
+    <div class="style-card">
+      <h3>स्वीटहार्ट नेक</h3>
+      <p>सामने के बीच में एक घुमावदार, दिल के आकार की डिप — बिना ज़्यादा गहरे हुए नेकलाइन को नरम करती है। ज़्यादातर बॉडी टाइप और मौकों के लिए अच्छी लगती है।</p>
+      <div class="best-for">सबसे अच्छी: रिसेप्शन, पार्टी, ज़्यादातर साड़ी ब्लाउज़</div>
+    </div>
 
-  <div class="style-card">
-    <h3>High Neck</h3>
-    <p>Sits close to the base of the neck, often paired with full or 3/4th sleeves. A more covered, structured look that still reads as festive when paired with embellishment.</p>
-    <div class="best-for">BEST FOR: winter functions, more traditional or modest preferences</div>
-  </div>
+    <div class="style-card">
+      <h3>बोट नेक (बातो)</h3>
+      <p>एक चौड़ी, हल्की नेकलाइन जो कंधे से कंधे तक लगभग सीधी चलती है। शालीन और बनावटदार — सिल्क साड़ी और औपचारिक मौकों के लिए क्लासिक पसंद।</p>
+      <div class="best-for">सबसे अच्छी: सिल्क साड़ी, औपचारिक/ऑफिस जैसे त्योहारी पहनावे</div>
+    </div>
 
-  <h2>Sleeve Styles</h2>
+    <div class="style-card">
+      <h3>डीप वी-नेक</h3>
+      <p>एक तेज़ V कट जो सामान्य राउंड नेक से गहरा जाता है — आधुनिक और थोड़ा साहसी। आराम के लिए सही इनर लाइनिंग/सपोर्ट के साथ सबसे अच्छा लगता है।</p>
+      <div class="best-for">सबसे अच्छी: पार्टी, रिसेप्शन, आधुनिक लहंगे</div>
+    </div>
 
-  <div class="style-card">
-    <h3>Sleeveless</h3>
-    <p>Clean and versatile — puts more visual focus on the neckline and embellishment. The most common default for lehenga blouses.</p>
-  </div>
+    <div class="style-card">
+      <h3>राउंड / कॉलर नेक</h3>
+      <p>एक सीधा, शालीन राउंड कट, कभी-कभी छोटे स्टैंड कॉलर के साथ। आरामदायक और बहुमुखी, खासकर पूजा और दिन के समारोह के लिए।</p>
+      <div class="best-for">सबसे अच्छी: पूजा समारोह, दिन का त्योहारी पहनावा, रोज़मर्रा की कुर्ती</div>
+    </div>
 
-  <div class="style-card">
-    <h3>Cap Sleeve</h3>
-    <p>A short sleeve that just covers the top of the shoulder — a small amount of coverage without the weight of a full sleeve.</p>
-  </div>
+    <div class="style-card">
+      <h3>हॉल्टर नेक</h3>
+      <p>पट्टियां जो कंधों के ऊपर की बजाय गर्दन के पीछे बंधती या जुड़ती हैं, अक्सर बैकलेस या लो-बैक डिज़ाइन के साथ। आकर्षक और आधुनिक।</p>
+      <div class="best-for">सबसे अच्छी: संगीत, रिसेप्शन, शाम की पार्टी</div>
+    </div>
 
-  <div class="style-card">
-    <h3>3/4th or Full (Bell) Sleeve</h3>
-    <p>More coverage and often more embellishment surface — bell sleeves in particular add a flowy, dramatic silhouette. A popular choice for anarkalis and winter functions.</p>
-  </div>
+    <div class="style-card">
+      <h3>हाई नेक</h3>
+      <p>गर्दन के आधार के पास बैठती है, अक्सर फुल या 3/4th आस्तीन के साथ। ज़्यादा ढका हुआ, बनावटदार लुक जो सजावट के साथ फिर भी त्योहारी लगता है।</p>
+      <div class="best-for">सबसे अच्छी: सर्दी के समारोह, ज़्यादा पारंपरिक या शालीन पसंद</div>
+    </div>
 
-  <h2>Back Designs</h2>
+    <h2>आस्तीन की स्टाइल</h2>
 
-  <div class="style-card">
-    <h3>Deep-Back / Backless</h3>
-    <p>A low back cut, sometimes finished with a single string or tassel closure. Common for reception and sangeet blouses where the back becomes a design feature in its own right.</p>
-  </div>
+    <div class="style-card">
+      <h3>स्लीवलेस</h3>
+      <p>साफ और बहुमुखी — नेकलाइन और सजावट पर ज़्यादा ध्यान केंद्रित करता है। लहंगा ब्लाउज़ के लिए सबसे आम डिफॉल्ट।</p>
+    </div>
 
-  <div class="style-card">
-    <h3>Tasseled or Knotted Back</h3>
-    <p>Ties, tassels, or a decorative knot at the back — turns the closure itself into a design element rather than hiding it.</p>
-  </div>
+    <div class="style-card">
+      <h3>कैप स्लीव</h3>
+      <p>एक छोटी आस्तीन जो बस कंधे के ऊपरी हिस्से को ढकती है — पूरी आस्तीन के वज़न के बिना थोड़ी कवरेज।</p>
+    </div>
 
-  <div class="style-card">
-    <h3>Closed / Full Back</h3>
-    <p>A more covered back, usually with a zip or hook closure — the practical, comfortable default when the back isn't meant to be a focal point.</p>
-  </div>
+    <div class="style-card">
+      <h3>3/4th या फुल (बेल) स्लीव</h3>
+      <p>ज़्यादा कवरेज और अक्सर ज़्यादा सजावट की जगह — बेल स्लीव खासकर एक बहता हुआ, नाटकीय सिल्हूट जोड़ती हैं। अनारकली और सर्दी के समारोह के लिए एक लोकप्रिय पसंद।</p>
+    </div>
 
-  <div class="callout">
-    <strong>How this helps your AI Design Studio request:</strong> instead of just "a nice blouse," try combining a neckline + sleeve + back style — e.g. "sweetheart neck, sleeveless, tasseled back" — it gives both the AI and our tailors something much more specific to work from.
-  </div>
+    <h2>पीठ के डिज़ाइन</h2>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Ready to design your blouse?</h2>
-    <p>Describe your combination of neckline, sleeve, and back style, and get 3 AI-generated design concepts back — free to try.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    <div class="style-card">
+      <h3>डीप-बैक / बैकलेस</h3>
+      <p>एक नीची पीठ की कट, कभी-कभी एक डोरी या टैसल क्लोज़र के साथ। रिसेप्शन और संगीत के ब्लाउज़ में आम, जहां पीठ खुद एक डिज़ाइन फीचर बन जाती है।</p>
+    </div>
+
+    <div class="style-card">
+      <h3>टैसल या गांठ वाली पीठ</h3>
+      <p>पीछे डोरी, टैसल, या सजावटी गांठ — क्लोज़र को छुपाने के बजाय खुद एक डिज़ाइन एलिमेंट बनाता है।</p>
+    </div>
+
+    <div class="style-card">
+      <h3>बंद / फुल बैक</h3>
+      <p>ज़्यादा ढकी हुई पीठ, आमतौर पर ज़िप या हुक क्लोज़र के साथ — जब पीठ पर ध्यान केंद्रित करना मकसद न हो तो यह व्यावहारिक, आरामदायक डिफॉल्ट है।</p>
+    </div>
+
+    <div class="callout">
+      <strong>यह आपके AI Design Studio अनुरोध में कैसे मदद करता है:</strong> सिर्फ "एक अच्छा ब्लाउज़" कहने के बजाय, नेकलाइन + आस्तीन + पीठ की स्टाइल मिलाकर आज़माएं — जैसे "स्वीटहार्ट नेक, स्लीवलेस, टैसल बैक" — यह AI और हमारे दर्ज़ियों दोनों को काम करने के लिए कहीं ज़्यादा साफ जानकारी देता है।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">अपना ब्लाउज़ डिज़ाइन करने के लिए तैयार हैं?</h2>
+      <p>अपनी नेकलाइन, आस्तीन और पीठ की स्टाइल का मिश्रण बताएं, और 3 AI-जनरेटेड डिज़ाइन कॉन्सेप्ट पाएं — मुफ़्त में आज़माएं।</p>
+      <a href="https://gurbanifashion.com/#lensSection">AI Design Studio आज़माएं →</a>
+    </div>
   </div>
 </main>
 
@@ -133,6 +228,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>

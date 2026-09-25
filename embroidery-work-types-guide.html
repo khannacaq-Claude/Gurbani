@@ -36,6 +36,8 @@
   .cta a { display: inline-block; background: var(--vivid); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 30px; border-radius: 24px; margin-top: 12px; }
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -45,73 +47,150 @@
 </header>
 
 <main>
-  <h1>Embroidery &amp; Work Types Explained</h1>
-  <p class="subtitle">"Heavy work" and "light work" mean very different things depending on the technique. Here's what each one actually looks, feels, and weighs like — so you can describe what you want more precisely.</p>
-
-  <div class="work-card">
-    <h2>Zardozi</h2>
-    <div class="tagline">Metallic thread, dense, bridal-weight</div>
-    <p>Heavy metallic-thread embroidery, often combined with beads, stones, or sequins, worked densely across the fabric. It's rich and dimensional — but genuinely heavy, both in visual impact and in the fabric's actual weight once it's done.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Heavy</span><span><strong>Typical use:</strong> Bridal lehengas, heavy sarees</span><span><strong>Time:</strong> Weeks of hand-work</span></div>
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <div class="work-card">
-    <h2>Gota Patti</h2>
-    <div class="tagline">Rajasthani gold/silver ribbon appliqué, festive but lighter</div>
-    <p>Small pieces of gold or silver ribbon (gota) folded and appliquéd onto the fabric in patterns — gives a festive, metallic shimmer without the density or weight of zardozi. A popular middle ground between plain and bridal-heavy.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Sangeet, festive daywear</span><span><strong>Time:</strong> Days, not weeks</span></div>
+  <div id="langEn">
+    <h1>Embroidery &amp; Work Types Explained</h1>
+    <p class="subtitle">"Heavy work" and "light work" mean very different things depending on the technique. Here's what each one actually looks, feels, and weighs like — so you can describe what you want more precisely.</p>
+
+    <div class="work-card">
+      <h2>Zardozi</h2>
+      <div class="tagline">Metallic thread, dense, bridal-weight</div>
+      <p>Heavy metallic-thread embroidery, often combined with beads, stones, or sequins, worked densely across the fabric. It's rich and dimensional — but genuinely heavy, both in visual impact and in the fabric's actual weight once it's done.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Heavy</span><span><strong>Typical use:</strong> Bridal lehengas, heavy sarees</span><span><strong>Time:</strong> Weeks of hand-work</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Gota Patti</h2>
+      <div class="tagline">Rajasthani gold/silver ribbon appliqué, festive but lighter</div>
+      <p>Small pieces of gold or silver ribbon (gota) folded and appliquéd onto the fabric in patterns — gives a festive, metallic shimmer without the density or weight of zardozi. A popular middle ground between plain and bridal-heavy.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Sangeet, festive daywear</span><span><strong>Time:</strong> Days, not weeks</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Thread Work (Resham)</h2>
+      <div class="tagline">Silk or cotton thread embroidery, versatile</div>
+      <p>Embroidery done with silk or cotton thread rather than metallic elements — can range from delicate and minimal to dense floral patterns. Generally lighter and more affordable than metallic or stonework, and works well for both festive and semi-formal pieces.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Kurtis, anarkalis, everyday festive wear</span><span><strong>Time:</strong> Days</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Sequin &amp; Stone Work</h2>
+      <div class="tagline">Reflective, catches light, party-forward</div>
+      <p>Sequins and stones stitched or glued in patterns across the fabric — built to catch and reflect light, which is exactly why it's so common for party and reception wear under indoor lighting.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Parties, receptions, evening wear</span><span><strong>Time:</strong> Days</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Mirror Work (Kutch/Shisha)</h2>
+      <div class="tagline">Small mirrors set into embroidery, folk-inspired</div>
+      <p>Small circular mirrors stitched into place with surrounding thread embroidery — rooted in Kutch and Rajasthani folk traditions. Distinct, sparkly, and unmistakably festive; often paired with thread work or gota patti.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Navratri, festive folk-style outfits</span><span><strong>Time:</strong> Days</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Aari Work</h2>
+      <div class="tagline">Fine chain-stitch embroidery using a hooked needle</div>
+      <p>Done with a hooked needle (aari) rather than a regular needle, allowing for very fine, continuous chain-stitch detail — often used for intricate floral or paisley motifs that need precision rather than bulk.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Detailed blouses, fine-motif sarees</span><span><strong>Time:</strong> Days to a couple weeks, depending on detail</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Kantha</h2>
+      <div class="tagline">Simple running-stitch embroidery, rustic and traditional</div>
+      <p>A traditional Bengal running-stitch technique, usually in cotton thread — simpler and more rustic-looking than zardozi or aari, often used for everyday or lightly festive pieces rather than heavy occasion wear.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light</span><span><strong>Typical use:</strong> Casual/everyday festive kurtis</span><span><strong>Time:</strong> Days</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>Chikankari</h2>
+      <div class="tagline">Lucknowi white-on-white (or tone-on-tone) shadow work</div>
+      <p>Delicate, subtle embroidery traditionally done white-on-white, though now common in tone-on-tone pastel combinations too. Fine and understated rather than eye-catching, and typically done on breathable fabric — a favorite for summer festive wear.</p>
+      <div class="meta-row"><span><strong>Weight:</strong> Light</span><span><strong>Typical use:</strong> Summer festive wear, daytime functions</span><span><strong>Time:</strong> Days to weeks, depending on density</span></div>
+    </div>
+
+    <div class="callout">
+      <strong>How this helps your AI Design Studio request:</strong> naming the technique (not just "heavy work" or "light work") gives both the AI and our tailors a much clearer starting point — and helps us give you a more honest read on timeline and cost upfront.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Know the work you want?</h2>
+      <p>Describe it — technique, density, fabric — and get 3 AI-generated design concepts back, free to try.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    </div>
   </div>
 
-  <div class="work-card">
-    <h2>Thread Work (Resham)</h2>
-    <div class="tagline">Silk or cotton thread embroidery, versatile</div>
-    <p>Embroidery done with silk or cotton thread rather than metallic elements — can range from delicate and minimal to dense floral patterns. Generally lighter and more affordable than metallic or stonework, and works well for both festive and semi-formal pieces.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Kurtis, anarkalis, everyday festive wear</span><span><strong>Time:</strong> Days</span></div>
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>कढ़ाई और वर्क टाइप समझाए गए</h1>
+    <p class="subtitle">"भारी काम" और "हल्का काम" तकनीक के हिसाब से बहुत अलग-अलग मतलब रखते हैं। यहां बताया गया है कि हर एक असल में कैसा दिखता, महसूस होता और वज़न में कैसा है — ताकि आप ज़्यादा सटीक तरीके से बता सकें क्या चाहिए।</p>
 
-  <div class="work-card">
-    <h2>Sequin &amp; Stone Work</h2>
-    <div class="tagline">Reflective, catches light, party-forward</div>
-    <p>Sequins and stones stitched or glued in patterns across the fabric — built to catch and reflect light, which is exactly why it's so common for party and reception wear under indoor lighting.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Parties, receptions, evening wear</span><span><strong>Time:</strong> Days</span></div>
-  </div>
+    <div class="work-card">
+      <h2>ज़रदोज़ी</h2>
+      <div class="tagline">धातु का धागा, घना, दुल्हन जैसा वज़न</div>
+      <p>भारी धातु-धागे की कढ़ाई, अक्सर मोती, स्टोन या सितारों के साथ मिलाकर, कपड़े पर घनी तरह से की जाती है। यह शानदार और उभरी हुई है — लेकिन सच में भारी है, दिखने में भी और कपड़े के असली वज़न में भी, एक बार हो जाने के बाद।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> भारी</span><span><strong>आम इस्तेमाल:</strong> दुल्हन के लहंगे, भारी साड़ियां</span><span><strong>समय:</strong> हफ्तों का हाथ का काम</span></div>
+    </div>
 
-  <div class="work-card">
-    <h2>Mirror Work (Kutch/Shisha)</h2>
-    <div class="tagline">Small mirrors set into embroidery, folk-inspired</div>
-    <p>Small circular mirrors stitched into place with surrounding thread embroidery — rooted in Kutch and Rajasthani folk traditions. Distinct, sparkly, and unmistakably festive; often paired with thread work or gota patti.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Navratri, festive folk-style outfits</span><span><strong>Time:</strong> Days</span></div>
-  </div>
+    <div class="work-card">
+      <h2>गोटा पट्टी</h2>
+      <div class="tagline">राजस्थानी सोने/चांदी के रिबन की एप्लीक, त्योहारी पर हल्की</div>
+      <p>सोने या चांदी के रिबन (गोटा) के छोटे टुकड़े मोड़कर कपड़े पर पैटर्न में एप्लीक किए जाते हैं — ज़रदोज़ी के घनेपन या वज़न के बिना त्योहारी, धातु जैसी चमक देता है। सादे और दुल्हन-भारी के बीच एक लोकप्रिय बीच का रास्ता।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का-मध्यम</span><span><strong>आम इस्तेमाल:</strong> संगीत, त्योहारी दिन का पहनावा</span><span><strong>समय:</strong> दिन, हफ्ते नहीं</span></div>
+    </div>
 
-  <div class="work-card">
-    <h2>Aari Work</h2>
-    <div class="tagline">Fine chain-stitch embroidery using a hooked needle</div>
-    <p>Done with a hooked needle (aari) rather than a regular needle, allowing for very fine, continuous chain-stitch detail — often used for intricate floral or paisley motifs that need precision rather than bulk.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light-medium</span><span><strong>Typical use:</strong> Detailed blouses, fine-motif sarees</span><span><strong>Time:</strong> Days to a couple weeks, depending on detail</span></div>
-  </div>
+    <div class="work-card">
+      <h2>थ्रेड वर्क (रेशम)</h2>
+      <div class="tagline">सिल्क या कॉटन धागे की कढ़ाई, बहुमुखी</div>
+      <p>धातु तत्वों की बजाय सिल्क या कॉटन धागे से की गई कढ़ाई — नाज़ुक और कम से लेकर घने फूलों के पैटर्न तक हो सकती है। आमतौर पर धातु या स्टोन वर्क से हल्की और सस्ती, और त्योहारी और अर्ध-औपचारिक दोनों टुकड़ों के लिए अच्छी लगती है।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का-मध्यम</span><span><strong>आम इस्तेमाल:</strong> कुर्ती, अनारकली, रोज़मर्रा का त्योहारी पहनावा</span><span><strong>समय:</strong> दिन</span></div>
+    </div>
 
-  <div class="work-card">
-    <h2>Kantha</h2>
-    <div class="tagline">Simple running-stitch embroidery, rustic and traditional</div>
-    <p>A traditional Bengal running-stitch technique, usually in cotton thread — simpler and more rustic-looking than zardozi or aari, often used for everyday or lightly festive pieces rather than heavy occasion wear.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light</span><span><strong>Typical use:</strong> Casual/everyday festive kurtis</span><span><strong>Time:</strong> Days</span></div>
-  </div>
+    <div class="work-card">
+      <h2>सितारे और स्टोन वर्क</h2>
+      <div class="tagline">चमकदार, रोशनी पकड़ता है, पार्टी के लिए आगे</div>
+      <p>कपड़े पर पैटर्न में सिले या चिपकाए गए सितारे और स्टोन — रोशनी पकड़ने और परावर्तित करने के लिए बने होते हैं, इसीलिए घर के अंदर की रोशनी में पार्टी और रिसेप्शन के पहनावे में यह इतना आम है।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का-मध्यम</span><span><strong>आम इस्तेमाल:</strong> पार्टी, रिसेप्शन, शाम का पहनावा</span><span><strong>समय:</strong> दिन</span></div>
+    </div>
 
-  <div class="work-card">
-    <h2>Chikankari</h2>
-    <div class="tagline">Lucknowi white-on-white (or tone-on-tone) shadow work</div>
-    <p>Delicate, subtle embroidery traditionally done white-on-white, though now common in tone-on-tone pastel combinations too. Fine and understated rather than eye-catching, and typically done on breathable fabric — a favorite for summer festive wear.</p>
-    <div class="meta-row"><span><strong>Weight:</strong> Light</span><span><strong>Typical use:</strong> Summer festive wear, daytime functions</span><span><strong>Time:</strong> Days to weeks, depending on density</span></div>
-  </div>
+    <div class="work-card">
+      <h2>मिरर वर्क (कच्छ/शीशा)</h2>
+      <div class="tagline">कढ़ाई में जड़े छोटे शीशे, लोक-प्रेरित</div>
+      <p>छोटे गोल शीशे जिन्हें चारों ओर धागे की कढ़ाई से जगह पर सिला जाता है — कच्छ और राजस्थानी लोक परंपराओं में जड़ें। अलग, चमकदार, और साफ तौर पर त्योहारी; अक्सर थ्रेड वर्क या गोटा पट्टी के साथ मिलाया जाता है।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का-मध्यम</span><span><strong>आम इस्तेमाल:</strong> नवरात्रि, त्योहारी लोक-शैली के आउटफिट</span><span><strong>समय:</strong> दिन</span></div>
+    </div>
 
-  <div class="callout">
-    <strong>How this helps your AI Design Studio request:</strong> naming the technique (not just "heavy work" or "light work") gives both the AI and our tailors a much clearer starting point — and helps us give you a more honest read on timeline and cost upfront.
-  </div>
+    <div class="work-card">
+      <h2>आरी वर्क</h2>
+      <div class="tagline">हुक वाली सुई से बारीक चेन-स्टिच कढ़ाई</div>
+      <p>सामान्य सुई की बजाय हुक वाली सुई (आरी) से की जाती है, जिससे बहुत बारीक, लगातार चेन-स्टिच डिटेल मिलती है — अक्सर बारीक फूल या पैस्ले मोटिफ के लिए इस्तेमाल होती है जिन्हें भारीपन की नहीं, सटीकता की ज़रूरत होती है।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का-मध्यम</span><span><strong>आम इस्तेमाल:</strong> डिटेल्ड ब्लाउज़, बारीक-मोटिफ साड़ियां</span><span><strong>समय:</strong> डिटेल के हिसाब से दिन से एक-दो हफ्ते</span></div>
+    </div>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Know the work you want?</h2>
-    <p>Describe it — technique, density, fabric — and get 3 AI-generated design concepts back, free to try.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    <div class="work-card">
+      <h2>कांथा</h2>
+      <div class="tagline">सादी रनिंग-स्टिच कढ़ाई, देहाती और पारंपरिक</div>
+      <p>एक पारंपरिक बंगाल रनिंग-स्टिच तकनीक, आमतौर पर कॉटन धागे में — ज़रदोज़ी या आरी से सरल और ज़्यादा देहाती दिखने वाली, अक्सर भारी मौके के पहनावे की बजाय रोज़मर्रा या हल्के त्योहारी टुकड़ों के लिए इस्तेमाल होती है।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का</span><span><strong>आम इस्तेमाल:</strong> कैज़ुअल/रोज़मर्रा त्योहारी कुर्ती</span><span><strong>समय:</strong> दिन</span></div>
+    </div>
+
+    <div class="work-card">
+      <h2>चिकनकारी</h2>
+      <div class="tagline">लखनवी सफेद-पर-सफेद (या टोन-पर-टोन) शैडो वर्क</div>
+      <p>नाज़ुक, सूक्ष्म कढ़ाई जो परंपरागत रूप से सफेद-पर-सफेद की जाती थी, हालांकि अब टोन-पर-टोन पेस्टल मिश्रणों में भी आम है। आंख खींचने की बजाय बारीक और शालीन, और आमतौर पर हवादार कपड़े पर की जाती है — गर्मी के त्योहारी पहनावे के लिए एक पसंदीदा।</p>
+      <div class="meta-row"><span><strong>वज़न:</strong> हल्का</span><span><strong>आम इस्तेमाल:</strong> गर्मी का त्योहारी पहनावा, दिन के समारोह</span><span><strong>समय:</strong> घनत्व के हिसाब से दिन से हफ्ते</span></div>
+    </div>
+
+    <div class="callout">
+      <strong>यह आपके AI Design Studio अनुरोध में कैसे मदद करता है:</strong> सिर्फ "भारी काम" या "हल्का काम" की बजाय तकनीक का नाम बताना, AI और हमारे दर्ज़ियों दोनों को शुरुआत में कहीं ज़्यादा साफ जानकारी देता है — और हमें आपको समय और लागत का ज़्यादा ईमानदार अंदाज़ा देने में मदद करता है।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">जानती हैं कौन सा काम चाहिए?</h2>
+      <p>बताएं — तकनीक, घनत्व, कपड़ा — और 3 AI-जनरेटेड डिज़ाइन कॉन्सेप्ट पाएं, मुफ़्त में आज़माएं।</p>
+      <a href="https://gurbanifashion.com/#lensSection">AI Design Studio आज़माएं →</a>
+    </div>
   </div>
 </main>
 
@@ -119,6 +198,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>

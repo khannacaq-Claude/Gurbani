@@ -34,6 +34,8 @@
   .cta a { display: inline-block; background: var(--vivid); color: #fff; text-decoration: none; font-weight: 700; padding: 14px 30px; border-radius: 24px; margin-top: 12px; }
   footer { text-align: center; padding: 24px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: var(--vivid); }
+  .lang-toggle-wrap { text-align: center; margin-bottom: 16px; }
+  .lang-toggle-btn { background: none; border: 1.5px solid var(--vivid); border-radius: 20px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; color: var(--vivid); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -43,57 +45,118 @@
 </header>
 
 <main>
-  <h1>When to Book Your Wedding Outfit: A Custom-Stitching Timeline</h1>
-  <p class="subtitle">Custom stitching runs on real-world timelines — fabric sourcing, embroidery, and fittings all take actual time. Here's a realistic guide to when you should start, by outfit type.</p>
-
-  <div class="timeline-card">
-    <h2>🪔 3+ Months Out</h2>
-    <div class="window">Bridal lehengas &amp; heavily embroidered outfits</div>
-    <ul>
-      <li>Heavy zardozi, hand embroidery, and stonework take real time — often several weeks of hand-work alone, before stitching even begins.</li>
-      <li>Bridal fabric (especially imported or specialty pieces) sometimes needs to be sourced specifically, which isn't instant.</li>
-      <li>Bridal fittings usually need 2–3 rounds to get right, spaced out so the outfit can be adjusted and rechecked properly — not rushed into one sitting.</li>
-      <li>This window also protects you if your wedding falls in peak season (Oct–Feb), when every boutique's order book fills up fastest.</li>
-    </ul>
+  <div class="lang-toggle-wrap">
+    <button type="button" id="langToggleBtn" class="lang-toggle-btn" onclick="toggleGuideLang()">EN | हिं</button>
   </div>
 
-  <div class="timeline-card">
-    <h2>🎉 6–8 Weeks Out</h2>
-    <div class="window">Sangeet, reception, mehendi &amp; haldi outfits</div>
-    <ul>
-      <li>Enough time for a moderately worked outfit — sequins, thread work, gota patti — without the multi-week hand-embroidery timeline of a bridal piece.</li>
-      <li>Still comfortably allows 2 fitting rounds if needed.</li>
-      <li>This is also a good window to finalize your AI Design Studio concept and get fabric matched against actual stock before anything is cut.</li>
-    </ul>
+  <div id="langEn">
+    <h1>When to Book Your Wedding Outfit: A Custom-Stitching Timeline</h1>
+    <p class="subtitle">Custom stitching runs on real-world timelines — fabric sourcing, embroidery, and fittings all take actual time. Here's a realistic guide to when you should start, by outfit type.</p>
+
+    <div class="timeline-card">
+      <h2>🪔 3+ Months Out</h2>
+      <div class="window">Bridal lehengas &amp; heavily embroidered outfits</div>
+      <ul>
+        <li>Heavy zardozi, hand embroidery, and stonework take real time — often several weeks of hand-work alone, before stitching even begins.</li>
+        <li>Bridal fabric (especially imported or specialty pieces) sometimes needs to be sourced specifically, which isn't instant.</li>
+        <li>Bridal fittings usually need 2–3 rounds to get right, spaced out so the outfit can be adjusted and rechecked properly — not rushed into one sitting.</li>
+        <li>This window also protects you if your wedding falls in peak season (Oct–Feb), when every boutique's order book fills up fastest.</li>
+      </ul>
+    </div>
+
+    <div class="timeline-card">
+      <h2>🎉 6–8 Weeks Out</h2>
+      <div class="window">Sangeet, reception, mehendi &amp; haldi outfits</div>
+      <ul>
+        <li>Enough time for a moderately worked outfit — sequins, thread work, gota patti — without the multi-week hand-embroidery timeline of a bridal piece.</li>
+        <li>Still comfortably allows 2 fitting rounds if needed.</li>
+        <li>This is also a good window to finalize your AI Design Studio concept and get fabric matched against actual stock before anything is cut.</li>
+      </ul>
+    </div>
+
+    <div class="timeline-card">
+      <h2>👗 3–4 Weeks Out</h2>
+      <div class="window">Guest outfits &amp; simpler designs</div>
+      <ul>
+        <li>Comfortable for straightforward stitching — plain or lightly worked kurtis, anarkalis, simple gowns — with one fitting round.</li>
+        <li>Fabric that's already in stock moves faster than anything needing sourcing, so flexibility on fabric choice helps at this stage.</li>
+      </ul>
+    </div>
+
+    <div class="timeline-card">
+      <h2>⏱️ 1–2 Weeks Out</h2>
+      <div class="window">Rush orders — possible, but limited</div>
+      <ul>
+        <li>We can sometimes accommodate this, but only for simple designs, only with fabric already on our shelves, and usually with just one fitting.</li>
+        <li>Heavy embroidery or bridal work isn't realistic in this window — not because we won't try, but because the hand-work genuinely can't be compressed without quality suffering.</li>
+        <li>If you're this close to your date, call ahead before starting a design so we can tell you honestly what's actually possible.</li>
+      </ul>
+    </div>
+
+    <div class="callout">
+      <strong>Worth knowing:</strong> October–February is wedding season in North India, and order books at every custom boutique — ours included — fill up fastest in this window. If your event falls here, booking at the earlier end of each range above gives you real breathing room instead of a tight squeeze.
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">Know your date? Start now.</h2>
+      <p>Describe your outfit in AI Design Studio to get 3 concepts back today, or book a slot with Sonia directly.</p>
+      <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    </div>
   </div>
 
-  <div class="timeline-card">
-    <h2>👗 3–4 Weeks Out</h2>
-    <div class="window">Guest outfits &amp; simpler designs</div>
-    <ul>
-      <li>Comfortable for straightforward stitching — plain or lightly worked kurtis, anarkalis, simple gowns — with one fitting round.</li>
-      <li>Fabric that's already in stock moves faster than anything needing sourcing, so flexibility on fabric choice helps at this stage.</li>
-    </ul>
-  </div>
+  <div id="langHi" style="display:none;">
+    <h1>अपना शादी का आउटफिट कब बुक करें: एक कस्टम-सिलाई टाइमलाइन</h1>
+    <p class="subtitle">कस्टम सिलाई असल-दुनिया की टाइमलाइन पर चलती है — कपड़ा मंगवाना, कढ़ाई, और फिटिंग सबमें असली समय लगता है। यहां आउटफिट के प्रकार के हिसाब से एक सच्ची गाइड है कि आपको कब शुरू करना चाहिए।</p>
 
-  <div class="timeline-card">
-    <h2>⏱️ 1–2 Weeks Out</h2>
-    <div class="window">Rush orders — possible, but limited</div>
-    <ul>
-      <li>We can sometimes accommodate this, but only for simple designs, only with fabric already on our shelves, and usually with just one fitting.</li>
-      <li>Heavy embroidery or bridal work isn't realistic in this window — not because we won't try, but because the hand-work genuinely can't be compressed without quality suffering.</li>
-      <li>If you're this close to your date, call ahead before starting a design so we can tell you honestly what's actually possible.</li>
-    </ul>
-  </div>
+    <div class="timeline-card">
+      <h2>🪔 3+ महीने पहले</h2>
+      <div class="window">दुल्हन के लहंगे और भारी कढ़ाई वाले आउटफिट</div>
+      <ul>
+        <li>भारी ज़रदोज़ी, हाथ की कढ़ाई, और स्टोन वर्क में असल में समय लगता है — अक्सर सिलाई शुरू होने से पहले ही हाथ के काम में कई हफ्ते लग जाते हैं।</li>
+        <li>दुल्हन का कपड़ा (खासकर आयातित या खास टुकड़े) कभी-कभी खासतौर पर मंगवाना पड़ता है, जो तुरंत नहीं होता।</li>
+        <li>दुल्हन की फिटिंग को सही करने के लिए आमतौर पर 2–3 राउंड चाहिए होते हैं, ताकि आउटफिट को ठीक से एडजस्ट और दोबारा जांचा जा सके — एक ही बैठक में जल्दबाज़ी नहीं।</li>
+        <li>यह समय आपको तब भी बचाता है जब आपकी शादी पीक सीज़न (अक्टूबर–फरवरी) में पड़ती है, जब हर बुटीक की ऑर्डर बुक सबसे तेज़ी से भरती है।</li>
+      </ul>
+    </div>
 
-  <div class="callout">
-    <strong>Worth knowing:</strong> October–February is wedding season in North India, and order books at every custom boutique — ours included — fill up fastest in this window. If your event falls here, booking at the earlier end of each range above gives you real breathing room instead of a tight squeeze.
-  </div>
+    <div class="timeline-card">
+      <h2>🎉 6–8 हफ्ते पहले</h2>
+      <div class="window">संगीत, रिसेप्शन, मेहंदी और हल्दी के आउटफिट</div>
+      <ul>
+        <li>एक मध्यम काम वाले आउटफिट के लिए काफी समय — सितारे, थ्रेड वर्क, गोटा पट्टी — दुल्हन के टुकड़े की कई-हफ्तों वाली हाथ-कढ़ाई की टाइमलाइन के बिना।</li>
+        <li>ज़रूरत पड़ने पर अभी भी आराम से 2 फिटिंग राउंड की गुंजाइश है।</li>
+        <li>यह आपके AI Design Studio कॉन्सेप्ट को फाइनल करने और कुछ भी काटे जाने से पहले असली स्टॉक से मिलाने के लिए भी एक अच्छा समय है।</li>
+      </ul>
+    </div>
 
-  <div class="cta">
-    <h2 style="margin-top:0;">Know your date? Start now.</h2>
-    <p>Describe your outfit in AI Design Studio to get 3 concepts back today, or book a slot with Sonia directly.</p>
-    <a href="https://gurbanifashion.com/#lensSection">Try AI Design Studio →</a>
+    <div class="timeline-card">
+      <h2>👗 3–4 हफ्ते पहले</h2>
+      <div class="window">मेहमानों के आउटफिट और सादे डिज़ाइन</div>
+      <ul>
+        <li>सीधी-सादी सिलाई के लिए आरामदायक — सादी या हल्के काम वाली कुर्ती, अनारकली, सादे गाउन — एक फिटिंग राउंड के साथ।</li>
+        <li>जो कपड़ा पहले से स्टॉक में है वह मंगवाने वाले कपड़े से तेज़ी से चलता है, इसलिए इस स्टेज पर कपड़े की पसंद में लचीलापन मदद करता है।</li>
+      </ul>
+    </div>
+
+    <div class="timeline-card">
+      <h2>⏱️ 1–2 हफ्ते पहले</h2>
+      <div class="window">जल्दी वाले ऑर्डर — मुमकिन, पर सीमित</div>
+      <ul>
+        <li>हम कभी-कभी यह संभाल सकते हैं, लेकिन सिर्फ सादे डिज़ाइन के लिए, सिर्फ पहले से हमारी शेल्फ पर मौजूद कपड़े के साथ, और आमतौर पर सिर्फ एक फिटिंग के साथ।</li>
+        <li>भारी कढ़ाई या दुल्हन का काम इस समय में असंभव है — इसलिए नहीं कि हम कोशिश नहीं करेंगे, बल्कि इसलिए कि हाथ का काम बिना क्वालिटी खराब किए सच में छोटा नहीं किया जा सकता।</li>
+        <li>अगर आपकी तारीख इतनी नज़दीक है, तो डिज़ाइन शुरू करने से पहले पहले कॉल करें ताकि हम ईमानदारी से बता सकें असल में क्या मुमकिन है।</li>
+      </ul>
+    </div>
+
+    <div class="callout">
+      <strong>जानने लायक बात:</strong> अक्टूबर–फरवरी उत्तर भारत में शादी का मौसम है, और हर कस्टम बुटीक की ऑर्डर बुक — हमारी भी — इस समय सबसे तेज़ी से भरती है। अगर आपका समारोह इस दौरान पड़ता है, तो ऊपर दिए हर दायरे के शुरुआती छोर पर बुक करना आपको जल्दबाज़ी की बजाय असली सांस लेने की जगह देता है।
+    </div>
+
+    <div class="cta">
+      <h2 style="margin-top:0;">अपनी तारीख पता है? अभी शुरू करें।</h2>
+      <p>आज ही 3 कॉन्सेप्ट पाने के लिए AI Design Studio में अपना आउटफिट बताएं, या सीधे सोनिया के साथ स्लॉट बुक करें।</p>
+      <a href="https://gurbanifashion.com/#lensSection">AI Design Studio आज़माएं →</a>
+    </div>
   </div>
 </main>
 
@@ -101,6 +164,25 @@
   Gurbani Fashion Boutique · Greenfields Colony, Faridabad, NCR · 9899810977<br>
   <a href="https://gurbanifashion.com">gurbanifashion.com</a>
 </footer>
+
+<script>
+  (function () {
+    var lang = localStorage.getItem('gurbaniLang') || 'en';
+    function apply() {
+      document.getElementById('langEn').style.display = lang === 'hi' ? 'none' : '';
+      document.getElementById('langHi').style.display = lang === 'hi' ? '' : 'none';
+      var btn = document.getElementById('langToggleBtn');
+      if (btn) btn.textContent = lang === 'hi' ? 'हिं | EN' : 'EN | हिं';
+      document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
+    }
+    window.toggleGuideLang = function () {
+      lang = lang === 'hi' ? 'en' : 'hi';
+      localStorage.setItem('gurbaniLang', lang);
+      apply();
+    };
+    apply();
+  })();
+</script>
 
 </body>
 </html>
