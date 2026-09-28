@@ -3936,6 +3936,7 @@
         </div>
         <div class="tab-group-dropdown-panel" id="helpGroupPanel">
           <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
+          <button class="tab-btn" id="adminAskClaudeTabBtn" onclick="switchTab(event, 'adminAskClaude')" style="display: none;">🧠 Ask Claude</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -5474,6 +5475,31 @@
           </div>
         </div>
 
+        <!-- ASK CLAUDE — general knowledge tool for the admin dashboard.
+             Same Claude API key the AI Design Studio already runs on, so
+             nothing new to set up — but each question is still a real
+             API call, so it's "free" in the sense of no extra sign-up or
+             subscription, not literally zero cost. -->
+        <div id="adminAskClaude" class="tab-content">
+          <h3>🧠 Ask Claude</h3>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Ask about anything — business, fashion, general knowledge. This uses the same AI already built into your design tools, no separate app or sign-up needed.</p>
+
+          <div class="card" style="padding:20px; max-width:640px;">
+            <div class="form-group">
+              <label>Your question</label>
+              <textarea id="askClaudeQuestion" rows="4" placeholder="e.g. What's a good caption for a Diwali sale post? Or: How do I remove a turmeric stain from silk?" style="width:100%; resize:vertical;"></textarea>
+            </div>
+            <button type="button" class="btn-submit" id="askClaudeBtn" onclick="askClaudeKnowledgeTool()">💬 Ask</button>
+
+            <div id="askClaudeStatus" style="margin-top:10px; font-size:13px; color:var(--text-muted);"></div>
+
+            <div id="askClaudeAnswerBox" style="display:none; margin-top:16px; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px;">
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:6px;">Answer</div>
+              <div id="askClaudeAnswerText" style="font-size:14px; line-height:1.6; white-space:pre-wrap;"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -5857,6 +5883,47 @@
     function applyPhotoshootPreset(key) {
       const promptEl = document.getElementById('photoToolsPrompt');
       if (promptEl && PHOTOSHOOT_PRESETS[key]) promptEl.value = PHOTOSHOOT_PRESETS[key];
+    }
+
+    // ── Ask Claude (general knowledge tool for the admin dashboard) ──
+    async function askClaudeKnowledgeTool() {
+      const questionEl = document.getElementById('askClaudeQuestion');
+      const btn = document.getElementById('askClaudeBtn');
+      const statusEl = document.getElementById('askClaudeStatus');
+      const answerBox = document.getElementById('askClaudeAnswerBox');
+      const answerText = document.getElementById('askClaudeAnswerText');
+
+      const question = questionEl.value.trim();
+      if (!question) {
+        showToast('Please type a question first');
+        return;
+      }
+
+      btn.disabled = true;
+      answerBox.style.display = 'none';
+      statusEl.textContent = '⏳ Thinking...';
+
+      try {
+        const res = await fetch(`${API}/api/admin/ask-claude`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ question }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          statusEl.textContent = `❌ ${data.message || 'Something went wrong.'}`;
+          return;
+        }
+
+        statusEl.textContent = '';
+        answerText.textContent = data.answer;
+        answerBox.style.display = 'block';
+      } catch (err) {
+        statusEl.textContent = `❌ ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     // Catalogue items to attach a photoshoot result to — loaded once when
@@ -6638,6 +6705,7 @@
       adminImportTabBtn: { icon: 'upload', label: 'Import Data' },
       adminPhotoToolsTabBtn: { icon: 'image', label: 'Photo Tools' },
       adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
+      adminAskClaudeTabBtn: { icon: 'brain', label: 'Ask Claude' },
     };
     let _tabIconsLoaded = false;
     async function loadTabIcons() {
@@ -15848,6 +15916,7 @@
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminPhotoToolsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminAskClaudeTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // The dropdown-trigger row itself (Sales & Orders/Finance/etc.) —
         // customers never had any of the buttons inside these groups
         // visible anyway, but with them collapsed into dropdowns now, an
