@@ -3936,7 +3936,7 @@
         </div>
         <div class="tab-group-dropdown-panel" id="helpGroupPanel">
           <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
-          <button class="tab-btn" id="adminAskClaudeTabBtn" onclick="switchTab(event, 'adminAskClaude')" style="display: none;">🧠 Ask Claude</button>
+          <button class="tab-btn" id="adminAskClaudeTabBtn" onclick="switchTab(event, 'adminAskClaude'); loadAskClaudeHistory();" style="display: none;">🧠 Ask Claude</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -5477,26 +5477,32 @@
 
         <!-- ASK CLAUDE — general knowledge tool for the admin dashboard.
              Same Claude API key the AI Design Studio already runs on, so
-             nothing new to set up — but each question is still a real
-             API call, so it's "free" in the sense of no extra sign-up or
-             subscription, not literally zero cost. -->
+             nothing new to set up — but each question (and every prior
+             turn resent as context) is still a real API call, so it's
+             "free" in the sense of no extra sign-up or subscription, not
+             literally zero cost. This is now a real back-and-forth: the
+             conversation is stored server-side per admin (see
+             AskClaudeConversation) and restored when this tab is opened,
+             same idea as the Claude app remembering your chat. -->
         <div id="adminAskClaude" class="tab-content">
-          <h3>🧠 Ask Claude</h3>
-          <p style="color:#666; margin-bottom:16px; font-size:13px;">Ask about anything — business, fashion, general knowledge. This uses the same AI already built into your design tools, no separate app or sign-up needed.</p>
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+            <h3 style="margin:0;">🧠 Ask Claude</h3>
+            <button type="button" onclick="startNewAskClaudeConversation()" style="background:none; border:1px solid var(--vivid); color:var(--vivid); border-radius:14px; padding:5px 14px; font-size:12.5px; font-weight:600; cursor:pointer;">+ New conversation</button>
+          </div>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">Ask about anything — business, fashion, general knowledge. Follow-up questions remember earlier ones in this conversation. Uses the same AI already built into your design tools, no separate app or sign-up needed.</p>
 
           <div class="card" style="padding:20px; max-width:640px;">
+            <div id="askClaudeThread" style="max-height:420px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:12px;">
+              <div id="askClaudeEmptyState" style="font-size:13px; color:var(--text-muted); text-align:center; padding:20px 0;">No questions yet — ask something below to start.</div>
+            </div>
+
             <div class="form-group">
               <label>Your question</label>
-              <textarea id="askClaudeQuestion" rows="4" placeholder="e.g. What's a good caption for a Diwali sale post? Or: How do I remove a turmeric stain from silk?" style="width:100%; resize:vertical;"></textarea>
+              <textarea id="askClaudeQuestion" rows="3" placeholder="e.g. What's a good caption for a Diwali sale post? Or: How do I remove a turmeric stain from silk?" style="width:100%; resize:vertical;"></textarea>
             </div>
             <button type="button" class="btn-submit" id="askClaudeBtn" onclick="askClaudeKnowledgeTool()">💬 Ask</button>
 
             <div id="askClaudeStatus" style="margin-top:10px; font-size:13px; color:var(--text-muted);"></div>
-
-            <div id="askClaudeAnswerBox" style="display:none; margin-top:16px; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px;">
-              <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:6px;">Answer</div>
-              <div id="askClaudeAnswerText" style="font-size:14px; line-height:1.6; white-space:pre-wrap;"></div>
-            </div>
           </div>
         </div>
 
@@ -5886,12 +5892,74 @@
     }
 
     // ── Ask Claude (general knowledge tool for the admin dashboard) ──
+    // ── Ask Claude (general knowledge tool — real back-and-forth,
+    // conversation stored server-side per admin) ──
+    function renderAskClaudeThread(messages) {
+      const thread = document.getElementById('askClaudeThread');
+      if (!messages || messages.length === 0) {
+        // Rebuilt fresh each time rather than reusing the original
+        // #askClaudeEmptyState node — that node gets detached the first
+        // time a question is asked (see askClaudeKnowledgeTool's
+        // optimistic render), so re-querying it by id would return null
+        // on every subsequent empty state (e.g. after "New conversation").
+        thread.innerHTML = '<div id="askClaudeEmptyState" style="font-size:13px; color:var(--text-muted); text-align:center; padding:20px 0;">No questions yet — ask something below to start.</div>';
+        return;
+      }
+      thread.innerHTML = messages.map((m) => {
+        const isUser = m.role === 'user';
+        return `
+          <div style="align-self:${isUser ? 'flex-end' : 'flex-start'}; max-width:85%;">
+            <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:3px; text-align:${isUser ? 'right' : 'left'};">${isUser ? 'You' : 'Claude'}</div>
+            <div style="font-size:14px; line-height:1.6; white-space:pre-wrap; padding:10px 14px; border-radius:10px; ${isUser ? 'background:var(--vivid); color:#fff;' : 'background:var(--sand); border-left:4px solid var(--marigold);'}">${(m.content || '').replace(/</g, '&lt;')}</div>
+          </div>`;
+      }).join('');
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    async function loadAskClaudeHistory() {
+      try {
+        const res = await fetch(`${API}/api/admin/ask-claude/history`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          renderAskClaudeThread(data.messages);
+        }
+      } catch (err) {
+        // Silent — worst case, the thread just starts empty; the question
+        // box still works either way.
+      }
+    }
+
+    async function startNewAskClaudeConversation() {
+      const btn = document.getElementById('askClaudeBtn');
+      const statusEl = document.getElementById('askClaudeStatus');
+      try {
+        btn.disabled = true;
+        const res = await fetch(`${API}/api/admin/ask-claude/history`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          renderAskClaudeThread([]);
+          statusEl.textContent = '';
+          showToast('Started a new conversation');
+        } else {
+          statusEl.textContent = `❌ ${data.message || 'Could not start a new conversation.'}`;
+        }
+      } catch (err) {
+        statusEl.textContent = `❌ ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
     async function askClaudeKnowledgeTool() {
       const questionEl = document.getElementById('askClaudeQuestion');
       const btn = document.getElementById('askClaudeBtn');
       const statusEl = document.getElementById('askClaudeStatus');
-      const answerBox = document.getElementById('askClaudeAnswerBox');
-      const answerText = document.getElementById('askClaudeAnswerText');
+      const thread = document.getElementById('askClaudeThread');
 
       const question = questionEl.value.trim();
       if (!question) {
@@ -5899,8 +5967,19 @@
         return;
       }
 
+      // Optimistically show the question right away, before the answer
+      // comes back — makes the wait feel like a real chat rather than a
+      // stalled form.
+      document.getElementById('askClaudeEmptyState')?.remove();
+      thread.insertAdjacentHTML('beforeend', `
+        <div style="align-self:flex-end; max-width:85%;">
+          <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:3px; text-align:right;">You</div>
+          <div style="font-size:14px; line-height:1.6; white-space:pre-wrap; padding:10px 14px; border-radius:10px; background:var(--vivid); color:#fff;">${question.replace(/</g, '&lt;')}</div>
+        </div>`);
+      thread.scrollTop = thread.scrollHeight;
+      questionEl.value = '';
+
       btn.disabled = true;
-      answerBox.style.display = 'none';
       statusEl.textContent = '⏳ Thinking...';
 
       try {
@@ -5912,13 +5991,23 @@
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-          statusEl.textContent = `❌ ${data.message || 'Something went wrong.'}`;
+          if (data.capped) {
+            // Hourly quota used up — point her to claude.ai (her own
+            // normal sign-in) to keep going rather than just a dead end.
+            statusEl.innerHTML = `⏸️ ${data.message || "You've used this hour's free questions."} <a href="https://claude.ai" target="_blank" rel="noopener" style="color:var(--vivid); font-weight:700;">Open claude.ai &rarr;</a>`;
+          } else {
+            statusEl.textContent = `❌ ${data.message || 'Something went wrong.'}`;
+          }
           return;
         }
 
         statusEl.textContent = '';
-        answerText.textContent = data.answer;
-        answerBox.style.display = 'block';
+        thread.insertAdjacentHTML('beforeend', `
+          <div style="align-self:flex-start; max-width:85%;">
+            <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:3px;">Claude</div>
+            <div style="font-size:14px; line-height:1.6; white-space:pre-wrap; padding:10px 14px; border-radius:10px; background:var(--sand); border-left:4px solid var(--marigold);">${data.answer.replace(/</g, '&lt;')}</div>
+          </div>`);
+        thread.scrollTop = thread.scrollHeight;
       } catch (err) {
         statusEl.textContent = `❌ ${err.message}`;
       } finally {
