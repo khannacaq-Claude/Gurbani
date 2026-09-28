@@ -3952,7 +3952,7 @@
         </div>
         <div class="tab-group-dropdown-panel" id="helpGroupPanel">
           <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
-          <button class="tab-btn" id="adminAskClaudeTabBtn" onclick="switchTab(event, 'adminAskClaude'); loadAskClaudeHistory();" style="display: none;">🧠 Ask Claude</button>
+          <button class="tab-btn" id="adminAskClaudeTabBtn" onclick="switchTab(event, 'adminAskClaude'); initAskClaudeTab();" style="display: none;">🧠 Ask Claude</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -5505,7 +5505,7 @@
             <h3 style="margin:0;">🧠 Ask Claude</h3>
             <button type="button" onclick="startNewAskClaudeConversation()" style="background:none; border:1px solid var(--vivid); color:var(--vivid); border-radius:14px; padding:5px 14px; font-size:12.5px; font-weight:600; cursor:pointer;">+ New conversation</button>
           </div>
-          <p style="color:#666; margin-bottom:4px; font-size:13px;">Ask about anything — business, fashion, general knowledge. Follow-up questions remember earlier ones in this conversation. Uses the same AI already built into your design tools, no separate app or sign-up needed.</p>
+          <p style="color:#666; margin-bottom:4px; font-size:13px;">Ask about anything — business, fashion, general knowledge. Follow-up questions remember earlier ones in the same conversation. Uses the same AI already built into your design tools, no separate app or sign-up needed.</p>
           <!-- Site-info version marker — keep this in sync with
                SITE_FEATURES_VERSION in adminController.js. Bump both
                whenever a real feature is added/changed on the site, so
@@ -5514,6 +5514,16 @@
           <p style="color:var(--text-muted); margin-bottom:16px; font-size:11.5px;">ℹ️ Site info Claude knows: <strong>v1 — 28 Sep 2026</strong>. Update this whenever a feature changes on the site.</p>
 
           <div class="card" style="padding:20px; max-width:640px;">
+            <!-- Conversation list — multiple separate, named chats (like
+                 the Claude app's own sidebar), each rename-able and
+                 delete-able, switchable by clicking. Rebuilt fully by
+                 renderAskClaudeConversationList() whenever the list
+                 changes (new/rename/delete/switch). -->
+            <div style="margin-bottom:14px;">
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:6px;">Your conversations</div>
+              <div id="askClaudeConvoList" style="display:flex; flex-direction:column; gap:4px; max-height:160px; overflow-y:auto; margin-bottom:4px;"></div>
+            </div>
+
             <div id="askClaudeThread" style="max-height:420px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:12px;">
               <div id="askClaudeEmptyState" style="font-size:13px; color:var(--text-muted); text-align:center; padding:20px 0;">No questions yet — ask something below to start.</div>
             </div>
@@ -5932,9 +5942,12 @@
       if (promptEl && PHOTOSHOOT_PRESETS[key]) promptEl.value = PHOTOSHOOT_PRESETS[key];
     }
 
-    // ── Ask Claude (general knowledge tool for the admin dashboard) ──
-    // ── Ask Claude (general knowledge tool — real back-and-forth,
-    // conversation stored server-side per admin) ──
+    // ── Ask Claude (general knowledge tool — multiple named, switchable
+    // conversations per admin, stored server-side; see
+    // AskClaudeConversation on the backend) ──
+    let askClaudeConversations = [];       // list for the sidebar: {id, title, updatedAt, preview}
+    let askClaudeCurrentConversationId = null; // null = a brand-new, not-yet-saved conversation
+
     function renderAskClaudeThread(messages) {
       const thread = document.getElementById('askClaudeThread');
       if (!messages || messages.length === 0) {
@@ -5942,7 +5955,7 @@
         // #askClaudeEmptyState node — that node gets detached the first
         // time a question is asked (see askClaudeKnowledgeTool's
         // optimistic render), so re-querying it by id would return null
-        // on every subsequent empty state (e.g. after "New conversation").
+        // on every subsequent empty state (e.g. after switching chats).
         thread.innerHTML = '<div id="askClaudeEmptyState" style="font-size:13px; color:var(--text-muted); text-align:center; padding:20px 0;">No questions yet — ask something below to start.</div>';
         return;
       }
@@ -5957,9 +5970,59 @@
       thread.scrollTop = thread.scrollHeight;
     }
 
-    async function loadAskClaudeHistory() {
+    // Rebuilds the conversation list UI from askClaudeConversations. Each
+    // row is clickable to switch, plus a small "⋯" menu with Rename and
+    // Delete — the claude.ai-style options that actually apply to a
+    // 2-person admin tool (no projects/groups to sort into here, so those
+    // parts of that menu are left out).
+    function renderAskClaudeConversationList() {
+      const listEl = document.getElementById('askClaudeConvoList');
+      if (!askClaudeConversations.length) {
+        listEl.innerHTML = '<div style="font-size:12px; color:var(--text-muted); padding:4px 2px;">No saved conversations yet.</div>';
+        return;
+      }
+      listEl.innerHTML = askClaudeConversations.map((c) => {
+        const active = c.id === askClaudeCurrentConversationId;
+        return `
+          <div style="display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:8px; cursor:pointer; ${active ? 'background:var(--sand); border:1px solid var(--marigold);' : 'border:1px solid transparent;'}" onclick="switchAskClaudeConversation('${c.id}')">
+            <span style="flex:1; min-width:0; font-size:13px; font-weight:${active ? '700' : '500'}; color:var(--text-ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${(c.title || 'New conversation').replace(/</g, '&lt;')}</span>
+            <button type="button" title="Rename" onclick="event.stopPropagation(); renameAskClaudeConversation('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:13px; padding:2px 4px; opacity:0.6;">✏️</button>
+            <button type="button" title="Delete" onclick="event.stopPropagation(); deleteAskClaudeConversation('${c.id}')" style="background:none; border:none; cursor:pointer; font-size:13px; padding:2px 4px; opacity:0.6;">🗑️</button>
+          </div>`;
+      }).join('');
+    }
+
+    // Called when the tab is opened: loads the conversation list, then
+    // opens the most recently used one (or a blank/untitled state if
+    // there are none yet — that's fine, the first question will create
+    // one automatically).
+    async function initAskClaudeTab() {
       try {
-        const res = await fetch(`${API}/api/admin/ask-claude/history`, {
+        const res = await fetch(`${API}/api/admin/ask-claude/conversations`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          askClaudeConversations = data.conversations || [];
+          renderAskClaudeConversationList();
+          if (askClaudeConversations.length) {
+            await switchAskClaudeConversation(askClaudeConversations[0].id);
+          } else {
+            askClaudeCurrentConversationId = null;
+            renderAskClaudeThread([]);
+          }
+        }
+      } catch (err) {
+        // Silent — worst case, the tab just opens with an empty state;
+        // the question box still works and starts a fresh conversation.
+      }
+    }
+
+    async function switchAskClaudeConversation(id) {
+      askClaudeCurrentConversationId = id;
+      renderAskClaudeConversationList();
+      try {
+        const res = await fetch(`${API}/api/admin/ask-claude/conversations/${id}`, {
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
         const data = await res.json();
@@ -5967,22 +6030,26 @@
           renderAskClaudeThread(data.messages);
         }
       } catch (err) {
-        // Silent — worst case, the thread just starts empty; the question
-        // box still works either way.
+        // Leave the thread as-is; the question box still works.
       }
     }
 
+    // "+ New conversation" — starts a genuinely separate chat, kept
+    // alongside the old ones in the list rather than replacing them.
     async function startNewAskClaudeConversation() {
       const btn = document.getElementById('askClaudeBtn');
       const statusEl = document.getElementById('askClaudeStatus');
       try {
         btn.disabled = true;
-        const res = await fetch(`${API}/api/admin/ask-claude/history`, {
-          method: 'DELETE',
+        const res = await fetch(`${API}/api/admin/ask-claude/conversations`, {
+          method: 'POST',
           headers: { 'Authorization': `Bearer ${authToken}` },
         });
         const data = await res.json();
         if (res.ok && data.success) {
+          askClaudeConversations.unshift({ id: data.id, title: 'New conversation', updatedAt: new Date().toISOString(), preview: '' });
+          askClaudeCurrentConversationId = data.id;
+          renderAskClaudeConversationList();
           renderAskClaudeThread([]);
           statusEl.textContent = '';
           showToast('Started a new conversation');
@@ -5993,6 +6060,59 @@
         statusEl.textContent = `❌ ${err.message}`;
       } finally {
         btn.disabled = false;
+      }
+    }
+
+    async function renameAskClaudeConversation(id) {
+      const existing = askClaudeConversations.find((c) => c.id === id);
+      const title = prompt('Rename this conversation:', existing ? existing.title : '');
+      if (title === null) return; // cancelled
+      if (!title.trim()) { showToast('Please enter a name'); return; }
+      try {
+        const res = await fetch(`${API}/api/admin/ask-claude/conversations/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ title: title.trim() }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (existing) existing.title = data.title;
+          renderAskClaudeConversationList();
+          showToast('Renamed');
+        } else {
+          showToast(data.message || 'Could not rename conversation');
+        }
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function deleteAskClaudeConversation(id) {
+      const existing = askClaudeConversations.find((c) => c.id === id);
+      if (!confirm(`Delete "${existing ? existing.title : 'this conversation'}"? This can't be undone.`)) return;
+      try {
+        const res = await fetch(`${API}/api/admin/ask-claude/conversations/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          askClaudeConversations = askClaudeConversations.filter((c) => c.id !== id);
+          renderAskClaudeConversationList();
+          if (askClaudeCurrentConversationId === id) {
+            if (askClaudeConversations.length) {
+              await switchAskClaudeConversation(askClaudeConversations[0].id);
+            } else {
+              askClaudeCurrentConversationId = null;
+              renderAskClaudeThread([]);
+            }
+          }
+          showToast('Conversation deleted');
+        } else {
+          showToast(data.message || 'Could not delete conversation');
+        }
+      } catch (err) {
+        showToast(err.message);
       }
     }
 
@@ -6034,7 +6154,7 @@
         const res = await fetch(`${API}/api/admin/ask-claude`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({ question, conversationId: askClaudeCurrentConversationId }),
         });
         const data = await res.json();
 
@@ -6056,6 +6176,20 @@
             <div style="font-size:14px; line-height:1.6; white-space:pre-wrap; padding:10px 14px; border-radius:10px; background:var(--sand); border-left:4px solid var(--marigold);">${data.answer.replace(/</g, '&lt;')}</div>
           </div>`);
         thread.scrollTop = thread.scrollHeight;
+
+        // The backend may have just created this conversation (first
+        // question, no conversationId sent) or auto-titled it (first
+        // question in an untitled one) — reconcile the list either way.
+        askClaudeCurrentConversationId = data.conversationId;
+        const existing = askClaudeConversations.find((c) => c.id === data.conversationId);
+        if (existing) {
+          existing.title = data.title;
+          existing.updatedAt = new Date().toISOString();
+          askClaudeConversations = [existing, ...askClaudeConversations.filter((c) => c.id !== data.conversationId)];
+        } else {
+          askClaudeConversations.unshift({ id: data.conversationId, title: data.title, updatedAt: new Date().toISOString(), preview: question.slice(0, 80) });
+        }
+        renderAskClaudeConversationList();
       } catch (err) {
         statusEl.textContent = `❌ ${err.message}`;
       } finally {
