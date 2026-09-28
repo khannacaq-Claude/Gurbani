@@ -4677,7 +4677,7 @@
             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
               <h4 style="margin:0;">👀 Site Visitors <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(your own admin/test visits excluded)</span></h4>
               <div style="display:flex; align-items:center; gap:14px;">
-                <button type="button" onclick="excludeThisDeviceFromStats()" style="font-size:11.5px; font-weight:600; color:var(--text-muted); background:none; border:1px solid #e5dcc8; border-radius:6px; padding:4px 9px; cursor:pointer; white-space:nowrap;" title="Stop counting visits from this specific browser/device, including past ones already logged">🚫 Don't count this device</button>
+                <button type="button" id="excludeDeviceBtn" onclick="excludeThisDeviceFromStats()" style="font-size:11.5px; font-weight:600; color:var(--text-muted); background:none; border:1px solid #e5dcc8; border-radius:6px; padding:4px 9px; cursor:pointer; white-space:nowrap;" title="Stop counting visits from this specific browser/device, including past ones already logged">🚫 Don't count this device</button>
                 <!-- Jumps straight into the Gurbani Fashion GA4 property (Property
                      ID 547786470), skipping the property-picker step. Lands on
                      the reports home — from there it's 2 clicks to User >
@@ -16397,6 +16397,28 @@
     // (so future calls are silently skipped even after signing out) AND
     // deletes that visitorId's past log entries, so historical stats get
     // corrected too, not just going forward.
+    // Reflects whether THIS device has already been excluded (flag set by
+    // excludeThisDeviceFromStats below) in the button itself, so it isn't
+    // silently offering the same action again with no sign it already
+    // ran — swaps to a disabled, clearly-already-done state instead.
+    function syncExcludeDeviceButton() {
+      const btn = document.getElementById('excludeDeviceBtn');
+      if (!btn) return;
+      if (localStorage.getItem('gfExcludeFromVisitorStats') === 'true') {
+        btn.textContent = '✅ This device is excluded';
+        btn.disabled = true;
+        btn.style.cursor = 'default';
+        btn.style.opacity = '0.7';
+        btn.title = 'Visits from this device/browser are already excluded from Site Visitors stats.';
+      } else {
+        btn.textContent = "🚫 Don't count this device";
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+        btn.style.opacity = '1';
+        btn.title = 'Stop counting visits from this specific browser/device, including past ones already logged';
+      }
+    }
+
     async function excludeThisDeviceFromStats() {
       if (!confirm('Stop counting visits from this device/browser in Site Visitors stats — including past visits already logged? This can\'t be undone.')) return;
       const visitorId = getOrCreateVisitorId();
@@ -16409,6 +16431,7 @@
         const data = await res.json();
         if (res.ok && data.success) {
           localStorage.setItem('gfExcludeFromVisitorStats', 'true');
+          syncExcludeDeviceButton();
           showToast(`✅ This device is now excluded — removed ${data.deletedCount} past visit(s) from the count.`);
           loadVisitorStats();
         } else {
@@ -16469,6 +16492,7 @@
     async function loadVisitorStats() {
       const grid = document.getElementById('visitorStatsGrid');
       if (!grid) return;
+      syncExcludeDeviceButton();
       try {
         const res = await fetch(`${API}/api/visitors/stats`, {
           headers: { 'Authorization': `Bearer ${authToken}` },
