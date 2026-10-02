@@ -10979,11 +10979,14 @@
             </div>
 
             <div class="form-group">
-              <label style="font-size:13px;">Anything else? (optional)</label>
-              <textarea id="feedbackComments" placeholder="What you liked, what felt off, anything at all..." style="min-height:60px;"></textarea>
+              <label style="font-size:13px; font-weight:600;">💡 Have an idea or suggestion? We'd genuinely love to hear it (optional)</label>
+              <textarea id="feedbackComments" placeholder="A feature you wish existed, a fabric or garment we should add, something that confused you, anything at all..." style="min-height:70px;"></textarea>
             </div>
 
-            <button type="button" onclick="submitFeedback()" class="btn-submit">Submit Feedback</button>
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+              <button type="button" onclick="submitFeedback()" class="btn-submit">Submit Feedback</button>
+              <button type="button" onclick="skipFeedback()" style="background:none; border:none; color:var(--text-muted); font-size:13px; text-decoration:underline; cursor:pointer; padding:4px;">Skip for now</button>
+            </div>
             <div id="feedbackStatus" style="margin-top:10px; font-size:13px;"></div>
           </div>
         `;
@@ -11048,6 +11051,19 @@
         b.style.color = active ? 'white' : 'var(--text-ink)';
         b.style.borderColor = active ? 'var(--vivid)' : '#E5DCC8';
       });
+    }
+
+    // Lets someone dismiss the feedback widget without answering anything —
+    // deliberately client-side only (no backend call), since skipping isn't
+    // a fact worth recording, it's just honoring that they don't want to
+    // engage right now. Re-viewing this design later will show the ask
+    // again, same as if they'd never seen it (only an actual submission
+    // sets alreadyGaveFeedback server-side and stops the re-ask for good).
+    function skipFeedback() {
+      const widget = document.getElementById('feedbackWidget');
+      if (widget) {
+        widget.innerHTML = '<p style="text-align:center; padding: 10px 0; color:var(--text-muted); font-size:13px;">No worries — you can always share feedback on this design later from "My Designs".</p>';
+      }
     }
 
     async function submitFeedback() {
