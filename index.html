@@ -3945,6 +3945,7 @@
         <div class="tab-group-dropdown-panel" id="peopleGroupPanel">
           <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
           <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
+          <button class="tab-btn" id="adminRewardsTabBtn" onclick="switchTab(event, 'adminRewards'); initRewardsTab();" style="display: none;">⭐ Rewards</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
         </div>
         <div class="tab-group-dropdown-panel" id="marketingGroupPanel">
@@ -5491,6 +5492,26 @@
           </div>
         </div>
 
+        <!-- Rewards Card register: admin-only, keyed by phone number so a lost or duplicate printed card never loses stamps. -->
+        <div id="adminRewards" class="tab-content">
+          <h3>⭐ Rewards Card Register</h3>
+          <p style="color:#666; margin-bottom:12px; font-size:13px;">Stamps are tracked by phone number. If a customer loses the printed card or holds two, the stamps here are the truth.</p>
+          <div id="rwProgramLine" style="font-size:12px; color:var(--text-muted); margin-bottom:14px;"></div>
+          <div class="card" style="padding:16px; margin-bottom:16px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <input type="text" id="rwSearch" placeholder="Phone number or name" style="flex:1; min-width:180px;" onkeydown="if(event.key==='Enter'){rewardsLookup();}">
+              <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="rewardsLookup()">Find</button>
+            </div>
+            <div id="rwStats" style="font-size:12px; color:var(--text-muted); margin-top:10px;"></div>
+          </div>
+          <div id="rwEnrollBox" class="card" style="padding:16px; margin-bottom:16px; display:none;"></div>
+          <div id="rwAccountBox" style="display:none;"></div>
+          <div class="card" style="padding:16px;">
+            <h4 style="margin-bottom:10px;">Recent members</h4>
+            <div id="rwMemberList" style="font-size:13px;"></div>
+          </div>
+        </div>
+
         <!-- ASK CLAUDE — general knowledge tool for the admin dashboard.
              Same Claude API key the AI Design Studio already runs on, so
              nothing new to set up — but each question (and every prior
@@ -5511,7 +5532,7 @@
                whenever a real feature is added/changed on the site, so
                it's obvious at a glance whether Claude's answer about
                "my website" is based on current information. -->
-          <p style="color:var(--text-muted); margin-bottom:16px; font-size:11.5px;">ℹ️ Site info Claude knows: <strong>v1 — 28 Sep 2026</strong>. Update this whenever a feature changes on the site.</p>
+          <p style="color:var(--text-muted); margin-bottom:16px; font-size:11.5px;">ℹ️ Site info Claude knows: <strong>v2 — 10 Oct 2026</strong>. Update this whenever a feature changes on the site.</p>
 
           <div class="card" style="padding:20px; max-width:640px;">
             <!-- Conversation list — multiple separate, named chats (like
@@ -5996,6 +6017,204 @@
     // opens the most recently used one (or a blank/untitled state if
     // there are none yet — that's fine, the first question will create
     // one automatically).
+    /* ============================================================
+       REWARDS CARD REGISTER (admin only) - stamps tracked by phone
+       Rule mirrors controllers/loyaltyController.js stampsForBill.
+       ============================================================ */
+    let rwCurrent = null;
+    let rwProgram = null;
+
+    function rwStampsForBill(items, suits, fabric) {
+      items = Math.max(0, Math.floor(Number(items) || 0));
+      suits = Math.max(0, Math.floor(Number(suits) || 0));
+      if (items < 2) return 0;
+      return (suits > 2 ? 2 : 1) + (fabric ? 1 : 0);
+    }
+    async function rwFetch(path, method = 'GET', body = null) {
+      const opts = { method, headers: { 'Authorization': `Bearer ${authToken}` } };
+      if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+      const res = await fetch(`${API}/api/loyalty${path}`, opts);
+      let data = {};
+      try { data = await res.json(); } catch (e) {}
+      return { ok: res.ok, status: res.status, data };
+    }
+    function rwFmtDate(d) {
+      try { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; }
+    }
+    function rwSetProgram(p) {
+      if (!p) return;
+      rwProgram = p;
+      const el = document.getElementById('rwProgramLine');
+      if (el) el.innerHTML = `Season <strong>${escapeHtml(p.season)}</strong> &middot; valid till <strong>${escapeHtml(rwFmtDate(p.validTill))}</strong>` + (p.expired ? ' <strong style="color:#c62828;">(EXPIRED)</strong>' : '');
+    }
+    async function initRewardsTab() {
+      document.getElementById('rwEnrollBox').style.display = 'none';
+      document.getElementById('rwAccountBox').style.display = 'none';
+      try {
+        const [stats, list] = await Promise.all([rwFetch('/stats'), rwFetch('/')]);
+        if (stats.ok && stats.data.success) {
+          rwSetProgram(stats.data.program);
+          document.getElementById('rwStats').textContent = `${stats.data.members} members · ${stats.data.totalStamps} stamps given · ${stats.data.pendingRewards} rewards waiting to be redeemed`;
+        }
+        if (list.ok && list.data.success) rwRenderMembers(list.data.accounts);
+      } catch (e) { showToast('Could not load the Rewards register'); }
+    }
+    function rwRenderMembers(accounts) {
+      const box = document.getElementById('rwMemberList');
+      if (!accounts || !accounts.length) { box.innerHTML = '<span style="color:var(--text-muted);">No members yet. Search a phone number to enroll the first one.</span>'; return; }
+      box.innerHTML = accounts.map(a => `
+        <div onclick="rewardsOpen('${escapeHtml(a.phone)}')" style="display:flex; justify-content:space-between; gap:10px; padding:9px 4px; border-bottom:1px solid #eee; cursor:pointer;">
+          <span><strong>${escapeHtml(a.name)}</strong> <span style="color:var(--text-muted);">${escapeHtml(a.phone)}</span></span>
+          <span>${a.stampsOnCard}/10 &middot; card ${a.cardNumber}${a.pendingCount ? ` <span style="background:#F2C879; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700;">${a.pendingCount} reward${a.pendingCount > 1 ? 's' : ''}</span>` : ''}</span>
+        </div>`).join('');
+    }
+    async function rewardsLookup() {
+      const q = document.getElementById('rwSearch').value.trim();
+      if (!q) { showToast('Enter a phone number or name'); return; }
+      const digits = q.replace(/\D/g, '');
+      if (digits.length >= 10) { return rewardsOpen(digits.slice(-10)); }
+      const r = await rwFetch('/?search=' + encodeURIComponent(q));
+      if (r.ok && r.data.success) {
+        rwRenderMembers(r.data.accounts);
+        document.getElementById('rwEnrollBox').style.display = 'none';
+        document.getElementById('rwAccountBox').style.display = 'none';
+        if (!r.data.accounts.length) showToast('No member found. Use the full 10 digit phone number to enroll.');
+      } else showToast(r.data.message || 'Search failed');
+    }
+    async function rewardsOpen(phone) {
+      const r = await rwFetch('/' + encodeURIComponent(phone));
+      if (r.ok && r.data.success) {
+        rwSetProgram(r.data.program);
+        rwCurrent = r.data.account;
+        document.getElementById('rwEnrollBox').style.display = 'none';
+        rwRenderAccount();
+      } else if (r.status === 404 && r.data.notEnrolled) {
+        rwCurrent = null;
+        document.getElementById('rwAccountBox').style.display = 'none';
+        rwShowEnroll(phone);
+      } else showToast(r.data.message || 'Could not load this member');
+    }
+    function rwShowEnroll(phone) {
+      const box = document.getElementById('rwEnrollBox');
+      box.style.display = 'block';
+      box.innerHTML = `
+        <h4 style="margin-bottom:8px;">Not enrolled yet: ${escapeHtml(phone)}</h4>
+        <input type="text" id="rwEnrollName" placeholder="Customer name" style="margin-bottom:8px;">
+        <label style="display:flex; gap:8px; align-items:center; font-size:13px; margin-bottom:10px;"><input type="checkbox" id="rwWelcome" checked> Give the welcome stamp (first stamp on us)</label>
+        <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="rewardsEnroll('${escapeHtml(phone)}')">Enroll</button>`;
+    }
+    async function rewardsEnroll(phone) {
+      const name = document.getElementById('rwEnrollName').value.trim();
+      if (!name) { showToast('Enter the customer name'); return; }
+      const r = await rwFetch('/enroll', 'POST', { phone, name, welcomeStamp: document.getElementById('rwWelcome').checked });
+      if (r.ok && r.data.success) {
+        showToast('Enrolled');
+        rwCurrent = r.data.account;
+        document.getElementById('rwEnrollBox').style.display = 'none';
+        rwRenderAccount(); initRewardsTabList();
+      } else showToast(r.data.message || 'Could not enroll');
+    }
+    async function initRewardsTabList() {
+      const [stats, list] = await Promise.all([rwFetch('/stats'), rwFetch('/')]);
+      if (stats.ok && stats.data.success) document.getElementById('rwStats').textContent = `${stats.data.members} members · ${stats.data.totalStamps} stamps given · ${stats.data.pendingRewards} rewards waiting to be redeemed`;
+      if (list.ok && list.data.success) rwRenderMembers(list.data.accounts);
+    }
+    function rwRenderAccount() {
+      const a = rwCurrent;
+      const box = document.getElementById('rwAccountBox');
+      if (!a) { box.style.display = 'none'; return; }
+      const milestones = [3, 5, 8, 10];
+      let circles = '';
+      for (let i = 1; i <= 10; i++) {
+        const filled = i <= a.stampsOnCard;
+        const ms = milestones.includes(i);
+        circles += `<div style="width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; border:2px solid ${ms ? '#D9A441' : '#c9b8c2'}; background:${filled ? '#7B3056' : 'white'}; color:${filled ? '#F2C879' : '#999'};">${filled ? '✓' : i}</div>`;
+      }
+      const pending = (a.pending || []).map(p => `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; background:#FFF6DF; border:1px solid #F2C879; border-radius:8px; margin-bottom:8px;">
+          <span style="font-size:13px;"><strong>Card ${p.cardNumber}, ${p.milestone} stamps:</strong> ${escapeHtml(p.reward)}</span>
+          <button type="button" onclick="rewardsRedeem(${p.cardNumber}, ${p.milestone})" style="padding:8px 14px; border-radius:6px; border:none; background:#7B3056; color:#F2C879; font-weight:600; cursor:pointer;">Mark redeemed</button>
+        </div>`).join('') || '<div style="font-size:13px; color:var(--text-muted);">No rewards waiting.</div>';
+      const next = a.next ? `<div style="font-size:13px; margin-top:10px;">Next reward at <strong>${a.next.milestone}</strong> stamps (${a.next.stampsAway} more): ${escapeHtml(a.next.reward || '')}</div>` : '';
+      const hist = [
+        ...(a.entries || []).map(e => ({ t: e.date, kind: 'e', e })),
+        ...(a.redemptions || []).map(r => ({ t: r.redeemedAt, kind: 'r', r })),
+      ].sort((x, y) => new Date(y.t) - new Date(x.t)).map(h => {
+        if (h.kind === 'e') {
+          const e = h.e;
+          const label = e.type === 'welcome' ? 'Welcome stamp' : `Bill${e.billRef ? ' ' + escapeHtml(e.billRef) : ''}: ${e.stitchingItems} items, ${e.suits} suits${e.fabric ? ', fabric' : ''}`;
+          return `<div style="display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(e.date)} &middot; ${label} <strong>+${e.stamps}</strong>${e.note ? ' <em style="color:var(--text-muted);">' + escapeHtml(e.note) + '</em>' : ''}</span><button type="button" onclick="rewardsUndoEntry('${e._id}')" style="border:none; background:none; color:#c62828; cursor:pointer;">Undo</button></div>`;
+        }
+        const r = h.r;
+        return `<div style="display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(r.redeemedAt)} &middot; Redeemed card ${r.cardNumber}, ${r.milestone} stamps</span><button type="button" onclick="rewardsUndoRedemption('${r._id}')" style="border:none; background:none; color:#c62828; cursor:pointer;">Undo</button></div>`;
+      }).join('') || '<div style="font-size:12.5px; color:var(--text-muted);">No history yet.</div>';
+      const season = rwProgram ? rwProgram.season : '';
+      const msg = `Namaste ${a.name}, your Gurbani Fashion Rewards Card: ${a.stampsOnCard}/10 stamps on card ${a.cardNumber}` + (a.next ? `. ${a.next.stampsAway} more stamp(s) for ${a.next.reward}.` : '.') + ((a.pending || []).length ? ' You have a reward waiting, ask us at your next visit!' : '') + ' Thank you for choosing us!';
+      const wa = `https://wa.me/91${a.phone}?text=${encodeURIComponent(msg)}`;
+      box.style.display = 'block';
+      box.innerHTML = `
+        <div class="card" style="padding:16px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;">
+            <div><h4 style="margin:0;">${escapeHtml(a.name)}</h4><div style="font-size:13px; color:var(--text-muted);">${escapeHtml(a.phone)} &middot; ${a.totalStamps} stamps in total &middot; card ${a.cardNumber} &middot; ${escapeHtml(season)}</div></div>
+            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;">Rename</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#25D366; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:14px;">${circles}</div>
+          ${next}
+          <h5 style="margin:16px 0 8px;">Rewards waiting</h5>${pending}
+        </div>
+        <div class="card" style="padding:16px; margin-bottom:16px;">
+          <h4 style="margin-bottom:10px;">Add a bill</h4>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+            <input type="number" id="rwItems" min="0" placeholder="Stitching items" style="flex:1; min-width:130px;" oninput="rwPreview()">
+            <input type="number" id="rwSuits" min="0" placeholder="Of which suits" style="flex:1; min-width:130px;" oninput="rwPreview()">
+            <input type="text" id="rwBillRef" placeholder="Bill no. (optional)" style="flex:1; min-width:130px;">
+          </div>
+          <label style="display:flex; gap:8px; align-items:center; font-size:13px; margin-bottom:8px;"><input type="checkbox" id="rwFabric" onchange="rwPreview()"> Fabric also bought from our store</label>
+          <div id="rwPreviewLine" style="font-size:13px; font-weight:600; margin-bottom:10px;">Stamps for this bill: 0</div>
+          <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="rewardsAddBill()">Add stamp(s)</button>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Rule: at least 2 stitching items = 1 stamp; more than 2 suits = 2 stamps; fabric from us = +1.</div>
+        </div>
+        <div class="card" style="padding:16px; margin-bottom:16px;"><h4 style="margin-bottom:10px;">History</h4>${hist}</div>`;
+    }
+    function rwPreview() {
+      const n = rwStampsForBill(document.getElementById('rwItems').value, document.getElementById('rwSuits').value, document.getElementById('rwFabric').checked);
+      document.getElementById('rwPreviewLine').textContent = 'Stamps for this bill: ' + n + (n === 0 ? ' (needs at least 2 stitching items)' : '');
+    }
+    async function rwApply(r, okMsg) {
+      if (r.ok && r.data.success) {
+        rwCurrent = r.data.account; rwSetProgram(r.data.program);
+        rwRenderAccount(); initRewardsTabList();
+        if (okMsg) showToast(okMsg);
+      } else showToast(r.data.message || 'Something went wrong');
+    }
+    async function rewardsAddBill() {
+      if (!rwCurrent) return;
+      const items = document.getElementById('rwItems').value, suits = document.getElementById('rwSuits').value || 0;
+      const fabric = document.getElementById('rwFabric').checked;
+      if (rwStampsForBill(items, suits, fabric) === 0) { showToast('A stamp needs at least 2 stitching items on the bill'); return; }
+      const r = await rwFetch(`/${rwCurrent.phone}/bill`, 'POST', { stitchingItems: Number(items), suits: Number(suits), fabric, billRef: document.getElementById('rwBillRef').value });
+      await rwApply(r, r.ok && r.data.success ? `${r.data.stampsAdded} stamp(s) added` : '');
+    }
+    async function rewardsRedeem(cardNumber, milestone) {
+      if (!rwCurrent) return;
+      if (!(await showConfirm(`Mark the ${milestone} stamp reward (card ${cardNumber}) as redeemed?`))) return;
+      await rwApply(await rwFetch(`/${rwCurrent.phone}/redeem`, 'POST', { cardNumber, milestone }), 'Marked redeemed');
+    }
+    async function rewardsUndoEntry(id) {
+      if (!rwCurrent || !(await showConfirm('Remove this stamp entry?'))) return;
+      await rwApply(await rwFetch(`/${rwCurrent.phone}/entry/${id}`, 'DELETE'), 'Entry removed');
+    }
+    async function rewardsUndoRedemption(id) {
+      if (!rwCurrent || !(await showConfirm('Undo this redemption? The reward will show as waiting again.'))) return;
+      await rwApply(await rwFetch(`/${rwCurrent.phone}/redemption/${id}`, 'DELETE'), 'Redemption undone');
+    }
+    async function rewardsRename() {
+      if (!rwCurrent) return;
+      const name = prompt('Customer name', rwCurrent.name);
+      if (!name || !name.trim()) return;
+      await rwApply(await rwFetch(`/${rwCurrent.phone}`, 'PUT', { name: name.trim() }), 'Name updated');
+    }
+
     async function initAskClaudeTab() {
       try {
         const res = await fetch(`${API}/api/admin/ask-claude/conversations`, {
@@ -6977,6 +7196,7 @@
       adminPhotoToolsTabBtn: { icon: 'image', label: 'Photo Tools' },
       adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
       adminAskClaudeTabBtn: { icon: 'brain', label: 'Ask Claude' },
+      adminRewardsTabBtn: { icon: 'star', label: 'Rewards' },
     };
     let _tabIconsLoaded = false;
     async function loadTabIcons() {
@@ -14099,6 +14319,7 @@
             <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
           </div>
           <div style="display:flex; gap:6px;">
+            <a href="mailto:${c.email}?subject=${encodeURIComponent('Gurbani Fashion')}" class="admin-filter-btn" style="white-space:nowrap; text-decoration:none; display:inline-block;" title="Opens your own email app to write to ${escapeHtml(c.email)} — nothing is sent automatically">✉️ Message</a>
             <button type="button" onclick="toggleCustomerBlock('${c._id}', ${!c.isBlocked})" class="admin-filter-btn" style="white-space:nowrap;">${c.isBlocked ? '🔓 Unblock' : '🔒 Block'}</button>
             <button type="button" onclick="deleteCustomerAccount('${c._id}', '${escapeHtml(c.name)}')" class="admin-filter-btn" style="white-space:nowrap; color:#c62828;">🗑️ Delete</button>
           </div>
@@ -16204,6 +16425,7 @@
         document.getElementById('adminPhotoToolsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAskClaudeTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // The dropdown-trigger row itself (Sales & Orders/Finance/etc.) —
         // customers never had any of the buttons inside these groups
         // visible anyway, but with them collapsed into dropdowns now, an
