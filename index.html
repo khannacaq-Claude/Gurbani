@@ -1711,6 +1711,28 @@
       z-index: 450;
     }
 
+    /* ===== Dashboard: left sidebar menu on desktop (saves vertical space) =====
+       .tabs becomes a sticky left panel under the fixed header; content sits
+       to its right. Phones/narrow screens keep the original top bar. */
+    @media (min-width: 900px) {
+      #dashboard > .card { display: grid; grid-template-columns: 224px minmax(0, 1fr); column-gap: 22px; align-items: start; }
+      #dashboard > .card > * { grid-column: 2; min-width: 0; }
+      #dashboard > .card > h2, #dashboard > .card > p { grid-column: 1 / -1; }
+      #dashboard > .card > .tabs {
+        grid-column: 1; grid-row: 3 / span 60;
+        position: sticky; top: calc(var(--header-h, 120px) + 14px);
+        max-height: calc(100vh - var(--header-h, 120px) - 28px); overflow-y: auto;
+        flex-direction: column; flex-wrap: nowrap; align-items: stretch;
+        margin-bottom: 0; padding: 12px 8px;
+      }
+      .tabs .tab-group { padding: 0 0 8px 0; margin: 0 0 8px 0; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.12); }
+      .tabs .tab-group-row { flex-direction: column; flex-wrap: nowrap; }
+      .tabs .tab-btn { width: 100%; text-align: left; padding: 10px 12px; }
+      .tabs .tab-group-dropdown-bar { flex-direction: column; flex-wrap: nowrap; padding: 0; gap: 4px; }
+      .tabs .tab-group-dropdown-trigger { width: 100%; text-align: left; }
+      .tab-group-dropdown-panel { flex-direction: column; flex-wrap: nowrap; min-width: 230px; max-width: 300px; }
+      .tab-group-dropdown-panel .tab-btn { text-align: left; width: 100%; }
+    }
     .tab-btn {
       background: transparent;
       color: rgba(255,255,255,0.8);
@@ -8579,8 +8601,9 @@
       if (isOpening) {
         const trigger = event.currentTarget;
         const rect = trigger.getBoundingClientRect();
-        panel.style.top = (rect.bottom + 4) + 'px';
-        let left = rect.left;
+        const sideMode = window.matchMedia('(min-width: 900px)').matches;
+        panel.style.top = sideMode ? Math.max(8, Math.min(rect.top, window.innerHeight - 320)) + 'px' : (rect.bottom + 4) + 'px';
+        let left = sideMode ? rect.right + 12 : rect.left;
         // Keep it on-screen if the trigger sits near the right edge.
         const estWidth = 300;
         if (left + estWidth > window.innerWidth - 8) left = window.innerWidth - estWidth - 8;
