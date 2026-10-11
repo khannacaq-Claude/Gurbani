@@ -213,6 +213,17 @@
        floating on top of unrelated sections further down (confirmed:
        it was overlapping the Instagram photo grid). Reverted to normal,
        non-sticky flow. Only the header itself stays pinned now. */
+    /* Landing page: tabs bar + Rewards strip stay frozen under the fixed header
+       while scrolling. Header is position:fixed, so these stick at its bottom edge. */
+    #sectionTabs { position: sticky; top: var(--header-h, 0px); z-index: 300; }
+    #rewardsStrip { position: sticky; top: calc(var(--header-h, 0px) + var(--nav-h, 44px)); z-index: 299; }
+    /* Rewards message: endless flash loop (gold flash on wine, gentle pulse) */
+    @keyframes rewardsFlash {
+      0%, 100% { background: #40192D; color: #F2C879; box-shadow: none; }
+      50%      { background: #F2C879; color: #40192D; box-shadow: 0 0 16px rgba(242,200,121,0.7); }
+    }
+    .rewards-strip-flash { animation: rewardsFlash 1.6s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .rewards-strip-flash { animation-duration: 3.2s; } }
     .section-tabs {
       background: var(--ink);
       display: flex;
@@ -3060,7 +3071,7 @@
         <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">📲 Stay in Loop</a>
       </div>
       <!-- Rewards Card announcement strip (in-store loyalty, Season 1). Taps through to the Rewards section below. -->
-      <a href="#rewardsSection" onclick="document.getElementById('rewardsSection').scrollIntoView({behavior:'smooth'}); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card is now live at our Greenfields boutique. Collect stamps, earn up to ₹1000 off &rsaquo;</a>
+      <a id="rewardsStrip" class="rewards-strip-flash" href="#rewardsSection" onclick="document.getElementById('rewardsSection').scrollIntoView({behavior:'smooth'}); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card is now live at our Greenfields boutique. Collect stamps, earn up to ₹1000 off &rsaquo;</a>
       <div class="hero-fullbleed" id="heroFullbleed">
         <!-- Hero full-bleed background — mosaic of real, customer-approved
              AI Design Studio photos filling the whole banner, a dark wine
@@ -16537,6 +16548,8 @@
       const header = document.querySelector('header');
       if (header) {
         document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+        const tabsEl = document.getElementById('sectionTabs');
+        if (tabsEl) document.documentElement.style.setProperty('--nav-h', tabsEl.offsetHeight + 'px');
       }
     }
     window.addEventListener('resize', updateHeaderHeightVar);
