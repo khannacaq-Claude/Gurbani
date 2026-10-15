@@ -3065,7 +3065,6 @@
         <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
         <button type="button" data-target="landingDesignPreview" onclick="jumpToTab('landingDesignPreview', this)">✨ AI Design Studio</button>
         <button type="button" data-target="trendingSection" onclick="jumpToTab('trendingSection', this)">🔥 Trending</button>
-        <button type="button" data-target="rcSection" onclick="jumpToTab('rcSection', this)">💰 Rate Card</button>
         <button type="button" data-target="marketplaceSection" onclick="jumpToTab('marketplaceSection', this)">🛍️ Marketplace</button>
         <button type="button" data-target="journeySection" onclick="jumpToTab('journeySection', this)">📅 Your Journey</button>
         <button type="button" data-target="fabricCalcCard-pub" onclick="jumpToTab('fabricCalcCard-pub', this)">🧵 Fabric Calculator</button>
@@ -3629,9 +3628,7 @@
         </div>
 
         <div class="rc-section snap-section reveal-section" id="rcSection">
-          <h3 id="landingRateCardHeading" style="text-align:center;">💰 Rate Card</h3>
-          <p id="landingRateCardSubtitle" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px;">Tap a category to see every item — sign in for exact quotes.</p>
-          <div class="rc-panel-row" id="rcPanelRow"></div>
+          <!-- Rate Card intentionally NOT shown publicly: rates are shared one-on-one by Sonia. -->
 
           <!-- FABRIC LENGTH CALCULATOR — public version, same tool that
                lives in the signed-in Rate Card tab, duplicated here with
@@ -3927,7 +3924,7 @@
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">How can I check your pricing?<span class="faq-chevron">▾</span></button>
-              <div class="faq-answer"><p>Our Rate Card gives you a general sense of pricing by category — you'll find it on this page. For an exact quote on your own design, sign in and ask through AI Design Studio, or just message Sonia directly.</p></div>
+              <div class="faq-answer"><p>Every outfit is quoted individually, because the price depends on the design, fabric and work involved. Sonia shares the rates personally: call or message 98998 10977, visit us at the boutique, or tap Ask Quote on any AI design and she will get back to you.</p></div>
             </div>
           </div>
         </div>
@@ -3958,7 +3955,7 @@
               <button class="tab-btn" id="designTabBtn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
               <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
               <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
-              <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">💰 Rate Card</button>
+              <button class="tab-btn" id="rateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();">🧵 Fabric Calculator</button>
               <button class="tab-btn" id="shopSuitsTabBtn" onclick="switchTab(event, 'shopSuits'); loadShopSuits();">🛍️ Marketplace</button>
             </div>
           </div>
@@ -3988,6 +3985,7 @@
           <button class="tab-btn" id="pendingApprovalTabBtn" onclick="switchTab(event, 'pendingApproval'); loadPendingApprovals();" style="display: none;">⏳ Pending Approval</button>
           <button class="tab-btn" id="adminAppointmentsTabBtn" onclick="switchTab(event, 'adminAppointments'); loadAdminAppointments();" style="display: none;">📅 Manage Appointments</button>
           <button class="tab-btn" id="adminCouponsTabBtn" onclick="switchTab(event, 'adminCoupons'); loadAdminCoupons(); loadPromoMessageForEditing(); loadFestivalBannerForEditing(); loadBannerImagesGallery();" style="display: none;">🎟️ Coupons &amp; Banners</button>
+          <button class="tab-btn" id="adminRateCardTabBtn" onclick="switchTab(event, 'rateCard'); loadRateCardTab();" style="display: none;">💰 Rate Card (private)</button>
           <button class="tab-btn" id="feedbackTabBtn" onclick="switchTab(event, 'feedback'); loadFeedbackDashboard();" style="display: none;">💬 Feedback</button>
         </div>
         <div class="tab-group-dropdown-panel" id="financeGroupPanel">
@@ -4622,12 +4620,15 @@
           <div id="myInvoicesList">Loading...</div>
         </div>
 
-        <!-- RATE CARD (customers: read-only; admins: editable) -->
+        <!-- RATE CARD: ADMIN ONLY (prices are shared one-on-one by Sonia). Customers see only the Fabric Calculator below. -->
         <div id="rateCard" class="tab-content">
-          <h3>💰 Standard Rate Card</h3>
-          <p style="color:#666; margin-bottom:16px; font-size:13px;">Indicative starting prices — your final quote depends on fabric, design complexity, and any customization. Ask Sonia for an exact quote.</p>
+          <div id="rateCardAdminOnly" style="display:none;">
+          <h3>💰 Standard Rate Card <span style="font-size:12px; font-weight:600; color:var(--text-muted);">(private, not shown to customers)</span></h3>
+          <p style="color:#666; margin-bottom:12px; font-size:13px;">Share rates one-on-one when a customer asks. Print a fresh copy whenever rates change.</p>
+          <button type="button" onclick="printRateCardPDF()" style="margin-bottom:16px;">🖨️ Print Rate List (large print PDF)</button>
           <div id="rateCardAdminControls" style="display:none; margin-bottom:20px;"></div>
           <div id="rateCardList">Loading...</div>
+          </div>
 
           <!-- FABRIC LENGTH CALCULATOR — a general estimate to help someone
                buying fabric ahead of a visit know roughly how much to get.
@@ -4636,7 +4637,7 @@
                rule-of-thumb starting points, not Sonia's own calibrated
                numbers, so this should be reviewed/adjusted by her before
                being treated as reliable advice a customer acts on. -->
-          <div class="card" style="padding:20px; margin-top:28px;">
+          <div class="card" style="padding:20px; margin-top:8px;">
             <h4 style="margin-bottom:6px;">🧵 Fabric Length Estimator</h4>
             <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">Not sure how much fabric to buy? Get a rough estimate based on your height and garment type.</p>
 
@@ -7256,6 +7257,8 @@
       adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
       adminAskClaudeTabBtn: { icon: 'brain', label: 'Ask Claude' },
       adminRewardsTabBtn: { icon: 'star', label: 'Rewards' },
+      adminRateCardTabBtn: { icon: 'indian-rupee', label: 'Rate Card (private)' },
+      rateCardTabBtn: { icon: 'ruler', label: 'Fabric Calculator' },
     };
     let _tabIconsLoaded = false;
     async function loadTabIcons() {
@@ -7335,7 +7338,7 @@
     // for identical data.
     async function fetchRateCardItems() {
       try {
-        const res = await fetch(`${API}/api/ratecard`);
+        const res = await fetch(`${API}/api/ratecard/categories`); // names only, no prices
         const data = await res.json();
         if (!res.ok || !data.success || !data.items.length) return null;
         return data.items;
@@ -7410,7 +7413,7 @@
       }
       const banner = bannerRotationPool[bannerRotationIndex];
 
-      const destinationFeatureNames = { design: 'AI Design Studio', shopSuits: 'Marketplace', appointments: 'Appointments', rateCard: 'Rate Card' };
+      const destinationFeatureNames = { design: 'AI Design Studio', shopSuits: 'Marketplace', appointments: 'Appointments' };
       const PUBLIC_BANNER_DESTINATIONS = { guides: 'guidesShowcaseSection', fabricCalc: 'rcSection' };
       const featureName = destinationFeatureNames[banner.destination] || 'AI Design Studio';
       // Guides and the Fabric Calculator are genuinely public — no
@@ -8380,7 +8383,6 @@
       const items = await fetchRateCardItems();
       if (!items) return; // both keep their static fallback content
       loadHeaderProductCategories(items);
-      loadLandingRateCardTeaser(items);
     }
 
     function loadHeaderProductCategories(items) {
@@ -8406,7 +8408,7 @@
         const ageDays = firstSeen ? (now - firstSeen.getTime()) / 86400000 : Infinity;
         const isNew = ageDays <= NEW_CATEGORY_WINDOW_DAYS && firstSeen && firstSeen >= NEW_CATEGORY_CUTOFF;
         const newBadge = isNew ? '<span class="hp-new">NEW</span>' : '';
-        return `<span class="hp-link" onclick="jumpToRateCardCategory('${escapeHtml(cat).replace(/'/g, "\\'")}')">${escapeHtml(cat)}${newBadge}</span>${idx < order.length - 1 ? '<span class="hp-dot">•</span>' : ''}`;
+        return `<span class="hp-link" style="pointer-events:none;">${escapeHtml(cat)}${newBadge}</span>${idx < order.length - 1 ? '<span class="hp-dot">•</span>' : ''}`;
       }).join('');
     }
 
@@ -8445,7 +8447,7 @@
       {
         selector: '#sectionTabs',
         title: '🧭 Jump to any section',
-        text: 'Rate Card, FAQ, Visit Us, and more — this bar stays with you as you scroll and jumps straight there.',
+        text: 'Fabric Calculator, FAQ, Visit Us, and more — this bar stays with you as you scroll and jumps straight there.',
       },
       {
         selector: '#signinTrigger',
@@ -8672,62 +8674,6 @@
         });
       }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
       targets.forEach((t) => io.observe(t));
-    }
-
-    // Clicking a header category jumps to the Rate Card section and expands
-    // that exact category's panel, if it's still rendered there.
-    function jumpToRateCardCategory(categoryName) {
-      const section = document.getElementById('rcSection');
-      if (!section || section.offsetParent === null) return; // not visible right now
-      scrollToSection('rcSection'); // accounts for the sticky nav bar's height
-      const panel = document.querySelector(`.rc-panel[data-category="${CSS.escape(categoryName)}"]`);
-      if (panel) {
-        const idx = panel.dataset.rc;
-        setTimeout(() => expandRcPanel(idx), 350); // after scroll settles
-      }
-    }
-
-    function loadLandingRateCardTeaser(items) {
-      const container = document.getElementById('rcPanelRow');
-      if (!container) return;
-
-      // Group into categories, preserving the order categories first appear in
-      const categories = [];
-      const byCategory = {};
-      items.forEach(i => {
-        if (!byCategory[i.category]) {
-          byCategory[i.category] = [];
-          categories.push(i.category);
-        }
-        byCategory[i.category].push(i);
-      });
-
-      container.innerHTML = categories.map((cat, idx) => {
-        const items = byCategory[cat];
-        const [c1, c2] = RC_PANEL_COLORS[idx % RC_PANEL_COLORS.length];
-        const itemsHtml = items.map(i => {
-          const priced = i.priceFrom > 0;
-          const priceLabel = priced
-            ? `₹${i.priceFrom.toLocaleString('en-IN')}${i.priceTo ? '–₹' + i.priceTo.toLocaleString('en-IN') : ''}`
-            : 'Coming soon';
-          return `
-            <div class="rc-item-row">
-              <span class="rc-item-name">${escapeHtml(i.item)}${i.unit ? `<span class="rc-unit">${escapeHtml(i.unit)}</span>` : ''}</span>
-              <span class="rc-item-price${priced ? '' : ' rc-soon'}">${priceLabel}</span>
-            </div>`;
-        }).join('');
-        return `
-          <div class="rc-panel${idx === 0 ? ' active' : ''}" data-rc="${idx}" data-category="${escapeHtml(cat)}" onclick="expandRcPanel(${idx})" style="background:linear-gradient(160deg, ${c1}, ${c2});">
-            <span class="rc-panel-label">${escapeHtml(cat)}</span>
-            <div class="rc-panel-content">
-              <h4>${escapeHtml(cat)}</h4>
-              ${itemsHtml}
-              <div style="margin-top:14px;">
-                <button onclick="event.stopPropagation(); promptSignIn('Rate Card')" style="background:white; color:var(--ink); font-size:12px; padding:9px 16px;">Sign in for exact quotes →</button>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
     }
 
     function expandRcPanel(idx) {
@@ -8965,7 +8911,6 @@
           'AI Design Studio': 'design',
           'Appointments': 'appointments',
           'Marketplace': 'shopSuits',
-          'Rate Card': 'rateCard',
         };
         document.getElementById('dashboard').classList.add('show');
         document.getElementById('landingPage').classList.add('hidden');
@@ -12728,25 +12673,86 @@
     }
 
     async function loadRateCardTab() {
+      const adminBox = document.getElementById('rateCardAdminOnly');
+      const isAdmin = !!(currentUser && currentUser.role === 'admin');
+      // Rates are private: only admins ever load or see them. Customers just
+      // get the Fabric Calculator on this tab.
+      if (adminBox) adminBox.style.display = isAdmin ? 'block' : 'none';
+      if (!isAdmin) return;
       const list = document.getElementById('rateCardList');
       const adminControls = document.getElementById('rateCardAdminControls');
-      const isAdmin = currentUser && currentUser.role === 'admin';
-      adminControls.style.display = isAdmin ? 'block' : 'none';
-      if (isAdmin) renderRateCardForm();
+      adminControls.style.display = 'block';
+      renderRateCardForm();
 
       list.innerHTML = 'Loading...';
       try {
-        const res = await fetch(`${API}/api/ratecard`);
+        const res = await fetch(`${API}/api/ratecard`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const data = await res.json();
         if (!res.ok || !data.success) {
           list.innerHTML = `<p style="color:#c62828;">❌ ${data.error || 'Failed to load rate card'}</p>`;
           return;
         }
-        renderRateCardList(data.items, isAdmin);
+        window._rateCardItems = data.items;
+        renderRateCardList(data.items, true);
         populateRcCategoryList(data.items);
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
       }
+    }
+
+    // Large-print rate list for Sonia to keep at the counter / hand to a
+    // customer. Sized to be readable from about 3 feet (item names 26pt,
+    // prices 30pt, category bands 36pt). Opens a print window; choose
+    // "Save as PDF" in the print dialog.
+    async function printRateCardPDF() {
+      let items = window._rateCardItems;
+      try {
+        const res = await fetch(`${API}/api/ratecard`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (res.ok && data.success) items = data.items;
+      } catch (e) { /* fall back to last loaded list */ }
+      if (!items || !items.length) { showToast('❌ No rates to print yet'); return; }
+      const byCat = {}; const order = [];
+      items.forEach(i => { if (!byCat[i.category]) { byCat[i.category] = []; order.push(i.category); } byCat[i.category].push(i); });
+      const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
+      const dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+      const sections = order.map(cat => `
+        <section>
+          <h2>${escapeHtml(cat)}</h2>
+          ${byCat[cat].map(r => `
+            <div class="row">
+              <div class="nm">${escapeHtml(r.item)}${r.unit ? `<span class="un"> (${escapeHtml(r.unit)})</span>` : ''}${r.offer ? `<div class="of">${escapeHtml(r.offer)}</div>` : ''}</div>
+              <div class="pr">${r.priceFrom > 0 ? fmt(r.priceFrom) + (r.priceTo ? ' - ' + fmt(r.priceTo) : '') : 'Ask'}</div>
+            </div>`).join('')}
+        </section>`).join('');
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>Gurbani Fashion - Rate List</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Berkshire+Swash&display=swap" rel="stylesheet">
+        <style>
+          @page { size: A4 portrait; margin: 12mm; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Poppins', Arial, sans-serif; color: #141A29; margin: 0; }
+          .top { text-align: center; border-bottom: 4px solid #D9A441; padding-bottom: 8px; margin-bottom: 12px; }
+          .top .brand { font-family: 'Berkshire Swash', Georgia, serif; font-size: 44pt; color: #40192D; line-height: 1.1; }
+          .top .sub { font-size: 16pt; font-weight: 700; color: #7B3056; letter-spacing: 1px; }
+          section { break-inside: avoid; margin-bottom: 14px; }
+          h2 { background: #40192D; color: #F2C879; font-size: 36pt; margin: 0 0 4px; padding: 6px 16px; border-radius: 8px; line-height: 1.15; }
+          .row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 8px 12px; border-bottom: 2px solid #E6D9C3; }
+          .nm { font-size: 26pt; font-weight: 700; line-height: 1.15; }
+          .un { font-size: 17pt; font-weight: 600; color: #6B5A64; }
+          .of { font-size: 16pt; font-weight: 700; color: #B9791C; }
+          .pr { font-size: 30pt; font-weight: 800; color: #7B3056; white-space: nowrap; }
+          .foot { margin-top: 10px; text-align: center; font-size: 16pt; font-weight: 700; color: #40192D; border-top: 4px solid #D9A441; padding-top: 8px; }
+          .foot small { display: block; font-size: 13pt; font-weight: 600; color: #6B5A64; }
+        </style></head><body>
+        <div class="top"><div class="brand">Gurbani Fashion</div><div class="sub">RATE LIST  |  AI DESIGN STUDIO  |  Rates as on ${dateStr}</div></div>
+        ${sections}
+        <div class="foot">Prices are starting rates. Final price depends on fabric, design and work.
+          <small>Call 98998 10977  |  gurbanifashion.com  |  @gurbanifashion</small></div>
+        <script>window.onload = function () { setTimeout(function () { window.print(); }, 600); };<\/script>
+        </body></html>`;
+      const w = window.open('', '_blank');
+      if (!w) { showToast('❌ Pop-up blocked. Allow pop-ups for this site and try again'); return; }
+      w.document.open(); w.document.write(html); w.document.close();
     }
 
     // Fills the Category datalist with every existing category so the admin
@@ -14637,7 +14643,6 @@
                 <option value="design" ${(!b.destination || b.destination === 'design') ? 'selected' : ''}>Clicks go to: AI Design Studio</option>
                 <option value="shopSuits" ${b.destination === 'shopSuits' ? 'selected' : ''}>Clicks go to: Marketplace</option>
                 <option value="appointments" ${b.destination === 'appointments' ? 'selected' : ''}>Clicks go to: Appointments</option>
-                <option value="rateCard" ${b.destination === 'rateCard' ? 'selected' : ''}>Clicks go to: Rate Card</option>
                 <option value="guides" ${b.destination === 'guides' ? 'selected' : ''}>Clicks go to: Guides (public, no sign-in)</option>
                 <option value="fabricCalc" ${b.destination === 'fabricCalc' ? 'selected' : ''}>Clicks go to: Fabric Calculator (public, no sign-in)</option>
               </select>
@@ -16486,6 +16491,7 @@
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAskClaudeTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminRateCardTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // The dropdown-trigger row itself (Sales & Orders/Finance/etc.) —
         // customers never had any of the buttons inside these groups
         // visible anyway, but with them collapsed into dropdowns now, an
