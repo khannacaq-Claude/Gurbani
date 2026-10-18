@@ -3092,7 +3092,7 @@
         <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">📲 Stay in Loop</a>
       </div>
       <!-- Rewards Card announcement strip (in-store loyalty, Season 1). Taps through to the Rewards section below. -->
-      <a id="rewardsStrip" class="rewards-strip-flash" href="#rewardsSection" onclick="document.getElementById('rewardsSection').scrollIntoView({behavior:'smooth'}); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card starts Ashtami, 19 October. Every payment gets a stamp, earn up to ₹5,000 &rsaquo;</a>
+      <a id="rewardsStrip" class="rewards-strip-flash" href="#rewardsSection" onclick="document.getElementById('rewardsSection').scrollIntoView({behavior:'smooth'}); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card starts Ashtami, 19 October. Every payment gets a stamp. Earn up to ₹12,500, with ₹5,000 guaranteed at ₹50,000 &rsaquo;</a>
       <div class="hero-fullbleed" id="heroFullbleed">
         <!-- Hero full-bleed background — mosaic of real, customer-approved
              AI Design Studio photos filling the whole banner, a dark wine
@@ -5609,7 +5609,7 @@
                whenever a real feature is added/changed on the site, so
                it's obvious at a glance whether Claude's answer about
                "my website" is based on current information. -->
-          <p style="color:var(--text-muted); margin-bottom:16px; font-size:11.5px;">ℹ️ Site info Claude knows: <strong>v7 — 17 Oct 2026</strong>. Update this whenever a feature changes on the site.</p>
+          <p style="color:var(--text-muted); margin-bottom:16px; font-size:11.5px;">ℹ️ Site info Claude knows: <strong>v8 — 18 Oct 2026</strong>. Update this whenever a feature changes on the site.</p>
 
           <div class="card" style="padding:20px; max-width:640px;">
             <!-- Conversation list — multiple separate, named chats (like
@@ -18655,5 +18655,53 @@
         });
       }
     </script>
+
+<!-- FLOATING REWARDS CARD BAR: sits bottom-right (the FAQ chat button is bottom-left). Shows on the public home page,
+     hides while the Rewards section itself is on screen, and can be closed (stays closed for this visit). -->
+<style>
+  #rewardsFloat { position: fixed; right: 14px; bottom: 18px; z-index: 480; display: none; align-items: center; gap: 0;
+    max-width: calc(100vw - 100px); border-radius: 999px; overflow: hidden;
+    background: linear-gradient(180deg,#F7D98A,#E0A93F 55%,#B9791C); box-shadow: 0 10px 28px -6px rgba(64,25,45,0.55), 0 0 0 2px #40192D;
+    animation: rwFloatPulse 2.4s ease-in-out infinite; }
+  #rewardsFloat.show { display: flex; }
+  #rewardsFloat a { display: flex; align-items: center; gap: 9px; padding: 11px 6px 11px 16px; color: #2A0F1D; text-decoration: none; font-family: var(--font-body, 'Poppins', sans-serif); line-height: 1.15; }
+  #rewardsFloat .rw-ico { font-size: 22px; }
+  #rewardsFloat .rw-t1 { display: block; font-weight: 800; font-size: 13.5px; letter-spacing: 0.3px; }
+  #rewardsFloat .rw-t2 { display: block; font-weight: 600; font-size: 11.5px; }
+  #rewardsFloat button { border: none; background: rgba(42,15,29,0.12); color: #2A0F1D; width: 30px; align-self: stretch; cursor: pointer; font-size: 16px; font-weight: 700; margin-left: 4px; }
+  @keyframes rwFloatPulse { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @media (prefers-reduced-motion: reduce) { #rewardsFloat { animation: none; } }
+  @media (max-width: 480px) { #rewardsFloat { bottom: 14px; right: 10px; max-width: calc(100vw - 84px); } #rewardsFloat .rw-t2 { display: none; } }
+</style>
+<div id="rewardsFloat" role="complementary" aria-label="Rewards Card">
+  <a href="#rewardsSection" onclick="rwFloatGo(); return false;"><span class="rw-ico">&#127873;</span><span><span class="rw-t1">Rewards Card</span><span class="rw-t2">Earn up to &#8377;12,500 &rsaquo;</span></span></a>
+  <button type="button" aria-label="Close" onclick="rwFloatClose()">&times;</button>
+</div>
+<script>
+  (function () {
+    var KEY = 'gf_rw_float_closed';
+    function closed() { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+    window.rwFloatClose = function () {
+      try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+      var f = document.getElementById('rewardsFloat'); if (f) f.classList.remove('show');
+    };
+    window.rwFloatGo = function () {
+      var sec = document.getElementById('rewardsSection');
+      if (sec && sec.offsetParent !== null) sec.scrollIntoView({ behavior: 'smooth' });
+    };
+    function tick() {
+      var f = document.getElementById('rewardsFloat'); if (!f) return;
+      var land = document.getElementById('landingPage');
+      var sec = document.getElementById('rewardsSection');
+      var onHome = land && land.offsetParent !== null && sec && sec.offsetParent !== null;
+      var inView = false;
+      if (onHome) { var r = sec.getBoundingClientRect(); inView = r.top < window.innerHeight * 0.75 && r.bottom > window.innerHeight * 0.25; }
+      f.classList.toggle('show', !!onHome && !inView && !closed());
+    }
+    setInterval(tick, 700);
+    window.addEventListener('scroll', tick, { passive: true });
+    setTimeout(tick, 1500);
+  })();
+</script>
 </body>
 </html>
