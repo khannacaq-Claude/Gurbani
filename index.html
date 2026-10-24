@@ -3453,6 +3453,7 @@
                    — right before the customer moves on. Still disabled
                    until Dress Type + Occasion are picked. -->
               <button type="button" id="landingDraftBtn" onclick="generateLandingDescriptionDraft()" disabled data-i18n="btnDraftItForMe" data-i18n-title="titleSelectFirst" title="Please select Dress Type and Occasion above first" style="width:100%; background:white; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:10px 12px; font-weight:700; font-size:13px; cursor:pointer; margin-top:16px;">✨ Draft It For Me</button>
+              <div id="landingDraftErr" style="display:none; margin-top:10px; background:#FDECEC; border:1.5px solid #C0392B; color:#8E1B10; border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.5;"></div>
 
               <!-- The output box — deliberately right after the button
                    that fills it, not above it. It used to sit at the top
@@ -9830,6 +9831,14 @@
       const originalLabel = btn.textContent;
       btn.disabled = true;
       btn.textContent = '⏳ Drafting...';
+      const errBox = document.getElementById('landingDraftErr');
+      const showDraftErr = (msg) => {
+        if (!errBox) return;
+        const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent('Hi Gurbani Fashion, website par Draft It For Me nahi chal raha. Dress: ' + dressType + ', Occasion: ' + occasion);
+        errBox.innerHTML = '⚠️ ' + msg + '<br><a href="' + wa + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:6px; background:#25D366; color:#fff; font-weight:700; text-decoration:none; padding:7px 14px; border-radius:20px;">💬 Sonia ko WhatsApp karein</a>';
+        errBox.style.display = 'block';
+      };
+      if (errBox) errBox.style.display = 'none';
       try {
         const res = await fetch(`${API}/api/designs/draft-description`, {
           method: 'POST',
@@ -9838,18 +9847,18 @@
         });
         const data = await res.json();
         if (res.status === 429) {
-          showToast('✋ ' + (data.error || "You've tried a few drafts already — sign in to keep going!"));
+          showDraftErr(data.error || "You've tried a few drafts already — sign in to keep going!");
           return;
         }
         if (!res.ok || !data.success) {
-          showToast('❌ ' + (data.error || "Couldn't draft a description right now"));
+          showDraftErr(data.error || "Couldn't draft a description right now. Please try again in a minute, or write it yourself in the box below.");
           return;
         }
         document.getElementById('landingDesignDesc').value = data.description;
         showToast('✅ Description drafted! Sign in when ready to see 3 actual AI-generated images of it.');
         if (typeof gtag === 'function') gtag('event', 'landing_draft_generated');
       } catch (err) {
-        showToast('❌ ' + err.message);
+        showDraftErr("Connection problem. Please try again, or write your idea in the box below.");
       } finally {
         btn.disabled = false;
         btn.textContent = originalLabel;
