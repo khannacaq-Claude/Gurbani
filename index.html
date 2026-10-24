@@ -3768,6 +3768,16 @@
               Complete your first card at ₹50,000 and your next card is a Gold Card with bigger rewards: ₹750, ₹1,500, ₹2,500 and ₹7,500. The ₹5,000 from your Silver card is not paid then: it is carried forward onto your Gold Card. Whatever Gold reward you collect, your carried ₹5,000 is added to it. Take your Gold Card to ₹50,000 and you collect ₹5,000 + ₹7,500 = <strong style="color:#F2C879;">₹12,500</strong> together. Wait a little, win bigger.<br>
               <strong style="color:#F2C879;">The Gold Card cannot be taken directly. Your first card must be completed and its ₹50,000 reward collected first.</strong>
             </div>
+            <div style="text-align:left; background:#fff; border:2px solid #F2C879; border-radius:12px; padding:14px; margin:0 0 16px;">
+              <strong style="font-size:14.5px;">Apna Rewards Card dekhein</strong>
+              <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="tel" id="rwPubPhone" inputmode="numeric" placeholder="10 digit phone number" maxlength="14" style="flex:2; min-width:160px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
+                <input type="text" id="rwPubCard" placeholder="Card no." maxlength="20" style="flex:1; min-width:90px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
+                <button type="button" onclick="rwPublicCheck()" style="padding:10px 20px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Dekhein</button>
+              </div>
+              <div id="rwPubOut"></div>
+            </div>
             <p style="font-size:14px; margin-bottom:6px;"><strong>How to start:</strong> ask for a Rewards Card with your next payment at our Greenfields boutique.</p>
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Starts Ashtami, 19 October 2026. Valid on all orders picked up till Holi, 19 March 2027. Available at our Greenfields boutique only (not on online orders). One card holds up to 10 payments; if all 10 are used without reaching ₹8,000, the card closes without a reward. Not combinable with other offers.</p>
             <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20know%20about%20the%20Rewards%20Card." target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:10px 20px; border-radius:22px; font-weight:700; font-size:14px;">💬 Ask Sonia about the Rewards Card</a>
@@ -5583,6 +5593,8 @@
           </div>
           <div id="rwEnrollBox" class="card" style="padding:16px; margin-bottom:16px; display:none;"></div>
           <div id="rwAccountBox" style="display:none;"></div>
+          <div class="card" style="padding:16px; margin-bottom:16px;" id="rwReserveBox"></div>
+          <div class="card" style="padding:16px; margin-bottom:16px;" id="rwRemindBox"></div>
           <div class="card" style="padding:16px;">
             <h4 style="margin-bottom:10px;">Recent members</h4>
             <div id="rwMemberList" style="font-size:13px;"></div>
@@ -6171,6 +6183,7 @@
           document.getElementById('rwStats').textContent = rwStatsText(stats.data);
         }
         if (list.ok && list.data.success) rwRenderMembers(list.data.accounts);
+        rwLoadReserve();
       } catch (e) { showToast('Could not load the Rewards register'); }
     }
     function rwRenderMembers(accounts) {
@@ -6233,6 +6246,7 @@
       const [stats, list] = await Promise.all([rwFetch('/stats'), rwFetch('/')]);
       if (stats.ok && stats.data.success) document.getElementById('rwStats').textContent = rwStatsText(stats.data);
       if (list.ok && list.data.success) rwRenderMembers(list.data.accounts);
+      rwLoadReserve();
     }
     function rwRenderAccount() {
       const a = rwCurrent;
@@ -6355,6 +6369,108 @@
       const v = prompt('Card no. written on the printed card', rwCurrent.cardNo || '');
       if (v === null) return;
       await rwApply(await rwFetch(`/${rwCurrent.phone}/cardno`, 'PUT', { cardNo: v.trim() }), 'Card no. saved');
+    }
+
+
+    // ---- Reserve fund + reminders (admin) ----
+    let rwReserveData = null;
+    async function rwLoadReserve() {
+      try {
+        const r = await rwFetch('/reserve');
+        if (!(r.ok && r.data.success)) return;
+        rwReserveData = r.data;
+        rwRenderReserve(); rwRenderRemind();
+      } catch (e) {}
+    }
+    function rwRenderReserve() {
+      const box = document.getElementById('rwReserveBox'); const d = rwReserveData;
+      if (!box || !d) return;
+      const t = d.totals;
+      const tile = (label, val, sub, bg) => `<div style="flex:1; min-width:150px; background:${bg}; border-radius:10px; padding:12px 14px;"><div style="font-size:11.5px; color:#6b5560; font-weight:600;">${label}</div><div style="font-size:22px; font-weight:800; color:#40192D; margin:2px 0;">${rwRs(val)}</div><div style="font-size:11px; color:#6b5560;">${sub}</div></div>`;
+      box.innerHTML = `
+        <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+          <h4 style="margin:0;">Reserve fund as of today</h4>
+          <button type="button" onclick="rwDownloadReserve()" style="padding:7px 14px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer; font-weight:600; font-size:12.5px;">Download CSV</button>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          ${tile('Reward earned, payable today', t.earned, 'on open cards', '#FFF6DF')}
+          ${tile('Carried Rs 5,000 guarantees', t.carry, 'paid with the Gold reward', '#F6EEF2')}
+          ${tile('RESERVE TO HOLD', t.reserve, 'if everyone encashed today', '#F2C879')}
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:10px;">${t.members} members &middot; already paid so far: ${rwRs(t.paidReward)} in ${t.paidCount} reward${t.paidCount === 1 ? '' : 's'}. Updated ${escapeHtml(new Date(d.asOf).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))}. Cards that are still growing can earn more, so the reserve rises as customers keep paying.</div>`;
+    }
+    function rwDownloadReserve() {
+      if (!rwReserveData) return;
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const head = ['Name', 'Phone', 'Printed card no', 'Tier', 'Payments on card', 'Card total', 'Reward earned', 'Carried guarantee', 'Reserve', 'Last payment', 'Days since'];
+      const lines = [head.map(q).join(',')].concat(rwReserveData.rows.map(r => [r.name, r.phone, r.cardNo, r.tier, r.billsOnCard, r.cardTotal, r.earned, r.carry, r.reserve, r.lastPaymentAt ? new Date(r.lastPaymentAt).toISOString().slice(0, 10) : '', r.daysSince == null ? '' : r.daysSince].map(q).join(',')));
+      const t = rwReserveData.totals;
+      lines.push(['TOTAL', '', '', '', '', '', t.earned, t.carry, t.reserve, '', ''].map(q).join(','));
+      const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'gurbani-rewards-reserve-' + rwTodayIST() + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    }
+    function rwRemindDays() { try { return Number(localStorage.getItem('gf_rw_remind_days')) || 20; } catch (e) { return 20; } }
+    function rwSetRemindDays(v) { try { localStorage.setItem('gf_rw_remind_days', String(v)); } catch (e) {} rwRenderRemind(); }
+    function rwRemindedMap() { try { return JSON.parse(localStorage.getItem('gf_rw_reminded') || '{}'); } catch (e) { return {}; } }
+    function rwRemindMsg(r) {
+      const first = String(r.name || '').trim().split(/\s+/)[0] || 'ji';
+      let m = `Namaste ${first}, aapke Gurbani Fashion Rewards Card par abhi ${r.billsOnCard} stamp${r.billsOnCard === 1 ? '' : 's'} hain, payments total ${rwRs(r.cardTotal)}.`;
+      if (r.earned > 0) m += ` ${rwRs(r.earned)} ka inaam abhi ready hai.`;
+      if (r.nextAway > 0) m += ` Sirf ${rwRs(r.nextAway)} aur payments par ${rwRs(r.nextReward)} tak ka inaam.`;
+      m += ` Apna card yahan dekhein: https://gurbanifashion.com/?utm_source=whatsapp&utm_medium=reminder&utm_campaign=rewards_card#rewardsSection`;
+      m += ` Boutique mein aapka intezaar rahega. Sonia, Gurbani Fashion`;
+      return m;
+    }
+    function rwMarkReminded(phone) { try { const m = rwRemindedMap(); m[phone] = new Date().toISOString(); localStorage.setItem('gf_rw_reminded', JSON.stringify(m)); } catch (e) {} setTimeout(rwRenderRemind, 400); }
+    function rwRenderRemind() {
+      const box = document.getElementById('rwRemindBox'); const d = rwReserveData;
+      if (!box || !d) return;
+      const days = rwRemindDays(); const done = rwRemindedMap();
+      const list = d.rows.filter(r => r.canAddBill && r.billsOnCard >= 1 && r.daysSince != null && r.daysSince >= days).sort((a, b) => b.daysSince - a.daysSince);
+      const opt = v => `<option value="${v}"${v === days ? ' selected' : ''}>${v} days</option>`;
+      const rows = list.map(r => {
+        const when = done[r.phone] ? Math.floor((Date.now() - new Date(done[r.phone]).getTime()) / 86400000) : null;
+        const wa = `https://wa.me/91${r.phone}?text=${encodeURIComponent(rwRemindMsg(r))}`;
+        return `<div style="display:flex; justify-content:space-between; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid #eee; font-size:13px;">
+          <span>${r.cardNo ? `<span style="background:#F2C879; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:800; margin-right:6px;">Card ${escapeHtml(r.cardNo)}</span>` : ''}<strong>${escapeHtml(r.name)}</strong><br><span style="color:var(--text-muted); font-size:12px;">last payment ${r.daysSince} days ago &middot; ${r.billsOnCard}/10 &middot; ${rwRs(r.cardTotal)}${when != null ? ` &middot; reminded ${when === 0 ? 'today' : when + ' d ago'}` : ''}</span></span>
+          <a href="${wa}" target="_blank" rel="noopener" onclick="rwMarkReminded('${escapeHtml(r.phone)}')" style="flex-shrink:0; background:#25D366; color:#fff; text-decoration:none; padding:8px 14px; border-radius:20px; font-weight:700; font-size:12.5px;">${when != null ? 'Remind again' : 'WhatsApp'}</a>
+        </div>`;
+      }).join('');
+      box.innerHTML = `
+        <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:6px;">
+          <h4 style="margin:0;">Gentle reminder: not back since the last stamp</h4>
+          <label style="font-size:12.5px;">Not back for <select onchange="rwSetRemindDays(this.value)" style="padding:5px 8px;">${[10, 15, 20, 30, 45, 60].map(opt).join('')}</select></label>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Open cards with at least one stamp. The message shows their stamps, how much more earns the next reward, and a link to check the card. Send it from Sonia's own WhatsApp.</div>
+        ${rows || '<div style="font-size:13px; color:var(--text-muted);">No one is overdue right now.</div>'}`;
+    }
+
+    // ---- PUBLIC: customer checks own card with phone + printed card no. ----
+    async function rwPublicCheck() {
+      const phone = (document.getElementById('rwPubPhone').value || '').replace(/\D/g, '').slice(-10);
+      const cardNo = (document.getElementById('rwPubCard').value || '').trim();
+      const out = document.getElementById('rwPubOut');
+      if (phone.length !== 10 || !cardNo) { out.innerHTML = '<p style="color:#c62828; font-size:13px;">10 digit phone number aur card number dono daalein.</p>'; return; }
+      out.innerHTML = '<p style="font-size:13px;">Dekh rahe hain...</p>';
+      try {
+        const res = await fetch(`${API}/api/loyalty/check`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, cardNo }) });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok || !d.success) { out.innerHTML = `<p style="color:#c62828; font-size:13px;">${escapeHtml(d.message || 'Card nahi mila')}</p>`; return; }
+        const c = d.card;
+        const goldTag = c.tier === 'gold' ? ' <span style="background:linear-gradient(180deg,#F7D98A,#D9A441); color:#2A0F1D; font-size:11px; font-weight:800; padding:2px 10px; border-radius:10px; letter-spacing:1px;">GOLD CARD</span>' : '';
+        const got = (c.collected || []).filter(x => x.reward || x.carried).map(x => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(x.date)}</span><strong>${x.carried ? rwRs(x.carried) + ' carried to Gold' : rwRs(x.reward)}</strong></div>`).join('');
+        const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent('Hi Sonia, mujhe apne Rewards Card ke baare mein poochhna hai.');
+        out.innerHTML = `<div style="text-align:left; margin-top:14px;">
+          <h4 style="margin:0 0 4px;">Namaste ${escapeHtml(d.firstName)}${goldTag}</h4>
+          <div style="font-size:12.5px; color:var(--text-muted);">Stamps ${c.billsOnCard} of ${c.maxBills} &middot; payments total ${rwRs(c.cardTotal)}</div>
+          ${rwCardHtml(c, c.slabs || d.program.slabs)}
+          ${rwNudge(c)}
+          ${got ? `<div style="margin-top:12px;"><strong style="font-size:13px;">Rewards collected</strong>${got}</div>` : ''}
+          <p style="font-size:12.5px; margin:14px 0 8px;">Sonia ke register ka record hi final hai. Kuch alag dikhe to batayein.</p>
+          <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">WhatsApp Sonia</a>
+        </div>`;
+      } catch (e) { out.innerHTML = '<p style="color:#c62828; font-size:13px;">Abhi card nahi khul paya, thodi der baad try karein.</p>'; }
     }
 
     // Customer self-service view of their own Rewards Card (read-only).
