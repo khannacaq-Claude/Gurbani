@@ -3172,6 +3172,44 @@
           </div>
         </div>
 
+        <!-- REWARDS CARD — customer-facing explainer for the in-store Rewards Card (Season 1, starts 19 Oct 2026, orders picked up till Holi 19 Mar 2027).
+             If rewards change, update the rewards list here, the FAQ answer, and LOYALTY_* / SLABS in the backend loyaltyController.js. -->
+        <div class="snap-section reveal-section" id="rewardsSection" style="max-width:720px; margin:0 auto 22px auto; padding:0 16px; position:relative; z-index:3;">
+          <div class="card" style="padding:26px 22px; text-align:center;">
+            <div class="hero-eyebrow" style="text-align:center;">⭐ New at the boutique</div>
+            <h3 style="font-family:var(--font-display); font-style:italic; font-size:26px; margin:6px 0 4px 0;">Gurbani Rewards Card</h3>
+            <p style="color:var(--text-muted); font-size:14px; margin-bottom:16px;">Har payment par ek stamp, zyada kharid par bada reward. <em>Every payment gets a stamp. The more you shop, the more you earn.</em></p>
+            <p style="display:inline-block; background:#F2C879; color:#2A0F1D; font-weight:700; font-size:13px; padding:6px 14px; border-radius:999px; margin:0 0 16px;">Starts Ashtami, 19 October 2026</p>
+            <div style="text-align:left; margin-bottom:16px;"><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹8,000</span><span style="font-size:14px;">You get <strong>₹500</strong></span></div><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹15,000</span><span style="font-size:14px;">You get <strong>₹1,100</strong></span></div><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹25,000</span><span style="font-size:14px;">You get <strong>₹2,000</strong></span></div><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹50,000</span><span style="font-size:14px;">₹5,000 <strong>carried to your Gold Card</strong></span></div></div>
+            <div style="text-align:left; font-size:13.5px; background:var(--sand); border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+              <strong>How it works</strong><br>
+              Every payment gets one stamp on your card, and Sonia notes the payment amount. One card holds up to 10 payments, so make every payment count: the total of the payments on your card decides your reward. Collect it as soon as you reach a level, or keep adding payments to reach a bigger one. When you collect, your card is replaced with a fresh card and you start again.
+            </div>
+            <div style="text-align:left; font-size:13.5px; background:#FFF6DF; border:1px solid #F2C879; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+              <strong>Wait a little, earn more</strong><br>
+              The bigger the card total, the better the reward: ₹8,000 earns ₹500, but ₹15,000 earns ₹1,100 and ₹25,000 earns ₹2,000. Stopping early is your choice, and so is going for more.
+            </div>
+            <div style="text-align:left; font-size:13.5px; background:#2A0F1D; color:#FDF8F0; border:2px solid #D9A441; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+              <strong style="color:#F2C879; letter-spacing:1px;">GOLD CARD</strong><br>
+              Complete your first card at ₹50,000 and your next card is a Gold Card with bigger rewards: ₹750, ₹1,500, ₹2,500 and ₹7,500. The ₹5,000 from your Silver card is not paid then: it is carried forward onto your Gold Card. Whatever Gold reward you collect, your carried ₹5,000 is added to it. Take your Gold Card to ₹50,000 and you collect ₹5,000 + ₹7,500 = <strong style="color:#F2C879;">₹12,500</strong> together. Wait a little, win bigger.<br>
+              <strong style="color:#F2C879;">The Gold Card cannot be taken directly. Your first card must be completed and its ₹50,000 reward collected first.</strong>
+            </div>
+            <div style="text-align:left; background:#fff; border:2px solid #F2C879; border-radius:12px; padding:14px; margin:0 0 16px;">
+              <strong style="font-size:14.5px;">Apna Rewards Card dekhein</strong>
+              <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="tel" id="rwPubPhone" inputmode="numeric" placeholder="10 digit phone number" maxlength="14" style="flex:2; min-width:160px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
+                <input type="text" id="rwPubCard" placeholder="Card no." maxlength="20" style="flex:1; min-width:90px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
+                <button type="button" onclick="rwPublicCheck()" style="padding:10px 20px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Dekhein</button>
+              </div>
+              <div id="rwPubOut"></div>
+            </div>
+            <p style="font-size:14px; margin-bottom:6px;"><strong>How to start:</strong> ask for a Rewards Card with your next payment at our Greenfields boutique.</p>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Starts Ashtami, 19 October 2026. Valid on all orders picked up till Holi, 19 March 2027. Available at our Greenfields boutique only (not on online orders). One card holds up to 10 payments; if all 10 are used without reaching ₹8,000, the card closes without a reward. Not combinable with other offers.</p>
+            <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20know%20about%20the%20Rewards%20Card." target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:10px 20px; border-radius:22px; font-weight:700; font-size:14px;">💬 Ask Sonia about the Rewards Card</a>
+          </div>
+        </div>
+
         <!-- PUBLIC PREVIEW OF THE DESIGN FLOW — moved right up here, above
              stats/lens/occasion sections, so it's visible with little to no
              scrolling on a fresh landing. Step 1 (Dress Type + Occasion),
@@ -3746,44 +3784,6 @@
         </div>
 
         <!-- VISIT US -->
-        <!-- REWARDS CARD — customer-facing explainer for the in-store Rewards Card (Season 1, starts 19 Oct 2026, orders picked up till Holi 19 Mar 2027).
-             If rewards change, update the rewards list here, the FAQ answer, and LOYALTY_* / SLABS in the backend loyaltyController.js. -->
-        <div class="snap-section reveal-section" id="rewardsSection" style="max-width:720px; margin:48px auto 0 auto; padding:0 16px;">
-          <div class="card" style="padding:26px 22px; text-align:center;">
-            <div class="hero-eyebrow" style="text-align:center;">⭐ New at the boutique</div>
-            <h3 style="font-family:var(--font-display); font-style:italic; font-size:26px; margin:6px 0 4px 0;">Gurbani Rewards Card</h3>
-            <p style="color:var(--text-muted); font-size:14px; margin-bottom:16px;">Har payment par ek stamp, zyada kharid par bada reward. <em>Every payment gets a stamp. The more you shop, the more you earn.</em></p>
-            <p style="display:inline-block; background:#F2C879; color:#2A0F1D; font-weight:700; font-size:13px; padding:6px 14px; border-radius:999px; margin:0 0 16px;">Starts Ashtami, 19 October 2026</p>
-            <div style="text-align:left; margin-bottom:16px;"><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹8,000</span><span style="font-size:14px;">You get <strong>₹500</strong></span></div><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹15,000</span><span style="font-size:14px;">You get <strong>₹1,100</strong></span></div><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹25,000</span><span style="font-size:14px;">You get <strong>₹2,000</strong></span></div><div style="display:flex; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #eee;"><span style="flex-shrink:0; min-width:118px; background:#7B3056; color:#F2C879; font-weight:700; font-size:12.5px; text-align:center; padding:4px 8px; border-radius:14px;">Payments of ₹50,000</span><span style="font-size:14px;">₹5,000 <strong>carried to your Gold Card</strong></span></div></div>
-            <div style="text-align:left; font-size:13.5px; background:var(--sand); border-radius:10px; padding:12px 14px; margin-bottom:14px;">
-              <strong>How it works</strong><br>
-              Every payment gets one stamp on your card, and Sonia notes the payment amount. One card holds up to 10 payments, so make every payment count: the total of the payments on your card decides your reward. Collect it as soon as you reach a level, or keep adding payments to reach a bigger one. When you collect, your card is replaced with a fresh card and you start again.
-            </div>
-            <div style="text-align:left; font-size:13.5px; background:#FFF6DF; border:1px solid #F2C879; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
-              <strong>Wait a little, earn more</strong><br>
-              The bigger the card total, the better the reward: ₹8,000 earns ₹500, but ₹15,000 earns ₹1,100 and ₹25,000 earns ₹2,000. Stopping early is your choice, and so is going for more.
-            </div>
-            <div style="text-align:left; font-size:13.5px; background:#2A0F1D; color:#FDF8F0; border:2px solid #D9A441; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
-              <strong style="color:#F2C879; letter-spacing:1px;">GOLD CARD</strong><br>
-              Complete your first card at ₹50,000 and your next card is a Gold Card with bigger rewards: ₹750, ₹1,500, ₹2,500 and ₹7,500. The ₹5,000 from your Silver card is not paid then: it is carried forward onto your Gold Card. Whatever Gold reward you collect, your carried ₹5,000 is added to it. Take your Gold Card to ₹50,000 and you collect ₹5,000 + ₹7,500 = <strong style="color:#F2C879;">₹12,500</strong> together. Wait a little, win bigger.<br>
-              <strong style="color:#F2C879;">The Gold Card cannot be taken directly. Your first card must be completed and its ₹50,000 reward collected first.</strong>
-            </div>
-            <div style="text-align:left; background:#fff; border:2px solid #F2C879; border-radius:12px; padding:14px; margin:0 0 16px;">
-              <strong style="font-size:14.5px;">Apna Rewards Card dekhein</strong>
-              <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <input type="tel" id="rwPubPhone" inputmode="numeric" placeholder="10 digit phone number" maxlength="14" style="flex:2; min-width:160px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
-                <input type="text" id="rwPubCard" placeholder="Card no." maxlength="20" style="flex:1; min-width:90px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
-                <button type="button" onclick="rwPublicCheck()" style="padding:10px 20px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Dekhein</button>
-              </div>
-              <div id="rwPubOut"></div>
-            </div>
-            <p style="font-size:14px; margin-bottom:6px;"><strong>How to start:</strong> ask for a Rewards Card with your next payment at our Greenfields boutique.</p>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Starts Ashtami, 19 October 2026. Valid on all orders picked up till Holi, 19 March 2027. Available at our Greenfields boutique only (not on online orders). One card holds up to 10 payments; if all 10 are used without reaching ₹8,000, the card closes without a reward. Not combinable with other offers.</p>
-            <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20know%20about%20the%20Rewards%20Card." target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:10px 20px; border-radius:22px; font-weight:700; font-size:14px;">💬 Ask Sonia about the Rewards Card</a>
-          </div>
-        </div>
-
         <div class="visit-section snap-section reveal-section" id="visitSection">
           <h3 style="text-align:center;">📍 Visit Our Boutique</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">Come see fabrics in person, get measured, or just say hello</p>
