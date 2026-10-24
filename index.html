@@ -6278,9 +6278,10 @@
         ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
             <input type="number" id="rwAmount" min="1" placeholder="Payment amount Rs" style="flex:1; min-width:170px;">
             <input type="text" id="rwBillRef" placeholder="Bill / receipt no. (optional)" style="flex:1; min-width:130px;">
+            <label style="flex:1; min-width:150px; font-size:11.5px; color:var(--text-muted);">Payment date<input type="date" id="rwPayDate" value="${rwTodayIST()}" min="2026-10-19" max="${rwTodayIST()}" style="width:100%; margin-top:2px;"></label>
           </div>
           <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="rewardsAddBill()">Add payment and stamp the card</button>
-          <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Every payment is one stamp. Write the payment amount on the line under the stamp on the printed card, then stamp it.</div>`
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Every payment is one stamp. Choose the date the customer actually paid, write the amount on the printed card, then stamp it.</div>`
         : `<div style="font-size:13.5px; font-weight:600; color:#7B3056;">${escapeHtml(a.blockReason)}</div>`;
       box.style.display = 'block';
       box.innerHTML = `
@@ -6307,11 +6308,12 @@
         if (okMsg) showToast(okMsg);
       } else showToast(r.data.message || 'Something went wrong');
     }
+    function rwTodayIST() { return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); }
     async function rewardsAddBill() {
       if (!rwCurrent) return;
       const amount = Number(document.getElementById('rwAmount').value);
       if (!(amount >= 1)) { showToast('Enter the payment amount in Rs'); return; }
-      const r = await rwFetch(`/${rwCurrent.phone}/bill`, 'POST', { billAmount: amount, billRef: document.getElementById('rwBillRef').value });
+      const r = await rwFetch(`/${rwCurrent.phone}/bill`, 'POST', { billAmount: amount, billRef: document.getElementById('rwBillRef').value, date: (document.getElementById('rwPayDate') || {}).value || '' });
       await rwApply(r, r.ok && r.data.success ? (r.data.message || 'Payment added') : '');
     }
     async function rewardsRedeem(spend) {
