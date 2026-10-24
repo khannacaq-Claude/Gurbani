@@ -6303,7 +6303,7 @@
         <div class="card" style="padding:16px; margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;">
             <div><h4 style="margin:0;">${escapeHtml(a.name)}${goldBadge}</h4><div style="font-size:13px; color:var(--text-muted);">${escapeHtml(a.phone)} &middot; ${a.cardNo ? `printed card no. <strong>${escapeHtml(a.cardNo)}</strong>` : '<strong style="color:#c62828;">printed card no. not set</strong>'} &middot; ${escapeHtml(season)}</div></div>
-            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;">Rename</button><button type="button" onclick="rewardsCardNo()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;">Card no.</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#25D366; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
+            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">Rename</button><button type="button" onclick="rewardsCardNo()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">Card no.</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#25D366; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
           </div>
           ${card}
           ${rwNudge(a)}
@@ -6390,7 +6390,7 @@
       box.innerHTML = `
         <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
           <h4 style="margin:0;">Reserve fund as of today</h4>
-          <button type="button" onclick="rwDownloadReserve()" style="padding:7px 14px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer; font-weight:600; font-size:12.5px;">Download CSV</button>
+          <button type="button" onclick="rwDownloadReserve()" style="padding:7px 14px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer; font-weight:600; font-size:12.5px;">Download CSV</button>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           ${tile('Reward earned, payable today', t.earned, 'on open cards', '#FFF6DF')}
@@ -7235,7 +7235,7 @@
             <td style="padding:4px;"><input type="number" step="0.01" value="${item.price}" oninput="billUpdateItem(${idx}, 'price', this.value)" style="width:70px; border:1px solid ${item.price <= 0 ? '#D9534F' : '#ccc'}; border-radius:4px; padding:4px; font-size:12px;"></td>
             <td style="padding:4px; font-weight:600;">₹${(item.qty * item.price).toFixed(2)}</td>
             <td style="padding:4px;">
-              <button type="button" onclick="billToggleSkip(${idx})" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid #ccc; background:white; cursor:pointer;">${item.skip ? 'Unskip' : 'Skip'}</button>
+              <button type="button" onclick="billToggleSkip(${idx})" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">${item.skip ? 'Unskip' : 'Skip'}</button>
               <button type="button" onclick="billDeleteItem(${idx})" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid #D9534F; color:#D9534F; background:white; cursor:pointer;">Delete</button>
             </td>
           </tr>`;
