@@ -5576,7 +5576,7 @@
           <div id="rwProgramLine" style="font-size:12px; color:var(--text-muted); margin-bottom:14px;"></div>
           <div class="card" style="padding:16px; margin-bottom:16px;">
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <input type="text" id="rwSearch" placeholder="Phone number or name" style="flex:1; min-width:180px;" onkeydown="if(event.key==='Enter'){rewardsLookup();}">
+              <input type="text" id="rwSearch" placeholder="Phone number, name or card no." style="flex:1; min-width:180px;" onkeydown="if(event.key==='Enter'){rewardsLookup();}">
               <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="rewardsLookup()">Find</button>
             </div>
             <div id="rwStats" style="font-size:12px; color:var(--text-muted); margin-top:10px;"></div>
@@ -6178,13 +6178,13 @@
       if (!accounts || !accounts.length) { box.innerHTML = '<span style="color:var(--text-muted);">No members yet. Search a phone number to enroll the first one.</span>'; return; }
       box.innerHTML = accounts.map(a => `
         <div onclick="rewardsOpen('${escapeHtml(a.phone)}')" style="display:flex; justify-content:space-between; gap:10px; padding:9px 4px; border-bottom:1px solid #eee; cursor:pointer;">
-          <span><strong>${escapeHtml(a.name)}</strong> <span style="color:var(--text-muted);">${escapeHtml(a.phone)}</span></span>
+          <span>${a.cardNo ? `<span style="background:#F2C879; color:#2A0F1D; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:800; margin-right:6px;">Card ${escapeHtml(a.cardNo)}</span>` : ''}<strong>${escapeHtml(a.name)}</strong> <span style="color:var(--text-muted);">${escapeHtml(a.phone)}</span></span>
           <span>${a.billsOnCard}/10 payments &middot; ${rwRs(a.cardTotal)}${a.rewardReady ? ` <span style="background:#F2C879; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700;">${rwRs(a.rewardReady)} ready</span>` : ''}</span>
         </div>`).join('');
     }
     async function rewardsLookup() {
       const q = document.getElementById('rwSearch').value.trim();
-      if (!q) { showToast('Enter a phone number or name'); return; }
+      if (!q) { showToast('Enter a phone number, name or card no.'); return; }
       const digits = q.replace(/\D/g, '');
       if (digits.length >= 10) { return rewardsOpen(digits.slice(-10)); }
       const r = await rwFetch('/?search=' + encodeURIComponent(q));
@@ -6214,12 +6214,14 @@
       box.innerHTML = `
         <h4 style="margin-bottom:8px;">Not enrolled yet: ${escapeHtml(phone)}</h4>
         <input type="text" id="rwEnrollName" placeholder="Customer name" style="margin-bottom:10px;">
+        <input type="text" id="rwEnrollCardNo" placeholder="Card no. written on the printed card" style="margin-bottom:10px;">
         <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="rewardsEnroll('${escapeHtml(phone)}')">Enroll</button>`;
     }
     async function rewardsEnroll(phone) {
       const name = document.getElementById('rwEnrollName').value.trim();
       if (!name) { showToast('Enter the customer name'); return; }
-      const r = await rwFetch('/enroll', 'POST', { phone, name });
+      const cardNo = (document.getElementById('rwEnrollCardNo') || {}).value || '';
+      const r = await rwFetch('/enroll', 'POST', { phone, name, cardNo: cardNo.trim() });
       if (r.ok && r.data.success) {
         showToast('Enrolled. Give the customer a new card.');
         rwCurrent = r.data.account;
@@ -6284,8 +6286,8 @@
       box.innerHTML = `
         <div class="card" style="padding:16px; margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;">
-            <div><h4 style="margin:0;">${escapeHtml(a.name)}${goldBadge}</h4><div style="font-size:13px; color:var(--text-muted);">${escapeHtml(a.phone)} &middot; card no. ${a.cardNumber} &middot; ${escapeHtml(season)}</div></div>
-            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;">Rename</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#25D366; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
+            <div><h4 style="margin:0;">${escapeHtml(a.name)}${goldBadge}</h4><div style="font-size:13px; color:var(--text-muted);">${escapeHtml(a.phone)} &middot; ${a.cardNo ? `printed card no. <strong>${escapeHtml(a.cardNo)}</strong>` : '<strong style="color:#c62828;">printed card no. not set</strong>'} &middot; ${escapeHtml(season)}</div></div>
+            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;">Rename</button><button type="button" onclick="rewardsCardNo()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;">Card no.</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#25D366; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
           </div>
           ${card}
           ${rwNudge(a)}
@@ -6343,6 +6345,13 @@
       const name = prompt('Customer name', rwCurrent.name);
       if (!name || !name.trim()) return;
       await rwApply(await rwFetch(`/${rwCurrent.phone}`, 'PUT', { name: name.trim() }), 'Name updated');
+    }
+
+    async function rewardsCardNo() {
+      if (!rwCurrent) return;
+      const v = prompt('Card no. written on the printed card', rwCurrent.cardNo || '');
+      if (v === null) return;
+      await rwApply(await rwFetch(`/${rwCurrent.phone}/cardno`, 'PUT', { cardNo: v.trim() }), 'Card no. saved');
     }
 
     // Customer self-service view of their own Rewards Card (read-only).
