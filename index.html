@@ -6272,6 +6272,7 @@
       if (a.best) msg += (a.tier !== 'gold' && a.best.spend === 50000) ? ` You have reached the top level! Your ${rwRs(a.best.reward)} will be carried forward to your Gold Card.` : ` You have earned a ${rwRs(a.best.reward)} reward!`;
       if (a.next) msg += ` Add ${rwRs(a.next.rupeesAway)} more in payments to reach ${rwRs(a.next.reward)}.`;
       msg += ' Thank you for choosing us!';
+      msg += ' \n\nAb apni agli outfit ka design pehle screen par dekhein, 3 design free: https://gurbanifashion.com/?utm_source=whatsapp&utm_medium=reward_update&utm_campaign=rewards_card';
       const wa = `https://wa.me/91${a.phone}?text=${encodeURIComponent(msg)}`;
       const season = rwProgram ? rwProgram.season : '';
       const addBox = a.canAddBill
