@@ -3971,6 +3971,7 @@
             <div class="tab-group-label">My Account</div>
             <div class="tab-group-row">
               <button class="tab-btn active" id="overviewTabBtn" onclick="switchTab(event, 'overview')">📊 Overview</button>
+              <button class="tab-btn" id="adminRewardsTabBtn" onclick="switchTab(event, 'adminRewards'); initRewardsTab();" style="display: none;">⭐ Rewards</button>
               <button class="tab-btn" id="designTabBtn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
               <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
               <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
@@ -4022,7 +4023,6 @@
         <div class="tab-group-dropdown-panel" id="peopleGroupPanel">
           <button class="tab-btn" id="adminCustomersTabBtn" onclick="switchTab(event, 'adminCustomers'); loadAdminCustomers();" style="display: none;">👥 Customers</button>
           <button class="tab-btn" id="adminEmployeesTabBtn" onclick="switchTab(event, 'adminEmployees'); openEmployeesGate();" style="display: none;">🧑‍🔧 Employees &amp; Payroll</button>
-          <button class="tab-btn" id="adminRewardsTabBtn" onclick="switchTab(event, 'adminRewards'); initRewardsTab();" style="display: none;">⭐ Rewards</button>
           <button class="tab-btn" id="adminMeasurementsTabBtn" onclick="switchTab(event, 'adminMeasurements'); openMeasurementsGate();" style="display: none;">📏 Measurements</button>
         </div>
         <div class="tab-group-dropdown-panel" id="marketingGroupPanel">
@@ -16722,6 +16722,8 @@
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAskClaudeTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        // Admins use the Rewards register; the customer's own 'My Rewards' view is of no use to them.
+        document.getElementById('myRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'none' : '';
         document.getElementById('adminRateCardTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // The dropdown-trigger row itself (Sales & Orders/Finance/etc.) —
         // customers never had any of the buttons inside these groups
