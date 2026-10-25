@@ -6285,6 +6285,7 @@
       let msg = `Namaste ${a.name}, your Gurbani Fashion Rewards Card: ${a.billsOnCard} of ${a.maxBills} stamps, payments total ${rwRs(a.cardTotal)}.`;
       if (a.best) msg += (a.tier !== 'gold' && a.best.spend === 50000) ? ` You have reached the top level! Your ${rwRs(a.best.reward)} will be carried forward to your Gold Card.` : ` You have earned a ${rwRs(a.best.reward)} reward!`;
       if (a.next) msg += ` Add ${rwRs(a.next.rupeesAway)} more in payments to reach ${rwRs(a.next.reward)}.`;
+      msg += ' Dost ko laayein, har dost ke 50 referral points milte hain, jo Gold Card par Rs 500 ke barabar hain.';
       msg += ' Thank you for choosing us!';
       msg += ' \n\nAb apni agli outfit ka design pehle screen par dekhein, 3 design free: https://gurbanifashion.com/?utm_source=whatsapp&utm_medium=reward_update&utm_campaign=rewards_card';
       const wa = `https://wa.me/91${a.phone}?text=${encodeURIComponent(msg)}`;
@@ -6443,6 +6444,7 @@
       let m = `Namaste ${first}, aapke Gurbani Fashion Rewards Card par abhi ${r.billsOnCard} stamp${r.billsOnCard === 1 ? '' : 's'} hain, payments total ${rwRs(r.cardTotal)}.`;
       if (r.earned > 0) m += ` ${rwRs(r.earned)} ka inaam abhi ready hai.`;
       if (r.nextAway > 0) m += ` Sirf ${rwRs(r.nextAway)} aur payments par ${rwRs(r.nextReward)} tak ka inaam.`;
+      m += ` Dost ko laayein, har dost ke 50 referral points milte hain.`;
       m += ` Apna card yahan dekhein: https://gurbanifashion.com/?utm_source=whatsapp&utm_medium=reminder&utm_campaign=rewards_card#rewardsSection`;
       m += ` Boutique mein aapka intezaar rahega. Sonia, Gurbani Fashion`;
       return m;
@@ -6469,6 +6471,22 @@
         </div>
         <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Open cards with at least one stamp. The message shows their stamps, how much more earns the next reward, and a link to check the card. Send it from Sonia's own WhatsApp.</div>
         ${rows || '<div style="font-size:13px; color:var(--text-muted);">No one is overdue right now.</div>'}`;
+    }
+
+    // Nudge shown under "Apna Rewards Card dekhein": bring friends, collect referral points.
+    function rwReferNudgeHtml(c, mine) {
+      const gold = c && c.tier === 'gold';
+      const code = mine && currentUser && currentUser.referralCode;
+      const link = code ? `https://gurbanifashion.com/?ref=${code}` : '';
+      const msg = `Namaste! Gurbani Fashion boutique (Greenfield Colony, Faridabad) mein design aur stitching kaafi achhi hai. Mere link se judiye: ${link}`;
+      const btn = code
+        ? `<a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13px;">WhatsApp par dost ko bhejein</a>`
+        : `<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Apna referral link website par sign in karke Dashboard mein milega.</div>`;
+      return `<div style="margin-top:14px; padding:12px; background:#FFF6DF; border:1.5px dashed #D9A441; border-radius:10px; text-align:left;">
+        <strong style="font-size:13.5px;">Dost ko laayein, points kamayein</strong>
+        <div style="font-size:12.5px; line-height:1.55; margin-top:4px;">Har dost jo aapke link se judta hai, aapko <strong>50 points</strong> deta hai. ${gold ? 'Gold Card par 1 point = Rs 10, yani <strong>har dost Rs 500</strong> ke barabar, aur ye aapko Rs 1,00,000 poore karne mein madad karte hain.' : 'Silver Card par points jama hote rehte hain, aur Gold Card par pahunchte hi <strong>1 point = Rs 10</strong> (har dost Rs 500) ban jaate hain.'}</div>
+        ${btn}
+      </div>`;
     }
 
     // ---- PUBLIC: customer checks own card with phone + printed card no. ----
@@ -6500,6 +6518,7 @@
           <div style="font-size:12.5px; color:var(--text-muted);">Stamps ${c.billsOnCard} of ${c.maxBills} &middot; payments total ${rwRs(c.cardTotal)}</div>
           ${rwCardHtml(c, c.slabs || d.program.slabs)}
           ${rwNudge(c)}
+          ${rwReferNudgeHtml(c, outId === 'myRewardsOut')}
           ${got ? `<div style="margin-top:12px;"><strong style="font-size:13px;">Rewards collected</strong>${got}</div>` : ''}
           <p style="font-size:12.5px; margin:14px 0 8px;">Sonia ke register ka record hi final hai. Kuch alag dikhe to batayein.</p>
           <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">WhatsApp Sonia</a>
