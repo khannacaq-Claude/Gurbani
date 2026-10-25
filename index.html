@@ -3206,7 +3206,7 @@
               <div id="rwPubOut"></div>
             </div>
             <p style="font-size:14px; margin-bottom:6px;"><strong>How to start:</strong> ask for a Rewards Card with your next payment at our Greenfields boutique.</p>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Starts Ashtami, 19 October 2026. Valid on all orders picked up till Holi, 19 March 2027. Available at our Greenfields boutique only (not on online orders). One card holds up to 10 payments; if all 10 are used without reaching ₹8,000, the card closes without a reward. Not combinable with other offers.</p>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Starts Ashtami, 19 October 2026. Stamping on all orders picked up till Holi, 19 March 2027; rewards you have earned can be collected any time. Available at our Greenfields boutique only (not on online orders). One card holds up to 10 payments; if all 10 are used without reaching ₹8,000, the card closes without a reward. Not combinable with other offers.</p>
             <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20know%20about%20the%20Rewards%20Card." target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:10px 20px; border-radius:22px; font-weight:700; font-size:14px;">💬 Ask Sonia about the Rewards Card</a>
           </div>
         </div>
@@ -3933,7 +3933,7 @@
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">Do you have a Rewards Card?<span class="faq-chevron">▾</span></button>
-              <div class="faq-answer"><p>Yes! Our Rewards Card starts on Ashtami, 19 October 2026 and is valid on all orders picked up till Holi, 19 March 2027. Every payment you make at our Greenfields boutique gets one stamp on your card, and Sonia notes the payment amount. One card holds up to 10 payments, and the total of those payments decides your reward: payments of Rs 8,000 earn Rs 500, Rs 15,000 earn Rs 1,100, Rs 25,000 earn Rs 2,000, and at Rs 50,000 the Rs 5,000 is carried forward to your Gold Card. You can collect as soon as you reach a level, or keep adding payments for a bigger reward. When you collect a reward, your card is replaced with a fresh one. A card that fills all 10 payments without reaching Rs 8,000 earns no reward. Your card is also saved against your phone number, so you can always check it with us. Customers who complete a first card and collect the Rs 50,000 reward get a Gold Card next, with bigger rewards (Rs 750, Rs 1,500, Rs 2,500 and Rs 7,500). The Rs 5,000 from the Silver card is not paid at that time but carried forward onto the Gold Card: whatever Gold reward you collect, the carried Rs 5,000 is added to it, so a Gold Card that reaches Rs 50,000 pays Rs 5,000 + Rs 7,500 = Rs 12,500 together. The Gold Card cannot be taken directly: the first card must be completed and its Rs 50,000 reward collected first. If all 10 payments on a card are used without reaching Rs 8,000, the card closes without a reward. This works in-store only and is different from the Refer a Friend points on this website.</p></div>
+              <div class="faq-answer"><p>Yes! Our Rewards Card starts on Ashtami, 19 October 2026 and cards are stamped on all orders picked up till Holi, 19 March 2027. Rewards you have earned can be collected any time. Every payment you make at our Greenfields boutique gets one stamp on your card, and Sonia notes the payment amount. One card holds up to 10 payments, and the total of those payments decides your reward: payments of Rs 8,000 earn Rs 500, Rs 15,000 earn Rs 1,100, Rs 25,000 earn Rs 2,000, and at Rs 50,000 the Rs 5,000 is carried forward to your Gold Card. You can collect as soon as you reach a level, or keep adding payments for a bigger reward. When you collect a reward, your card is replaced with a fresh one. A card that fills all 10 payments without reaching Rs 8,000 earns no reward. Your card is also saved against your phone number, so you can always check it with us. Customers who complete a first card and collect the Rs 50,000 reward get a Gold Card next, with bigger rewards (Rs 750, Rs 1,500, Rs 2,500 and Rs 7,500). The Rs 5,000 from the Silver card is not paid at that time but carried forward onto the Gold Card: whatever Gold reward you collect, the carried Rs 5,000 is added to it, so a Gold Card that reaches Rs 50,000 pays Rs 5,000 + Rs 7,500 = Rs 12,500 together. The Gold Card cannot be taken directly: the first card must be completed and its Rs 50,000 reward collected first. If all 10 payments on a card are used without reaching Rs 8,000, the card closes without a reward. This works in-store only and is different from the Refer a Friend points on this website.</p></div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">Do you have a referral program?<span class="faq-chevron">▾</span></button>
@@ -6178,7 +6178,7 @@
       if (!p) return;
       rwProgram = p;
       const el = document.getElementById('rwProgramLine');
-      if (el) el.innerHTML = `Season <strong>${escapeHtml(p.season)}</strong> &middot; started <strong>${escapeHtml(rwFmtDate(p.validFrom))}</strong> &middot; orders picked up till <strong>${escapeHtml(rwFmtDate(p.validTill))}</strong> (Holi)` + (p.expired ? ' <strong style="color:#c62828;">(EXPIRED)</strong>' : '');
+      if (el) el.innerHTML = `Season <strong>${escapeHtml(p.season)}</strong> &middot; started <strong>${escapeHtml(rwFmtDate(p.validFrom))}</strong> &middot; orders picked up till <strong>${escapeHtml(rwFmtDate(p.validTill))}</strong> (Holi)` + (p.expired ? ' <strong style="color:#c62828;">(stamping closed, rewards can still be collected)</strong>' : '');
     }
     function rwStatsText(s) {
       return `${s.members} members · ${s.cardsReady} cards with a reward ready · ${s.rewardsGiven} rewards given (${rwRs(s.rewardsGivenAmount)})`;
@@ -6300,7 +6300,9 @@
       msg += ' \n\nAb apni agli outfit ka design pehle screen par dekhein, 3 design free: https://gurbanifashion.com/?utm_source=whatsapp&utm_medium=reward_update&utm_campaign=rewards_card';
       const wa = `https://wa.me/91${a.phone}?text=${encodeURIComponent(msg)}`;
       const season = rwProgram ? rwProgram.season : '';
-      const addBox = a.canAddBill
+      const addBox = (rwProgram && rwProgram.expired)
+        ? `<div style="font-size:13.5px; font-weight:600; color:#7B3056;">Stamping closed after Holi. Rewards already earned can still be collected above.</div>`
+        : a.canAddBill
         ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
             <input type="number" id="rwAmount" min="1" placeholder="Payment amount Rs" style="flex:1; min-width:170px;">
             <input type="text" id="rwBillRef" placeholder="Bill / receipt no. (optional)" style="flex:1; min-width:130px;">
@@ -6625,7 +6627,7 @@
         </div>
         <div class="card" style="padding:18px; margin-bottom:14px;">
           <h5 style="margin:0 0 6px;">How the Rewards Card works</h5>
-          <div style="font-size:13px; line-height:1.55;">Every payment at our Greenfields boutique gets one stamp. One card holds up to 10 payments, and the <strong>total of the payments on your card</strong> decides your reward. Starts Ashtami, 19 Oct 2026, valid on orders picked up till Holi, 19 March 2027.</div>
+          <div style="font-size:13px; line-height:1.55;">Every payment at our Greenfields boutique gets one stamp. One card holds up to 10 payments, and the <strong>total of the payments on your card</strong> decides your reward. Starts Ashtami, 19 Oct 2026. Stamping till Holi, 19 March 2027; earned rewards can be collected any time.</div>
           <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
             <tr style="background:#F6EEF2;"><th style="text-align:left; padding:6px 8px;">Card total</th><th style="text-align:left; padding:6px 8px;">Silver</th><th style="text-align:left; padding:6px 8px;">Gold</th></tr>
             ${row('Rs 8,000', 'Rs 500', 'Rs 750')}${row('Rs 15,000', 'Rs 1,100', 'Rs 1,500')}${row('Rs 25,000', 'Rs 2,000', 'Rs 2,500')}${row('Rs 50,000', 'Rs 5,000 carried to Gold', 'Rs 7,500 + carried Rs 5,000')}
