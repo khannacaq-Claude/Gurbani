@@ -6351,7 +6351,7 @@
       out.innerHTML = `<div style="padding:12px; background:#FFF6DF; border:1px solid #F2C879; border-radius:8px;"><strong>${escapeHtml(d.name || phone)}</strong><div style="font-size:14px; margin:4px 0;">${d.paid} paying friend${d.paid === 1 ? '' : 's'} &middot; credit <strong>${rwRs(d.credit)}</strong></div><div style="font-size:12.5px; margin-bottom:8px;">${status}</div>${btns}</div>${log ? `<div style="margin-top:8px;">${log}</div>` : ''}`;
     }
     async function rwRefUse(phone, mode, amount) {
-      if (!confirm(mode === 'cash' ? `Pay Rs ${amount} in cash? (Check TDS first.) This deducts the credit.` : `Give Rs ${amount} discount on the bill? This deducts the credit.`)) return;
+      if (!confirm(mode === 'cash' ? `Pay Rs ${amount} in cash? (Check TDS first.) This deducts the credit. After this, the customer's Gold points will NOT apply any more.` : `Give Rs ${amount} discount on the bill? This deducts the credit. After this, the customer's Gold points will NOT apply any more.`)) return;
       const r = await rwFetch('/referral/use', 'POST', { phone, mode });
       showToast((r.data && r.data.message) || 'Something went wrong');
       rwRefLookup();
@@ -6365,6 +6365,7 @@
       const used = (d.used || []).map(u => `<div style="display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(u.at)}</span><strong>${u.points} points = ${rwRs(u.rs)} less in last payment</strong></div>`).join('');
       let act = '';
       if (!d.hasUser) act = '<div style="font-size:12.5px; color:var(--text-muted);">This customer has no website account, so no referral points.</div>';
+      else if (d.blockedByCredit) act = `<div style="font-size:13px; line-height:1.55; color:#8E1B10;">This customer has already used the <strong>referral credit</strong>, so Gold points do not apply.</div>`;
       else if (!d.gold) act = `<div style="font-size:12.5px; line-height:1.55;">Points help only on a <strong>Gold Card</strong>. They are saved and will count once this customer reaches Gold.</div>`;
       else if (d.balance < 1) act = '<div style="font-size:12.5px; color:var(--text-muted);">No points to use.</div>';
       else act = `<div style="padding:12px; background:#FFF6DF; border:1px solid #F2C879; border-radius:8px; font-size:14px; line-height:1.55;">Use the points only if the customer is completing Rs 1,00,000. Then the <strong>last payment is ${rwRs(d.reduceBy)} less</strong> (${d.balance} points x Rs 10).</div>
@@ -6564,7 +6565,7 @@
           try { localStorage.setItem('gf_my_card_no', cardNo); } catch (e) {}
           const st = document.getElementById('myPointsStatus');
           const pts = Number((currentUser && currentUser.loyaltyPoints) || 0);
-          if (st) st.textContent = c.tier === 'gold'
+          if (st) st.textContent = window.gfCreditUsed ? 'You have used your referral credit, so your points no longer apply.' : c.tier === 'gold'
             ? `You are on the Gold Card. Your ${pts} points = Rs ${(pts * 10).toLocaleString('en-IN')}, so your last payment can be Rs ${(pts * 10).toLocaleString('en-IN')} less when you complete Rs 1,00,000.`
             : `You have ${pts} points. They will be worth Rs ${(pts * 10).toLocaleString('en-IN')} once you reach the Gold Card.`;
         }
@@ -6612,11 +6613,12 @@
         </div>
         <div class="card" id="myPointsCard" style="padding:18px; margin-bottom:14px; background:#FFF6DF; border:1px solid #F2C879;">
           <h5 style="margin:0 0 6px;">🎁 Your Referral Points</h5>
-          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;"><span id="myPointsNum" style="font-size:28px; font-weight:800; color:var(--vivid);">${Number((currentUser && currentUser.loyaltyPoints) || 0)}</span><span style="font-size:13px;">points = <strong id="myPointsRs">Rs ${(Number((currentUser && currentUser.loyaltyPoints) || 0) * 10).toLocaleString('en-IN')}</strong> discount</span></div>
+          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;"><span id="myPointsNum" style="font-size:28px; font-weight:800; color:var(--vivid);">${Number((currentUser && currentUser.loyaltyPoints) || 0)}</span><span style="font-size:13px;">points, worth <strong id="myPointsRs">Rs ${(Number((currentUser && currentUser.loyaltyPoints) || 0) * 10).toLocaleString('en-IN')}</strong> once you are on the Gold Card</span></div>
           <div id="myPointsRule" style="font-size:12.5px; line-height:1.6; margin-top:8px; color:#40192D;">
             Your referral points help you complete <strong>Rs 1,00,000</strong> of payments (Silver Rs 50,000 plus Gold Rs 50,000, by your 12th or 20th stamp) and earn the <strong>Rs 12,500 cashback</strong>.<br>
             <strong>1 point = Rs 10</strong> once you are on the Gold Card. <em>Example: 500 points = Rs 5,000, so you pay Rs 95,000 in cash or bank and still earn Rs 12,500.</em> You must pay the balance; points do not turn into cash on their own.<br>
             On the Silver Card your points just keep adding up and count from the day you reach Gold.<br>
+            <strong>Points and referral credit cannot be combined:</strong> once you have used your referral credit (discount or cash), your points no longer apply.<br>
             Only your own direct referrals earn you points, there are no levels. Sonia records every use of points.
           </div>
           <div id="myPointsStatus" style="font-size:13px; font-weight:700; margin-top:10px; color:#7B3056;"></div>
@@ -6635,6 +6637,9 @@
       if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
       try {
         fetch(`${API}/api/loyalty/referral/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(d => {
+          window.gfCreditUsed = !!(d && d.creditUsed);
+          const stx = document.getElementById('myPointsStatus');
+          if (stx && window.gfCreditUsed) stx.textContent = 'You have used your referral credit, so your points no longer apply.';
           const el = document.getElementById('myRefNums'); if (!el || !d || !d.success) { if (el) el.textContent = ''; return; }
           el.innerHTML = `<strong>${d.paid}</strong> paying friend${d.paid === 1 ? '' : 's'} &middot; credit <strong>Rs ${Number(d.credit).toLocaleString('en-IN')}</strong><br><span style="font-size:12.5px;">${d.cashUnlocked ? 'Discount and cash are open. Ask Sonia.' : (d.discountUnlocked ? 'Discount is open, ask Sonia. Cash opens after ' + d.moreForCash + ' more paying friends.' : d.moreForDiscount + ' more paying friend' + (d.moreForDiscount === 1 ? '' : 's') + ' to open the discount.')}</span>`;
         }).catch(() => { const el = document.getElementById('myRefNums'); if (el) el.textContent = ''; });
