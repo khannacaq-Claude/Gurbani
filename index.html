@@ -4055,7 +4055,7 @@
                currentUser is available. -->
           <div class="card" id="referralCard" style="padding:20px; margin-top:20px; display:none;">
             <h4 style="margin-bottom:6px;">🎁 Refer a Friend</h4>
-            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Redeeming points for a discount is coming soon; they're already adding up.</p>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Each point is worth Rs 10 as a discount on the bill of your 20th Rewards Card stamp (see My Rewards).</p>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
               <input type="text" id="referralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0;">
               <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyReferralLink()">📋 Copy</button>
@@ -6310,12 +6310,37 @@
           <h5 style="margin:16px 0 8px;">Reward</h5>${rewardBlock}
           ${a.tier === 'gold' ? '' : goldRule}
         </div>
+        <div class="card" id="rwPointsBox" style="padding:16px; margin-bottom:16px;"></div>
         <div class="card" style="padding:16px; margin-bottom:16px;">
           <h4 style="margin-bottom:10px;">Add a payment</h4>
           ${addBox}
         </div>
         <div class="card" style="padding:16px; margin-bottom:16px;"><h4 style="margin-bottom:10px;">History</h4>${hist}</div>`;
+      rwLoadPoints();
     }
+    async function rwLoadPoints() {
+      const box = document.getElementById('rwPointsBox'); if (!box || !rwCurrent) return;
+      const phone = rwCurrent.phone;
+      const r = await rwFetch(`/${phone}/points`);
+      if (!(r.ok && r.data.success)) { box.innerHTML = '<h4 style="margin-bottom:6px;">Referral points</h4><div style="font-size:12.5px; color:var(--text-muted);">Could not load points.</div>'; return; }
+      const d = r.data;
+      const used = (d.used || []).map(u => `<div style="display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(u.at)}</span><strong>${u.points} points = ${rwRs(u.rs)} less in last payment</strong></div>`).join('');
+      let act = '';
+      if (!d.hasUser) act = '<div style="font-size:12.5px; color:var(--text-muted);">This customer has no website account, so no referral points.</div>';
+      else if (!d.gold) act = `<div style="font-size:12.5px; line-height:1.55;">Points help only on a <strong>Gold Card</strong>. They are saved and will count once this customer reaches Gold.</div>`;
+      else if (d.balance < 1) act = '<div style="font-size:12.5px; color:var(--text-muted);">No points to use.</div>';
+      else act = `<div style="padding:12px; background:#FFF6DF; border:1px solid #F2C879; border-radius:8px; font-size:14px; line-height:1.55;">Use the points only if the customer is completing Rs 1,00,000. Then the <strong>last payment is ${rwRs(d.reduceBy)} less</strong> (${d.balance} points x Rs 10).</div>
+        <button type="button" onclick="rwUsePoints()" style="margin-top:10px; padding:10px 18px; border:none; border-radius:6px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Use points (take ${rwRs(d.reduceBy)} less)</button>`;
+      box.innerHTML = `<h4 style="margin-bottom:6px;">Referral points: <span style="color:var(--vivid);">${d.balance}</span></h4>${act}${used ? `<div style="margin-top:12px;"><strong style="font-size:13px;">Points used</strong>${used}</div>` : ''}`;
+    }
+    async function rwUsePoints() {
+      if (!rwCurrent) return;
+      if (!confirm('Has the customer paid the rest of the Rs 1,00,000 in cash or bank? Press OK only if yes. The points will be deducted and this cannot be undone.')) return;
+      const r = await rwFetch(`/${rwCurrent.phone}/points`, 'POST', {});
+      showToast(r.data.message || (r.ok ? 'Done' : 'Something went wrong'));
+      rwLoadPoints();
+    }
+
     async function rwApply(r, okMsg) {
       if (r.ok && r.data.success) {
         rwCurrent = r.data.account; rwSetProgram(r.data.program);
@@ -6459,7 +6484,14 @@
         const d = await res.json().catch(() => ({}));
         if (!res.ok || !d.success) { out.innerHTML = `<p style="color:#c62828; font-size:13px;">${escapeHtml(d.message || 'Card nahi mila')}</p>`; return; }
         const c = d.card;
-        if (outId === 'myRewardsOut') { try { localStorage.setItem('gf_my_card_no', cardNo); } catch (e) {} }
+        if (outId === 'myRewardsOut') {
+          try { localStorage.setItem('gf_my_card_no', cardNo); } catch (e) {}
+          const st = document.getElementById('myPointsStatus');
+          const pts = Number((currentUser && currentUser.loyaltyPoints) || 0);
+          if (st) st.textContent = c.tier === 'gold'
+            ? `You are on the Gold Card. Your ${pts} points = Rs ${(pts * 10).toLocaleString('en-IN')}, so your last payment can be Rs ${(pts * 10).toLocaleString('en-IN')} less when you complete Rs 1,00,000.`
+            : `You have ${pts} points. They will be worth Rs ${(pts * 10).toLocaleString('en-IN')} once you reach the Gold Card.`;
+        }
         const goldTag = c.tier === 'gold' ? ' <span style="background:linear-gradient(180deg,#F7D98A,#D9A441); color:#2A0F1D; font-size:11px; font-weight:800; padding:2px 10px; border-radius:10px; letter-spacing:1px;">GOLD CARD</span>' : '';
         const got = (c.collected || []).filter(x => x.reward || x.carried).map(x => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(x.date)}</span><strong>${x.carried ? rwRs(x.carried) + ' carried to Gold' : rwRs(x.reward)}</strong></div>`).join('');
         const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent('Hi Sonia, mujhe apne Rewards Card ke baare mein poochhna hai.');
@@ -6495,6 +6527,17 @@
           </div>
           <div id="myRewardsOut"></div>
         </div>
+        <div class="card" id="myPointsCard" style="padding:18px; margin-bottom:14px; background:#FFF6DF; border:1px solid #F2C879;">
+          <h5 style="margin:0 0 6px;">🎁 Your Referral Points</h5>
+          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;"><span id="myPointsNum" style="font-size:28px; font-weight:800; color:var(--vivid);">${Number((currentUser && currentUser.loyaltyPoints) || 0)}</span><span style="font-size:13px;">points = <strong id="myPointsRs">Rs ${(Number((currentUser && currentUser.loyaltyPoints) || 0) * 10).toLocaleString('en-IN')}</strong> discount</span></div>
+          <div id="myPointsRule" style="font-size:12.5px; line-height:1.6; margin-top:8px; color:#40192D;">
+            Your referral points help you complete <strong>Rs 1,00,000</strong> of payments (Silver Rs 50,000 plus Gold Rs 50,000, by your 12th or 20th stamp) and earn the <strong>Rs 12,500 cashback</strong>.<br>
+            <strong>1 point = Rs 10</strong> once you are on the Gold Card. <em>Example: 500 points = Rs 5,000, so you pay Rs 95,000 in cash or bank and still earn Rs 12,500.</em> You must pay the balance; points do not turn into cash on their own.<br>
+            On the Silver Card your points just keep adding up and count from the day you reach Gold.<br>
+            Only your own direct referrals earn you points, there are no levels. Sonia records every use of points.
+          </div>
+          <div id="myPointsStatus" style="font-size:13px; font-weight:700; margin-top:10px; color:#7B3056;"></div>
+        </div>
         <div class="card" style="padding:18px; margin-bottom:14px;">
           <h5 style="margin:0 0 6px;">How the Rewards Card works</h5>
           <div style="font-size:13px; line-height:1.55;">Every payment at our Greenfields boutique gets one stamp. One card holds up to 10 payments, and the <strong>total of the payments on your card</strong> decides your reward. Starts Ashtami, 19 Oct 2026, valid on orders picked up till Holi, 19 March 2027.</div>
@@ -6506,6 +6549,17 @@
           <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
         </div>`;
       if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
+      // refresh the latest referral points (same endpoint the dashboard uses)
+      try {
+        fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(data => {
+          if (!data || !data.success) return;
+          const pts = Number(data.user.loyaltyPoints || 0);
+          if (currentUser) currentUser.loyaltyPoints = pts;
+          const n = document.getElementById('myPointsNum'), r2 = document.getElementById('myPointsRs');
+          if (n) n.textContent = pts;
+          if (r2) r2.textContent = 'Rs ' + (pts * 10).toLocaleString('en-IN');
+        }).catch(() => {});
+      } catch (e) {}
     }
 
     async function initAskClaudeTab() {
