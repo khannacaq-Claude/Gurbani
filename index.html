@@ -4477,10 +4477,9 @@
 
           <div class="account-group">
             <div class="account-group-label">🏆 Loyalty</div>
-            <div class="account-row account-row-soon">
-              <span>Coupons</span>
-              <span class="account-soon-badge">Coming Soon</span>
-            </div>
+            <a href="#" id="accountRewardsRow" class="account-row" onclick="event.preventDefault(); closeAccountPanel(); switchTab(null, 'myRewards'); loadMyRewards();">
+              <span>⭐ My Rewards Card</span><span class="account-row-chevron">›</span>
+            </a>
           </div>
 
           <div class="account-group">
@@ -4645,7 +4644,7 @@
         <div id="myRewards" class="tab-content">
           <h3>⭐ My Rewards Card</h3>
           <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Your Rewards Card at our Greenfields boutique. Sonia adds a stamp when you make a payment.</p>
-          <div id="myRewardsBody">Loading...</div>
+          <div id="myRewardsBody"></div>
         </div>
 
         <!-- RATE CARD: ADMIN ONLY (prices are shared one-on-one by Sonia). Customers see only the Fabric Calculator below. -->
@@ -6448,10 +6447,11 @@
     }
 
     // ---- PUBLIC: customer checks own card with phone + printed card no. ----
-    async function rwPublicCheck() {
-      const phone = (document.getElementById('rwPubPhone').value || '').replace(/\D/g, '').slice(-10);
-      const cardNo = (document.getElementById('rwPubCard').value || '').trim();
-      const out = document.getElementById('rwPubOut');
+    async function rwPublicCheck(phoneId, cardId, outId) {
+      phoneId = phoneId || 'rwPubPhone'; cardId = cardId || 'rwPubCard'; outId = outId || 'rwPubOut';
+      const phone = (document.getElementById(phoneId).value || '').replace(/\D/g, '').slice(-10);
+      const cardNo = (document.getElementById(cardId).value || '').trim();
+      const out = document.getElementById(outId);
       if (phone.length !== 10 || !cardNo) { out.innerHTML = '<p style="color:#c62828; font-size:13px;">10 digit phone number aur card number dono daalein.</p>'; return; }
       out.innerHTML = '<p style="font-size:13px;">Dekh rahe hain...</p>';
       try {
@@ -6459,6 +6459,7 @@
         const d = await res.json().catch(() => ({}));
         if (!res.ok || !d.success) { out.innerHTML = `<p style="color:#c62828; font-size:13px;">${escapeHtml(d.message || 'Card nahi mila')}</p>`; return; }
         const c = d.card;
+        if (outId === 'myRewardsOut') { try { localStorage.setItem('gf_my_card_no', cardNo); } catch (e) {} }
         const goldTag = c.tier === 'gold' ? ' <span style="background:linear-gradient(180deg,#F7D98A,#D9A441); color:#2A0F1D; font-size:11px; font-weight:800; padding:2px 10px; border-radius:10px; letter-spacing:1px;">GOLD CARD</span>' : '';
         const got = (c.collected || []).filter(x => x.reward || x.carried).map(x => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${rwFmtDate(x.date)}</span><strong>${x.carried ? rwRs(x.carried) + ' carried to Gold' : rwRs(x.reward)}</strong></div>`).join('');
         const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent('Hi Sonia, mujhe apne Rewards Card ke baare mein poochhna hai.');
@@ -6474,36 +6475,37 @@
       } catch (e) { out.innerHTML = '<p style="color:#c62828; font-size:13px;">Abhi card nahi khul paya, thodi der baad try karein.</p>'; }
     }
 
-    // Customer self-service view of their own Rewards Card (read-only).
-    async function loadMyRewards() {
+    // Customer view: scheme summary + check own card with phone + printed card no.
+    // (no OTP needed; same safe check as the public form on the home page).
+    function loadMyRewards() {
       const box = document.getElementById('myRewardsBody');
-      box.innerHTML = 'Loading...';
-      try {
-        const res = await fetch(`${API}/api/loyalty/me`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-        const d = await res.json();
-        if (!res.ok || !d.success) { box.innerHTML = `<p style="color:#c62828;">${escapeHtml(d.message || d.error || 'Could not load your rewards')}</p>`; return; }
-        const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent("Hi Sonia, I'd like to know about my Rewards Card.");
-        const askBtn = `<a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>`;
-        if (d.state === 'no_phone') { box.innerHTML = `<div class="card" style="padding:18px;">Add your mobile number in My Account so we can find your Rewards Card.<br>${askBtn}</div>`; return; }
-        if (d.state === 'unverified') { box.innerHTML = `<div class="card" style="padding:18px;">We will show your card here once Sonia has verified your mobile number (it takes a moment at the boutique).<br>${askBtn}</div>`; return; }
-        if (d.state === 'not_enrolled') { box.innerHTML = `<div class="card" style="padding:18px;"><strong>Not a member yet.</strong> Ask for a Rewards Card at our Greenfields boutique. Every payment gets a stamp.<br>${askBtn}</div>`; return; }
-        const c = d.card;
-        const card = rwCardHtml(c, c.slabs || d.program.slabs);
-        const goldTag = c.tier === 'gold' ? ' <span style="background:linear-gradient(180deg,#F7D98A,#D9A441); color:#2A0F1D; font-size:11px; font-weight:800; padding:2px 10px; border-radius:10px; letter-spacing:1px;">GOLD CARD</span>' : '';
-        const pend = c.best
-          ? `<div style="padding:10px; background:#FFF6DF; border:1px solid #F2C879; border-radius:8px; font-size:13.5px;"><strong>${(c.tier !== 'gold' && c.best.spend === 50000) ? rwRs(c.best.reward) + ' will be carried to your Gold Card.' : rwRs(c.best.reward + ((c.tier === 'gold' && c.carry > 0) ? c.carry : 0)) + ' reward earned.'}</strong> Show your card to Sonia to collect it, or keep adding payments for a bigger reward.</div>`
-          : (c.cardFull ? '<div style="font-size:13px; color:var(--text-muted);">Your card is full but did not reach Rs 8,000, so it earns no reward. Ask Sonia for a new card.</div>' : '<div style="font-size:13px; color:var(--text-muted);">No reward earned on this card yet.</div>');
-        const got = (c.collected || []).filter(x => x.reward || x.carried).map(x => `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #eee; font-size:12.5px;"><span>${new Date(x.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} &middot; Card ${x.cardNumber}</span><strong>${x.carried ? rwRs(x.carried) + ' carried to Gold' : rwRs(x.reward)}</strong></div>`).join('');
-        box.innerHTML = `
-          <div class="card" style="padding:18px; margin-bottom:14px;">
-            <h4 style="margin:0 0 4px;">${escapeHtml(c.name)}${goldTag}</h4>
-            <div style="font-size:13px; color:var(--text-muted);">Card no. ${c.cardNumber} &middot; started 19 Oct 2026 &middot; orders picked up till Holi, 19 March 2027</div>
-            ${card}
-            ${rwNudge(c)}
+      let savedCard = ''; try { savedCard = localStorage.getItem('gf_my_card_no') || ''; } catch (e) {}
+      const ph = String((currentUser && currentUser.phone) || '').replace(/\D/g, '').slice(-10);
+      const inp = 'padding:10px; border:1.5px solid #d8c9d0; border-radius:8px; font-size:14px;';
+      const row = (a, b, c) => `<tr><td style="padding:6px 8px; border-bottom:1px solid #eee;">${a}</td><td style="padding:6px 8px; border-bottom:1px solid #eee;">${b}</td><td style="padding:6px 8px; border-bottom:1px solid #eee; font-weight:700;">${c}</td></tr>`;
+      const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent("Hi Sonia, I'd like to know about my Rewards Card.");
+      box.innerHTML = `
+        <div class="card" style="padding:18px; margin-bottom:14px; border:2px solid #F2C879;">
+          <strong style="font-size:15px;">Apna Rewards Card dekhein</strong>
+          <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="tel" id="myRwPhone" inputmode="numeric" maxlength="14" placeholder="10 digit phone number" value="${escapeHtml(ph)}" style="flex:2; min-width:160px; ${inp}" onkeydown="if(event.key==='Enter'){rwPublicCheck('myRwPhone','myRwCard','myRewardsOut');}">
+            <input type="text" id="myRwCard" maxlength="20" placeholder="Card no." value="${escapeHtml(savedCard)}" style="flex:1; min-width:90px; ${inp}" onkeydown="if(event.key==='Enter'){rwPublicCheck('myRwPhone','myRwCard','myRewardsOut');}">
+            <button type="button" onclick="rwPublicCheck('myRwPhone','myRwCard','myRewardsOut')" style="padding:10px 20px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Dekhein</button>
           </div>
-          <div class="card" style="padding:18px; margin-bottom:14px;"><h5 style="margin:0 0 10px;">Your reward</h5>${pend}<div style="font-size:12px; color:var(--text-muted); margin-top:8px;">When you collect a reward, your card is replaced with a fresh one. A card that fills all 10 payments without reaching Rs 8,000 earns no reward.${c.tier === 'gold' ? '' : ' Collect the Rs 50,000 reward and your next card is a <strong>Gold Card</strong> with bigger rewards, up to Rs 7,500.'}</div></div>
-          ${got ? `<div class="card" style="padding:18px;"><h5 style="margin:0 0 8px;">Rewards collected</h5>${got}</div>` : ''}`;
-      } catch (err) { box.innerHTML = `<p style="color:#c62828;">${escapeHtml(err.message)}</p>`; }
+          <div id="myRewardsOut"></div>
+        </div>
+        <div class="card" style="padding:18px; margin-bottom:14px;">
+          <h5 style="margin:0 0 6px;">How the Rewards Card works</h5>
+          <div style="font-size:13px; line-height:1.55;">Every payment at our Greenfields boutique gets one stamp. One card holds up to 10 payments, and the <strong>total of the payments on your card</strong> decides your reward. Starts Ashtami, 19 Oct 2026, valid on orders picked up till Holi, 19 March 2027.</div>
+          <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+            <tr style="background:#F6EEF2;"><th style="text-align:left; padding:6px 8px;">Card total</th><th style="text-align:left; padding:6px 8px;">Silver</th><th style="text-align:left; padding:6px 8px;">Gold</th></tr>
+            ${row('Rs 8,000', 'Rs 500', 'Rs 750')}${row('Rs 15,000', 'Rs 1,100', 'Rs 1,500')}${row('Rs 25,000', 'Rs 2,000', 'Rs 2,500')}${row('Rs 50,000', 'Rs 5,000 carried to Gold', 'Rs 7,500 + carried Rs 5,000')}
+          </table>
+          <div style="font-size:12.5px; color:var(--text-muted); margin-top:10px; line-height:1.5;">Wait a little, earn more: a bigger card total earns a bigger reward. Complete your first card at Rs 50,000 and your next card is a <strong>Gold Card</strong>; the Rs 5,000 from Silver is carried onto it, so you can earn up to Rs 12,500. A card that fills all 10 payments under Rs 8,000 earns no reward. Rewards are paid at the boutique, and Sonia's register is the final record.</div>
+          <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
+        </div>`;
+      if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
     }
 
     async function initAskClaudeTab() {
@@ -16733,6 +16735,7 @@
         document.getElementById('adminRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // Admins use the Rewards register; the customer's own 'My Rewards' view is of no use to them.
         document.getElementById('myRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'none' : '';
+        { const ar = document.getElementById('accountRewardsRow'); if (ar) ar.style.display = currentUser.role === 'admin' ? 'none' : ''; }
         document.getElementById('adminRateCardTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // The dropdown-trigger row itself (Sales & Orders/Finance/etc.) —
         // customers never had any of the buttons inside these groups
