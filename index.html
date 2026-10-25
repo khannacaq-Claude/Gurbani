@@ -17027,6 +17027,9 @@
 
       document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
       updateUI();
+      rwSyncPhoneFields();
+      // The landing page can be shown while signed in (Back to Home Page), so keep the Rewards phone box in step with the profile.
+      setInterval(rwSyncPhoneFields, 1000);
       // Moved to run AFTER updateUI() — previously this ran first thing on
       // load, before the saved login was even read from localStorage, so
       // the landing-page check inside it was always true regardless of
