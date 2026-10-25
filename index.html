@@ -3198,6 +3198,7 @@
               <strong style="font-size:14.5px;">Apna Rewards Card dekhein</strong>
               <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div id="rwPubPhoneNote" style="display:none; width:100%; font-size:12.5px; color:#8E1B10; background:#FDECEC; border-radius:8px; padding:8px 10px; margin-bottom:6px;"></div>
                 <input type="tel" id="rwPubPhone" inputmode="numeric" placeholder="10 digit phone number" maxlength="14" style="flex:2; min-width:160px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
                 <input type="text" id="rwPubCard" placeholder="Card no." maxlength="20" style="flex:1; min-width:90px;" onkeydown="if(event.key==='Enter'){rwPublicCheck();}">
                 <button type="button" onclick="rwPublicCheck()" style="padding:10px 20px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Dekhein</button>
@@ -6525,9 +6526,30 @@
       </div>`;
     }
 
+    // Once signed in, the phone number on the Rewards Card check comes from the profile and cannot be edited.
+    function rwSyncPhoneFields() {
+      const signedIn = !!(typeof currentUser !== 'undefined' && currentUser);
+      const ph = signedIn ? String(currentUser.phone || '').replace(/\D/g, '').slice(-10) : '';
+      ['rwPubPhone', 'myRwPhone'].forEach(id => {
+        const el = document.getElementById(id); if (!el) return;
+        const note = document.getElementById(id + 'Note');
+        if (!signedIn) { el.readOnly = false; el.style.background = ''; el.title = ''; if (note) note.style.display = 'none'; return; }
+        el.readOnly = true; el.style.background = '#f1ebee';
+        if (ph.length === 10) { el.value = ph; el.title = 'This is the phone number on your profile'; if (note) note.style.display = 'none'; }
+        else {
+          el.value = ''; el.placeholder = 'Phone number missing on profile';
+          if (note) { note.innerHTML = 'Aapke profile mein phone number nahi hai. Pehle apna phone number profile mein update karein. <a href="#" onclick="event.preventDefault(); scrollToPersonalDetails();" style="color:#7B3056; font-weight:700;">Profile kholein</a>'; note.style.display = 'block'; }
+        }
+      });
+    }
+
     // ---- PUBLIC: customer checks own card with phone + printed card no. ----
     async function rwPublicCheck(phoneId, cardId, outId) {
       phoneId = phoneId || 'rwPubPhone'; cardId = cardId || 'rwPubCard'; outId = outId || 'rwPubOut';
+      rwSyncPhoneFields();
+      if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.phone || '').replace(/\D/g, '').length < 10) {
+        document.getElementById(outId).innerHTML = '<p style="color:#c62828; font-size:13px;">Pehle apna phone number profile mein update karein.</p>'; return;
+      }
       const phone = (document.getElementById(phoneId).value || '').replace(/\D/g, '').slice(-10);
       const cardNo = (document.getElementById(cardId).value || '').trim();
       const out = document.getElementById(outId);
@@ -6575,6 +6597,7 @@
         <div class="card" style="padding:18px; margin-bottom:14px; border:2px solid #F2C879;">
           <strong style="font-size:15px;">Apna Rewards Card dekhein</strong>
           <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
+          <div id="myRwPhoneNote" style="display:none; font-size:12.5px; color:#8E1B10; background:#FDECEC; border-radius:8px; padding:8px 10px; margin-bottom:8px;"></div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <input type="tel" id="myRwPhone" inputmode="numeric" maxlength="14" placeholder="10 digit phone number" value="${escapeHtml(ph)}" style="flex:2; min-width:160px; ${inp}" onkeydown="if(event.key==='Enter'){rwPublicCheck('myRwPhone','myRwCard','myRewardsOut');}">
             <input type="text" id="myRwCard" maxlength="20" placeholder="Card no." value="${escapeHtml(savedCard)}" style="flex:1; min-width:90px; ${inp}" onkeydown="if(event.key==='Enter'){rwPublicCheck('myRwPhone','myRwCard','myRewardsOut');}">
@@ -6608,6 +6631,7 @@
           <div style="font-size:12.5px; color:var(--text-muted); margin-top:10px; line-height:1.5;">Wait a little, earn more: a bigger card total earns a bigger reward. Complete your first card at Rs 50,000 and your next card is a <strong>Gold Card</strong>; the Rs 5,000 from Silver is carried onto it, so you can earn up to Rs 12,500. A card that fills all 10 payments under Rs 8,000 earns no reward. Rewards are paid at the boutique, and Sonia's register is the final record.</div>
           <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
         </div>`;
+      rwSyncPhoneFields();
       if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
       try {
         fetch(`${API}/api/loyalty/referral/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(d => {
@@ -16870,6 +16894,7 @@
           if (currentUser.role !== 'admin') {
             referralCardEl.style.display = 'block';
             loadReferralCard();
+            rwSyncPhoneFields();
           } else {
             referralCardEl.style.display = 'none';
           }
