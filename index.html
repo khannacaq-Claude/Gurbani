@@ -4055,7 +4055,7 @@
                currentUser is available. -->
           <div class="card" id="referralCard" style="padding:20px; margin-top:20px; display:none;">
             <h4 style="margin-bottom:6px;">🎁 Refer a Friend</h4>
-            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Each point is worth Rs 10 as a discount on the bill of your 20th Rewards Card stamp (see My Rewards).</p>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Share your link — when a friend signs up through it, you earn loyalty points. Points and referral credit are explained under My Rewards.</p>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
               <input type="text" id="referralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0;">
               <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyReferralLink()">📋 Copy</button>
@@ -5595,6 +5595,15 @@
           <div id="rwAccountBox" style="display:none;"></div>
           <div class="card" style="padding:16px; margin-bottom:16px;" id="rwReserveBox"></div>
           <div class="card" style="padding:16px; margin-bottom:16px;" id="rwRemindBox"></div>
+          <div class="card" style="padding:16px; margin-bottom:16px;" id="rwRefBox">
+            <h4 style="margin:0 0 4px;">Referral credit (paying friends)</h4>
+            <div style="font-size:12.5px; color:var(--text-muted); line-height:1.55; margin-bottom:12px;">Rs 200 credit for every friend who joined through a link and made a first purchase of Rs 2,000 or more. Credit works as a discount after 5 paying friends, cash only at 50. No expiry. If the friend joined through the link and is in this register, adding their payment credits the referrer automatically. Otherwise record it below. For a family member who did not use the link, also enter the referrer's code or phone number (the customer gets the code from their Dashboard).</div>
+            <strong style="font-size:13px;">1. Record a friend's first purchase</strong>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px;"><input type="tel" id="rwRefFriend" inputmode="numeric" maxlength="14" placeholder="Friend's phone" style="flex:1; min-width:150px;"><input type="number" id="rwRefAmt" min="1" placeholder="Purchase Rs" style="flex:1; min-width:120px;"><input type="text" id="rwRefKey" maxlength="20" placeholder="Referrer code or phone (family)" style="flex:1; min-width:170px;"><button type="button" onclick="rwRefRecord()" style="padding:9px 16px; border:none; border-radius:6px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Add</button></div>
+            <strong style="font-size:13px; display:block; margin-top:14px;">2. Check a customer's referral credit</strong>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin:6px 0;"><input type="tel" id="rwRefPhone" inputmode="numeric" maxlength="14" placeholder="Referrer's phone" style="flex:1; min-width:150px;" onkeydown="if(event.key==='Enter'){rwRefLookup();}"><button type="button" onclick="rwRefLookup()" style="padding:9px 16px; border:none; border-radius:6px; background:#40192D; color:#F2C879; font-weight:700; cursor:pointer;">Check</button></div>
+            <div id="rwRefOut"></div>
+          </div>
           <div class="card" style="padding:16px;">
             <h4 style="margin-bottom:10px;">Recent members</h4>
             <div id="rwMemberList" style="font-size:13px;"></div>
@@ -6319,6 +6328,33 @@
         <div class="card" style="padding:16px; margin-bottom:16px;"><h4 style="margin-bottom:10px;">History</h4>${hist}</div>`;
       rwLoadPoints();
     }
+    async function rwRefRecord() {
+      const friendPhone = (document.getElementById('rwRefFriend').value || '').replace(/\D/g, '').slice(-10);
+      const amount = Number(document.getElementById('rwRefAmt').value);
+      if (friendPhone.length !== 10 || !(amount >= 1)) { showToast("Enter the friend's 10 digit phone and the purchase amount"); return; }
+      const r = await rwFetch('/referral/friend', 'POST', { friendPhone, amount, referrerKey: (document.getElementById('rwRefKey') || {}).value || '' });
+      showToast((r.data && r.data.message) || 'Something went wrong');
+      if (r.ok && r.data.success) { document.getElementById('rwRefFriend').value = ''; document.getElementById('rwRefAmt').value = ''; document.getElementById('rwRefKey').value = ''; }
+    }
+    async function rwRefLookup() {
+      const phone = (document.getElementById('rwRefPhone').value || '').replace(/\D/g, '').slice(-10);
+      const out = document.getElementById('rwRefOut');
+      if (phone.length !== 10) { out.innerHTML = '<div style="font-size:12.5px; color:#c62828;">Enter a 10 digit phone number.</div>'; return; }
+      const r = await rwFetch('/referral/lookup/' + phone);
+      if (!(r.ok && r.data.success)) { out.innerHTML = `<div style="font-size:12.5px; color:#c62828;">${escapeHtml((r.data && r.data.message) || 'Not found')}</div>`; return; }
+      const d = r.data;
+      const log = (d.log || []).map(l => `<div style="display:flex; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid #eee; font-size:12px;"><span>${rwFmtDate(l.at)} &middot; ${l.type === 'earned' ? 'Friend ' + escapeHtml(l.friend || '') : (l.type === 'cash' ? 'Paid in cash' : 'Used as discount')}</span><strong>${l.type === 'earned' ? '+' : '-'}${rwRs(l.rs)}</strong></div>`).join('');
+      const status = d.cashUnlocked ? 'Cash and discount are open.' : (d.discountUnlocked ? `Discount is open. Cash opens after ${d.moreForCash} more paying friends.` : `${d.moreForDiscount} more paying friend${d.moreForDiscount === 1 ? '' : 's'} before the discount opens.`);
+      const btns = (d.discountUnlocked && d.credit > 0 ? `<button type="button" onclick="rwRefUse('${phone}','discount',${d.credit})" style="padding:9px 16px; border:none; border-radius:6px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer; margin-right:8px;">Use ${rwRs(d.credit)} as discount</button>` : '')
+        + (d.cashUnlocked && d.credit > 0 ? `<button type="button" onclick="rwRefUse('${phone}','cash',${d.credit})" style="padding:9px 16px; border:none; border-radius:6px; background:#40192D; color:#F2C879; font-weight:700; cursor:pointer;">Pay ${rwRs(d.credit)} in cash</button>` : '');
+      out.innerHTML = `<div style="padding:12px; background:#FFF6DF; border:1px solid #F2C879; border-radius:8px;"><strong>${escapeHtml(d.name || phone)}</strong><div style="font-size:14px; margin:4px 0;">${d.paid} paying friend${d.paid === 1 ? '' : 's'} &middot; credit <strong>${rwRs(d.credit)}</strong></div><div style="font-size:12.5px; margin-bottom:8px;">${status}</div>${btns}</div>${log ? `<div style="margin-top:8px;">${log}</div>` : ''}`;
+    }
+    async function rwRefUse(phone, mode, amount) {
+      if (!confirm(mode === 'cash' ? `Pay Rs ${amount} in cash? (Check TDS first.) This deducts the credit.` : `Give Rs ${amount} discount on the bill? This deducts the credit.`)) return;
+      const r = await rwFetch('/referral/use', 'POST', { phone, mode });
+      showToast((r.data && r.data.message) || 'Something went wrong');
+      rwRefLookup();
+    }
     async function rwLoadPoints() {
       const box = document.getElementById('rwPointsBox'); if (!box || !rwCurrent) return;
       const phone = rwCurrent.phone;
@@ -6546,6 +6582,11 @@
           </div>
           <div id="myRewardsOut"></div>
         </div>
+        <div class="card" id="myRefCard" style="padding:18px; margin-bottom:14px; background:#F2FBF4; border:1px solid #BFE5C8;">
+          <h5 style="margin:0 0 6px;">🤝 Referral Credit (paying friends)</h5>
+          <div id="myRefNums" style="font-size:14px;">Loading...</div>
+          <div style="font-size:12.5px; line-height:1.6; margin-top:8px; color:#40192D;">When a friend joins through your link and makes a first purchase of <strong>Rs 2,000 or more</strong>, you earn <strong>Rs 200 credit</strong>. After <strong>5 paying friends</strong> you can use your credit as a discount on any boutique or online order. At <strong>50 paying friends</strong> you can take it as cash. Family members count too: if they did not use your link, they can tell Sonia your referral code or phone number when they pay. Your credit never expires, and it works wherever you live.</div>
+        </div>
         <div class="card" id="myPointsCard" style="padding:18px; margin-bottom:14px; background:#FFF6DF; border:1px solid #F2C879;">
           <h5 style="margin:0 0 6px;">🎁 Your Referral Points</h5>
           <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;"><span id="myPointsNum" style="font-size:28px; font-weight:800; color:var(--vivid);">${Number((currentUser && currentUser.loyaltyPoints) || 0)}</span><span style="font-size:13px;">points = <strong id="myPointsRs">Rs ${(Number((currentUser && currentUser.loyaltyPoints) || 0) * 10).toLocaleString('en-IN')}</strong> discount</span></div>
@@ -6568,6 +6609,12 @@
           <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
         </div>`;
       if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
+      try {
+        fetch(`${API}/api/loyalty/referral/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(d => {
+          const el = document.getElementById('myRefNums'); if (!el || !d || !d.success) { if (el) el.textContent = ''; return; }
+          el.innerHTML = `<strong>${d.paid}</strong> paying friend${d.paid === 1 ? '' : 's'} &middot; credit <strong>Rs ${Number(d.credit).toLocaleString('en-IN')}</strong><br><span style="font-size:12.5px;">${d.cashUnlocked ? 'Discount and cash are open. Ask Sonia.' : (d.discountUnlocked ? 'Discount is open, ask Sonia. Cash opens after ' + d.moreForCash + ' more paying friends.' : d.moreForDiscount + ' more paying friend' + (d.moreForDiscount === 1 ? '' : 's') + ' to open the discount.')}</span>`;
+        }).catch(() => { const el = document.getElementById('myRefNums'); if (el) el.textContent = ''; });
+      } catch (e) {}
       // refresh the latest referral points (same endpoint the dashboard uses)
       try {
         fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(data => {
