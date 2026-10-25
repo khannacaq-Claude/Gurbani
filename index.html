@@ -6533,24 +6533,24 @@
     function rwSyncPhoneFields() {
       const signedIn = !!(typeof currentUser !== 'undefined' && currentUser);
       const ph = signedIn ? String(currentUser.phone || '').replace(/\D/g, '').slice(-10) : '';
-      ['rwPubPhone', 'myRwPhone'].forEach(id => {
+      // 'myRwPhone' (My Rewards tab) asks the customer to update the profile if the phone is missing.
+      // 'rwPubPhone' (landing page) never shows that message: if the profile has no phone it simply stays a normal box.
+      [['rwPubPhone', false], ['myRwPhone', true]].forEach(([id, needsProfile]) => {
         const el = document.getElementById(id); if (!el) return;
         const note = document.getElementById(id + 'Note');
-        if (!signedIn) { el.readOnly = false; el.style.background = ''; el.title = ''; if (note) note.style.display = 'none'; return; }
-        el.readOnly = true; el.style.background = '#f1ebee';
-        if (ph.length === 10) { el.value = ph; el.title = 'This is the phone number on your profile'; if (note) note.style.display = 'none'; }
-        else {
-          el.value = ''; el.placeholder = 'Phone number missing on profile';
-          if (note) { note.innerHTML = 'Aapke profile mein phone number nahi hai. Pehle apna phone number profile mein update karein. <a href="#" onclick="event.preventDefault(); scrollToPersonalDetails();" style="color:#7B3056; font-weight:700;">Profile kholein</a>'; note.style.display = 'block'; }
-        }
+        const free = () => { el.readOnly = false; el.style.background = ''; el.title = ''; if (note) note.style.display = 'none'; };
+        if (!signedIn) { free(); return; }
+        if (ph.length === 10) { el.readOnly = true; el.style.background = '#f1ebee'; el.value = ph; el.title = 'This is the phone number on your profile'; if (note) note.style.display = 'none'; return; }
+        if (!needsProfile) { free(); return; }
+        el.readOnly = true; el.style.background = '#f1ebee'; el.value = ''; el.placeholder = 'Phone number missing on profile';
+        if (note) { note.innerHTML = 'Aapke profile mein phone number nahi hai. Pehle apna phone number profile mein update karein. <a href="#" onclick="event.preventDefault(); scrollToPersonalDetails();" style="color:#7B3056; font-weight:700;">Profile kholein</a>'; note.style.display = 'block'; }
       });
     }
-
     // ---- PUBLIC: customer checks own card with phone + printed card no. ----
     async function rwPublicCheck(phoneId, cardId, outId) {
       phoneId = phoneId || 'rwPubPhone'; cardId = cardId || 'rwPubCard'; outId = outId || 'rwPubOut';
       rwSyncPhoneFields();
-      if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.phone || '').replace(/\D/g, '').length < 10) {
+      if (outId === 'myRewardsOut' && typeof currentUser !== 'undefined' && currentUser && String(currentUser.phone || '').replace(/\D/g, '').length < 10) {
         document.getElementById(outId).innerHTML = '<p style="color:#c62828; font-size:13px;">Pehle apna phone number profile mein update karein.</p>'; return;
       }
       const phone = (document.getElementById(phoneId).value || '').replace(/\D/g, '').slice(-10);
