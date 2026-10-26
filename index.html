@@ -5132,7 +5132,7 @@
         <!-- ADMIN: CUSTOMERS & VISITORS -->
         <div id="adminCustomers" class="tab-content">
           <h3>👥 Customers & Visitors</h3>
-          <p style="color:#666; margin-bottom:16px; font-size:13px;">A "Customer" is anyone who's actually generated revenue — a stitching order, a paid invoice. Everyone else who's just signed in is a "Visitor" until they do.</p>
+          <p style="color:#666; margin-bottom:16px; font-size:13px;">A "Customer" is anyone who's actually generated revenue: a stitching order, a paid invoice, or a payment recorded on a Rewards Card. Everyone else who's just signed in is a "Visitor" until they do.</p>
 
           <button type="button" class="btn-submit" style="width:auto; padding:8px 18px; margin-bottom:16px;" onclick="toggleCreateCustomerForm()">➕ Create Customer Manually</button>
           <div id="createCustomerForm" class="card" style="display:none; padding:16px; margin-bottom:20px; max-width:420px;">
@@ -14775,6 +14775,7 @@
         <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <strong>${escapeHtml(c.name)}</strong> ${c.isBlocked ? '<span style="font-size:11px; font-weight:700; color:#c62828;">🔒 BLOCKED</span>' : ''}
+            ${c.rewards ? `<div style="font-size:12px; margin:2px 0;"><span style="background:#F2C879; color:#2A0F1D; font-weight:800; padding:1px 8px; border-radius:10px; font-size:11px;">⭐ Rewards${c.rewards.cardNo ? ' card ' + escapeHtml(c.rewards.cardNo) : ''}</span> ${c.rewards.stamps} stamp${c.rewards.stamps === 1 ? '' : 's'} &middot; payments Rs ${Number(c.rewards.total).toLocaleString('en-IN')}</div>` : ''}
             <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
           </div>
           <div style="display:flex; gap:6px;">
