@@ -7485,12 +7485,14 @@
         const conceptsHtml = (d.aiConcepts || []).map((c, i) => {
           const isSelected = d.quotedConceptIndex === i;
           const isFeatured = d.featured && (d.featuredConceptIndex ?? 0) === i;
-          const thumb = c.imageUrl
+          const thumbInner = c.imageUrl
             ? `<a href="${c.imageUrl}" target="_blank" rel="noopener"><img src="${c.imageUrl}" alt="${escapeHtml(c.title)}" style="width:64px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;"></a>`
             : `<div style="width:64px; height:64px; border-radius:6px; background:#eee; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; flex-shrink:0;">No image</div>`;
+          const thumb = `<div class="adm-thumb" style="flex-shrink:0;">${thumbInner}</div>`;
           return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:8px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:10px;">
             ${thumb}
             <span style="flex:1;">${isSelected ? '⭐ ' : ''}${escapeHtml(c.title)} (₹${c.priceMin}-${c.priceMax})</span>
+            <button type="button" onclick="adminRegenerateImage('${d._id}', ${i}, this)" title="Naya image banayein (purana replace ho jayega)" style="background:#fff; border:1px solid var(--vivid); color:var(--vivid); border-radius:14px; cursor:pointer; font-size:11px; font-weight:600; padding:4px 9px; white-space:nowrap;">🔄 ${c.imageUrl ? 'Regenerate' : 'Generate'}</button>
             <button onclick="toggleFeaturedDesign('${d._id}', ${i}, this)" title="${isFeatured ? 'Remove from homepage showcase' : 'Feature on homepage — visible to everyone'}" style="background:none; border:none; cursor:pointer; font-size:15px; padding:0; line-height:1; color:${isFeatured ? '#F2A93B' : '#ccc'};">${isFeatured ? '🌟' : '☆'}</button>
             ${isFeatured ? consentTag : ''}
           </div>`;
@@ -11227,6 +11229,37 @@
         closeImageLightbox(true);
       }
     });
+
+    // Admin: make a fresh image for one concept (replaces the old one).
+    async function adminRegenerateImage(designId, idx, btn) {
+      if (btn && btn.dataset.busy) return;
+      if (!confirm('Is concept ka naya image banayein? Purana image replace ho jayega.')) return;
+      const label = btn ? btn.innerHTML : '';
+      if (btn) { btn.dataset.busy = '1'; btn.disabled = true; btn.style.opacity = '0.6'; btn.innerHTML = '⏳ ~30-60s...'; }
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/generate-concept-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex: idx, force: true }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.concept?.imageUrl) {
+          const card = btn.closest('div');
+          const holder = card && card.querySelector('.adm-thumb');
+          if (holder) holder.innerHTML = `<a href="${data.concept.imageUrl}" target="_blank" rel="noopener"><img src="${data.concept.imageUrl}" style="width:64px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;"></a>`;
+          showToast('✅ Naya image ban gaya');
+          if (btn) btn.innerHTML = '🔄 Regenerate';
+        } else {
+          showToast('❌ ' + (data.error || 'Image nahi bana, dobara try karein'));
+          if (btn) btn.innerHTML = label;
+        }
+      } catch (err) {
+        showToast('❌ Connection problem: ' + err.message);
+        if (btn) btn.innerHTML = label;
+      } finally {
+        if (btn) { delete btn.dataset.busy; btn.disabled = false; btn.style.opacity = '1'; }
+      }
+    }
 
     async function generateConceptImage(idx, isRetry) {
       const imgContainer = document.getElementById(`designImage_${idx}`);
