@@ -45,6 +45,7 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="only light">
   <title>Gurbani Fashion — Custom Boutique Stitching in Faridabad | AI Design Studio</title>
   <meta name="description" content="Gurbani Fashion Boutique in Greenfields Colony, Faridabad — custom-stitched lehengas, anarkalis, kurtis, gowns & blouses. Describe your vision and get 3 AI-generated design concepts free, then get it perfectly tailored by Sonia. Call 9899810977.">
   <!-- Explicit no-AI-training signal, alongside robots.txt. Patchily
@@ -101,6 +102,7 @@
        everything else stays disciplined around it.
        ============================================================ */
     :root {
+      color-scheme: only light;
       --ink: #141a29;
       --ink-soft: #1c2338;
       /* Site-wide primary color — wine, approved after testing on the
@@ -588,7 +590,7 @@
       padding: 9px 8px; border-radius: 20px; text-decoration: none;
     }
     .chatbot-footer .cb-call { background: var(--sand, #f5ede3); color: var(--ink); }
-    .chatbot-footer .cb-wa { background: #25D366; color: #fff; }
+    .chatbot-footer .cb-wa { background: #128A43; color: #fff; }
     @media (max-width: 500px) {
       .chatbot-fab { bottom: 16px; left: 14px; width: 50px; height: 50px; font-size: 20px; }
       .chatbot-panel { bottom: 78px; left: 14px; right: 14px; width: auto; }
@@ -1426,7 +1428,7 @@
       background:#fff; color:var(--ink); border:1.5px solid #ddd; border-radius:16px;
       padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer;
     }
-    .mood-tag.selected { background:var(--vivid); color:#fff; border-color:var(--vivid); }
+    .mood-tag.selected { background:var(--vivid) !important; color:#fff !important; -webkit-text-fill-color:#fff; border-color:var(--vivid) !important; }
 
     /* Same visual styling as .mood-tag, but deliberately a SEPARATE class
        — the Quick Quizzes buttons below need this look without also
@@ -1768,7 +1770,7 @@
       font-weight: 600;
       transition: all 0.2s ease;
     }
-    .admin-filter-btn.active { background: var(--vivid); color: #FFFFFF; border-color: var(--vivid); }
+    .admin-filter-btn.active { background: var(--vivid) !important; color: #FFFFFF !important; border-color: var(--vivid) !important; }
     .admin-filter-btn:hover { opacity: 0.85; }
 
     .tab-content { display: none; }
@@ -2776,7 +2778,7 @@
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
         <input type="text" id="welcomeReferralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0; padding:8px; border-radius:6px;">
         <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyWelcomeReferralLink()">📋 Copy</button>
-        <button type="button" class="btn-quote" style="background:#25D366; color:#fff; border:1.5px solid #25D366; white-space:nowrap;" onclick="shareWelcomeReferralLink()">📤 Share</button>
+        <button type="button" class="btn-quote" style="background:#128A43; color:#fff; border:1.5px solid #128A43; white-space:nowrap;" onclick="shareWelcomeReferralLink()">📤 Share</button>
       </div>
       <p style="font-size:12px; color:var(--text-muted); text-align:left; margin-bottom:16px;">You can always find this again later in your Overview tab, under "Refer a Friend."</p>
       <div class="confirm-actions">
@@ -2832,7 +2834,7 @@
     <div style="max-width:100%; max-height:90vh; display:flex; flex-direction:column; align-items:center; gap:14px;" onclick="event.stopPropagation()">
       <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:78vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="closeImageLightbox()">
       <div style="display:flex; gap:10px;">
-        <button type="button" onclick="shareDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:#25D366; color:#fff; border:1.5px solid #25D366; border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">📤 Share</button>
+        <button type="button" onclick="shareDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:#128A43; color:#fff; border:1.5px solid #128A43; border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">📤 Share</button>
         <button type="button" onclick="downloadDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:rgba(255,255,255,0.15); color:#fff; border:1.5px solid rgba(255,255,255,0.4); border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">⬇️ Download</button>
         <button type="button" onclick="printDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:rgba(255,255,255,0.15); color:#fff; border:1.5px solid rgba(255,255,255,0.4); border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">🖨️ Print</button>
       </div>
@@ -3207,7 +3209,7 @@
             </div>
             <p style="font-size:14px; margin-bottom:6px;"><strong>How to start:</strong> ask for a Rewards Card with your next payment at our Greenfields boutique.</p>
             <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Starts Ashtami, 19 October 2026. Stamping on all orders picked up till Holi, 19 March 2027; rewards you have earned can be collected any time. Available at our Greenfields boutique only (not on online orders). One card holds up to 10 payments; if all 10 are used without reaching ₹8,000, the card closes without a reward. Not combinable with other offers.</p>
-            <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20know%20about%20the%20Rewards%20Card." target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:10px 20px; border-radius:22px; font-weight:700; font-size:14px;">💬 Ask Sonia about the Rewards Card</a>
+            <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20know%20about%20the%20Rewards%20Card." target="_blank" rel="noopener" style="display:inline-block; background:#128A43; color:#fff; text-decoration:none; padding:10px 20px; border-radius:22px; font-weight:700; font-size:14px;">💬 Ask Sonia about the Rewards Card</a>
           </div>
         </div>
 
@@ -4060,7 +4062,7 @@
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
               <input type="text" id="referralLinkDisplay" readonly style="flex:1; min-width:200px; font-size:13px; background:var(--sand); border:1px solid #e0d8d0;">
               <button type="button" class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid); white-space:nowrap;" onclick="copyReferralLink()">📋 Copy</button>
-              <button type="button" class="btn-quote" style="background:#25D366; color:#fff; border:1.5px solid #25D366; white-space:nowrap;" onclick="shareReferralLink()">📤 Share</button>
+              <button type="button" class="btn-quote" style="background:#128A43; color:#fff; border:1.5px solid #128A43; white-space:nowrap;" onclick="shareReferralLink()">📤 Share</button>
             </div>
             <div style="display:flex; gap:20px; flex-wrap:wrap;">
               <div><span style="font-size:22px; font-weight:800; color:var(--vivid);" id="referralPointsDisplay">0</span> <span style="font-size:12px; color:var(--text-muted);">points earned</span></div>
@@ -4589,7 +4591,7 @@
             </div>
             <div id="doorstepOutOfAreaNotice" style="display:none; background:var(--sand); border-left:4px solid var(--marigold); border-radius:6px; padding:14px 16px; margin-bottom:16px; font-size:13px;">
               That PIN code doesn't look like Greenfields Colony, so free doorstep pickup isn't guaranteed there. For other areas, message Sonia directly on WhatsApp — she'll let you know if it's possible, and any cost can be worked out between you.
-              <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20ask%20about%20doorstep%20measurement%2Fpickup%20outside%20Greenfields%20Colony." target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; background:#25D366; color:#fff; text-decoration:none; padding:9px 16px; border-radius:20px; font-weight:700; font-size:13px;">💬 Message Sonia on WhatsApp</a>
+              <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%27d%20like%20to%20ask%20about%20doorstep%20measurement%2Fpickup%20outside%20Greenfields%20Colony." target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; background:#128A43; color:#fff; text-decoration:none; padding:9px 16px; border-radius:20px; font-weight:700; font-size:13px;">💬 Message Sonia on WhatsApp</a>
             </div>
             <div id="apptBookingRestOfForm">
               <div class="form-group">
@@ -6316,7 +6318,7 @@
         <div class="card" style="padding:16px; margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;">
             <div><h4 style="margin:0;">${escapeHtml(a.name)}${goldBadge}</h4><div style="font-size:13px; color:var(--text-muted);">${escapeHtml(a.phone)} &middot; ${a.cardNo ? `printed card no. <strong>${escapeHtml(a.cardNo)}</strong>` : '<strong style="color:#c62828;">printed card no. not set</strong>'} &middot; ${escapeHtml(season)}</div></div>
-            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">Rename</button><button type="button" onclick="rewardsCardNo()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">Card no.</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#25D366; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
+            <div style="display:flex; gap:8px;"><button type="button" onclick="rewardsRename()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">Rename</button><button type="button" onclick="rewardsCardNo()" style="padding:7px 12px; border-radius:6px; border:1px solid #ccc; background:white; color:#40192D; font-weight:600; cursor:pointer;">Card no.</button><a href="${wa}" target="_blank" rel="noopener" style="padding:7px 12px; border-radius:6px; background:#128A43; color:white; text-decoration:none; font-weight:600;">WhatsApp status</a></div>
           </div>
           ${card}
           ${rwNudge(a)}
@@ -6501,7 +6503,7 @@
         const wa = `https://wa.me/91${r.phone}?text=${encodeURIComponent(rwRemindMsg(r))}`;
         return `<div style="display:flex; justify-content:space-between; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid #eee; font-size:13px;">
           <span>${r.cardNo ? `<span style="background:#F2C879; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:800; margin-right:6px;">Card ${escapeHtml(r.cardNo)}</span>` : ''}<strong>${escapeHtml(r.name)}</strong><br><span style="color:var(--text-muted); font-size:12px;">last payment ${r.daysSince} days ago &middot; ${r.billsOnCard}/10 &middot; ${rwRs(r.cardTotal)}${when != null ? ` &middot; reminded ${when === 0 ? 'today' : when + ' d ago'}` : ''}</span></span>
-          <a href="${wa}" target="_blank" rel="noopener" onclick="rwMarkReminded('${escapeHtml(r.phone)}')" style="flex-shrink:0; background:#25D366; color:#fff; text-decoration:none; padding:8px 14px; border-radius:20px; font-weight:700; font-size:12.5px;">${when != null ? 'Remind again' : 'WhatsApp'}</a>
+          <a href="${wa}" target="_blank" rel="noopener" onclick="rwMarkReminded('${escapeHtml(r.phone)}')" style="flex-shrink:0; background:#128A43; color:#fff; text-decoration:none; padding:8px 14px; border-radius:20px; font-weight:700; font-size:12.5px;">${when != null ? 'Remind again' : 'WhatsApp'}</a>
         </div>`;
       }).join('');
       box.innerHTML = `
@@ -6520,7 +6522,7 @@
       const link = code ? `https://gurbanifashion.com/?ref=${code}` : '';
       const msg = `Namaste! Gurbani Fashion boutique (Greenfield Colony, Faridabad) mein design aur stitching kaafi achhi hai. Mere link se judiye: ${link}`;
       const btn = code
-        ? `<a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13px;">WhatsApp par dost ko bhejein</a>`
+        ? `<a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; background:#128A43; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13px;">WhatsApp par dost ko bhejein</a>`
         : `<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Apna referral link website par sign in karke Dashboard mein milega.</div>`;
       return `<div style="margin-top:14px; padding:12px; background:#FFF6DF; border:1.5px dashed #D9A441; border-radius:10px; text-align:left;">
         <strong style="font-size:13.5px;">Dost ko laayein, points kamayein</strong>
@@ -6582,7 +6584,7 @@
           ${rwReferNudgeHtml(c, outId === 'myRewardsOut')}
           ${got ? `<div style="margin-top:12px;"><strong style="font-size:13px;">Rewards collected</strong>${got}</div>` : ''}
           <p style="font-size:12.5px; margin:14px 0 8px;">Sonia ke register ka record hi final hai. Kuch alag dikhe to batayein.</p>
-          <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">WhatsApp Sonia</a>
+          <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; background:#128A43; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">WhatsApp Sonia</a>
         </div>`;
       } catch (e) { out.innerHTML = '<p style="color:#c62828; font-size:13px;">Abhi card nahi khul paya, thodi der baad try karein.</p>'; }
     }
@@ -6633,7 +6635,7 @@
             ${row('Rs 8,000', 'Rs 500', 'Rs 750')}${row('Rs 15,000', 'Rs 1,100', 'Rs 1,500')}${row('Rs 25,000', 'Rs 2,000', 'Rs 2,500')}${row('Rs 50,000', 'Rs 5,000 carried to Gold', 'Rs 7,500 + carried Rs 5,000')}
           </table>
           <div style="font-size:12.5px; color:var(--text-muted); margin-top:10px; line-height:1.5;">Wait a little, earn more: a bigger card total earns a bigger reward. Complete your first card at Rs 50,000 and your next card is a <strong>Gold Card</strong>; the Rs 5,000 from Silver is carried onto it, so you can earn up to Rs 12,500. A card that fills all 10 payments under Rs 8,000 earns no reward. Rewards are paid at the boutique, and Sonia's register is the final record.</div>
-          <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#25D366; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
+          <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#128A43; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
         </div>`;
       rwSyncPhoneFields();
       if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
@@ -7496,7 +7498,7 @@
 
         const waPhone = (customer.phone || '').replace(/[^0-9]/g, '');
         const waLink = waPhone
-          ? `<a href="https://wa.me/91${waPhone}" target="_blank" style="display:inline-block; margin-top:8px; padding:6px 12px; background:#25D366; color:white; text-decoration:none; border-radius:4px; font-size:12px;">💬 WhatsApp Customer</a>`
+          ? `<a href="https://wa.me/91${waPhone}" target="_blank" style="display:inline-block; margin-top:8px; padding:6px 12px; background:#128A43; color:white; text-decoration:none; border-radius:4px; font-size:12px;">💬 WhatsApp Customer</a>`
           : '';
 
         const orderBtn = d.status !== 'ordered' && d.status !== 'completed' && d.status !== 'archived'
@@ -9988,7 +9990,7 @@
       const showDraftErr = (msg) => {
         if (!errBox) return;
         const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent('Hi Gurbani Fashion, website par Draft It For Me nahi chal raha. Dress: ' + dressType + ', Occasion: ' + occasion);
-        errBox.innerHTML = '⚠️ ' + msg + '<br><a href="' + wa + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:6px; background:#25D366; color:#fff; font-weight:700; text-decoration:none; padding:7px 14px; border-radius:20px;">💬 Sonia ko WhatsApp karein</a>';
+        errBox.innerHTML = '⚠️ ' + msg + '<br><a href="' + wa + '" target="_blank" rel="noopener" style="display:inline-block; margin-top:6px; background:#128A43; color:#fff; font-weight:700; text-decoration:none; padding:7px 14px; border-radius:20px;">💬 Sonia ko WhatsApp karein</a>';
         errBox.style.display = 'block';
       };
       if (errBox) errBox.style.display = 'none';
@@ -11450,7 +11452,7 @@
                 <button class="btn-quote" onclick="sendQuote(${idx})">💬 Ask Quote</button>
                 <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="bookFittingForDesign(${idx})">📅 Book a Fitting</button>
                 ${!notYetGenerated ? `
-                  <button class="btn-quote" style="background:#25D366; color:#fff; border:1.5px solid #25D366;" onclick="shareDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">📤 Share</button>
+                  <button class="btn-quote" style="background:#128A43; color:#fff; border:1.5px solid #128A43;" onclick="shareDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">📤 Share</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="downloadDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">⬇️ Download</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="printDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">🖨️ Print</button>
                 ` : ''}
