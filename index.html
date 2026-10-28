@@ -16765,7 +16765,10 @@
               <input type="checkbox" ${consentOn ? 'checked' : ''} onchange="toggleMyShowcaseConsent('${d._id}', this.checked)" style="width:auto;">
               ✨ Show this design on our homepage${d.featured ? ' <span style="color:#2e7d32; font-weight:600;">(currently featured)</span>' : ''}
             </label>
-            <button type="button" onclick="reuseDesignForNewGeneration(${i})" style="margin-top:10px; background:#fff; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;">🔄 Reuse &amp; Tweak This</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+              <button type="button" onclick="editPastDesign(${i})" style="background:var(--vivid); border:1.5px solid var(--vivid); color:#fff; border-radius:16px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;">✏️ Badlaav / Views (color, front, back)</button>
+              <button type="button" onclick="reuseDesignForNewGeneration(${i})" style="margin-top:10px; background:#fff; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:16px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;">🔄 Reuse &amp; Tweak This</button>
+            </div>
           </div>
         `;
         }).join('');
@@ -16794,6 +16797,24 @@
         showToast('❌ ' + err.message);
         loadMyDesigns();
       }
+    }
+
+    // Open an earlier design straight in the new change/edit mode (colour, front/back/side view, tweaks)
+    // without going back through the Try It form. Opens the featured / quoted concept, else the first one with an image.
+    function editPastDesign(index) {
+      const d = myDesignsCache[index];
+      if (!d) return;
+      const cs = d.aiConcepts || [];
+      let idx = [d.featured ? d.featuredConceptIndex : null, d.quotedConceptIndex].find(k => typeof k === 'number' && cs[k] && cs[k].imageUrl);
+      if (idx === undefined) idx = cs.findIndex(c => c && c.imageUrl);
+      if (idx === -1) { showToast('Is design ki koi image nahi bani. Pehle design kholkar image generate karein.'); viewPastDesign(index); return; }
+      viewPastDesign(index);
+      setTimeout(async () => {
+        const panel = document.getElementById(`editPanel_${idx}`);
+        if (!panel) return;
+        if (panel.style.display === 'none' || !panel.style.display) await toggleEditPanel(idx);
+        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 250);
     }
 
     function viewPastDesign(index) {
