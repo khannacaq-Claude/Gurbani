@@ -3976,6 +3976,7 @@
             <div class="tab-group-row">
               <button class="tab-btn active" id="overviewTabBtn" onclick="switchTab(event, 'overview')">📊 Overview</button>
               <button class="tab-btn" id="adminRewardsTabBtn" onclick="switchTab(event, 'adminRewards'); initRewardsTab();" style="display: none;">⭐ Rewards</button>
+              <button class="tab-btn" id="adminKittyTabBtn" onclick="switchTab(event, 'adminKitty'); initKittyTab();" style="display: none;">💰 Kitty</button>
               <button class="tab-btn" id="designTabBtn" onclick="switchTab(event, 'design')">🎨 AI Design</button>
               <button class="tab-btn" id="appointmentsTabBtn" onclick="switchTab(event, 'appointments'); loadMyAppointments();">📅 Appointments</button>
               <button class="tab-btn" id="myDesignsTabBtn" onclick="switchTab(event, 'orders'); loadMyDesigns(); loadMyOrders(); loadMyInvoices();">📦 My Designs</button>
@@ -5613,6 +5614,35 @@
           </div>
         </div>
 
+        <div id="adminKitty" class="tab-content">
+          <h3>💰 Saheli Kitty (Diwali se Diwali)</h3>
+          <p style="color:#666; margin-bottom:12px; font-size:13px;">Customer 11 mahine installment bharti hai, hum 12ve installment ka bonus jodte hain, aur poora store credit stitching ya kharid par lagta hai. Credit maturity ke baad 6 mahine chalta hai. Beech mein chhodne par jama raqam wapas (bonus nahi). Lump sum: Rs 10,000 do, Rs 11,000 ka credit lo (12 mahine).</p>
+          <div id="kitStats" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;"></div>
+          <div class="card" style="padding:16px; margin-bottom:16px;">
+            <h4 style="margin:0 0 10px;">Nayi kitty shuru karein</h4>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+              <input type="tel" id="kitPhone" inputmode="numeric" maxlength="14" placeholder="Phone number" style="flex:1; min-width:150px;">
+              <input type="text" id="kitName" maxlength="80" placeholder="Naam" style="flex:1; min-width:150px;">
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+              <select id="kitType" onchange="kitTypeChanged()" style="flex:1; min-width:150px;"><option value="monthly">Monthly (11 installments)</option><option value="lump">Lump sum advance</option></select>
+              <select id="kitPlan" style="flex:1; min-width:130px;"><option value="1000">Rs 1,000 / mahina</option><option value="2000" selected>Rs 2,000 / mahina</option><option value="3000">Rs 3,000 / mahina</option><option value="5000">Rs 5,000 / mahina</option></select>
+              <input type="number" id="kitLump" min="5000" max="200000" step="500" placeholder="Advance Rs (5,000 se)" style="flex:1; min-width:150px; display:none;">
+              <select id="kitMode" style="flex:1; min-width:110px;"><option value="cash">Cash</option><option value="upi">UPI</option><option value="bank">Bank</option></select>
+              <input type="date" id="kitDate" title="Payment ki date (khaali = aaj)" style="flex:1; min-width:140px;">
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Pehli installment/advance abhi mil gayi ho tabhi shuru karein, wo pehli payment ke roop mein likhi jaati hai.</div>
+            <button type="button" class="btn-submit" style="width:auto; padding:10px 22px;" onclick="kitEnrol()">Shuru karein</button>
+          </div>
+          <div class="card" style="padding:16px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+              <input type="text" id="kitSearch" placeholder="Naam ya phone se khojein" style="flex:1; min-width:180px;" oninput="kitRender()">
+              <select id="kitFilter" onchange="kitRender()" style="min-width:150px;"><option value="all">Sab</option><option value="due">Installment due / late</option><option value="active">Chalti hui</option><option value="credit">Credit ready</option><option value="done">Poori / band</option></select>
+            </div>
+            <div id="kitList" style="font-size:13px;">Loading...</div>
+          </div>
+        </div>
+
         <!-- ASK CLAUDE — general knowledge tool for the admin dashboard.
              Same Claude API key the AI Design Studio already runs on, so
              nothing new to set up — but each question (and every prior
@@ -6591,6 +6621,152 @@
 
     // Customer view: scheme summary + check own card with phone + printed card no.
     // (no OTP needed; same safe check as the public form on the home page).
+
+    /* ============================================================
+       SAHELI KITTY (admin + customer view). Rules live in controllers/kittyController.js
+       ============================================================ */
+    let kitData = { kitties: [], stats: null, program: null };
+    async function kitFetch(path, method = 'GET', body = null) {
+      const opts = { method, headers: { 'Authorization': `Bearer ${authToken}` } };
+      if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+      const res = await fetch(`${API}/api/loyalty/kitty${path}`, opts);
+      let data = {};
+      try { data = await res.json(); } catch (e) {}
+      return { ok: res.ok && data.success !== false, data };
+    }
+    function kitTypeChanged() {
+      const lump = document.getElementById('kitType').value === 'lump';
+      document.getElementById('kitPlan').style.display = lump ? 'none' : '';
+      document.getElementById('kitLump').style.display = lump ? '' : 'none';
+    }
+    async function initKittyTab() {
+      try {
+        const r = await kitFetch('');
+        if (!r.ok) { document.getElementById('kitList').textContent = (r.data && r.data.message) || 'Could not load'; return; }
+        kitData = r.data;
+        kitRender();
+      } catch (e) { showToast('Kitty load nahi hui'); }
+    }
+    async function kitEnrol() {
+      const lump = document.getElementById('kitType').value === 'lump';
+      const body = {
+        phone: document.getElementById('kitPhone').value,
+        name: document.getElementById('kitName').value,
+        type: lump ? 'lump' : 'monthly',
+        plan: lump ? document.getElementById('kitLump').value : document.getElementById('kitPlan').value,
+        mode: document.getElementById('kitMode').value,
+        date: document.getElementById('kitDate').value,
+      };
+      const r = await kitFetch('', 'POST', body);
+      if (!r.ok) { showToast('❌ ' + ((r.data && r.data.message) || 'Kitty shuru nahi hui')); return; }
+      showToast('✅ ' + r.data.message);
+      ['kitPhone', 'kitName', 'kitLump', 'kitDate'].forEach(id => { document.getElementById(id).value = ''; });
+      initKittyTab();
+    }
+    async function kitPay(id) {
+      const mode = (document.getElementById('kitPayMode_' + id) || {}).value || 'cash';
+      const r = await kitFetch(`/${id}/pay`, 'POST', { mode });
+      showToast(r.ok ? '✅ ' + r.data.message : '❌ ' + ((r.data && r.data.message) || 'Nahi hua'));
+      if (r.ok) initKittyTab();
+    }
+    async function kitUse(id, left) {
+      const v = prompt('Kitna credit use hua? (Rs, abhi ' + left + ' bacha hai)', '');
+      if (v === null) return;
+      const amount = Math.round(Number(v));
+      if (!(amount >= 1)) { showToast('Rakam daalein'); return; }
+      const billRef = prompt('Bill / order ref (optional)', '') || '';
+      const stamp = confirm('Is kharid par Rewards Card ka stamp bhi lagayein?\n\nOK = haan, stamp lagao\nCancel = stamp nahi');
+      const r = await kitFetch(`/${id}/use`, 'POST', { amount, billRef, stamp });
+      showToast(r.ok ? '✅ ' + r.data.message : '❌ ' + ((r.data && r.data.message) || 'Nahi hua'));
+      if (r.ok) initKittyTab();
+    }
+    async function kitRefund(id, paid) {
+      const cash = confirm('Kitty beech mein band karni hai.\n\nJama raqam Rs ' + Number(paid).toLocaleString('en-IN') + ' (bonus ke bina).\n\nOK = CASH wapas karein\nCancel = store credit mein badlein');
+      if (!confirm('Pakka? ' + (cash ? 'Cash wapas, kitty band.' : 'Store credit (bonus nahi), kitty band hogi.'))) return;
+      const r = await kitFetch(`/${id}/refund`, 'POST', { how: cash ? 'cash' : 'credit' });
+      showToast(r.ok ? '✅ ' + r.data.message : '❌ ' + ((r.data && r.data.message) || 'Nahi hua'));
+      if (r.ok) initKittyTab();
+    }
+    async function kitUndo(id) {
+      if (!confirm('Aakhri installment hata dein? (sirf galti sudharne ke liye)')) return;
+      const r = await kitFetch(`/${id}/payment/last`, 'DELETE');
+      showToast(r.ok ? '✅ ' + r.data.message : '❌ ' + ((r.data && r.data.message) || 'Nahi hua'));
+      if (r.ok) initKittyTab();
+    }
+    async function kitDelete(id) {
+      if (!confirm('Is kitty ko pura delete karein? (sirf galti se bani kitty ke liye)')) return;
+      const r = await kitFetch(`/${id}`, 'DELETE');
+      showToast(r.ok ? '✅ Deleted' : '❌ ' + ((r.data && r.data.message) || 'Nahi hua'));
+      if (r.ok) initKittyTab();
+    }
+    function kitMarkReminded(id) { kitFetch(`/${id}/reminded`, 'POST', {}).catch(() => {}); }
+    function kitWaLink(k) {
+      const first = String(k.name || '').split(' ')[0];
+      const due = k.nextDue ? rwFmtDate(k.nextDue) : '';
+      const msg = `Namaste ${first} ji 🙏 Gurbani Fashion se. Aapki Saheli Kitty ki installment ${k.paidCount + 1} of ${k.installments} (Rs ${Number(k.plan).toLocaleString('en-IN')}) ${due ? due + ' ko ' : ''}due hai. Boutique aakar ya UPI se de sakti hain. Poori hone par aapko ${k.installments + 1} installment ka store credit milega. Dhanyavaad! - Sonia`;
+      return 'https://wa.me/91' + k.phone + '?text=' + encodeURIComponent(msg);
+    }
+    function kitRender() {
+      const list = document.getElementById('kitList'); if (!list) return;
+      const st = kitData.stats;
+      const stat = (a, b, tip) => `<div style="flex:1; min-width:120px; background:#F6EEF2; border-radius:10px; padding:10px 12px;" title="${tip || ''}"><div style="font-size:11px; color:#6B5A5F;">${a}</div><div style="font-size:18px; font-weight:800; color:#40192D;">${b}</div></div>`;
+      document.getElementById('kitStats').innerHTML = st ? stat('Members', st.members) + stat('Chalti kitty', st.running) + stat('Ab tak jama', rwRs(st.collected), 'Refund ke bina') + stat('Hum par baaki (goods/service)', rwRs(st.owed), 'Chalti kitty ka jama paisa + bacha hua credit') + stat('Installment due', st.dueNow) + stat('Late (7+ din)', st.overdue) : '';
+      const q = (document.getElementById('kitSearch').value || '').trim().toLowerCase();
+      const f = document.getElementById('kitFilter').value;
+      let rows = (kitData.kitties || []).filter(k => !q || k.name.toLowerCase().includes(q) || k.phone.includes(q.replace(/\D/g, '') || '@@'));
+      rows = rows.filter(k => f === 'all' ? true : f === 'due' ? (k.status === 'active' && k.dueNow) : f === 'active' ? k.status === 'active' : f === 'credit' ? (k.status === 'matured' && k.creditLeft > 0 && !k.expired) : (k.status === 'refunded' || (k.status === 'matured' && k.creditLeft <= 0)));
+      if (!rows.length) { list.innerHTML = '<div style="color:#888;">Koi kitty nahi mili.</div>'; return; }
+      list.innerHTML = rows.map(k => {
+        const chipBg = k.status === 'active' ? (k.overdueDays > 7 ? '#FDECEC' : k.dueNow ? '#FFF3D6' : '#E8F3FF') : k.status === 'refunded' ? '#eee' : k.expired ? '#FDECEC' : k.creditLeft > 0 ? '#E6F6EA' : '#eee';
+        const chipTx = k.status === 'active' ? (k.overdueDays > 7 ? '#8E1B10' : k.dueNow ? '#7A5200' : '#0B4A8F') : k.status === 'refunded' ? '#555' : k.expired ? '#8E1B10' : k.creditLeft > 0 ? '#0B5A26' : '#555';
+        const dots = k.type === 'monthly' ? `<div style="display:flex; gap:4px; flex-wrap:wrap; margin:8px 0 4px;">${Array.from({ length: k.installments }, (_, i) => `<span style="width:18px; height:18px; border-radius:50%; ${i < k.paidCount ? 'background:#D9A441; border:1.5px solid #B9791C;' : 'border:1.5px dashed #C9AEBB;'}"></span>`).join('')}</div>` : '';
+        let info = '';
+        if (k.type === 'monthly' && k.status === 'active') {
+          info = `${k.paidCount} of ${k.installments} bhari, ${rwRs(k.paid)} jama. Agli: <strong>${rwFmtDate(k.nextDue)}</strong>${k.overdueDays > 0 ? ` <span style="color:#8E1B10; font-weight:700;">(${k.overdueDays} din late)</span>` : ''}`;
+        } else if (k.status === 'matured') {
+          info = `Credit ${rwRs(k.creditTotal)}${k.bonus ? ` (bonus ${rwRs(k.bonus)})` : k.bonusForfeited ? ' (bonus nahi, beech mein band)' : ''}, use hua ${rwRs(k.creditUsed)}, <strong>bacha ${rwRs(k.creditLeft)}</strong>. Valid ${rwFmtDate(k.validTill)} tak${k.expired ? ' <span style="color:#8E1B10; font-weight:700;">(EXPIRED)</span>' : ''}`;
+        } else if (k.status === 'refunded') {
+          info = `Beech mein band, ${rwRs(k.refunded)} wapas.`;
+        }
+        const acts = [];
+        if (k.type === 'monthly' && k.status === 'active') {
+          acts.push(`<select id="kitPayMode_${k._id}" style="padding:6px; border-radius:6px;"><option value="cash">Cash</option><option value="upi">UPI</option><option value="bank">Bank</option></select>`);
+          acts.push(`<button type="button" onclick="kitPay('${k._id}')" style="padding:7px 14px; border:none; border-radius:6px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">✓ Installment mili (${rwRs(k.plan)})</button>`);
+          acts.push(`<a href="${kitWaLink(k)}" target="_blank" rel="noopener" onclick="kitMarkReminded('${k._id}')" style="padding:7px 12px; border-radius:6px; background:#128A43; color:#fff; text-decoration:none; font-weight:600;">WhatsApp reminder${k.remindedAt ? ' (' + rwFmtDate(k.remindedAt) + ')' : ''}</a>`);
+          acts.push(`<button type="button" onclick="kitRefund('${k._id}', ${k.paid})" style="padding:7px 12px; border:1px solid #ccc; border-radius:6px; background:#fff; color:#40192D; font-weight:600; cursor:pointer;">Beech mein band</button>`);
+        }
+        if (k.status === 'matured' && k.creditLeft > 0 && !k.expired) acts.push(`<button type="button" onclick="kitUse('${k._id}', ${k.creditLeft})" style="padding:7px 14px; border:none; border-radius:6px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Credit use karein</button>`);
+        if (k.type === 'monthly' && k.payments.length > 1 && !k.uses.length && !k.refundsList.length) acts.push(`<button type="button" onclick="kitUndo('${k._id}')" style="padding:7px 12px; border:1px solid #ccc; border-radius:6px; background:#fff; color:#40192D; cursor:pointer;">Aakhri hatayein</button>`);
+        if (k.payments.length <= 1 && !k.uses.length && !k.refundsList.length) acts.push(`<button type="button" onclick="kitDelete('${k._id}')" style="padding:7px 12px; border:1px solid #e0b4b4; border-radius:6px; background:#fff; color:#8E1B10; cursor:pointer;">Delete</button>`);
+        const hist = `<details style="margin-top:8px; font-size:12px; color:#555;"><summary style="cursor:pointer;">Hisaab</summary>${k.payments.map(p => `<div>Installment ${p.n}: ${rwRs(p.amount)} (${p.mode}) ${rwFmtDate(p.date)}</div>`).join('')}${k.uses.map(u => `<div>Credit use: ${rwRs(u.amount)} ${rwFmtDate(u.date)}${u.billRef ? ' (' + escapeHtml(u.billRef) + ')' : ''}${u.stamped ? ' ⭐' : ''}</div>`).join('')}${k.refundsList.map(r => `<div>Beech mein band: ${rwRs(r.amount)} ${r.how === 'cash' ? 'cash wapas' : 'credit mein'} ${rwFmtDate(r.date)}</div>`).join('')}</details>`;
+        return `<div style="border:1px solid #e5d8df; border-radius:10px; padding:12px; margin-bottom:10px; background:#fff; color:#2A0F1D;">
+          <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center;"><div><strong style="font-size:14px;">${escapeHtml(k.name)}</strong> <span style="color:#777;">${escapeHtml(k.phone)}</span><div style="font-size:12px; color:#777;">${k.type === 'lump' ? 'Lump sum ' + rwRs(k.plan) : rwRs(k.plan) + ' x ' + k.installments + ' mahine'}, shuru ${rwFmtDate(k.startDate)}</div></div><span style="background:${chipBg}; color:${chipTx}; font-size:12px; font-weight:700; padding:4px 10px; border-radius:12px;">${k.label}</span></div>
+          ${dots}<div style="font-size:13px; margin-top:4px;">${info}</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;">${acts.join('')}</div>${hist}</div>`;
+      }).join('');
+    }
+    // Customer view (inside My Rewards)
+    function loadMyKitty() {
+      const box = document.getElementById('myKittyBox'); if (!box) return;
+      const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent('Hi Sonia, I would like to join the Saheli Kitty.');
+      const promoHtml = (extra) => `<div class="card" style="padding:18px; margin-bottom:14px; background:#FFF6DF; border:1px solid #F2C879; color:#2A0F1D;">
+        <h5 style="margin:0 0 6px;">💰 Saheli Kitty: Diwali se Diwali</h5>
+        <div style="font-size:13px; line-height:1.6;">11 mahine har mahine <strong>Rs 1,000 / 2,000 / 3,000 / 5,000</strong> bharein, <strong>12ve mahine ki installment hamari taraf se bonus</strong>. Poora store credit stitching ya kharid par lagta hai (maturity ke baad 6 mahine). Ek saath advance par bhi <strong>10% bonus</strong>. Beech mein chhodna chahein to jama raqam wapas (bonus ke bina).</div>
+        <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; background:#128A43; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Sonia se jud jayein</a>${extra || ''}</div>`;
+      box.innerHTML = promoHtml('');
+      fetch(`${API}/api/loyalty/kitty/mine`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(d => {
+        if (!d || !d.success || !d.kitties || !d.kitties.length) return;
+        const cards = d.kitties.map(k => {
+          const dots = k.type === 'monthly' ? `<div style="display:flex; gap:4px; flex-wrap:wrap; margin:8px 0;">${Array.from({ length: k.installments }, (_, i) => `<span style="width:20px; height:20px; border-radius:50%; ${i < k.paidCount ? 'background:#D9A441; border:1.5px solid #B9791C;' : 'border:1.5px dashed #C9AEBB;'}"></span>`).join('')}</div>` : '';
+          let line = '';
+          if (k.status === 'active') line = `${k.paidCount} of ${k.installments} installments bhari (${rwRs(k.paid)}). Agli installment: <strong>${rwFmtDate(k.nextDue)}</strong>. Poori hone par <strong>${rwRs(k.plan * (k.installments + (d.program.bonusInstallments || 1)))}</strong> ka credit milega.`;
+          else line = `Store credit <strong>${rwRs(k.creditTotal)}</strong>${k.bonus ? ` (bonus ${rwRs(k.bonus)} included)` : ''}. Use hua ${rwRs(k.creditUsed)}. <strong style="color:#0B5A26;">Bacha ${rwRs(k.creditLeft)}</strong>${k.validTill ? '. Valid ' + rwFmtDate(k.validTill) + ' tak' : ''}${k.expired ? ' <span style="color:#8E1B10; font-weight:700;">(expired)</span>' : ''}.`;
+          return `<div style="border:1px solid #e5d8df; background:#fff; border-radius:10px; padding:12px; margin-top:10px; color:#2A0F1D;"><strong>${k.type === 'lump' ? 'Advance ' + rwRs(k.plan) : rwRs(k.plan) + ' x ' + k.installments + ' mahine'}</strong> <span style="font-size:12px; color:#777;">${k.label}</span>${dots}<div style="font-size:13px; line-height:1.55;">${line}</div></div>`;
+        }).join('');
+        box.innerHTML = promoHtml(cards);
+      }).catch(() => {});
+    }
+
     function loadMyRewards() {
       const box = document.getElementById('myRewardsBody');
       let savedCard = ''; try { savedCard = localStorage.getItem('gf_my_card_no') || ''; } catch (e) {}
@@ -6599,6 +6775,7 @@
       const row = (a, b, c) => `<tr><td style="padding:6px 8px; border-bottom:1px solid #eee;">${a}</td><td style="padding:6px 8px; border-bottom:1px solid #eee;">${b}</td><td style="padding:6px 8px; border-bottom:1px solid #eee; font-weight:700;">${c}</td></tr>`;
       const wa = 'https://wa.me/919899810977?text=' + encodeURIComponent("Hi Sonia, I'd like to know about my Rewards Card.");
       box.innerHTML = `
+        <div id="myKittyBox"></div>
         <div class="card" style="padding:18px; margin-bottom:14px; border:2px solid #F2C879;">
           <strong style="font-size:15px;">Apna Rewards Card dekhein</strong>
           <div style="font-size:12.5px; color:var(--text-muted); margin:2px 0 10px;">Phone number aur card par likha card number daalein. Stamps, payments aur reward yahin dikhenge.</div>
@@ -6638,6 +6815,7 @@
           <a href="${wa}" target="_blank" rel="noopener" style="display:inline-block; margin-top:12px; background:#128A43; color:#fff; text-decoration:none; padding:9px 18px; border-radius:20px; font-weight:700; font-size:13.5px;">💬 Ask Sonia</a>
         </div>`;
       rwSyncPhoneFields();
+      loadMyKitty();
       if (ph.length === 10 && savedCard) rwPublicCheck('myRwPhone', 'myRwCard', 'myRewardsOut');
       try {
         fetch(`${API}/api/loyalty/referral/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()).then(d => {
@@ -7494,6 +7672,7 @@
           return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:8px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:10px;">
             ${thumb}
             <span style="flex:1;">${isSelected ? '⭐ ' : ''}${escapeHtml(c.title)} (₹${c.priceMin}-${c.priceMax})</span>
+            <button type="button" onclick="adminShowVersions('${d._id}', ${i})" title="Customer ke badlaav / views" style="background:#fff; border:1px solid #bbb; color:#40192D; border-radius:14px; cursor:pointer; font-size:11px; padding:4px 9px; white-space:nowrap;">🖼 Versions</button>
             <button type="button" onclick="adminRegenerateImage('${d._id}', ${i}, this)" title="Naya image banayein (purana replace ho jayega)" style="background:#fff; border:1px solid var(--vivid); color:var(--vivid); border-radius:14px; cursor:pointer; font-size:11px; font-weight:600; padding:4px 9px; white-space:nowrap;">🔄 ${c.imageUrl ? 'Regenerate' : 'Generate'}</button>
             <button onclick="toggleFeaturedDesign('${d._id}', ${i}, this)" title="${isFeatured ? 'Remove from homepage showcase' : 'Feature on homepage — visible to everyone'}" style="background:none; border:none; cursor:pointer; font-size:15px; padding:0; line-height:1; color:${isFeatured ? '#F2A93B' : '#ccc'};">${isFeatured ? '🌟' : '☆'}</button>
             ${isFeatured ? consentTag : ''}
@@ -7647,6 +7826,7 @@
       adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
       adminAskClaudeTabBtn: { icon: 'brain', label: 'Ask Claude' },
       adminRewardsTabBtn: { icon: 'star', label: 'Rewards' },
+      adminKittyTabBtn: { icon: 'piggy-bank', label: 'Kitty' },
       adminRateCardTabBtn: { icon: 'indian-rupee', label: 'Rate Card (private)' },
       rateCardTabBtn: { icon: 'ruler', label: 'Fabric Calculator' },
       myRewardsTabBtn: { icon: 'star', label: 'My Rewards' },
@@ -11290,6 +11470,121 @@
       };
     }
 
+
+    // ── Customer: tweak a generated design (colour, front/back/side view, small changes) ──
+    const designEditState = { remaining: null, unlimited: false, concepts: {}, busy: false, loadedFor: '' };
+    const EDIT_COLORS = [['Red', '#C62828'], ['Maroon', '#7B1E3A'], ['Pink', '#E0508F'], ['Orange', '#EF6C00'], ['Yellow', '#F2B71D'], ['Green', '#2E7D32'], ['Emerald green', '#046A4A'], ['Royal blue', '#1E4FBF'], ['Navy blue', '#14213D'], ['Purple', '#6A1B9A'], ['Black', '#111111'], ['White', '#F5F5F5'], ['Gold', '#C9A227'], ['Silver', '#B0B0B0']];
+    async function loadDesignEdits() {
+      if (!currentDesignId) return;
+      try {
+        const res = await fetch(`${API}/api/designs/${currentDesignId}/edits`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const d = await res.json();
+        if (res.ok && d.success) {
+          designEditState.remaining = d.unlimited ? null : d.remaining;
+          designEditState.unlimited = !!d.unlimited;
+          designEditState.concepts = d.concepts || {};
+          designEditState.loadedFor = currentDesignId;
+        }
+      } catch (e) {}
+    }
+    async function toggleEditPanel(idx) {
+      const p = document.getElementById(`editPanel_${idx}`); if (!p) return;
+      if (p.style.display !== 'none') { p.style.display = 'none'; return; }
+      p.style.display = 'block';
+      p.innerHTML = '<div style="font-size:13px; color:#777;">Loading...</div>';
+      if (designEditState.loadedFor !== currentDesignId) await loadDesignEdits();
+      renderEditPanel(idx);
+    }
+    function renderEditPanel(idx) {
+      const p = document.getElementById(`editPanel_${idx}`); if (!p) return;
+      const st = designEditState, c = st.concepts[idx] || { versions: [], selected: 0 };
+      const busy = st.busy ? 'disabled style="opacity:.5;"' : '';
+      const left = st.unlimited ? 'unlimited (admin)' : (st.remaining === null ? '' : st.remaining + ' badlaav bache');
+      const chips = EDIT_COLORS.map(([n, hex]) => `<button type="button" ${busy} onclick="runDesignEdit(${idx}, 'color', { instruction: '${n}' })" style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border:1px solid #d8c9d0; border-radius:16px; background:#fff; color:#2A0F1D; font-size:12px; cursor:pointer;"><span style="width:12px; height:12px; border-radius:50%; background:${hex}; border:1px solid #bbb;"></span>${n}</button>`).join('');
+      const vbtn = (v, t) => `<button type="button" ${busy} onclick="runDesignEdit(${idx}, 'view', { view: '${v}' })" style="padding:7px 14px; border:1.5px solid var(--vivid); border-radius:18px; background:#fff; color:var(--vivid); font-weight:700; font-size:13px; cursor:pointer;">${t}</button>`;
+      const versions = (c.versions || []).map(v => {
+        const chosen = v.n === c.selected;
+        const pick = v.kind === 'view' ? '<span style="font-size:10.5px; color:#777;">sirf dekhne ke liye</span>' : chosen ? '<span style="font-size:11px; font-weight:700; color:#0B5A26;">⭐ Chuna hua</span>' : `<button type="button" onclick="pickDesignVersion(${idx}, ${v.n})" style="padding:4px 8px; border:none; border-radius:10px; background:#7B3056; color:#F2C879; font-size:11px; font-weight:700; cursor:pointer;">✓ Ye pasand hai</button>`;
+        return `<div style="width:96px; text-align:center;"><img src="${v.imageUrl}" alt="" onclick="openImageLightbox('${v.imageUrl}')" style="width:96px; height:128px; object-fit:cover; border-radius:8px; cursor:zoom-in; border:2px solid ${chosen ? '#D9A441' : '#e3d6dc'};"><div style="font-size:11px; line-height:1.3; margin:3px 0; color:#2A0F1D;">${escapeHtml(v.label || '')}</div>${pick}</div>`;
+      }).join('');
+      p.innerHTML = `
+        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:6px;"><strong style="font-size:14px;">✏️ Is design mein badlaav</strong><span style="font-size:12px; color:#7B3056; font-weight:700;">${left}</span></div>
+        <div style="font-size:12px; color:#6B5A5F; margin-bottom:10px; line-height:1.5;">Poora form dobara bharne ki zaroorat nahi. Color badlein, front/back/side dekhein, ya apni baat likhein. Ye AI ka andaza hai, final design Sonia confirm karengi.</div>
+        <div style="font-size:12px; font-weight:700; margin-bottom:5px;">1. Color badlein</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">${chips}</div>
+        <div style="display:flex; gap:6px; margin-bottom:12px;"><input type="text" id="editColorTxt_${idx}" maxlength="40" placeholder="Ya apna color likhein, jaise wine red" style="flex:1; min-width:0; padding:8px; border:1px solid #d8c9d0; border-radius:8px; font-size:13px; color:#2A0F1D; background:#fff;"><button type="button" ${busy} onclick="runDesignEdit(${idx}, 'color', { instruction: document.getElementById('editColorTxt_${idx}').value })" style="padding:8px 14px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Badlein</button></div>
+        <div style="font-size:12px; font-weight:700; margin-bottom:5px;">2. Doosra view dekhein</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">${vbtn('front', 'Front')}${vbtn('back', 'Back')}${vbtn('side', 'Side')}</div>
+        <div style="font-size:12px; font-weight:700; margin-bottom:5px;">3. Kuch aur badalna hai?</div>
+        <div style="display:flex; gap:6px; margin-bottom:12px;"><input type="text" id="editTweakTxt_${idx}" maxlength="140" placeholder="Jaise: sleeves chhote karo, neckline gehri karo" style="flex:1; min-width:0; padding:8px; border:1px solid #d8c9d0; border-radius:8px; font-size:13px; color:#2A0F1D; background:#fff;"><button type="button" ${busy} onclick="runDesignEdit(${idx}, 'tweak', { instruction: document.getElementById('editTweakTxt_${idx}').value })" style="padding:8px 14px; border:none; border-radius:8px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;">Badlein</button></div>
+        <div id="editStatus_${idx}" style="font-size:12.5px; font-weight:700; color:#7B3056; margin-bottom:8px;">${st.busy ? '⏳ Badlaav ban raha hai (30 se 60 second)...' : ''}</div>
+        ${versions ? `<div style="font-size:12px; font-weight:700; margin-bottom:6px;">Aapke versions (tap karke bada dekhein)</div><div style="display:flex; gap:10px; flex-wrap:wrap;">${versions}</div>` : '<div style="font-size:12px; color:#888;">Abhi koi badlaav nahi kiya.</div>'}`;
+    }
+    async function runDesignEdit(idx, kind, payload) {
+      if (designEditState.busy) return;
+      const instruction = String((payload && payload.instruction) || '').trim();
+      if ((kind === 'color' || kind === 'tweak') && !instruction) { showToast('Pehle likhein ya chunein'); return; }
+      designEditState.busy = true; renderEditPanel(idx);
+      try {
+        const res = await fetch(`${API}/api/designs/${currentDesignId}/edit-concept-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex: idx, kind, instruction, view: payload && payload.view }),
+        });
+        const d = await res.json();
+        if (res.ok && d.success) {
+          designEditState.concepts[idx] = { versions: d.versions, selected: d.selected };
+          if (d.remaining !== null && d.remaining !== undefined) designEditState.remaining = d.remaining;
+          showToast('✅ Naya version ban gaya, neeche dekhein');
+        } else {
+          if (d && d.remaining === 0) designEditState.remaining = 0;
+          showToast('❌ ' + ((d && d.error) || 'Badlaav nahi ban paya'));
+        }
+      } catch (e) { showToast('❌ Connection problem, dobara try karein'); }
+      designEditState.busy = false; renderEditPanel(idx);
+    }
+    async function pickDesignVersion(idx, n) {
+      try {
+        const res = await fetch(`${API}/api/designs/${currentDesignId}/select-version`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex: idx, n }),
+        });
+        const d = await res.json();
+        if (!res.ok || !d.success) { showToast('❌ ' + ((d && d.error) || 'Save nahi hua')); return; }
+        const c = designEditState.concepts[idx]; if (c) c.selected = n;
+        if (currentConcepts[idx]) currentConcepts[idx].imageUrl = d.imageUrl;
+        const imgEl = document.querySelector(`#designImage_${idx} img`);
+        if (imgEl) {
+          const old = imgEl.getAttribute('src');
+          imgEl.src = d.imageUrl;
+          imgEl.setAttribute('onclick', `openImageLightbox('${d.imageUrl}')`);
+          const card = imgEl.closest('.design-card');
+          if (card) card.querySelectorAll('.design-actions button').forEach(b => { const oc = b.getAttribute('onclick'); if (oc && old && oc.includes(old)) b.setAttribute('onclick', oc.split(old).join(d.imageUrl)); });
+        }
+        showToast('⭐ Ye version aapka design hai. Sonia ko yahi dikhega.');
+        renderEditPanel(idx);
+      } catch (e) { showToast('❌ Connection problem'); }
+    }
+    // Admin: see every version a customer made for one concept
+    async function adminShowVersions(designId, idx) {
+      const old = document.getElementById('admVersModal'); if (old) old.remove();
+      const m = document.createElement('div');
+      m.id = 'admVersModal';
+      m.style.cssText = 'position:fixed; inset:0; background:rgba(20,10,20,0.55); z-index:10000; display:flex; align-items:center; justify-content:center; padding:16px;';
+      m.innerHTML = '<div style="background:#fff; color:#2a1a24; border-radius:12px; max-width:640px; width:100%; padding:16px; max-height:92vh; overflow:auto;"><div style="font-weight:700; margin-bottom:10px;">Versions (concept ' + (idx + 1) + ')</div><div id="admVersBody" style="display:flex; gap:10px; flex-wrap:wrap; font-size:12px;">Loading...</div><div style="text-align:right; margin-top:12px;"><button type="button" id="admVersClose" style="padding:8px 16px; border:1px solid #ccc; border-radius:8px; background:#fff; color:#2a1a24; cursor:pointer;">Band karein</button></div></div>';
+      document.body.appendChild(m);
+      document.getElementById('admVersClose').onclick = () => m.remove();
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/edits`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const d = await res.json();
+        const c = d && d.concepts && d.concepts[idx];
+        const body = document.getElementById('admVersBody'); if (!body) return;
+        if (!c || !c.versions || c.versions.length < 2) { body.textContent = 'Customer ne is concept mein koi badlaav nahi kiya.'; return; }
+        body.innerHTML = c.versions.map(v => `<div style="width:120px; text-align:center;"><a href="${v.imageUrl}" target="_blank" rel="noopener"><img src="${v.imageUrl}" style="width:120px; height:160px; object-fit:cover; border-radius:8px; border:2px solid ${v.n === c.selected ? '#D9A441' : '#e3d6dc'};"></a><div style="margin-top:3px;">${escapeHtml(v.label || '')}</div>${v.n === c.selected ? '<div style="color:#0B5A26; font-weight:700;">⭐ Customer ka chuna hua</div>' : ''}</div>`).join('');
+      } catch (e) { const b = document.getElementById('admVersBody'); if (b) b.textContent = 'Load nahi hua'; }
+    }
+
     async function generateConceptImage(idx, isRetry) {
       const imgContainer = document.getElementById(`designImage_${idx}`);
       const btn = document.getElementById(`genBtn_${idx}`);
@@ -11517,8 +11812,10 @@
                   <button class="btn-quote" style="background:#128A43; color:#fff; border:1.5px solid #128A43;" onclick="shareDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">📤 Share</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="downloadDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">⬇️ Download</button>
                   <button class="btn-quote" style="background:#fff; color:var(--vivid); border:1.5px solid var(--vivid);" onclick="printDesignImage('${concept.imageUrl}', '${escapeHtml(concept.title).replace(/'/g, "\\'")}')">🖨️ Print</button>
+                  <button class="btn-quote" style="background:var(--vivid); color:#fff; border:1.5px solid var(--vivid);" onclick="toggleEditPanel(${idx})">✏️ Badlaav / Views</button>
                 ` : ''}
               </div>
+              <div id="editPanel_${idx}" style="display:none; margin-top:12px; border:1.5px solid #e3d6dc; background:#fff; color:#2A0F1D; border-radius:10px; padding:12px;"></div>
             </div>
           </div>
         `;
@@ -14839,6 +15136,7 @@
         <div class="card" style="padding:12px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <strong>${escapeHtml(c.name)}</strong> ${c.isBlocked ? '<span style="font-size:11px; font-weight:700; color:#c62828;">🔒 BLOCKED</span>' : ''}
+            ${c.kitty ? `<div style="font-size:12px; margin:2px 0;"><span style="background:#CFE8D5; color:#0B3D1C; font-weight:800; padding:1px 8px; border-radius:10px; font-size:11px;">💰 Saheli Kitty</span> jama Rs ${Number(c.kitty.paid).toLocaleString('en-IN')}${c.kitty.creditLeft ? ' &middot; credit bacha Rs ' + Number(c.kitty.creditLeft).toLocaleString('en-IN') : ''}</div>` : ''}
             ${c.rewards ? `<div style="font-size:12px; margin:2px 0;"><span style="background:#F2C879; color:#2A0F1D; font-weight:800; padding:1px 8px; border-radius:10px; font-size:11px;">⭐ Rewards${c.rewards.cardNo ? ' card ' + escapeHtml(c.rewards.cardNo) : ''}</span> ${c.rewards.stamps} stamp${c.rewards.stamps === 1 ? '' : 's'} &middot; payments Rs ${Number(c.rewards.total).toLocaleString('en-IN')}</div>` : ''}
             <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(c.email) || ''} ${c.phone ? '· ' + escapeHtml(c.phone) : ''} · Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</div>
           </div>
@@ -16949,6 +17247,7 @@
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAskClaudeTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminKittyTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         // Admins use the Rewards register; the customer's own 'My Rewards' view is of no use to them.
         document.getElementById('myRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'none' : '';
         { const ar = document.getElementById('accountRewardsRow'); if (ar) ar.style.display = currentUser.role === 'admin' ? 'none' : ''; }
