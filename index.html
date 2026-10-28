@@ -2104,16 +2104,28 @@
 
     .design-pricing strong { color: var(--vivid-deep); }
 
+    /* Buttons sit in a tidy grid: equal-width, never overflow the card, text stays on one line. */
     .design-actions {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
       gap: 8px;
       margin-top: 12px;
     }
 
     .design-actions button {
-      flex: 1;
-      padding: 10px;
-      font-size: 11px;
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 10px;
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
+      border-radius: 21px;
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-sizing: border-box;
     }
 
     .btn-quote {
