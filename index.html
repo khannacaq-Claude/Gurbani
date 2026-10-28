@@ -7672,7 +7672,7 @@
           return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:8px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:10px;">
             ${thumb}
             <span style="flex:1;">${isSelected ? '⭐ ' : ''}${escapeHtml(c.title)} (₹${c.priceMin}-${c.priceMax})</span>
-            <button type="button" onclick="adminShowVersions('${d._id}', ${i})" title="Customer ke badlaav / views" style="background:#fff; border:1px solid #bbb; color:#40192D; border-radius:14px; cursor:pointer; font-size:11px; padding:4px 9px; white-space:nowrap;">🖼 Versions</button>
+            <button type="button" onclick="adminShowVersions('${d._id}', ${i})" title="Versions dekhein aur naye versions banayein (color, front/back/side)" style="background:#fff; border:1px solid #bbb; color:#40192D; border-radius:14px; cursor:pointer; font-size:11px; padding:4px 9px; white-space:nowrap;">🖼 Versions / Naya</button>
             <button type="button" onclick="adminRegenerateImage('${d._id}', ${i}, this)" title="Naya image banayein (purana replace ho jayega)" style="background:#fff; border:1px solid var(--vivid); color:var(--vivid); border-radius:14px; cursor:pointer; font-size:11px; font-weight:600; padding:4px 9px; white-space:nowrap;">🔄 ${c.imageUrl ? 'Regenerate' : 'Generate'}</button>
             <button onclick="toggleFeaturedDesign('${d._id}', ${i}, this)" title="${isFeatured ? 'Remove from homepage showcase' : 'Feature on homepage — visible to everyone'}" style="background:none; border:none; cursor:pointer; font-size:15px; padding:0; line-height:1; color:${isFeatured ? '#F2A93B' : '#ccc'};">${isFeatured ? '🌟' : '☆'}</button>
             ${isFeatured ? consentTag : ''}
@@ -11566,23 +11566,70 @@
         renderEditPanel(idx);
       } catch (e) { showToast('❌ Connection problem'); }
     }
-    // Admin: see every version a customer made for one concept
+    // Admin: see every version of one concept, create new versions (colour / view / tweak), pick the main one
     async function adminShowVersions(designId, idx) {
       const old = document.getElementById('admVersModal'); if (old) old.remove();
       const m = document.createElement('div');
       m.id = 'admVersModal';
       m.style.cssText = 'position:fixed; inset:0; background:rgba(20,10,20,0.55); z-index:10000; display:flex; align-items:center; justify-content:center; padding:16px;';
-      m.innerHTML = '<div style="background:#fff; color:#2a1a24; border-radius:12px; max-width:640px; width:100%; padding:16px; max-height:92vh; overflow:auto;"><div style="font-weight:700; margin-bottom:10px;">Versions (concept ' + (idx + 1) + ')</div><div id="admVersBody" style="display:flex; gap:10px; flex-wrap:wrap; font-size:12px;">Loading...</div><div style="text-align:right; margin-top:12px;"><button type="button" id="admVersClose" style="padding:8px 16px; border:1px solid #ccc; border-radius:8px; background:#fff; color:#2a1a24; cursor:pointer;">Band karein</button></div></div>';
+      m.innerHTML = '<div style="background:#fff; color:#2a1a24; border-radius:12px; max-width:680px; width:100%; padding:16px; max-height:92vh; overflow:auto;"><div style="font-weight:700; margin-bottom:10px;">Versions (concept ' + (idx + 1) + ')</div><div id="admVersBody" style="font-size:12px;">Loading...</div><div style="text-align:right; margin-top:12px;"><button type="button" id="admVersClose" style="padding:8px 16px; border:1px solid #ccc; border-radius:8px; background:#fff; color:#2a1a24; cursor:pointer;">Band karein</button></div></div>';
       document.body.appendChild(m);
-      document.getElementById('admVersClose').onclick = () => m.remove();
+      document.getElementById('admVersClose').onclick = () => { m.remove(); if (typeof loadAdminRequests === 'function') loadAdminRequests(); };
+      await admVersRender(designId, idx);
+    }
+    async function admVersRender(designId, idx, busyMsg) {
+      const body = document.getElementById('admVersBody'); if (!body) return;
+      let c = null;
       try {
         const res = await fetch(`${API}/api/designs/${designId}/edits`, { headers: { 'Authorization': `Bearer ${authToken}` } });
         const d = await res.json();
-        const c = d && d.concepts && d.concepts[idx];
-        const body = document.getElementById('admVersBody'); if (!body) return;
-        if (!c || !c.versions || c.versions.length < 2) { body.textContent = 'Customer ne is concept mein koi badlaav nahi kiya.'; return; }
-        body.innerHTML = c.versions.map(v => `<div style="width:120px; text-align:center;"><a href="${v.imageUrl}" target="_blank" rel="noopener"><img src="${v.imageUrl}" style="width:120px; height:160px; object-fit:cover; border-radius:8px; border:2px solid ${v.n === c.selected ? '#D9A441' : '#e3d6dc'};"></a><div style="margin-top:3px;">${escapeHtml(v.label || '')}</div>${v.n === c.selected ? '<div style="color:#0B5A26; font-weight:700;">⭐ Customer ka chuna hua</div>' : ''}</div>`).join('');
-      } catch (e) { const b = document.getElementById('admVersBody'); if (b) b.textContent = 'Load nahi hua'; }
+        c = d && d.concepts && d.concepts[idx];
+      } catch (e) { body.textContent = 'Load nahi hua'; return; }
+      const dis = busyMsg ? 'disabled style="opacity:.5;"' : '';
+      const inp = 'flex:1; min-width:0; padding:7px; border:1px solid #ccc; border-radius:6px; font-size:12px; color:#2a1a24; background:#fff;';
+      const btn = 'padding:7px 12px; border:none; border-radius:6px; background:#7B3056; color:#F2C879; font-weight:700; cursor:pointer;';
+      const vb = (v, t) => `<button type="button" ${dis} onclick="admCreateVersion('${designId}', ${idx}, 'view', { view: '${v}' })" style="padding:7px 12px; border:1.5px solid #7B3056; border-radius:16px; background:#fff; color:#7B3056; font-weight:700; cursor:pointer;">${t}</button>`;
+      const controls = `<div style="border:1px solid #e5d8df; border-radius:10px; padding:10px; margin-bottom:12px;">
+        <div style="font-weight:700; margin-bottom:6px;">Naya version banayein (admin ke liye koi limit nahi)</div>
+        <div style="display:flex; gap:6px; margin-bottom:6px;"><input id="admVerColor" type="text" maxlength="40" placeholder="Color, jaise wine red" style="${inp}"><button type="button" ${dis} onclick="admCreateVersion('${designId}', ${idx}, 'color', { instruction: document.getElementById('admVerColor').value })" style="${btn}">Color badlein</button></div>
+        <div style="display:flex; gap:6px; margin-bottom:6px;"><input id="admVerTweak" type="text" maxlength="140" placeholder="Kuch aur badalna hai, jaise sleeves chhote karo" style="${inp}"><button type="button" ${dis} onclick="admCreateVersion('${designId}', ${idx}, 'tweak', { instruction: document.getElementById('admVerTweak').value })" style="${btn}">Badlein</button></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${vb('front', 'Front')}${vb('back', 'Back')}${vb('side', 'Side')}</div>
+        <div style="margin-top:6px; font-weight:700; color:#7B3056;">${busyMsg ? '⏳ ' + busyMsg : ''}</div></div>`;
+      let list;
+      if (!c || !c.versions || !c.versions.length) list = '<div style="color:#777;">Abhi koi badlaav nahi hua. Upar se naya version banayein.</div>';
+      else list = '<div style="display:flex; gap:10px; flex-wrap:wrap;">' + c.versions.map(v => {
+        const chosen = v.n === c.selected;
+        const pick = v.kind === 'view' ? '<div style="color:#777;">sirf dekhne ke liye</div>' : chosen ? '<div style="color:#0B5A26; font-weight:700;">⭐ Main design</div>' : `<button type="button" onclick="admPickVersion('${designId}', ${idx}, ${v.n})" style="margin-top:3px; padding:3px 8px; border:none; border-radius:10px; background:#7B3056; color:#F2C879; font-size:11px; font-weight:700; cursor:pointer;">Main banayein</button>`;
+        return `<div style="width:120px; text-align:center;"><a href="${v.imageUrl}" target="_blank" rel="noopener"><img src="${v.imageUrl}" style="width:120px; height:160px; object-fit:cover; border-radius:8px; border:2px solid ${chosen ? '#D9A441' : '#e3d6dc'};"></a><div style="margin-top:3px;">${escapeHtml(v.label || '')}</div>${pick}</div>`;
+      }).join('') + '</div>';
+      body.innerHTML = controls + list;
+    }
+    async function admCreateVersion(designId, idx, kind, payload) {
+      const instruction = String((payload && payload.instruction) || '').trim();
+      if ((kind === 'color' || kind === 'tweak') && !instruction) { showToast('Pehle likhein'); return; }
+      await admVersRender(designId, idx, 'Naya version ban raha hai (30 se 60 second)...');
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/edit-concept-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex: idx, kind, instruction, view: payload && payload.view }),
+        });
+        const d = await res.json();
+        showToast(res.ok && d.success ? '✅ Naya version ban gaya' : '❌ ' + ((d && d.error) || 'Nahi bana'));
+      } catch (e) { showToast('❌ Connection problem'); }
+      await admVersRender(designId, idx);
+    }
+    async function admPickVersion(designId, idx, n) {
+      try {
+        const res = await fetch(`${API}/api/designs/${designId}/select-version`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ conceptIndex: idx, n }),
+        });
+        const d = await res.json();
+        showToast(res.ok && d.success ? '⭐ Ye version ab main design hai' : '❌ ' + ((d && d.error) || 'Nahi hua'));
+      } catch (e) { showToast('❌ Connection problem'); }
+      await admVersRender(designId, idx);
     }
 
     async function generateConceptImage(idx, isRetry) {
