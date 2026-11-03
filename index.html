@@ -13649,6 +13649,11 @@
     function renderRateCardForm() {
       const container = document.getElementById('rateCardAdminControls');
       container.innerHTML = `
+        <div class="card" style="padding:14px 20px; margin-bottom:14px;">
+          <strong>📋 Sonia ki handwritten rate list (3 Nov)</strong>
+          <div style="font-size:12px; color:var(--text-muted); margin:4px 0 10px;">13 rates ek saath add ho jayenge. Dobara dabane par duplicate nahi banenge, bas update honge. Bina price wale purane blouse, kurti, anarkali, gown ke khali rows hat jayenge.</div>
+          <button type="button" onclick="importSoniaRateList()" class="btn-submit" style="width:auto; padding:10px 24px;">Rate list import karein</button>
+        </div>
         <div class="card" style="padding:18px 20px;">
           <h4 id="rateCardFormTitle" style="margin-bottom:12px;">➕ Add a Rate</h4>
           <div class="grid-2" style="margin-bottom:10px;">
@@ -13671,6 +13676,17 @@
           <button type="button" onclick="cancelRateCardEdit()" id="rcCancelBtn" style="display:none; padding:10px 24px; margin-left:8px; background:white; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancel</button>
         </div>
       `;
+    }
+
+    async function importSoniaRateList() {
+      if (!(await showConfirm('Sonia ki handwritten list (13 rates) rate card me daal dein?'))) return;
+      try {
+        const res = await fetch(`${API}/api/ratecard/import-handwritten-list`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (!res.ok || !data.success) { showToast('❌ ' + (data.error || 'Import nahi hua')); return; }
+        showToast(`✅ ${data.created} naye, ${data.updated} update, ${data.removedPlaceholders} khali row hate`);
+        loadRateCardTab();
+      } catch (err) { showToast('❌ ' + err.message); }
     }
 
     function editRateCardItem(item) {
