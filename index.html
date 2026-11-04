@@ -4791,6 +4791,7 @@
               </div>
             </div>
             <div id="visitorStatsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">Loading...</div>
+            <div id="visitorDailyBox" style="margin-top:16px;"></div>
           </div>
 
           <h3>🔐 Design Requests (Admin)</h3>
@@ -17928,9 +17929,46 @@
           stat('Total Page Views', s.totalViews) +
           stat("Today's Unique Visitors", s.todayUniqueVisitors) +
           stat("Today's Page Views", s.todayViews);
+        loadVisitorDaily();
       } catch (err) {
         grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Could not load visitor stats right now.</p>';
       }
+    }
+
+    // Day-by-day visitors for the last 30 days (India time), drawn as simple bars
+    // with a table underneath. Own/test visits are excluded by the backend.
+    async function loadVisitorDaily() {
+      const box = document.getElementById('visitorDailyBox');
+      if (!box) return;
+      try {
+        const res = await fetch(`${API}/api/visitors/daily?days=30`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        if (!res.ok || !data.success) { box.innerHTML = ''; return; }
+        const days = data.days;
+        const maxU = Math.max(1, ...days.map(d => d.uniqueVisitors));
+        const lbl = (iso) => { const [y, m, d] = iso.split('-').map(Number); return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]}`; };
+        const totalViews = days.reduce((t, d) => t + d.views, 0);
+        const best = days.reduce((b, d) => d.uniqueVisitors > b.uniqueVisitors ? d : b, days[0]);
+        const bars = days.map(d => `<div title="${lbl(d.date)}: ${d.uniqueVisitors} visitors, ${d.views} views" style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:flex-end; height:100%;">
+            <div style="height:${Math.max(d.uniqueVisitors ? 4 : 1, Math.round(d.uniqueVisitors / maxU * 100))}%; background:${d.uniqueVisitors ? 'var(--vivid)' : '#e0d8d0'}; border-radius:2px 2px 0 0;"></div></div>`).join('');
+        const rows = days.slice().reverse().map(d => `<tr><td style="padding:4px 8px;">${lbl(d.date)}</td><td style="padding:4px 8px; text-align:right;">${d.uniqueVisitors}</td><td style="padding:4px 8px; text-align:right;">${d.views}</td></tr>`).join('');
+        box.innerHTML = `
+          <div style="font-weight:700; font-size:13px; margin-bottom:6px;">Pichhle 30 din (roz ke unique visitors)</div>
+          <div style="display:flex; align-items:flex-end; gap:2px; height:110px; padding:4px 0; border-bottom:1px solid #e0d8d0;">${bars}</div>
+          <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-muted); margin-top:3px;">
+            <span>${lbl(days[0].date)}</span><span>${lbl(days[Math.floor(days.length / 2)].date)}</span><span>${lbl(days[days.length - 1].date)}</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">30 din me ${totalViews.toLocaleString('en-IN')} page views. Sabse zyada: ${lbl(best.date)} (${best.uniqueVisitors} visitors).</div>
+          <details style="margin-top:8px;">
+            <summary style="cursor:pointer; font-size:12.5px;">Din ke hisaab se table</summary>
+            <div style="max-height:260px; overflow:auto; margin-top:6px;">
+              <table style="width:100%; font-size:12px; border-collapse:collapse;">
+                <thead><tr style="text-align:left; position:sticky; top:0; background:var(--sand);"><th style="padding:4px 8px;">Din</th><th style="padding:4px 8px; text-align:right;">Unique visitors</th><th style="padding:4px 8px; text-align:right;">Page views</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </details>`;
+      } catch (err) { box.innerHTML = ''; }
     }
 
     // Voice input for the design description — native browser Web Speech
