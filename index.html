@@ -3734,7 +3734,16 @@
         </div>
 
         <div class="rc-section snap-section reveal-section" id="rcSection" data-hub="1">
-          <!-- Rate Card intentionally NOT shown publicly: rates are shared one-on-one by Sonia. -->
+          <!-- Rate Card is public from 14 Nov 2026 (Sanjeev/Sonia decision). -->
+          <!-- PUBLIC RATE CARD — priced rows from GET /api/ratecard/public,
+               loaded the first time this card is opened (loadPublicRateCard). -->
+          <div class="card" id="publicRateCard" style="padding:20px; max-width:620px; margin:0 auto;">
+            <h4 style="margin-bottom:4px;">💰 Stitching Rate Card</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:14px;">Starting rates for made-to-measure stitching. Final price depends on fabric, design and work. Designing charges are extra.</p>
+            <div id="publicRateCardBody" style="font-size:14px;">Loading rates...</div>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:12px; text-align:center;">Lehenga, bridal or heavy work? Ask Sonia for a quote: <a href="https://wa.me/919899810977?text=Hi%20Sonia%2C%20I%20would%20like%20a%20stitching%20quote." target="_blank" rel="noopener" style="color:var(--vivid); font-weight:700;">WhatsApp 98998 10977</a></p>
+          </div>
+
 
           <!-- FABRIC LENGTH CALCULATOR — public version, same tool that
                lives in the signed-in Rate Card tab, duplicated here with
@@ -9086,7 +9095,7 @@
       ['photoDesignSection', '📸', 'Photo se design', 'Pasand ki photo daalein'],
       ['personaQuizSection', '🎀', 'Style Quiz', '4 tap me style persona'],
       ['rewardsSection', '🎁', 'Rewards Card', 'Har payment par stamp'],
-      ['rcSection', '💰', 'Rate Card', 'Stitching ke rates'],
+      ['rcSection', '💰', 'Rate Card', 'Rates aur Fabric Calculator'],
       ['trendingSection', '🔥', 'Trending', 'Is season ke designs'],
       ['marketplaceSection', '🛍️', 'Marketplace', 'Fabric, lace, suits'],
       ['processSection', '🧵', 'Kaise kaam karta hai', 'Idea se final fitting tak'],
@@ -9102,6 +9111,33 @@
       ['faqSection', '❓', 'FAQ', 'Aam sawaal'],
       ['subscribeSection', '📲', 'Updates paayein', 'Offers aur new designs'],
     ];
+
+    let publicRateCardLoaded = false;
+    async function loadPublicRateCard() {
+      const box = document.getElementById('publicRateCardBody');
+      if (!box || publicRateCardLoaded) return;
+      try {
+        const res = await fetch(`${API}/api/ratecard/public`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error('bad response');
+        if (!data.items.length) { box.textContent = 'Rates coming soon. Please ask Sonia on WhatsApp.'; return; }
+        const byCat = {}; const order = [];
+        data.items.forEach(i => { if (!byCat[i.category]) { byCat[i.category] = []; order.push(i.category); } byCat[i.category].push(i); });
+        const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
+        box.innerHTML = order.map(cat => `
+          <div style="margin-bottom:14px;">
+            <div style="background:#40192D; color:#F2C879; font-weight:700; padding:6px 12px; border-radius:8px; margin-bottom:4px;">${escapeHtml(cat)}</div>
+            ${byCat[cat].map(r => `
+              <div style="display:flex; justify-content:space-between; gap:12px; padding:7px 4px; border-bottom:1px solid #E6D9C3;">
+                <div>${escapeHtml(r.item)}${r.unit ? `<span style="color:var(--text-muted); font-size:12px;"> (${escapeHtml(r.unit)})</span>` : ''}${r.note ? `<div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(r.note)}</div>` : ''}${r.offer ? `<div style="font-size:11.5px; font-weight:700; color:#B9791C;">${escapeHtml(r.offer)}</div>` : ''}</div>
+                <div style="font-weight:800; color:#7B3056; white-space:nowrap;">${fmt(r.priceFrom)}${r.priceTo ? ' - ' + fmt(r.priceTo) : ''}</div>
+              </div>`).join('')}
+          </div>`).join('');
+        publicRateCardLoaded = true;
+      } catch (e) {
+        box.innerHTML = 'Could not load rates right now. Please ask Sonia on WhatsApp: 98998 10977.';
+      }
+    }
 
     function hubLanding() { return document.getElementById('landingPage'); }
 
@@ -9127,6 +9163,7 @@
         document.querySelectorAll('#landingPage [data-hub].hub-open').forEach(x => x.classList.remove('hub-open'));
         host.classList.add('hub-open');
         host.classList.add('in-view');
+        if (host.id === 'rcSection') loadPublicRateCard();
         hubSyncUI();
       }
       if (!(opts && opts.noScroll)) scrollToSection(id);
