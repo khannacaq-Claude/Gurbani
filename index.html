@@ -815,6 +815,27 @@
     .reveal-section { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
     .reveal-section.in-view { opacity: 1; transform: translateY(0); }
 
+
+    /* ---------- Landing "card hub": every landing card is a tile; only the
+       tapped one is open (see initCardHub / hubOpen). Without JS the
+       hub-on class is never added, so everything just shows as before. ---------- */
+    #landingPage.hub-on [data-hub]:not(.hub-open) { display: none !important; }
+    .card-hub { position: relative; z-index: 3; max-width: 1000px; margin: 26px auto 10px; padding: 0 12px; }
+    .card-hub-title { text-align: center; font-family: var(--font-display); font-style: italic; font-size: 22px; color: #F2C879; margin-bottom: 4px; }
+    .card-hub-sub { text-align: center; font-size: 12.5px; color: #F3E3EC; margin-bottom: 14px; }
+    .hub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    @media (max-width: 639px) { .hub-tile .hub-desc { display: none !important; } .hub-tile { padding: 10px 4px; } .hub-tile .hub-name { font-size: 12px; } }
+    @media (min-width: 640px) { .hub-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 960px) { .hub-grid { grid-template-columns: repeat(4, 1fr); } }
+    .hub-tile { background: rgba(255,255,255,0.95); border: 1.5px solid transparent; border-radius: 16px; padding: 12px 10px; text-align: center; cursor: pointer; font-family: inherit; color: var(--ink); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+    .hub-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
+    .hub-tile .hub-ico { display: block; font-size: 26px; line-height: 1.2; }
+    .hub-tile .hub-name { display: block; font-size: 13.5px; font-weight: 700; margin-top: 4px; }
+    .hub-tile .hub-desc { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
+    .hub-tile.active { border-color: var(--vivid); background: #fff; box-shadow: 0 0 0 3px rgba(242,200,121,0.8); }
+    .hub-back { display: none; margin: 14px auto 22px; padding: 10px 22px; border-radius: 22px; border: 1.5px solid var(--vivid); background: #fff; color: var(--vivid); font-weight: 700; font-size: 13px; cursor: pointer; position: relative; z-index: 3; }
+    #landingPage.hub-on .hub-back.show { display: block; }
+
     /* ---------- Hero photo strip — small crossfading carousel of real,
        customer-shared design photos (same /api/designs/featured data
        already fetched for the "Real Designs" section below). Hidden by
@@ -3075,6 +3096,7 @@
   <main>
     <!-- LANDING PAGE -->
     <div class="landing-page" id="landingPage">
+      <script>document.getElementById("landingPage").classList.add("hub-on");</script>
       <nav class="section-tabs" id="sectionTabs">
         <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
         <button type="button" data-target="landingDesignPreview" onclick="jumpToTab('landingDesignPreview', this)">✨ AI Design Studio</button>
@@ -3106,7 +3128,7 @@
         <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">📲 Stay in Loop</a>
       </div>
       <!-- Rewards Card announcement strip (in-store loyalty, Season 1). Taps through to the Rewards section below. -->
-      <a id="rewardsStrip" class="rewards-strip-flash" href="#rewardsSection" onclick="document.getElementById('rewardsSection').scrollIntoView({behavior:'smooth'}); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card starts Ashtami, 19 October. Every payment gets a stamp. Earn up to ₹12,500, with ₹5,000 guaranteed at ₹50,000 &rsaquo;</a>
+      <a id="rewardsStrip" class="rewards-strip-flash" href="#rewardsSection" onclick="scrollToSection('rewardsSection'); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card starts Ashtami, 19 October. Every payment gets a stamp. Earn up to ₹12,500, with ₹5,000 guaranteed at ₹50,000 &rsaquo;</a>
       <div class="hero-fullbleed" id="heroFullbleed">
         <!-- Hero full-bleed background — mosaic of real, customer-approved
              AI Design Studio photos filling the whole banner, a dark wine
@@ -3149,12 +3171,21 @@
         <div class="hero-photo-strip" id="heroPhotoStrip"></div>
         </div>
 
+        <!-- CARD HUB — one tile per landing card; tap a tile to open that
+             card right here instead of scrolling the whole page. Tiles are
+             built from HUB_TILES in initCardHub(). -->
+        <div class="card-hub" id="cardHub">
+          <div class="card-hub-title">Kya dekhna chahenge?</div>
+          <div class="card-hub-sub">Kisi bhi card par tap karein, wo yahin khul jayega</div>
+          <div class="hub-grid" id="hubGrid"></div>
+        </div>
+
         <!-- PHOTO SE DESIGN — landing nudge for customers who already have a
              photo from Instagram / Google / a reel. Reuses the existing
              Inspiration photo upload in the AI Design Studio (nothing new
              server-side); this card just makes that path obvious and tells
              them they can ask for changes. See landingPhotoDesignCTA(). -->
-        <div class="snap-section reveal-section" id="photoDesignSection" style="scroll-margin-top: 90px; margin-top: 28px; margin-bottom: 8px; position: relative; z-index: 3;">
+        <div class="snap-section reveal-section" id="photoDesignSection" data-hub="1" style="scroll-margin-top: 90px; margin-top: 28px; margin-bottom: 8px; position: relative; z-index: 3;">
           <div class="card" style="max-width:760px; margin:0 auto; border:1.5px solid var(--vivid); text-align:center;">
             <div class="hero-eyebrow" style="text-align:center;">📸 Koi design pasand aaya?</div>
             <h3 style="font-family:var(--font-display); font-size:24px; margin-bottom:6px;">Photo se design banwayein</h3>
@@ -3187,7 +3218,7 @@
              getting washed out behind them — see the Try It card's own
              comment further down for the fuller explanation of that
              stacking issue and its fix. -->
-        <div class="snap-section reveal-section" id="personaQuizSection" style="margin-top: 32px; margin-bottom: 32px; position: relative; z-index: 3;">
+        <div class="snap-section reveal-section" id="personaQuizSection" data-hub="1" style="margin-top: 32px; margin-bottom: 32px; position: relative; z-index: 3;">
           <div class="card" id="personaQuizCard" style="max-width:700px; margin:0 auto;">
             <div id="personaIntro">
               <div style="text-align:center;">
@@ -3209,7 +3240,7 @@
 
         <!-- REWARDS CARD — customer-facing explainer for the in-store Rewards Card (Season 1, starts 19 Oct 2026, orders picked up till Holi 19 Mar 2027).
              If rewards change, update the rewards list here, the FAQ answer, and LOYALTY_* / SLABS in the backend loyaltyController.js. -->
-        <div class="snap-section reveal-section" id="rewardsSection" style="max-width:720px; margin:0 auto 22px auto; padding:0 16px; position:relative; z-index:3;">
+        <div class="snap-section reveal-section" id="rewardsSection" data-hub="1" style="max-width:720px; margin:0 auto 22px auto; padding:0 16px; position:relative; z-index:3;">
           <div class="card" style="padding:26px 22px; text-align:center;">
             <div class="hero-eyebrow" style="text-align:center;">⭐ New at the boutique</div>
             <h3 style="font-family:var(--font-display); font-style:italic; font-size:26px; margin:6px 0 4px 0;">Gurbani Rewards Card</h3>
@@ -3267,7 +3298,7 @@
              page width. Still keeps its own opaque white background
              (.card), so the form stays fully legible, floating on top
              of the photo backdrop. -->
-        <div class="card tryit-card" id="landingDesignPreview" style="max-width:1600px; width:100%; margin:0 auto 18px; padding:24px 26px; position:relative; z-index:3;">
+        <div class="card tryit-card hub-open" id="landingDesignPreview" data-hub="1" style="max-width:1600px; width:100%; margin:0 auto 18px; padding:24px 26px; position:relative; z-index:3;">
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
             <h3 data-i18n="tryItTitle" style="font-family:var(--font-display); font-style:italic; font-size:22px; margin-bottom:4px;">✨ Try it — no sign-in needed yet</h3>
             <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
@@ -3534,7 +3565,7 @@
              /api/polls/:pollKey/vote (POST) — one vote per visitor,
              enforced by the same persistent visitorId used for the
              free-preview limiter, not by IP. -->
-        <div class="snap-section reveal-section" id="pollSection" style="margin-top: 48px;">
+        <div class="snap-section reveal-section" id="pollSection" data-hub="1" style="margin-top: 48px;">
           <div class="card" id="pollCard" style="max-width:700px; margin:0 auto;">
             <div style="text-align:center; margin-bottom:16px;">
               <div class="hero-eyebrow" style="text-align:center;">🗳️ Help Us Decide</div>
@@ -3557,7 +3588,7 @@
              down, past Stats/Lenses/Journey/Rate Card/Marketplace) so it
              reads as direct inspiration right after describing an outfit,
              not buried past several unrelated sections. -->
-        <div class="snap-section reveal-section" id="trendingSection" style="margin-top: 48px;">
+        <div class="snap-section reveal-section" id="trendingSection" data-hub="1" style="margin-top: 48px;">
           <h3 style="text-align:center;">✨ Trending This Season in India</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); max-width:520px; margin:6px auto 20px;">What's actually moving in Indian ethnic wear right now — worth a look if you're still deciding what to describe above.</p>
           <div id="trendingGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px; max-width:980px; margin:0 auto;">
@@ -3574,7 +3605,7 @@
              Wedding Countdown use the latter with their own pickResult
              logic. Entirely client-side, same no-server-call spirit as
              the Style Persona quiz. -->
-        <div class="snap-section reveal-section" id="quizzesSection" style="margin-top: 48px;">
+        <div class="snap-section reveal-section" id="quizzesSection" data-hub="1" style="margin-top: 48px;">
           <div class="card" style="max-width:900px; margin:0 auto;">
             <div id="quizzesPicker">
               <div style="text-align:center; margin-bottom:8px;">
@@ -3592,7 +3623,7 @@
         <!-- STATS — self-gated, only shows once numbers are meaningful.
              The clickable stat opens the designs gallery — see the "Tap to
              see designs" hint added directly on that box for discoverability. -->
-        <div class="stats-section snap-section reveal-section" id="statsSection">
+        <div class="stats-section snap-section reveal-section" id="statsSection" data-hub="1">
           <h3 style="text-align:center;">📊 By the Numbers</h3>
           <div class="stats-row" id="statsRow"></div>
         </div>
@@ -3611,7 +3642,7 @@
         <div id="promoBannerSection" style="display:none; margin-bottom:16px;"></div>
 
         <!-- EXPERIENCE LENSES — interactive expand-on-click showcase -->
-        <div class="lens-section snap-section reveal-section" id="lensSection">
+        <div class="lens-section snap-section reveal-section" id="lensSection" data-hub="1">
           <h3 style="text-align:center;">✨ Real Designs From Our Customers</h3>
           <p style="text-align:center; max-width:480px; margin:0 auto; font-size:13px; color:var(--text-muted);">A few of the actual designs AI Design Studio has generated, shared with each customer's permission.</p>
 
@@ -3649,7 +3680,7 @@
              visitor hitting a detailed order-tracking example before
              they've even seen the simple 4-step overview was backwards;
              overview first, then the more granular tracking view. -->
-        <div class="process-section snap-section reveal-section" id="processSection">
+        <div class="process-section snap-section reveal-section" id="processSection" data-hub="1">
           <h3 style="text-align:center;">✂️ How It Works</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">From first idea to final fitting</p>
           <div class="process-steps">
@@ -3684,7 +3715,7 @@
              to be one of 4 tabs squeezed into a narrow accordion, where it
              (and Marketplace, now further below) had no real visibility
              of their own. -->
-        <div class="journey-section snap-section reveal-section" id="journeySection">
+        <div class="journey-section snap-section reveal-section" id="journeySection" data-hub="1">
           <h3 style="text-align:center;">📅 Your Order &amp; Fitting Journey</h3>
           <p style="text-align:center; font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto;">See where your order's at, from first idea to final fitting, and book a chat with Sonia anytime you want a second opinion.</p>
           <div style="text-align:center; margin: 16px 0;">
@@ -3702,7 +3733,7 @@
           </div>
         </div>
 
-        <div class="rc-section snap-section reveal-section" id="rcSection">
+        <div class="rc-section snap-section reveal-section" id="rcSection" data-hub="1">
           <!-- Rate Card intentionally NOT shown publicly: rates are shared one-on-one by Sonia. -->
 
           <!-- FABRIC LENGTH CALCULATOR — public version, same tool that
@@ -3774,7 +3805,7 @@
              own real section (not demoted back into a hidden tab), just
              sitting with the other secondary/supporting content below the
              primary path instead of in the middle of it. -->
-        <div class="marketplace-section snap-section reveal-section" id="marketplaceSection">
+        <div class="marketplace-section snap-section reveal-section" id="marketplaceSection" data-hub="1">
           <h3 style="text-align:center;">🛍️ Marketplace</h3>
           <p style="text-align:center; font-size:13px; color:var(--text-muted); max-width:480px; margin:0 auto;">Just want to buy as-is? Shop fabric, lace, lining and ready unstitched suits directly — no stitching, no waiting on a design. We ship worldwide; for shipments outside India, the shipping cost is borne by you as the receiver.</p>
           <div style="text-align:center; margin: 16px 0;">
@@ -3795,7 +3826,7 @@
         </div>
 
         <!-- INSTAGRAM GALLERY -->
-        <div id="instagramSection" class="snap-section" style="margin-top: 48px; text-align:center;">
+        <div id="instagramSection" data-hub="1" class="snap-section" style="margin-top: 48px; text-align:center;">
           <h3>📷 Latest From Instagram<span class="insta-live-badge"><span class="live-dot"></span>LIVE</span></h3>
           <p style="font-size:12px; color: var(--text-muted); margin-bottom: 6px;">
             Follow <a href="https://www.instagram.com/gurbanifashion/" target="_blank" rel="noopener" style="color: var(--vivid); font-weight:600; display:inline-flex; align-items:center; gap:4px;"><img src="instagram-icon-official.png" alt="Instagram" style="width:13px; height:13px; vertical-align:middle;"> @gurbanifashion</a> for our newest stitches & fabric drops
@@ -3813,7 +3844,7 @@
         </div>
 
         <!-- OUR STORY -->
-        <div class="story-section snap-section reveal-section" id="storySection">
+        <div class="story-section snap-section reveal-section" id="storySection" data-hub="1">
           <h3>Our Story</h3>
           <p>Gurbani Fashion started as a small family boutique in Faridabad with one simple idea: your outfit should feel like it was made for exactly you — because it was. What began with a needle, thread, and a lot of care has grown into something a little unusual for a neighborhood boutique: an AI Design Studio that turns your own words and photos into real design concepts, still finished by hand by our own tailors.</p>
           <p>We haven't changed why we started — helping people feel their best on the days that matter most. We've just found new ways to do it.</p>
@@ -3821,7 +3852,7 @@
         </div>
 
         <!-- VISIT US -->
-        <div class="visit-section snap-section reveal-section" id="visitSection">
+        <div class="visit-section snap-section reveal-section" id="visitSection" data-hub="1">
           <h3 style="text-align:center;">📍 Visit Our Boutique</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:4px;">Come see fabrics in person, get measured, or just say hello</p>
           <div class="visit-grid">
@@ -3850,7 +3881,7 @@
              outfit, and internal links from the highest-traffic page on
              the site to each guide, which helps their own search
              visibility too. -->
-        <div class="snap-section reveal-section" id="guidesShowcaseSection" style="margin-top: 48px;">
+        <div class="snap-section reveal-section" id="guidesShowcaseSection" data-hub="1" style="margin-top: 48px;">
           <h3 style="text-align:center;">📚 Helpful Guides</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:20px;">Everything you might want to know before you start designing.</p>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; max-width:900px; margin:0 auto;">
@@ -3903,7 +3934,7 @@
         </div>
 
         <!-- FAQ -->
-        <div class="faq-section snap-section reveal-section" id="faqSection">
+        <div class="faq-section snap-section reveal-section" id="faqSection" data-hub="1">
           <h3 style="text-align:center;">❓ Frequently Asked Questions</h3>
           <div id="faqList">
             <div class="faq-item">
@@ -3986,7 +4017,7 @@
         </div>
 
         <!-- SUBSCRIBE -->
-        <div class="subscribe-section snap-section reveal-section" id="subscribeSection">
+        <div class="subscribe-section snap-section reveal-section" id="subscribeSection" data-hub="1">
           <h3>📲 Stay in the Loop</h3>
           <p style="font-size:13px; color: var(--text-muted);">Get a WhatsApp or email nudge when we launch new collections or open new slots — no spam, unsubscribe anytime.</p>
           <div class="subscribe-form">
@@ -9049,8 +9080,103 @@
     // links. Silently does nothing if the section isn't currently visible
     // (e.g. a signed-in user viewing the dashboard instead of the landing
     // page) rather than scrolling to a hidden element.
+    // ---------- Landing card hub ----------
+    const HUB_TILES = [
+      ['landingDesignPreview', '✨', 'AI Design Studio', 'Likhiye, 3 design payein'],
+      ['photoDesignSection', '📸', 'Photo se design', 'Pasand ki photo daalein'],
+      ['personaQuizSection', '🎀', 'Style Quiz', '4 tap me style persona'],
+      ['rewardsSection', '🎁', 'Rewards Card', 'Har payment par stamp'],
+      ['rcSection', '💰', 'Rate Card', 'Stitching ke rates'],
+      ['trendingSection', '🔥', 'Trending', 'Is season ke designs'],
+      ['marketplaceSection', '🛍️', 'Marketplace', 'Fabric, lace, suits'],
+      ['processSection', '🧵', 'Kaise kaam karta hai', 'Idea se final fitting tak'],
+      ['journeySection', '📅', 'Order Journey', 'Apna order track karein'],
+      ['lensSection', '🔍', 'Concept Preview', 'Design aur match ka namuna'],
+      ['statsSection', '📊', 'Hamare numbers', 'Ab tak ka kaam'],
+      ['quizzesSection', '🧠', 'Quizzes', 'Fabric, shaadi, AI myth'],
+      ['pollSection', '🗳️', 'Poll', 'Apni raay dein'],
+      ['instagramSection', '📷', 'Instagram', 'Latest posts'],
+      ['storySection', '📖', 'Hamari Kahani', 'Gurbani Fashion kaise bana'],
+      ['visitSection', '📍', 'Dukaan par aayein', 'Address aur timing'],
+      ['guidesShowcaseSection', '📚', 'Guides', 'Fashion aur fabric guides'],
+      ['faqSection', '❓', 'FAQ', 'Aam sawaal'],
+      ['subscribeSection', '📲', 'Updates paayein', 'Offers aur new designs'],
+    ];
+
+    function hubLanding() { return document.getElementById('landingPage'); }
+
+    function hubSyncUI() {
+      const open = document.querySelector('#landingPage [data-hub].hub-open');
+      document.querySelectorAll('.hub-tile').forEach(t => t.classList.toggle('active', !!open && t.dataset.hubtarget === open.id));
+      const back = document.getElementById('hubBackBtn');
+      if (back) {
+        back.classList.toggle('show', !!open);
+        if (open) open.insertAdjacentElement('afterend', back);
+      }
+    }
+
+    // Opens the card that contains element `id`. Returns true if a hub card
+    // was involved. Nothing happens if the hub isn't active (e.g. no JS).
+    function hubOpen(id, opts) {
+      const landing = hubLanding();
+      if (!landing || !landing.classList.contains('hub-on')) return false;
+      const el = document.getElementById(id);
+      const host = el && el.closest ? el.closest('[data-hub]') : null;
+      if (!host) return false;
+      if (!host.classList.contains('hub-open')) {
+        document.querySelectorAll('#landingPage [data-hub].hub-open').forEach(x => x.classList.remove('hub-open'));
+        host.classList.add('hub-open');
+        host.classList.add('in-view');
+        hubSyncUI();
+      }
+      if (!(opts && opts.noScroll)) scrollToSection(id);
+      return true;
+    }
+
+    function hubTileClick(id) {
+      const host = document.getElementById(id);
+      if (host && host.classList.contains('hub-open')) {
+        host.classList.remove('hub-open'); // tapping the open tile closes it
+        hubSyncUI();
+        hubBackToTop();
+        return;
+      }
+      hubOpen(id);
+    }
+
+    function hubBackToTop() {
+      const hub = document.getElementById('cardHub');
+      const nav = document.getElementById('sectionTabs');
+      const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+      if (hub) window.scrollTo({ top: Math.max(0, hub.getBoundingClientRect().top + window.pageYOffset - navHeight - 12), behavior: 'smooth' });
+    }
+
+    function initCardHub() {
+      const grid = document.getElementById('hubGrid');
+      if (!grid) return;
+      grid.innerHTML = HUB_TILES.filter(t => document.getElementById(t[0])).map(t =>
+        `<button type="button" class="hub-tile" data-hubtarget="${t[0]}" onclick="hubTileClick('${t[0]}')"><span class="hub-ico">${t[1]}</span><span class="hub-name">${t[2]}</span><span class="hub-desc">${t[3]}</span></button>`
+      ).join('');
+      const back = document.createElement('button');
+      back.type = 'button'; back.id = 'hubBackBtn'; back.className = 'hub-back';
+      back.textContent = '↑ Sab cards dekhein';
+      back.onclick = hubBackToTop;
+      document.body.appendChild(back);
+      hubSyncUI();
+      // A link like gurbanifashion.com/#photoDesignSection opens that card.
+      const openFromHash = () => {
+        const id = (location.hash || '').slice(1);
+        if (id && document.getElementById(id) && hubOpen(id, { noScroll: true })) setTimeout(() => scrollToSection(id), 350);
+      };
+      openFromHash();
+      window.addEventListener('hashchange', openFromHash);
+    }
+
     function scrollToSection(id) {
       const el = document.getElementById(id);
+      // The landing cards live in a tile hub: if the target sits inside a
+      // collapsed card, open that card first (without its own scroll).
+      if (el && typeof hubOpen === 'function') hubOpen(id, { noScroll: true });
       if (!el || el.offsetParent === null) return;
       // The nav bar is position:sticky, pinned to the top of the viewport
       // while scrolling — aligning a target's top edge to the viewport's
@@ -10000,7 +10126,7 @@
     // extra, unnecessary step for someone who already said what they want.
     function goToTryItCard() {
       goToLandingPage(null);
-      document.getElementById('landingDesignPreview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection('landingDesignPreview');
     }
 
     function switchTab(event, tabName) {
@@ -10834,7 +10960,7 @@
       if (typeof resetDesignFormFields === 'function') resetDesignFormFields();
       if (typeof resetLandingDesignPreview === 'function') resetLandingDesignPreview();
       goToLandingPage(null);
-      document.getElementById('landingDesignPreview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection('landingDesignPreview');
     }
 
 
@@ -17752,6 +17878,7 @@
     window.addEventListener('load', () => {
       initSectionTabsObserver();
       initScrollReveals();
+      initCardHub();
       initHeroFullbleedSparkles();
       loadPoll();
       renderQuizPickerCards();
