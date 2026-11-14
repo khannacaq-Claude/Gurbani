@@ -3149,6 +3149,27 @@
         <div class="hero-photo-strip" id="heroPhotoStrip"></div>
         </div>
 
+        <!-- PHOTO SE DESIGN — landing nudge for customers who already have a
+             photo from Instagram / Google / a reel. Reuses the existing
+             Inspiration photo upload in the AI Design Studio (nothing new
+             server-side); this card just makes that path obvious and tells
+             them they can ask for changes. See landingPhotoDesignCTA(). -->
+        <div class="snap-section reveal-section" id="photoDesignSection" style="margin-top: 28px; margin-bottom: 8px; position: relative; z-index: 3;">
+          <div class="card" style="max-width:760px; margin:0 auto; border:1.5px solid var(--vivid); text-align:center;">
+            <div class="hero-eyebrow" style="text-align:center;">📸 Koi design pasand aaya?</div>
+            <h3 style="font-family:var(--font-display); font-size:24px; margin-bottom:6px;">Photo se design banwayein</h3>
+            <p style="color:var(--text-muted); max-width:520px; margin:0 auto 14px; font-size:14px; line-height:1.55;">Instagram, Google ya kisi reel par jo blouse, suit ya lehenga pasand aaya, uski photo daaliye. Hamara AI use aapke apne colour aur kapde me 3 naye design bana dega, aur Sonia wahi silegi aapke naap se.</p>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; font-size:13px; font-weight:600; color:var(--ink);">
+              <span style="background:#fdf2f6; border-radius:20px; padding:6px 14px;">1. Photo upload karein</span>
+              <span style="background:#fdf2f6; border-radius:20px; padding:6px 14px;">2. Likhein kya badalna hai</span>
+              <span style="background:#fdf2f6; border-radius:20px; padding:6px 14px;">3. 3 design dekhein</span>
+            </div>
+            <p style="font-size:13px; color:var(--text-muted); max-width:520px; margin:0 auto 16px; line-height:1.55;">✏️ <b>Kuch aur badalna ho?</b> Colour, neck, back, sleeves, border ya latkan, bas likh dijiye (Hindi ya English me), AI wahi badal dega.</p>
+            <button type="button" class="btn-submit" onclick="landingPhotoDesignCTA()" style="width:100%; max-width:360px;">📸 Photo upload karke shuru karein →</button>
+            <p style="font-size:11px; color:var(--text-muted); margin-top:8px;">Photo sirf aapke design ke liye use hoti hai. Sign in ek baar karna padega.</p>
+          </div>
+        </div>
+
         <!-- STYLE PERSONA QUIZ — moved here (was after the Try It card,
              now before it) so this fun, low-effort hook comes first,
              warming visitors up before the bigger-commitment design
@@ -9504,7 +9525,7 @@
       fabric: '🧵 Upload fabric swatches you like to match colors',
       lace: '🎀 Upload lace patterns you prefer for embroidery',
       accessories: '✨ Upload jewelry, dupatta draping, or accessory ideas',
-      inspiration: '🌟 Upload inspiration photos of complete outfits you love'
+      inspiration: '🌟 Upload photos of outfits you love, then write below what you want changed (colour, neck, sleeves, border...)'
     };
 
     function promptSignIn(feature) {
@@ -10556,6 +10577,44 @@
       }
     }
 
+    // "Photo se design" landing card. Photo upload lives in the signed-in
+    // AI Design Studio (Inspiration tab), so this remembers the intent, goes
+    // through the normal sign-in path, and once the studio is open
+    // applyInspirationPreset() selects the Inspiration tab and scrolls to
+    // the upload area with a nudge to also describe any changes.
+    function landingPhotoDesignCTA() {
+      try { localStorage.setItem('gfWantsInspiration', '1'); } catch (e) {}
+      promptSignIn('AI Design Studio');
+    }
+
+    function applyInspirationPreset() {
+      let wanted = false;
+      try { wanted = localStorage.getItem('gfWantsInspiration') === '1'; localStorage.removeItem('gfWantsInspiration'); } catch (e) {}
+      if (!wanted) return;
+      setTimeout(() => {
+        // The real form is hidden for people who arrive with no landing draft
+        // (a notice sends them back to the landing page instead). This
+        // visitor deliberately came for the photo upload, so show the form.
+        const notice = document.getElementById('designNoGoToLanding');
+        const wrapper = document.getElementById('designFormWrapper');
+        if (notice) notice.style.display = 'none';
+        if (wrapper) wrapper.style.display = '';
+        designEntryResolved = true;
+        const area = document.getElementById('photoUploadArea');
+        if (!area) return;
+        currentPhotoType = 'inspiration';
+        document.querySelectorAll('.photo-type-btn').forEach(btn => {
+          btn.classList.toggle('active', /Inspiration/.test(btn.textContent));
+        });
+        const hint = document.getElementById('photoTypeHint');
+        const consent = document.getElementById('photoConsentCheckbox');
+        if (hint && consent && !consent.checked) hint.textContent = 'Pehle upar consent box tick karein, phir pasand ki photo upload karein';
+        else if (hint) hint.textContent = photoTypeHints.inspiration;
+        showToast('📸 Pasand ki photo upload karein, aur niche likhein kya badalna hai (colour, neck, sleeves...)');
+        area.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+    }
+
     function landingContinueToSignIn() {
       saveLandingDesignInputs();
       promptSignIn('AI Design Studio');
@@ -10566,6 +10625,7 @@
     // preview into the REAL form fields, so the visitor never has to
     // re-type anything they already did pre-sign-in.
     function restoreLandingDesignInputs() {
+      applyInspirationPreset();
       // Checked FIRST, before the plain-draft path below — a clicked
       // preview box is a stronger, more specific signal ("I want THIS
       // design") than a generic carried-over draft, and the two paths
