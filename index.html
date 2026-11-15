@@ -2884,7 +2884,6 @@
         <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:78vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="closeImageLightbox()">
         <button type="button" id="lbPrev" aria-label="Previous design" onclick="lightboxStep(-1)" style="display:none; position:absolute; left:8px; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); color:#40192D; font-size:26px; line-height:1; padding:0 0 4px; cursor:pointer; box-shadow:0 1px 8px rgba(0,0,0,0.4);">‹</button>
         <button type="button" id="lbNext" aria-label="Next design" onclick="lightboxStep(1)" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); color:#40192D; font-size:26px; line-height:1; padding:0 0 4px; cursor:pointer; box-shadow:0 1px 8px rgba(0,0,0,0.4);">›</button>
-        <div id="lbCount" style="display:none; position:absolute; top:8px; left:8px; background:rgba(20,10,20,0.65); color:#fff; font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px;"></div>
       </div>
       <div style="display:flex; gap:10px;">
         <button type="button" onclick="shareDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:#128A43; color:#fff; border:1.5px solid #128A43; border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">📤 Share</button>
@@ -10287,8 +10286,6 @@
       imgs[heroCycleIndex].classList.remove('active');
       heroCycleIndex = ((n % imgs.length) + imgs.length) % imgs.length;
       imgs[heroCycleIndex].classList.add('active');
-      const count = document.getElementById('heroPhotoCount');
-      if (count) count.textContent = `${heroCycleIndex + 1} / ${imgs.length}`;
     }
 
     // Arrow buttons and swipe: go back or forward one design. The automatic
@@ -10312,7 +10309,7 @@
       heroCycleIndex = 0;
       strip.innerHTML = items.map((item, i) => `
         <img src="${imgThumb(item.imageUrl, 480)}" data-full="${item.imageUrl}" loading="lazy" decoding="async" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer" onclick="heroOpenLightbox(${i})">
-      `).join('') + `<button type="button" class="hero-nav prev" aria-label="Previous design" onclick="heroStripGo(-1)">‹</button><button type="button" class="hero-nav next" aria-label="Next design" onclick="heroStripGo(1)">›</button><div class="hero-photo-count" id="heroPhotoCount">1 / ${items.length}</div><div class="hero-photo-caption">✨ Real designs, created for real customers</div>`;
+      `).join('') + `<button type="button" class="hero-nav prev" aria-label="Previous design" onclick="heroStripGo(-1)">‹</button><button type="button" class="hero-nav next" aria-label="Next design" onclick="heroStripGo(1)">›</button><div class="hero-photo-caption">✨ Real designs, created for real customers</div>`;
       strip.style.display = 'block';
       // Hold the slideshow while someone is looking at it, swipe to change design
       strip.onmouseenter = stopHeroCycle;
@@ -11934,9 +11931,7 @@
 
     function lightboxSyncNav() {
       const on = !!lightboxSet;
-      ['lbPrev', 'lbNext', 'lbCount'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = on ? 'block' : 'none'; });
-      const c = document.getElementById('lbCount');
-      if (on && c) c.textContent = `${lightboxSet.i + 1} / ${lightboxSet.urls.length}`;
+      ['lbPrev', 'lbNext'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = on ? 'block' : 'none'; });
     }
     // Previous / next design while the big photo is open (also arrow keys and swipe)
     function lightboxStep(delta) {
