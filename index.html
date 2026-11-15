@@ -9345,9 +9345,7 @@
 
     function hubBackToTop() {
       const hub = document.getElementById('cardHub');
-      const nav = document.getElementById('sectionTabs');
-      const navHeight = nav ? nav.getBoundingClientRect().height : 0;
-      if (hub) window.scrollTo({ top: Math.max(0, hub.getBoundingClientRect().top + window.pageYOffset - navHeight - 12), behavior: 'smooth' });
+      if (hub) window.scrollTo({ top: Math.max(0, hub.getBoundingClientRect().top + window.pageYOffset - getStickyTopOffset() - 12), behavior: 'smooth' });
     }
 
     // Runs as soon as the HTML is parsed (DOMContentLoaded), NOT on window
@@ -9393,10 +9391,20 @@
       // Offsetting by the bar's real height (measured, not hardcoded, so
       // it stays correct if the bar's size ever changes) lands the actual
       // heading just below it instead.
-      const nav = document.getElementById('sectionTabs');
-      const navHeight = nav ? nav.getBoundingClientRect().height : 0;
-      const targetY = el.getBoundingClientRect().top + window.pageYOffset - navHeight - 12;
+      const targetY = el.getBoundingClientRect().top + window.pageYOffset - getStickyTopOffset() - 12;
       window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+    }
+
+    // Total height of everything pinned to the top while scrolling: the fixed
+    // header, the section tabs bar, and the rewards strip under it (when
+    // showing). A target scrolled to this offset starts just below all of
+    // them. (Using only the tabs bar's height left the first part of every
+    // section hidden behind the header and the strip.)
+    function getStickyTopOffset() {
+      const h = (el) => (el && el.offsetParent !== null ? el.getBoundingClientRect().height : 0);
+      const header = document.querySelector('header');
+      const headerH = header ? header.getBoundingClientRect().height : 0;
+      return headerH + h(document.getElementById('sectionTabs')) + h(document.getElementById('rewardsStrip'));
     }
 
     // ---------- Guided tour (first-time visitors) ----------
