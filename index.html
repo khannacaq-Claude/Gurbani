@@ -2886,7 +2886,12 @@
   <div id="imageLightboxOverlay" style="display:none; position:fixed; inset:0; background:rgba(10,5,10,0.88); z-index:3900; align-items:center; justify-content:center; padding:24px;" onclick="closeImageLightbox()">
     <span onclick="closeImageLightbox()" style="position:absolute; top:18px; right:24px; color:#fff; font-size:32px; cursor:pointer; line-height:1; z-index:3301;">×</span>
     <div style="max-width:100%; max-height:90vh; display:flex; flex-direction:column; align-items:center; gap:14px;" onclick="event.stopPropagation()">
-      <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:78vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="closeImageLightbox()">
+      <div style="position:relative; display:flex; justify-content:center;" id="imageLightboxStage">
+        <img id="imageLightboxImg" src="" alt="" style="max-width:100%; max-height:78vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); cursor:zoom-out;" onclick="closeImageLightbox()">
+        <button type="button" id="lbPrev" aria-label="Previous design" onclick="lightboxStep(-1)" style="display:none; position:absolute; left:8px; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); color:#40192D; font-size:26px; line-height:1; padding:0 0 4px; cursor:pointer; box-shadow:0 1px 8px rgba(0,0,0,0.4);">‹</button>
+        <button type="button" id="lbNext" aria-label="Next design" onclick="lightboxStep(1)" style="display:none; position:absolute; right:8px; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); color:#40192D; font-size:26px; line-height:1; padding:0 0 4px; cursor:pointer; box-shadow:0 1px 8px rgba(0,0,0,0.4);">›</button>
+        <div id="lbCount" style="display:none; position:absolute; top:8px; left:8px; background:rgba(20,10,20,0.65); color:#fff; font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px;"></div>
+      </div>
       <div style="display:flex; gap:10px;">
         <button type="button" onclick="shareDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:#128A43; color:#fff; border:1.5px solid #128A43; border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">📤 Share</button>
         <button type="button" onclick="downloadDesignImage(document.getElementById('imageLightboxImg').getAttribute('data-original-url') || document.getElementById('imageLightboxImg').src, 'design')" style="background:rgba(255,255,255,0.15); color:#fff; border:1.5px solid rgba(255,255,255,0.4); border-radius:20px; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">⬇️ Download</button>
@@ -10272,6 +10277,11 @@
       heroCycleTimer = setInterval(() => heroShow(heroCycleIndex + 1), HERO_CYCLE_MS);
     }
 
+    function heroOpenLightbox(i) {
+      const imgs = Array.from(document.querySelectorAll('#heroPhotoStrip img'));
+      openImageLightbox(imgs[i].dataset.full || imgs[i].src, imgs.map(m => m.dataset.full || m.src), i);
+    }
+
     // Shows design number n (wraps around) and updates the "2 / 5" counter.
     function heroShow(n) {
       const strip = document.getElementById('heroPhotoStrip');
@@ -10305,7 +10315,7 @@
 
       heroCycleIndex = 0;
       strip.innerHTML = items.map((item, i) => `
-        <img src="${imgThumb(item.imageUrl, 480)}" data-full="${item.imageUrl}" loading="lazy" decoding="async" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer" onclick="openImageLightbox(this.dataset.full || this.src)">
+        <img src="${imgThumb(item.imageUrl, 480)}" data-full="${item.imageUrl}" loading="lazy" decoding="async" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer" onclick="heroOpenLightbox(${i})">
       `).join('') + `<button type="button" class="hero-nav prev" aria-label="Previous design" onclick="heroStripGo(-1)">‹</button><button type="button" class="hero-nav next" aria-label="Next design" onclick="heroStripGo(1)">›</button><div class="hero-photo-count" id="heroPhotoCount">1 / ${items.length}</div><div class="hero-photo-caption">✨ Real designs, created for real customers</div>`;
       strip.style.display = 'block';
       // Hold the slideshow while someone is looking at it, swipe to change design
@@ -11903,7 +11913,11 @@
     }
 
     let imageLightboxToken = 0;
-    async function openImageLightbox(url) {
+    let lightboxSet = null; // { urls: [...], i: n } when opened from a group of designs
+    async function openImageLightbox(url, urls, startIdx) {
+      const wasOpen = document.getElementById('imageLightboxOverlay').style.display === 'flex';
+      lightboxSet = (Array.isArray(urls) && urls.length > 1) ? { urls, i: startIdx || 0 } : null;
+      lightboxSyncNav();
       const myToken = ++imageLightboxToken;
       const imgEl = document.getElementById('imageLightboxImg');
       imgEl.src = url; // shows instantly, watermarked version swaps in a moment later
@@ -11913,7 +11927,7 @@
       // lightbox first, instead of leaving the whole site — without
       // this, mobile back-gesture/back-button felt like it "exited"
       // the app rather than just dismissing the photo on top.
-      history.pushState({ lightboxOpen: true }, '');
+      if (!wasOpen) history.pushState({ lightboxOpen: true }, '');
       try {
         const canvas = await buildWatermarkedCanvas(url);
         if (imageLightboxToken === myToken) imgEl.src = canvas.toDataURL('image/jpeg', 0.92);
@@ -11922,7 +11936,42 @@
       }
     }
 
+    function lightboxSyncNav() {
+      const on = !!lightboxSet;
+      ['lbPrev', 'lbNext', 'lbCount'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = on ? 'block' : 'none'; });
+      const c = document.getElementById('lbCount');
+      if (on && c) c.textContent = `${lightboxSet.i + 1} / ${lightboxSet.urls.length}`;
+    }
+    // Previous / next design while the big photo is open (also arrow keys and swipe)
+    function lightboxStep(delta) {
+      if (!lightboxSet) return;
+      const n = lightboxSet.urls.length;
+      const i = ((lightboxSet.i + delta) % n + n) % n;
+      openImageLightbox(lightboxSet.urls[i], lightboxSet.urls, i);
+    }
+    document.addEventListener('keydown', (e) => {
+      const ov = document.getElementById('imageLightboxOverlay');
+      if (!ov || ov.style.display !== 'flex') return;
+      if (e.key === 'ArrowLeft') lightboxStep(-1);
+      else if (e.key === 'ArrowRight') lightboxStep(1);
+      else if (e.key === 'Escape') closeImageLightbox();
+    });
+    (function () {
+      let x = null;
+      const ov = document.getElementById('imageLightboxOverlay');
+      if (!ov) return;
+      ov.addEventListener('touchstart', (e) => { x = e.touches[0].clientX; }, { passive: true });
+      ov.addEventListener('touchend', (e) => {
+        if (x !== null && lightboxSet) {
+          const dx = e.changedTouches[0].clientX - x;
+          if (Math.abs(dx) > 50) lightboxStep(dx < 0 ? 1 : -1);
+        }
+        x = null;
+      }, { passive: true });
+    })();
+
     function closeImageLightbox(fromPopState) {
+      lightboxSet = null;
       document.getElementById('imageLightboxOverlay').style.display = 'none';
       document.getElementById('imageLightboxImg').src = '';
       // Replace, don't go back — history.back() is a REAL browser
