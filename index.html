@@ -840,6 +840,7 @@
     .design-feed-item img { width: 100%; display: block; min-height: 120px; }
     .design-feed-cap { padding: 7px 9px 8px; font-size: 12px; font-weight: 600; color: var(--ink); background: #fff; }
     .design-feed-heart { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.92); font-size: 17px; line-height: 1; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+    .design-search-chip { background:#fdf2f6; border:1px solid #ecd3de; color:var(--vivid); border-radius:16px; padding:4px 11px; font-size:12px; font-weight:600; cursor:pointer; }
     .hub-back { display: none; margin: 14px auto 22px; padding: 10px 22px; border-radius: 22px; border: 1.5px solid var(--vivid); background: #fff; color: var(--vivid); font-weight: 700; font-size: 13px; cursor: pointer; position: relative; z-index: 3; }
     #landingPage.hub-on .hub-back.show { display: block; }
 
@@ -3205,6 +3206,7 @@
             <p style="font-size:13px; color:var(--text-muted); max-width:520px; margin:0 auto 16px; line-height:1.55;">✏️ <b>Kuch aur badalna ho?</b> Colour, neck, back, sleeves, border ya latkan, bas likh dijiye (Hindi ya English me), AI wahi badal dega.</p>
             <button type="button" class="btn-submit" onclick="landingPhotoDesignCTA()" style="width:100%; max-width:360px;">📸 Photo upload karke shuru karein →</button>
             <p style="font-size:11px; color:var(--text-muted); margin-top:8px;">Photo sirf aapke design ke liye use hoti hai. Sign in ek baar karna padega.</p>
+            <p style="font-size:12px; margin-top:8px;">Photo nahi hai? <a href="#designGallerySection" onclick="scrollToSection('designGallerySection'); return false;" style="color:var(--vivid); font-weight:700;">Design Gallery me search karein</a> ya Pinterest par dhoondhein.</p>
           </div>
         </div>
 
@@ -3605,6 +3607,22 @@
           <div style="max-width:980px; margin:0 auto; padding:0 4px;">
             <h3 style="text-align:center; font-family:var(--font-display); margin-bottom:4px;">🖼️ Design Gallery</h3>
             <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:12px;">Designs banwaye gaye hamare AI Studio me, customers ki permission se. Pasand aaye to ❤️ karein, ya tap karke apna version banwayein.</p>
+            <!-- SEARCH: one box, two ways forward. Design it here in the AI
+                 Studio, or look for ideas on Pinterest (search page, new tab). -->
+            <div style="max-width:620px; margin:0 auto 16px; background:#fff; border:1.5px solid var(--vivid); border-radius:16px; padding:14px;">
+              <label for="designSearchInput" style="display:block; font-size:13px; font-weight:700; color:var(--ink); margin-bottom:6px;">🔍 Kaisa design chahiye? Yahan likhein</label>
+              <input type="text" id="designSearchInput" placeholder="E.g. blouse back neck designs" maxlength="120" style="width:100%; padding:11px 12px; border:1.5px solid #e5dcc8; border-radius:10px; font-size:15px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); designSearchGo('design');}">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 10px;">
+                <button type="button" class="design-search-chip" onclick="designSearchFill('blouse back neck designs')">blouse back neck</button>
+                <button type="button" class="design-search-chip" onclick="designSearchFill('anarkali suit designs')">anarkali suit</button>
+                <button type="button" class="design-search-chip" onclick="designSearchFill('bridal lehenga blouse designs')">bridal blouse</button>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn-submit" style="flex:1; min-width:180px; margin:0;" onclick="designSearchGo('design')">✨ Is par design banwayein</button>
+                <button type="button" onclick="designSearchGo('pinterest')" style="flex:1; min-width:180px; background:#E60023; color:#fff; border:none; border-radius:22px; padding:11px 14px; font-weight:700; font-size:14px; cursor:pointer;">📌 Pinterest par dhoondhein</button>
+              </div>
+              <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Pinterest alag site hai, nayi tab me khulegi. Pasand aayi photo save karke yahan "Photo se design" me upload karein.</div>
+            </div>
             <div style="text-align:center; margin-bottom:14px;">
               <button type="button" id="designFeedSavedBtn" onclick="toggleDesignFeedSaved()" style="background:#fff; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:20px; padding:6px 16px; font-size:13px; font-weight:700; cursor:pointer;">❤️ Saved (0)</button>
             </div>
@@ -9236,6 +9254,32 @@
     function toggleDesignFeedSaved() {
       designFeedSavedOnly = !designFeedSavedOnly;
       resetDesignFeed();
+    }
+
+    // ---------- Design search box (Design Gallery card) ----------
+    function designSearchFill(text) {
+      const el = document.getElementById('designSearchInput');
+      if (el) { el.value = text; el.focus(); }
+    }
+
+    function designSearchGo(where) {
+      const el = document.getElementById('designSearchInput');
+      const text = (el ? el.value : '').trim();
+      if (!text) { showToast('Pehle likhein kaisa design chahiye'); if (el) el.focus(); return; }
+      if (where === 'pinterest') {
+        window.open('https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(text), '_blank', 'noopener');
+        return;
+      }
+      // Design it here: carry the words into the main design box on the
+      // landing page and take them there.
+      const desc = document.getElementById('landingDesignDesc');
+      if (desc) {
+        desc.value = text;
+        desc.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      scrollToSection('landingDesignPreview');
+      setTimeout(() => { if (desc) desc.focus({ preventScroll: true }); }, 500);
+      showToast('✨ Aapki baat design box me daal di, aage ka detail bharein');
     }
 
     function hubLanding() { return document.getElementById('landingPage'); }
