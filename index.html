@@ -91,7 +91,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Fonts load without blocking the first paint (text shows in a fallback font, then swaps). -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
   <style>
     /* ============================================================
        GURBANI FASHION — DESIGN TOKENS (v2: Bold & Vivid)
@@ -2975,7 +2977,7 @@
   <header>
     <div class="header-topbar">
       <div class="header-brand-lockup">
-        <img src="gurbani_wordmark_on_dark.png" alt="Gurbani Fashion" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
+        <img src="gurbani_wordmark_on_dark.png" alt="Gurbani Fashion" fetchpriority="high" decoding="async" class="header-wordmark-final" onclick="goToLandingPage(event)" style="cursor:pointer;">
         <div class="header-wordmark-wrap" onclick="goToLandingPage(event)" style="cursor:pointer;">
           <div class="header-wordmark-text">Gurbani Fashion</div>
           <img src="gurbani_ribbon_accent.png" alt="" class="header-wordmark-ribbon">
@@ -3925,7 +3927,7 @@
               </div>
             </div>
             <div class="visit-map">
-              <iframe src="https://maps.google.com/maps?q=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121010&output=embed" loading="lazy" title="Gurbani Fashion Boutique location"></iframe>
+              <iframe data-src="https://maps.google.com/maps?q=Gurbani+Fashion+Boutique%2C+A-1915%2C+Ground+Floor%2C+Greenfields+Colony%2C+Faridabad%2C+Haryana+121010&output=embed" loading="lazy" title="Gurbani Fashion Boutique location"></iframe>
             </div>
           </div>
         </div>
@@ -7817,7 +7819,7 @@
           const isSelected = d.quotedConceptIndex === i;
           const isFeatured = d.featured && (d.featuredConceptIndex ?? 0) === i;
           const thumbInner = c.imageUrl
-            ? `<a href="${c.imageUrl}" target="_blank" rel="noopener"><img src="${c.imageUrl}" alt="${escapeHtml(c.title)}" style="width:64px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;"></a>`
+            ? `<a href="${c.imageUrl}" target="_blank" rel="noopener"><img src="${imgThumb(c.imageUrl, 160)}" loading="lazy" decoding="async" alt="${escapeHtml(c.title)}" style="width:64px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;"></a>`
             : `<div style="width:64px; height:64px; border-radius:6px; background:#eee; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; flex-shrink:0;">No image</div>`;
           const thumb = `<div class="adm-thumb" style="flex-shrink:0;">${thumbInner}</div>`;
           return `<div style="border:1px solid ${isSelected ? 'var(--vivid)' : '#ddd'}; background:${isSelected ? '#fdf2f6' : '#fafafa'}; border-radius:6px; padding:8px 10px; font-size:12px; font-weight:${isSelected ? 'bold' : 'normal'}; display:flex; align-items:center; gap:10px;">
@@ -8161,7 +8163,7 @@
 
       section.innerHTML = `
         <div style="position:relative; display:inline-block; max-width:100%; margin:0 auto; text-align:center;">
-          <img src="${banner.imageUrl}" alt="${escapeHtml(banner.label)}" onclick="${bannerClickHandler}" style="max-width:100%; max-height:min(56vh, 460px); width:auto; height:auto; display:block; margin:0 auto; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="${imgThumb(banner.imageUrl, 900)}" decoding="async" alt="${escapeHtml(banner.label)}" onclick="${bannerClickHandler}" style="max-width:100%; max-height:min(56vh, 460px); width:auto; height:auto; display:block; margin:0 auto; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:pointer; transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
           ${multi ? `<button type="button" onclick="event.stopPropagation(); prevBannerSlide()" aria-label="Previous ad" style="${arrowBtnStyle} left:10px;" onmouseover="this.style.background='rgba(20,10,20,0.6)'; this.style.opacity='1'; this.style.color='#fff'" onmouseout="this.style.background='rgba(20,10,20,0.16)'; this.style.opacity='0.55'; this.style.color='rgba(255,255,255,0.75)'">‹</button>` : ''}
           ${multi ? `<button type="button" onclick="event.stopPropagation(); nextBannerSlide()" aria-label="Next ad" style="${arrowBtnStyle} right:10px;" onmouseover="this.style.background='rgba(20,10,20,0.6)'; this.style.opacity='1'; this.style.color='#fff'" onmouseout="this.style.background='rgba(20,10,20,0.16)'; this.style.opacity='0.55'; this.style.color='rgba(255,255,255,0.75)'">›</button>` : ''}
           ${dotsHtml}
@@ -9288,6 +9290,12 @@
 
     // Instagram feed is heavy (third-party iframe + script), so it only loads
     // the first time its card is opened, not on every page load.
+    // Same idea for the Google Map in the Visit card.
+    function loadVisitMap() {
+      const f = document.querySelector('#visitSection iframe[data-src]');
+      if (f) { f.src = f.getAttribute('data-src'); f.removeAttribute('data-src'); }
+    }
+
     let instagramWidgetLoaded = false;
     function loadInstagramWidget() {
       if (instagramWidgetLoaded) return;
@@ -9326,6 +9334,7 @@
         host.classList.add('in-view');
         if (host.id === 'designGallerySection') loadDesignFeed();
         if (host.id === 'instagramSection') loadInstagramWidget();
+        if (host.id === 'visitSection') loadVisitMap();
         hubSyncUI();
       }
       if (!(opts && opts.noScroll)) scrollToSection(id);
@@ -15919,7 +15928,7 @@
         if (banners.length === 0) { gallery.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No banner images uploaded yet.</p>'; return; }
         gallery.innerHTML = banners.map(b => `
           <div style="border:2px solid ${b.active ? 'var(--vivid)' : '#e0d8d0'}; border-radius:8px; overflow:hidden; background:white;">
-            <img src="${b.imageUrl}" alt="${escapeHtml(b.label)}" style="width:100%; height:110px; object-fit:cover; display:block;">
+            <img src="${imgThumb(b.imageUrl, 400)}" loading="lazy" decoding="async" alt="${escapeHtml(b.label)}" style="width:100%; height:110px; object-fit:cover; display:block;">
             <div style="padding:8px;">
               <div style="font-size:11.5px; font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="editBannerImageLabel('${b._id}', '${escapeHtml(b.label)}')" title="Click to rename">✏️ ${escapeHtml(b.label)}</div>
               <select style="width:100%; font-size:11px; padding:4px; margin-bottom:6px; border-radius:5px; border:1px solid #e0d8d0;" onchange="updateBannerImageDestination('${b._id}', this.value)" title="Where clicking this image takes visitors">
