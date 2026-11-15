@@ -936,7 +936,10 @@
       background-size: cover;
       background-position: center;
       animation: heroFullbleedBreathe 20s ease-in-out infinite;
+      opacity: 0;
+      transition: opacity 1.4s ease;
     }
+    .hero-fullbleed-mosaic-tile.in { opacity: 1; }
     .hero-fullbleed-mosaic-tile:nth-child(odd) { animation-duration: 24s; animation-delay: -5s; }
     .hero-fullbleed-mosaic-tile:nth-child(3n) { animation-duration: 27s; animation-delay: -11s; }
     @keyframes heroFullbleedBreathe {
@@ -10217,9 +10220,20 @@
       const TILE_COUNT = window.innerWidth < 700 ? 6 : 10; // fewer tiles on phones: less to download and animate
       const tiles = [];
       for (let i = 0; i < TILE_COUNT; i++) tiles.push(items[i % items.length]); // repeats the pool if fewer than 14 designs exist yet
-      mosaic.innerHTML = tiles.map((item) =>
-        `<div class="hero-fullbleed-mosaic-tile" style="background-image:url('${imgThumb(item.imageUrl, 360)}');"></div>`
-      ).join('');
+      // This backdrop is decoration under a dark tint, so it must never be
+      // what the page waits for (PageSpeed counted it as the Largest
+      // Contentful Paint, 7.7 s). It is built only after the page has
+      // loaded, then fades in.
+      const build = () => {
+        mosaic.innerHTML = tiles.map((item) =>
+          `<div class="hero-fullbleed-mosaic-tile" style="background-image:url('${imgThumb(item.imageUrl, 360)}');"></div>`
+        ).join('');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          mosaic.querySelectorAll('.hero-fullbleed-mosaic-tile').forEach((t) => t.classList.add('in'));
+        }));
+      };
+      if (document.readyState === 'complete') setTimeout(build, 800);
+      else window.addEventListener('load', () => setTimeout(build, 800), { once: true });
     }
 
     function initHeroFullbleedSparkles() {
