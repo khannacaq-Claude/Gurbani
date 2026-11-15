@@ -833,6 +833,13 @@
     .hub-tile .hub-name { display: block; font-size: 13.5px; font-weight: 700; margin-top: 4px; }
     .hub-tile .hub-desc { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
     .hub-tile.active { border-color: var(--vivid); background: #fff; box-shadow: 0 0 0 3px rgba(242,200,121,0.8); }
+    .design-feed { column-count: 2; column-gap: 10px; }
+    @media (min-width: 640px) { .design-feed { column-count: 3; column-gap: 12px; } }
+    @media (min-width: 960px) { .design-feed { column-count: 4; } }
+    .design-feed-item { break-inside: avoid; margin-bottom: 10px; position: relative; border-radius: 12px; overflow: hidden; background: #f3e8ee; box-shadow: 0 2px 8px rgba(20,10,20,0.12); cursor: pointer; }
+    .design-feed-item img { width: 100%; display: block; min-height: 120px; }
+    .design-feed-cap { padding: 7px 9px 8px; font-size: 12px; font-weight: 600; color: var(--ink); background: #fff; }
+    .design-feed-heart { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.92); font-size: 17px; line-height: 1; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
     .hub-back { display: none; margin: 14px auto 22px; padding: 10px 22px; border-radius: 22px; border: 1.5px solid var(--vivid); background: #fff; color: var(--vivid); font-weight: 700; font-size: 13px; cursor: pointer; position: relative; z-index: 3; }
     #landingPage.hub-on .hub-back.show { display: block; }
 
@@ -3588,6 +3595,25 @@
              down, past Stats/Lenses/Journey/Rate Card/Marketplace) so it
              reads as direct inspiration right after describing an outfit,
              not buried past several unrelated sections. -->
+        <!-- DESIGN GALLERY — Pinterest-style browse of customer-shared designs
+             (GET /api/designs/featured, consent-gated). Masonry columns,
+             endless scroll in batches, heart to save (this browser only).
+             Tap opens the existing design detail modal (Use as Inspiration /
+             Order This Exact Design). Loaded the first time the card opens.
+             No filters yet, by request. See loadDesignFeed(). -->
+        <div class="snap-section reveal-section" id="designGallerySection" data-hub="1" style="margin-top: 28px;">
+          <div style="max-width:980px; margin:0 auto; padding:0 4px;">
+            <h3 style="text-align:center; font-family:var(--font-display); margin-bottom:4px;">🖼️ Design Gallery</h3>
+            <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:12px;">Designs banwaye gaye hamare AI Studio me, customers ki permission se. Pasand aaye to ❤️ karein, ya tap karke apna version banwayein.</p>
+            <div style="text-align:center; margin-bottom:14px;">
+              <button type="button" id="designFeedSavedBtn" onclick="toggleDesignFeedSaved()" style="background:#fff; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:20px; padding:6px 16px; font-size:13px; font-weight:700; cursor:pointer;">❤️ Saved (0)</button>
+            </div>
+            <div id="designFeed" class="design-feed"><p style="color:var(--text-muted); text-align:center;">Loading...</p></div>
+            <div id="designFeedSentinel" style="height:1px;"></div>
+            <div style="text-align:center;"><button type="button" id="designFeedMoreBtn" onclick="renderDesignFeedBatch()" style="display:none; background:#fff; border:1.5px solid var(--vivid); color:var(--vivid); border-radius:20px; padding:8px 22px; font-weight:700; cursor:pointer; margin:10px 0;">Aur dikhayein</button></div>
+          </div>
+        </div>
+
         <div class="snap-section reveal-section" id="trendingSection" data-hub="1" style="margin-top: 48px;">
           <h3 style="text-align:center;">✨ Trending This Season in India</h3>
           <p style="text-align:center; font-size:12px; color:var(--text-muted); max-width:520px; margin:6px auto 20px;">What's actually moving in Indian ethnic wear right now — worth a look if you're still deciding what to describe above.</p>
@@ -9093,6 +9119,7 @@
     // ---------- Landing card hub ----------
     const HUB_TILES = [
       ['landingDesignPreview', '✨', 'AI Design Studio', 'Likhiye, 3 design payein'],
+      ['designGallerySection', '🖼️', 'Design Gallery', 'Browse karein, ❤️ save karein'],
       ['photoDesignSection', '📸', 'Photo se design', 'Pasand ki photo daalein'],
       ['personaQuizSection', '🎀', 'Style Quiz', '4 tap me style persona'],
       ['rewardsSection', '🎁', 'Rewards Card', 'Har payment par stamp'],
@@ -9112,6 +9139,104 @@
       ['faqSection', '❓', 'FAQ', 'Aam sawaal'],
       ['subscribeSection', '📲', 'Updates paayein', 'Offers aur new designs'],
     ];
+
+    // ---------- Design Gallery feed ----------
+    const DESIGN_FEED_BATCH = 12;
+    let designFeedAll = [];      // every featured design, newest first
+    let designFeedShown = 0;     // how many of the current list are on screen
+    let designFeedSavedOnly = false;
+    let designFeedLoaded = false;
+    let designFeedObserver = null;
+
+    function getSavedDesignIds() {
+      try { return JSON.parse(localStorage.getItem('gfSavedDesigns') || '[]'); } catch (e) { return []; }
+    }
+    function setSavedDesignIds(ids) {
+      try { localStorage.setItem('gfSavedDesigns', JSON.stringify(ids)); } catch (e) {}
+    }
+    function designFeedList() {
+      if (!designFeedSavedOnly) return designFeedAll;
+      const saved = new Set(getSavedDesignIds());
+      return designFeedAll.filter(d => saved.has(String(d.id)));
+    }
+    function updateSavedBtn() {
+      const btn = document.getElementById('designFeedSavedBtn');
+      if (!btn) return;
+      const saved = new Set(getSavedDesignIds());
+      const n = designFeedAll.filter(d => saved.has(String(d.id))).length;
+      btn.textContent = designFeedSavedOnly ? '← Sab designs dekhein' : `❤️ Saved (${n})`;
+    }
+
+    async function loadDesignFeed() {
+      if (designFeedLoaded) return;
+      const feed = document.getElementById('designFeed');
+      if (!feed) return;
+      try {
+        const res = await fetch(`${API}/api/designs/featured?limit=500`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error('bad response');
+        designFeedAll = data.designs || [];
+        designFeedLoaded = true;
+        window.currentGalleryDesigns = designFeedAll; // the detail modal looks designs up by index here
+        resetDesignFeed();
+        if ('IntersectionObserver' in window) {
+          designFeedObserver = new IntersectionObserver(entries => {
+            if (entries.some(e => e.isIntersecting)) renderDesignFeedBatch();
+          }, { rootMargin: '600px' });
+          designFeedObserver.observe(document.getElementById('designFeedSentinel'));
+        }
+      } catch (e) {
+        feed.innerHTML = '<p style="color:var(--text-muted); text-align:center;">Designs abhi load nahi ho paaye. Thodi der baad dobara try karein.</p>';
+      }
+    }
+
+    function resetDesignFeed() {
+      designFeedShown = 0;
+      document.getElementById('designFeed').innerHTML = '';
+      updateSavedBtn();
+      renderDesignFeedBatch();
+    }
+
+    function renderDesignFeedBatch() {
+      const feed = document.getElementById('designFeed');
+      const moreBtn = document.getElementById('designFeedMoreBtn');
+      if (!feed) return;
+      const list = designFeedList();
+      if (!list.length) {
+        feed.innerHTML = `<p style="color:var(--text-muted); text-align:center;">${designFeedSavedOnly ? 'Abhi koi design save nahi kiya. Kisi photo ke ❤️ par tap karein.' : 'Designs jaldi hi yahan dikhenge.'}</p>`;
+        if (moreBtn) moreBtn.style.display = 'none';
+        return;
+      }
+      const saved = new Set(getSavedDesignIds());
+      const next = list.slice(designFeedShown, designFeedShown + DESIGN_FEED_BATCH);
+      const html = next.map(d => {
+        const idx = designFeedAll.indexOf(d); // detail modal indexes the full list
+        const isSaved = saved.has(String(d.id));
+        return `<div class="design-feed-item" onclick="openDesignDetail(${idx})">
+          <img src="${d.imageUrl}" alt="${escapeHtml(d.title)}" loading="lazy">
+          <button type="button" class="design-feed-heart" aria-label="Save" onclick="event.stopPropagation(); toggleDesignSaved('${String(d.id)}', this)">${isSaved ? '❤️' : '🤍'}</button>
+          <div class="design-feed-cap">${escapeHtml(d.title)}${d.publicId ? ` <span style="color:var(--marigold); font-size:10.5px;">#${d.publicId}</span>` : ''}</div>
+        </div>`;
+      }).join('');
+      feed.insertAdjacentHTML('beforeend', html);
+      designFeedShown += next.length;
+      // Fallback button for browsers without IntersectionObserver
+      if (moreBtn) moreBtn.style.display = (!designFeedObserver && designFeedShown < list.length) ? 'inline-block' : 'none';
+    }
+
+    function toggleDesignSaved(id, btn) {
+      let ids = getSavedDesignIds();
+      if (ids.includes(id)) { ids = ids.filter(x => x !== id); btn.textContent = '🤍'; }
+      else { ids.push(id); btn.textContent = '❤️'; showToast('❤️ Save ho gaya'); }
+      setSavedDesignIds(ids);
+      updateSavedBtn();
+      if (designFeedSavedOnly) resetDesignFeed(); // un-hearting in the saved view removes it
+    }
+
+    function toggleDesignFeedSaved() {
+      designFeedSavedOnly = !designFeedSavedOnly;
+      resetDesignFeed();
+    }
 
     function hubLanding() { return document.getElementById('landingPage'); }
 
@@ -9137,6 +9262,7 @@
         document.querySelectorAll('#landingPage [data-hub].hub-open').forEach(x => x.classList.remove('hub-open'));
         host.classList.add('hub-open');
         host.classList.add('in-view');
+        if (host.id === 'designGallerySection') loadDesignFeed();
         hubSyncUI();
       }
       if (!(opts && opts.noScroll)) scrollToSection(id);
