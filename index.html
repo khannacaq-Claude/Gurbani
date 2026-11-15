@@ -3891,7 +3891,7 @@
           <div class="insta-frame" id="instaFrame">
             <div class="insta-frame-inner">
               <div id="instagramWidgetContainer" style="min-height: 420px;">
-                <script src="https://cdn.lightwidget.com/widgets/lightwidget.js"></script><iframe src="https://cdn.lightwidget.com/widgets/059de719fcc5514baf2b4a4391497ef7.html" scrolling="no" allowtransparency="true" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;"></iframe>
+                <iframe data-src="https://cdn.lightwidget.com/widgets/059de719fcc5514baf2b4a4391497ef7.html" scrolling="no" allowtransparency="true" loading="lazy" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;min-height:420px;"></iframe>
               </div>
             </div>
           </div>
@@ -8426,7 +8426,7 @@
         const globalIndex = start + i; // index into the FULL list, so openDesignDetail keeps working across pages
         return `
           <div style="border-radius:10px; overflow:hidden; box-shadow:0 3px 10px rgba(20,10,20,0.12); cursor:pointer;" onclick="openDesignDetail(${globalIndex})">
-            <img src="${d.imageUrl}" alt="${escapeHtml(d.title)}" style="width:100%; height:150px; object-fit:cover; display:block;">
+            <img src="${imgThumb(d.imageUrl, 360)}" alt="${escapeHtml(d.title)}" loading="lazy" decoding="async" style="width:100%; height:150px; object-fit:cover; display:block;">
             <div style="padding:8px 10px;">
               <div style="font-size:12px; font-weight:600; color:var(--ink);">${escapeHtml(d.title)}</div>
               ${d.publicId ? `<div style="font-size:10.5px; color:var(--marigold); font-weight:700; margin-top:2px;">#${d.publicId}</div>` : ''}
@@ -8917,7 +8917,7 @@
           const defaultView = availableViews[0] || null;
           return `
           <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden; scroll-snap-align: start;" ${availableViews.length > 1 ? `onmouseenter="stopTrendCycle('${t.trendKey}')" onmouseleave="startTrendCycle('${t.trendKey}', trendAvailableViews['${t.trendKey}'])"` : ''}>
-            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${t.images[defaultView]}" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block; cursor:zoom-in;" onclick="openImageLightbox(this.src)">` : ''}
+            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${imgThumb(t.images[defaultView], 480)}" loading="lazy" decoding="async" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block; cursor:zoom-in;" onclick="openImageLightbox(this.src)">` : ''}
             ${availableViews.length > 1 ? `
               <div id="trendTabs-${t.trendKey}" style="display:flex; gap:4px; padding:8px 8px 0;">
                 ${availableViews.map((v) => `<button type="button" onclick="manualSwitchTrendView('${t.trendKey}','${v}')" data-view="${v}" style="flex:1; font-size:10px; font-weight:700; text-transform:uppercase; padding:4px; border-radius:4px; border:1px solid var(--sand); background:${v === defaultView ? 'var(--vivid)' : 'white'}; color:${v === defaultView ? 'white' : 'var(--text-muted)'}; cursor:pointer;">${VIEW_LABELS[v]}</button>`).join('')}
@@ -9233,7 +9233,7 @@
         const idx = designFeedAll.indexOf(d); // detail modal indexes the full list
         const isSaved = saved.has(String(d.id));
         return `<div class="design-feed-item" onclick="openDesignDetail(${idx})">
-          <img src="${d.imageUrl}" alt="${escapeHtml(d.title)}" loading="lazy">
+          <img src="${imgThumb(d.imageUrl, 480)}" alt="${escapeHtml(d.title)}" loading="lazy" decoding="async">
           <button type="button" class="design-feed-heart" aria-label="Save" onclick="event.stopPropagation(); toggleDesignSaved('${String(d.id)}', this)">${isSaved ? '❤️' : '🤍'}</button>
           <div class="design-feed-cap">${escapeHtml(d.title)}${d.publicId ? ` <span style="color:var(--marigold); font-size:10.5px;">#${d.publicId}</span>` : ''}</div>
         </div>`;
@@ -9284,6 +9284,20 @@
       showToast('✨ Aapki baat design box me daal di, aage ka detail bharein');
     }
 
+    // Instagram feed is heavy (third-party iframe + script), so it only loads
+    // the first time its card is opened, not on every page load.
+    let instagramWidgetLoaded = false;
+    function loadInstagramWidget() {
+      if (instagramWidgetLoaded) return;
+      instagramWidgetLoaded = true;
+      const frame = document.querySelector('#instagramWidgetContainer iframe[data-src]');
+      if (frame) frame.src = frame.getAttribute('data-src');
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.lightwidget.com/widgets/lightwidget.js';
+      sc.async = true;
+      document.body.appendChild(sc);
+    }
+
     function hubLanding() { return document.getElementById('landingPage'); }
 
     function hubSyncUI() {
@@ -9309,6 +9323,7 @@
         host.classList.add('hub-open');
         host.classList.add('in-view');
         if (host.id === 'designGallerySection') loadDesignFeed();
+        if (host.id === 'instagramSection') loadInstagramWidget();
         hubSyncUI();
       }
       if (!(opts && opts.noScroll)) scrollToSection(id);
@@ -9333,6 +9348,14 @@
       if (hub) window.scrollTo({ top: Math.max(0, hub.getBoundingClientRect().top + window.pageYOffset - navHeight - 12), behavior: 'smooth' });
     }
 
+    // Runs as soon as the HTML is parsed (DOMContentLoaded), NOT on window
+    // 'load', which waits for every image, font and third-party script and
+    // used to leave the tile grid empty for several seconds.
+    function initCardHubWhenReady() {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCardHub);
+      else initCardHub();
+    }
+
     function initCardHub() {
       const grid = document.getElementById('hubGrid');
       if (!grid) return;
@@ -9353,6 +9376,7 @@
       openFromHash();
       window.addEventListener('hashchange', openFromHash);
     }
+    initCardHubWhenReady();
 
     function scrollToSection(id) {
       const el = document.getElementById(id);
@@ -9621,6 +9645,22 @@
       document.querySelectorAll('.rc-panel').forEach(p => {
         p.classList.toggle('active', p.dataset.rc === String(idx));
       });
+    }
+
+    // Small, fast version of a Cloudinary image for thumbnails: asks Cloudinary
+    // for a resized, auto-format, auto-quality copy instead of the full-size
+    // original. Any other kind of URL is returned unchanged, so this can never
+    // break an image. Use ONLY for thumbnails; full-size views keep the original.
+    function imgThumb(url, width) {
+      try {
+        if (typeof url !== 'string') return url;
+        const marker = '/image/upload/';
+        const i = url.indexOf(marker);
+        if (i === -1 || url.indexOf('res.cloudinary.com') === -1) return url;
+        const rest = url.slice(i + marker.length);
+        if (/^[a-z]{1,3}_[^/]+\//.test(rest)) return url; // already has a transformation
+        return url.slice(0, i + marker.length) + `f_auto,q_auto,w_${width}/` + rest;
+      } catch (e) { return url; }
     }
 
     function escapeHtml(value) {
@@ -10051,7 +10091,7 @@
         // in addition to the 3 lens swatches and the hero photo strip —
         // one API call powers all three, rather than a separate fetch
         // per visual.
-        const res = await fetch(`${API}/api/designs/featured?limit=40`);
+        const res = await fetch(`${API}/api/designs/featured?limit=20`);
         const data = await res.json();
         if (!res.ok || !data.designs || data.designs.length === 0) return;
 
@@ -10065,7 +10105,7 @@
         window.featuredDesignsData.forEach((item, i) => {
           const el = swatches[i];
           if (!el) return;
-          el.style.backgroundImage = `url('${item.imageUrl}')`;
+          el.style.backgroundImage = `url('${imgThumb(item.imageUrl, 420)}')`;
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
           el.style.cursor = 'pointer';
@@ -10123,11 +10163,11 @@
       const mosaic = document.getElementById('heroFullbleedMosaic');
       if (!mosaic) return;
       if (!items || items.length === 0) return; // no approved shared designs yet — banner still shows sparkles + thread, just no photo tiles
-      const TILE_COUNT = 14; // enough to fill a wide banner without being a heavy, dense wall of images
+      const TILE_COUNT = window.innerWidth < 700 ? 6 : 10; // fewer tiles on phones: less to download and animate
       const tiles = [];
       for (let i = 0; i < TILE_COUNT; i++) tiles.push(items[i % items.length]); // repeats the pool if fewer than 14 designs exist yet
       mosaic.innerHTML = tiles.map((item) =>
-        `<div class="hero-fullbleed-mosaic-tile" style="background-image:url('${item.imageUrl}');"></div>`
+        `<div class="hero-fullbleed-mosaic-tile" style="background-image:url('${imgThumb(item.imageUrl, 360)}');"></div>`
       ).join('');
     }
 
@@ -10195,7 +10235,7 @@
 
       heroCycleIndex = 0;
       strip.innerHTML = items.map((item, i) => `
-        <img src="${item.imageUrl}" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer" onclick="openImageLightbox(this.src)">
+        <img src="${imgThumb(item.imageUrl, 480)}" loading="lazy" decoding="async" class="${i === 0 ? 'active' : ''}" alt="Real design created for a Gurbani Fashion customer" onclick="openImageLightbox(this.src)">
       `).join('') + `<div class="hero-photo-caption">✨ Real designs, created for real customers</div>`;
       strip.style.display = 'block';
 
@@ -18065,7 +18105,6 @@
     window.addEventListener('load', () => {
       initSectionTabsObserver();
       initScrollReveals();
-      initCardHub();
       initHeroFullbleedSparkles();
       loadPoll();
       renderQuizPickerCards();
