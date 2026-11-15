@@ -502,7 +502,10 @@
       box-shadow: 0 0 0 4px var(--marigold), 0 0 0 9999px rgba(20, 10, 20, 0.6);
       pointer-events: none;
       transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+      visibility: hidden; /* shown only once placed on its first target, so it never "moves in" (counted as layout shift) */
     }
+    .tour-highlight[data-placed] { visibility: visible; }
+    .tour-tooltip:not([data-placed]) { visibility: hidden; }
     .tour-tooltip {
       position: absolute;
       z-index: 5002;
@@ -9498,10 +9501,20 @@
       if (rect.width === 0 && rect.height === 0) { nextTourStep(); return; }
       const pad = 8;
       const highlight = document.getElementById('tourHighlight');
+      // The very first time the box is placed it must appear in position, not
+      // slide in from the corner: that slide was counted by Google as a huge
+      // layout shift (0.65). Later steps keep the smooth movement.
+      const firstPlacement = !highlight.dataset.placed;
+      if (firstPlacement) highlight.style.transition = 'none';
       highlight.style.top = (rect.top - pad) + 'px';
       highlight.style.left = (rect.left - pad) + 'px';
       highlight.style.width = (rect.width + pad*2) + 'px';
       highlight.style.height = (rect.height + pad*2) + 'px';
+      if (firstPlacement) {
+        void highlight.offsetWidth; // apply the position before turning the animation back on
+        highlight.style.transition = '';
+        highlight.dataset.placed = '1';
+      }
 
       document.getElementById('tourTitle').textContent = step.title;
       document.getElementById('tourText').textContent = step.text;
@@ -9517,6 +9530,7 @@
       left = Math.max(12, Math.min(left, window.innerWidth - tooltip.offsetWidth - 12));
       tooltip.style.top = top + 'px';
       tooltip.style.left = left + 'px';
+      tooltip.dataset.placed = '1';
     }
 
     function nextTourStep() {
@@ -9532,6 +9546,10 @@
     }
 
     function endTour() {
+      const hl = document.getElementById('tourHighlight');
+      if (hl) delete hl.dataset.placed;
+      const tt = document.getElementById('tourTooltip');
+      if (tt) delete tt.dataset.placed;
       document.getElementById('tourOverlay').classList.remove('open');
     }
 
