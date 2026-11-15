@@ -14102,7 +14102,10 @@
         const data = await res.json();
         if (res.ok && data.success) items = data.items;
       } catch (e) { /* fall back to last loaded list */ }
-      if (!items || !items.length) { showToast('❌ No rates to print yet'); return; }
+      // Printed list shows only priced items. Items with no price ("Ask")
+      // are left out, and so are categories left with nothing in them.
+      items = (items || []).filter(i => i.priceFrom > 0);
+      if (!items.length) { showToast('❌ No rates to print yet'); return; }
       const byCat = {}; const order = [];
       items.forEach(i => { if (!byCat[i.category]) { byCat[i.category] = []; order.push(i.category); } byCat[i.category].push(i); });
       const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
