@@ -221,13 +221,7 @@
        while scrolling. Header is position:fixed, so these stick at its bottom edge. */
     #sectionTabs { position: sticky; top: var(--header-h, 0px); z-index: 300; }
     #rewardsStrip { position: sticky; top: calc(var(--header-h, 0px) + var(--nav-h, 44px)); z-index: 299; }
-    /* Rewards message: endless flash loop (gold flash on wine, gentle pulse) */
-    @keyframes rewardsFlash {
-      0%, 100% { background: #40192D; color: #F2C879; box-shadow: none; }
-      50%      { background: #F2C879; color: #40192D; box-shadow: 0 0 16px rgba(242,200,121,0.7); }
-    }
-    .rewards-strip-flash { animation: rewardsFlash 1.6s ease-in-out infinite; }
-    @media (prefers-reduced-motion: reduce) { .rewards-strip-flash { animation-duration: 3.2s; } }
+    /* Rewards message strip: static (the flashing loop was removed Nov 2026) */
     .section-tabs {
       background: var(--ink);
       display: flex;
@@ -3132,14 +3126,9 @@
     <div class="landing-page" id="landingPage">
       <script>document.getElementById("landingPage").classList.add("hub-on");</script>
       <nav class="section-tabs" id="sectionTabs">
-        <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
+        <button type="button" onclick="hubShowAll()" title="See every section as tiles">☰ All Sections</button>
         <button type="button" data-target="landingDesignPreview" onclick="jumpToTab('landingDesignPreview', this)">✨ AI Design Studio</button>
-        <button type="button" data-target="trendingSection" onclick="jumpToTab('trendingSection', this)">🔥 Trending</button>
-        <button type="button" data-target="marketplaceSection" onclick="jumpToTab('marketplaceSection', this)">🛍️ Marketplace</button>
-        <button type="button" data-target="journeySection" onclick="jumpToTab('journeySection', this)">📅 Your Journey</button>
-        <button type="button" data-target="fabricCalcCard-pub" onclick="jumpToTab('fabricCalcCard-pub', this)">🧵 Fabric Calculator</button>
-        <button type="button" data-target="guidesShowcaseSection" onclick="jumpToTab('guidesShowcaseSection', this)">📚 Guides</button>
-        <button type="button" id="guidesDropdownTrigger" onclick="toggleGuidesDropdown(event)" style="opacity:0.8; flex:none;">☰ More ▾</button>
+        <button type="button" onclick="startTour()" title="Replay the guided tour">🧭 Take a Tour</button>
       </nav>
       <!-- Dropdown menu deliberately lives OUTSIDE .section-tabs, not
            nested inside it. That nav has overflow-x:auto for its
@@ -3162,7 +3151,7 @@
         <a href="#" onclick="closeGuidesDropdownAndJump('subscribeSection', event)" style="display:block; padding:12px 16px; color:var(--ink); text-decoration:none; font-size:13px; font-weight:600;">📲 Stay in Loop</a>
       </div>
       <!-- Rewards Card announcement strip (in-store loyalty, Season 1). Taps through to the Rewards section below. -->
-      <a id="rewardsStrip" class="rewards-strip-flash" href="#rewardsSection" onclick="scrollToSection('rewardsSection'); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card starts Ashtami, 19 October. Every payment gets a stamp. Earn up to ₹12,500, with ₹5,000 guaranteed at ₹50,000 &rsaquo;</a>
+      <a id="rewardsStrip" href="#rewardsSection" onclick="scrollToSection('rewardsSection'); return false;" style="display:block; background:#40192D; color:#F2C879; text-align:center; padding:10px 16px; font-size:13.5px; font-weight:600; text-decoration:none; letter-spacing:0.2px;">⭐ Rewards Card is on. Every payment gets a stamp. Earn up to ₹12,500, with ₹5,000 guaranteed at ₹50,000 &rsaquo;</a>
       <div class="hero-fullbleed" id="heroFullbleed">
         <!-- Hero full-bleed background — mosaic of real, customer-approved
              AI Design Studio photos filling the whole banner, a dark wine
@@ -9374,6 +9363,13 @@
       hubOpen(id);
     }
 
+    // "☰ All Sections": close any open card and show the tile grid.
+    function hubShowAll() {
+      document.querySelectorAll('#landingPage [data-hub].hub-open').forEach(x => x.classList.remove('hub-open'));
+      hubSyncUI();
+      hubBackToTop();
+    }
+
     function hubBackToTop() {
       const hub = document.getElementById('cardHub');
       if (hub) window.scrollTo({ top: Math.max(0, hub.getBoundingClientRect().top + window.pageYOffset - getStickyTopOffset() - 12), behavior: 'smooth' });
@@ -9453,7 +9449,7 @@
       {
         selector: '#sectionTabs',
         title: '🧭 Jump to any section',
-        text: 'Fabric Calculator, FAQ, Visit Us, and more — this bar stays with you as you scroll and jumps straight there.',
+        text: 'Tap ☰ All Sections to see everything as tiles: Fabric Calculator, FAQ, Visit Us, and more. This bar stays with you as you scroll.',
       },
       {
         selector: '#signinTrigger',
