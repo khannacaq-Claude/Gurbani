@@ -3104,6 +3104,14 @@
       </div>
     </div>
   </header>
+  <script>
+    // Set the real header height right away so the page content below it does
+    // not jump when the full script runs later (this was the layout shift).
+    (function () {
+      var h = document.querySelector('header');
+      if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+    })();
+  </script>
 
   <main>
     <!-- LANDING PAGE -->
@@ -3348,7 +3356,7 @@
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:20px;">
                 <div>
                   <div class="tryit-label" data-i18n="lblDressType">Dress Type</div>
-                  <select id="landingDressType" class="tryit-select" onchange="handleLandingDressTypeChange()">
+                  <select id="landingDressType" aria-label="Type of outfit" class="tryit-select" onchange="handleLandingDressTypeChange()">
                     <option value="" data-i18n="optChooseDressType">Choose dress type</option>
                     <optgroup label="👗 Ladies Wear" data-i18n-label="grpLadiesWear">
                       <option value="Lehenga" data-i18n="optLehenga">Lehenga</option>
@@ -3375,7 +3383,7 @@
 
                 <div>
                   <div class="tryit-label" data-i18n="lblOccasion">Occasion</div>
-                  <select id="landingOccasion" class="tryit-select" onchange="updateLandingDraftButtonState()">
+                  <select id="landingOccasion" aria-label="Occasion" class="tryit-select" onchange="updateLandingDraftButtonState()">
                     <option value="" data-i18n="optChooseOccasion">Choose occasion</option>
                     <optgroup label="Wedding Functions" data-i18n-label="grpWedding">
                       <option value="wedding-general" data-i18n="occWeddingGeneral">Not sure yet — general Wedding Function</option>
@@ -8921,7 +8929,7 @@
           const defaultView = availableViews[0] || null;
           return `
           <div style="background:var(--cream-card); border:1px solid var(--sand); border-radius:10px; overflow:hidden; scroll-snap-align: start;" ${availableViews.length > 1 ? `onmouseenter="stopTrendCycle('${t.trendKey}')" onmouseleave="startTrendCycle('${t.trendKey}', trendAvailableViews['${t.trendKey}'])"` : ''}>
-            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${imgThumb(t.images[defaultView], 480)}" loading="lazy" decoding="async" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block; cursor:zoom-in;" onclick="openImageLightbox(this.src)">` : ''}
+            ${defaultView ? `<img id="trendImg-${t.trendKey}" src="${imgThumb(t.images[defaultView], 480)}" alt="Trending design" loading="lazy" decoding="async" style="width:100%; aspect-ratio:4/5; object-fit:cover; display:block; cursor:zoom-in;" onclick="openImageLightbox(this.src)">` : ''}
             ${availableViews.length > 1 ? `
               <div id="trendTabs-${t.trendKey}" style="display:flex; gap:4px; padding:8px 8px 0;">
                 ${availableViews.map((v) => `<button type="button" onclick="manualSwitchTrendView('${t.trendKey}','${v}')" data-view="${v}" style="flex:1; font-size:10px; font-weight:700; text-transform:uppercase; padding:4px; border-radius:4px; border:1px solid var(--sand); background:${v === defaultView ? 'var(--vivid)' : 'white'}; color:${v === defaultView ? 'white' : 'var(--text-muted)'}; cursor:pointer;">${VIEW_LABELS[v]}</button>`).join('')}
@@ -8955,7 +8963,7 @@
           if (withImages.length > 0) {
             pickerRow.innerHTML = withImages.map((t) => `
               <button type="button" onclick="useTrendInDescription('${t.trendKey}')" style="flex:none; width:64px; border:none; background:none; cursor:pointer; padding:0; text-align:center;">
-                <img src="${t.images.front}" style="width:64px; height:80px; object-fit:cover; border-radius:8px; border:1.5px solid var(--sand);">
+                <img src="${imgThumb(t.images.front, 160)}" alt="" loading="lazy" decoding="async" style="width:64px; height:80px; object-fit:cover; border-radius:8px; border:1.5px solid var(--sand);">
                 <div style="font-size:9px; color:var(--text-muted); margin-top:3px; line-height:1.2;">${t.label.replace(/^\S+\s/, '')}</div>
               </button>
             `).join('');
