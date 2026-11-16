@@ -16458,8 +16458,13 @@
       list.innerHTML = 'Loading...';
       try {
         const res = await fetch(`${API}/api/employees`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-        const data = await res.json();
-        currentEmployees = data.data || [];
+        const data = await res.json().catch(() => ({}));
+        // A failed call must not look like "no employees": show the real reason.
+        if (!res.ok || !Array.isArray(data.data)) {
+          list.innerHTML = `<p style="color:#c62828;">❌ Employees load nahi ho paaye (${res.status}): ${escapeHtml(data.message || data.error || 'server ne jawab nahi diya')}</p>`;
+          return;
+        }
+        currentEmployees = data.data;
         renderEmployeesList();
       } catch (err) {
         list.innerHTML = `<p style="color:#c62828;">❌ ${err.message}</p>`;
