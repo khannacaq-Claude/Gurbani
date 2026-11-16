@@ -18360,6 +18360,8 @@
     // True for the owner's own sessions and excluded devices, so they never
     // show up in visitor or funnel numbers.
     function skipVisitorTracking() {
+      // Google PageSpeed / Lighthouse and headless test browsers are not customers
+      if (/Lighthouse|HeadlessChrome|PageSpeed|GTmetrix|Googlebot|bingbot/i.test(navigator.userAgent || '')) return true;
       if (currentUser && (currentUser.role === 'admin' || EXCLUDED_TEST_EMAILS.includes((currentUser.email || '').toLowerCase()))) return true;
       // Covers casual anonymous browsing from an already-excluded device
       // (signed out, or never signed in at all) — set once via "Don't
