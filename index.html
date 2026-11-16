@@ -16761,12 +16761,54 @@
       return { punches, skipped };
     }
 
+    // Reads the machine's own Excel export (.xls). The "Logs" sheet holds, for
+    // each employee, a row of day numbers, a "No : <id> Name : <name>" row and
+    // a row where each day's cell lists that day's punch times (one per line).
+    async function attParseXls(buf) {
+      await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+      const wb = XLSX.read(buf, { type: 'array' });
+      const name = wb.SheetNames.find(n => /logs?/i.test(n)) || wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: true });
+      let y = null, mo = null;
+      for (const r of rows.slice(0, 8)) {
+        const t = r.map(String).join(' ');
+        const m = /(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/.exec(t);
+        if (m) { y = +m[1]; mo = +m[2]; break; }
+      }
+      if (!y) throw new Error('Period (tarikh) nahi mili. Yeh "Logs" wali sheet nahi lagti.');
+      const punches = []; let skipped = 0;
+      for (let r = 1; r < rows.length - 1; r++) {
+        if (!/^No\s*:/i.test(String(rows[r][0]).trim())) continue;
+        const id = String(rows[r].slice(1).find(c => String(c).trim() !== '') ?? '').trim();
+        const head = rows[r - 1];
+        let yy = y, mm = mo, prev = 0;
+        head.forEach((h, c) => {
+          const day = Number(h);
+          if (!day) return;
+          if (day < prev) { mm += 1; if (mm > 12) { mm = 1; yy += 1; } }
+          prev = day;
+          const times = String(rows[r + 1][c] || '').match(/\d{1,2}:\d{2}/g) || [];
+          times.forEach(t => {
+            if (!id) { skipped++; return; }
+            punches.push({ biometricId: id, date: `${yy}-${String(mm).padStart(2, '0')}-${String(day).padStart(2, '0')}`, time: t.padStart(5, '0') });
+          });
+        });
+      }
+      return { punches, skipped };
+    }
+
     async function attImportFile() {
       const f = document.getElementById('attFile').files[0];
       const out = document.getElementById('attImportResult');
       if (!f) { showToast('Pehle file chunein'); return; }
-      if (/\.xlsx?$/i.test(f.name)) { out.innerHTML = '<span style="color:#c62828;">Excel file abhi seedhi nahi padhi jaati. Excel me File > Save As > CSV karke upload karein.</span>'; return; }
-      const { punches, skipped } = attParseExport(await f.text());
+      let parsed;
+      if (/\.xlsx?$/i.test(f.name)) {
+        out.textContent = 'Excel file padh rahe hain...';
+        try { parsed = await attParseXls(await f.arrayBuffer()); }
+        catch (e) { out.innerHTML = `<span style="color:#c62828;">Excel file nahi padh paaye: ${escapeHtml(e.message)}</span>`; return; }
+        out.textContent = '';
+      } else { parsed = attParseExport(await f.text()); }
+      const { punches, skipped } = parsed;
       if (!punches.length) { out.innerHTML = `<span style="color:#c62828;">Is file me koi punch samajh nahi aaya (${skipped} line chhoot gayi). File ka format mujhe bhejein.</span>`; return; }
       if (!(await showConfirm(`${punches.length} punch mile (${skipped} line chhoot gayi). Import karein?`))) return;
       showToast('⏳ Import ho raha hai...');
@@ -16777,7 +16819,7 @@
           days += r.days; count += r.punches; bad += r.skippedBad; (r.unmatchedIds || []).forEach(x => unmatched.add(x));
         }
         out.innerHTML = `✅ ${count} punch, ${days} din save hue.` +
-          (unmatched.size ? `<br><span style="color:#c62828;">Ye machine ID kisi employee se juri nahi: ${[...unmatched].map(escapeHtml).join(', ')}. Upar Biometric ID bhar kar dobara upload karein.</span>` : '') +
+          (unmatched.size ? `<br><span style="color:var(--text-muted);">Ye machine ID employee se juri nahi hai, isliye chhodi gayi: ${[...unmatched].map(escapeHtml).join(', ')}. (Agar inka bhi hisaab chahiye to upar Biometric ID bhar kar dobara upload karein.)</span>` : '') +
           (bad ? `<br>${bad} punch galat format ke the.` : '');
         loadAttMonth();
       } catch (err) { out.innerHTML = `<span style="color:#c62828;">❌ ${escapeHtml(err.message)}</span>`; }
