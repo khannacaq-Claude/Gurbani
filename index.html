@@ -9849,7 +9849,10 @@
     // legitimate 401 and must NOT be treated as "your session expired."
     (function () {
       const originalFetch = window.fetch;
-      const AUTH_ENDPOINTS = ['/api/auth/signin', '/api/auth/signup', '/api/auth/google-signin'];
+      // The Employees / Measurements lock screens also answer 401 for a wrong
+      // password. That is "wrong password", not "session expired", so it must
+      // not sign the admin out.
+      const AUTH_ENDPOINTS = ['/api/auth/signin', '/api/auth/signup', '/api/auth/google-signin', '/api/employees/verify-password', '/api/measurements/verify-password', '/api/employees/change-password', '/api/measurements/change-password'];
       window.fetch = function (...args) {
         return originalFetch.apply(this, args).then((response) => {
           const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
