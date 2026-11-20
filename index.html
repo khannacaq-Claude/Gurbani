@@ -4166,6 +4166,7 @@
         </div>
         <div class="tab-group-dropdown-panel" id="marketingGroupPanel">
           <button class="tab-btn" id="adminPhotoToolsTabBtn" onclick="switchTab(event, 'adminPhotoTools'); loadPhotoToolsHistory(); loadTrendsManagement(); loadCatalogueDesignsForAttach();" style="display: none;">📸 Photo Tools</button>
+          <button class="tab-btn" id="adminModelTryOnTabBtn" onclick="switchTab(event, 'adminModelTryOn')" style="display: none;">👗 Model par dekhein</button>
         </div>
         <div class="tab-group-dropdown-panel" id="helpGroupPanel">
           <button class="tab-btn" id="adminHelpTabBtn" onclick="switchTab(event, 'adminHelp')" style="display: none;">📖 Quick Guide</button>
@@ -5634,6 +5635,29 @@
              watermark removal, anonymization) via Replicate's Kontext model,
              auto-persisted to Cloudinary instead of Replicate's own
              temporary (expires ~1hr) delivery URLs. -->
+        <!-- MODEL PAR DEKHEIN — admin uploads finished-garment photos, AI shows
+             the same garment on a model (flux-2-pro via /api/admin/model-tryon).
+             Output is an AI visual, never a real photo. -->
+        <div id="adminModelTryOn" class="tab-content">
+          <h3 style="margin:0 0 6px;">👗 Model par dekhein</h3>
+          <p style="color:#666; font-size:13px; margin-bottom:12px;">Apne bane hue suit/blouse ki 1 se 3 photos daalein (aage, peeche, detail). AI usi dress ko model par dikhayega. Ek baar mein 2 options milte hain.</p>
+          <div class="card" style="padding:18px; max-width:640px;">
+            <input type="file" id="tryOnFiles" accept="image/*" multiple onchange="tryOnPickFiles(this)" style="margin-bottom:10px;">
+            <div id="tryOnThumbs" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
+            <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:10px; font-size:13px;">
+              <label><input type="checkbox" id="tryOnFace"> Chehra dikhe</label>
+              <label>Background:
+                <select id="tryOnSetting"><option value="studio">Studio (saaf)</option><option value="outdoor">Garden</option><option value="festive">Festive</option></select>
+              </label>
+            </div>
+            <input type="text" id="tryOnNote" maxlength="200" placeholder="Koi khaas baat (optional), jaise: dupatta kandhe par" style="width:100%; padding:8px; border:1px solid #e0d8d0; border-radius:8px; margin-bottom:12px;">
+            <button type="button" id="tryOnBtn" class="btn-primary" onclick="runModelTryOn()">✨ Model par dikhao</button>
+            <div id="tryOnStatus" style="font-size:13px; color:var(--text-muted); margin-top:10px;"></div>
+            <div id="tryOnResults" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;"></div>
+            <p style="font-size:11.5px; color:var(--text-muted); margin-top:12px;">⚠️ Ye AI se bani tasveer hai, asli photo nahi. Instagram/WhatsApp par daalte waqt caption mein "AI visual" zaroor likhein. Dress ke rang ya kaam mein thoda fark ho sakta hai, post karne se pehle asli suit se milakar dekh lein.</p>
+          </div>
+        </div>
+
         <div id="adminPhotoTools" class="tab-content">
           <h3>📸 Photo Tools</h3>
           <p style="color:#666; margin-bottom:20px; font-size:13px;">Describe an edit in plain English — background swaps, removing a watermark, anonymizing a customer's face for portfolio use, etc. The result is saved permanently to Cloudinary automatically (Replicate's own links expire after about an hour).</p>
@@ -7157,6 +7181,67 @@
       askClaudeKnowledgeTool();
     }
 
+    // ── Model par dekhein (admin AI try-on) ─────────────────────────────
+    let tryOnPhotos = [];
+    function tryOnShrink(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const max = 1280, r = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(url);
+          resolve(c.toDataURL('image/jpeg', 0.88));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+        img.src = url;
+      });
+    }
+    async function tryOnPickFiles(input) {
+      const files = Array.from(input.files || []).slice(0, 3);
+      tryOnPhotos = [];
+      const box = document.getElementById('tryOnThumbs');
+      box.innerHTML = '';
+      for (const f of files) {
+        try {
+          const d = await tryOnShrink(f);
+          tryOnPhotos.push(d);
+          box.insertAdjacentHTML('beforeend', `<img src="${d}" style="width:84px; height:110px; object-fit:cover; border-radius:8px; border:1px solid #e0d8d0;">`);
+        } catch (e) { showToast('Ek photo padh nahi payi'); }
+      }
+      if ((input.files || []).length > 3) showToast('Sirf pehli 3 photos li gayi');
+    }
+    async function runModelTryOn() {
+      const btn = document.getElementById('tryOnBtn');
+      const st = document.getElementById('tryOnStatus');
+      const out = document.getElementById('tryOnResults');
+      if (!tryOnPhotos.length) { showToast('Pehle 1 se 3 photos chunein'); return; }
+      btn.disabled = true; out.innerHTML = '';
+      st.textContent = '⏳ Model taiyar ho rahi hai, 1 se 2 minute lagte hain...';
+      try {
+        const res = await fetch(`${API}/api/admin/model-tryon`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({
+            photos: tryOnPhotos,
+            faceVisible: document.getElementById('tryOnFace').checked,
+            setting: document.getElementById('tryOnSetting').value,
+            note: document.getElementById('tryOnNote').value.trim(),
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) { st.textContent = '❌ ' + (data.message || 'Nahi ban payi, dobara try karein.'); return; }
+        st.textContent = '✅ Taiyar. Photo par tap karke badi dekhein ya download karein.';
+        out.innerHTML = data.images.map(u => `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" style="width:240px; max-width:46vw; border-radius:10px; border:1px solid #e0d8d0;"></a>`).join('');
+      } catch (e) {
+        st.textContent = '❌ Network problem, dobara try karein.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
     async function askClaudeKnowledgeTool() {
       const questionEl = document.getElementById('askClaudeQuestion');
       const btn = document.getElementById('askClaudeBtn');
@@ -8014,6 +8099,7 @@
       adminMeasurementsTabBtn: { icon: 'ruler', label: 'Measurements' },
       adminImportTabBtn: { icon: 'upload', label: 'Import Data' },
       adminPhotoToolsTabBtn: { icon: 'image', label: 'Photo Tools' },
+      adminModelTryOnTabBtn: { icon: 'shirt', label: 'Model par dekhein' },
       adminHelpTabBtn: { icon: 'book-open', label: 'Quick Guide' },
       adminAskClaudeTabBtn: { icon: 'brain', label: 'Ask Claude' },
       adminRewardsTabBtn: { icon: 'star', label: 'Rewards' },
@@ -18524,6 +18610,7 @@
         document.getElementById('adminMeasurementsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminImportTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminPhotoToolsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+        document.getElementById('adminModelTryOnTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminHelpTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminAskClaudeTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
         document.getElementById('adminRewardsTabBtn').style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
@@ -18567,6 +18654,7 @@
           document.getElementById('adminEmployeesTabBtn').style.display = 'none';
           document.getElementById('adminImportTabBtn').style.display = 'none';
           document.getElementById('adminPhotoToolsTabBtn').style.display = 'none';
+          document.getElementById('adminModelTryOnTabBtn').style.display = 'none';
           // Photo Tools was the only thing in the Marketing group — with
           // it hidden, the trigger button would open an empty dropdown
           // for her specifically. Finance/Inventory/People triggers stay,
