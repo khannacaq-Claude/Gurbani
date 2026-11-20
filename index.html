@@ -12143,6 +12143,33 @@
     // ── Customer: tweak a generated design (colour, front/back/side view, small changes) ──
     const designEditState = { remaining: null, unlimited: false, concepts: {}, busy: false, loadedFor: '' };
     const EDIT_COLORS = [['Red', '#C62828'], ['Maroon', '#7B1E3A'], ['Pink', '#E0508F'], ['Orange', '#EF6C00'], ['Yellow', '#F2B71D'], ['Green', '#2E7D32'], ['Emerald green', '#046A4A'], ['Royal blue', '#1E4FBF'], ['Navy blue', '#14213D'], ['Purple', '#6A1B9A'], ['Black', '#111111'], ['White', '#F5F5F5'], ['Gold', '#C9A227'], ['Silver', '#B0B0B0']];
+    // "Front dekhein / Back dekhein" buttons appear on a design card ONLY when
+    // the customer's own request asked for a front/back/side look. They reuse
+    // the existing view-edit system (one free badlaav each).
+    let designWantsViews = false;
+    function wantsDesignViews(text) {
+      return /\bfront(al)?\b|\bback\s*(look|view|side)\b|\bboth\s*(sides?|views?|looks?)\b|\b(aage|saamne|sामने)\b|\b(pichh?e|peeche)\s*(ka|ki|se|wala|wali)?\s*(look|view|side|dikhao|bhi)\b|\b(side|3d|360)\s*(view|look)\b|\bdono\s*(side|taraf|look)|आगे|सामने|पीछे/i.test(text || '');
+    }
+    function quickViewsShell(idx) {
+      return designWantsViews ? `<div id="quickViews_${idx}" style="margin-top:12px; padding:10px 12px; border:1.5px dashed #d9a441; border-radius:10px; background:#fffaf0;"></div>` : '';
+    }
+    async function renderQuickViews(idx) {
+      const el = document.getElementById(`quickViews_${idx}`); if (!el) return;
+      const c = currentConcepts && currentConcepts[idx];
+      if (!c || !c.imageUrl) { el.style.display = 'none'; return; }
+      el.style.display = 'block';
+      if (designEditState.loadedFor !== currentDesignId) await loadDesignEdits();
+      const st = designEditState, vs = ((st.concepts[idx] || {}).versions || []).filter(v => v.kind === 'view');
+      const dis = st.busy ? 'disabled style="opacity:.5;"' : '';
+      const b = (v, t) => `<button type="button" ${dis} onclick="runDesignEdit(${idx}, 'view', { view: '${v}' })" style="padding:8px 14px; border:1.5px solid var(--vivid); border-radius:18px; background:#fff; color:var(--vivid); font-weight:700; font-size:13px; cursor:pointer;">${t}</button>`;
+      const urls = [c.imageUrl].concat(vs.map(v => v.imageUrl));
+      const thumbs = vs.map((v, i) => `<div style="width:92px; text-align:center;"><img src="${v.imageUrl}" alt="" onclick='openImageLightbox(${JSON.stringify(v.imageUrl)}, ${JSON.stringify(urls)}, ${i + 1})' style="width:92px; height:122px; object-fit:cover; border-radius:8px; cursor:zoom-in; border:1.5px solid #e3d6dc;"><div style="font-size:11px; margin-top:2px;">${escapeHtml(v.label || '')}</div></div>`).join('');
+      el.innerHTML = `<div style="font-size:13px; font-weight:700; margin-bottom:8px;">👀 Aapne front/back look maanga tha</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:${thumbs || st.busy ? '10' : '0'}px;">${b('front', '👗 Front dekhein')}${b('back', '🔙 Back dekhein')}</div>
+        ${st.busy ? '<div style="font-size:12.5px; font-weight:700; color:#7B3056; margin-bottom:8px;">⏳ Ban raha hai (30 se 60 second)...</div>' : ''}
+        ${thumbs ? `<div style="display:flex; gap:10px; flex-wrap:wrap;">${thumbs}</div>` : ''}
+        ${!st.unlimited && st.remaining !== null ? `<div style="font-size:11px; color:#777; margin-top:6px;">${st.remaining} free badlaav bache (har view ek badlaav ginta hai)</div>` : ''}`;
+    }
     async function loadDesignEdits() {
       if (!currentDesignId) return;
       try {
@@ -12193,7 +12220,7 @@
       if (designEditState.busy) return;
       const instruction = String((payload && payload.instruction) || '').trim();
       if ((kind === 'color' || kind === 'tweak') && !instruction) { showToast('Pehle likhein ya chunein'); return; }
-      designEditState.busy = true; renderEditPanel(idx);
+      designEditState.busy = true; renderEditPanel(idx); renderQuickViews(idx);
       try {
         const res = await fetch(`${API}/api/designs/${currentDesignId}/edit-concept-image`, {
           method: 'POST',
@@ -12210,7 +12237,7 @@
           showToast('❌ ' + ((d && d.error) || 'Badlaav nahi ban paya'));
         }
       } catch (e) { showToast('❌ Connection problem, dobara try karein'); }
-      designEditState.busy = false; renderEditPanel(idx);
+      designEditState.busy = false; renderEditPanel(idx); renderQuickViews(idx);
     }
     async function pickDesignVersion(idx, n) {
       try {
@@ -12333,6 +12360,11 @@
           if (descInput) descInput.outerHTML = `<div class="design-desc">${escapeHtml(data.concept.description)}</div>`;
           const hint = document.getElementById(`conceptEditHint_${idx}`);
           if (hint) hint.remove();
+          if (designWantsViews && !document.getElementById(`quickViews_${idx}`)) {
+            const acts = imgContainer && imgContainer.closest('.design-card') && imgContainer.closest('.design-card').querySelector('.design-actions');
+            if (acts) acts.insertAdjacentHTML('afterend', quickViewsShell(idx));
+          }
+          renderQuickViews(idx);
         } else if (!isRetry) {
           // Image generation APIs are genuinely flaky sometimes (server
           // load, a transient timeout) — one silent automatic retry
@@ -12400,6 +12432,7 @@
 
     function displayDesigns(concepts, photoAnalysis, originalDescription, alreadyGaveFeedback, existingConsent, dressType, extraContext) {
       currentConcepts = concepts;
+      designWantsViews = wantsDesignViews(originalDescription);
       currentDesignDressType = dressType || getSelectedDressType() || '';
       // Same fallback pattern as dressType above — use what's passed in
       // (the actual saved values) when available, otherwise fall back to
@@ -12531,6 +12564,7 @@
                   <button class="btn-quote" style="background:var(--vivid); color:#fff; border:1.5px solid var(--vivid);" onclick="toggleEditPanel(${idx})">✏️ Badlaav / Views</button>
                 ` : ''}
               </div>
+              ${quickViewsShell(idx)}
               <div id="editPanel_${idx}" style="display:none; margin-top:12px; border:1.5px solid #e3d6dc; background:#fff; color:#2A0F1D; border-radius:10px; padding:12px;"></div>
             </div>
           </div>
@@ -12688,6 +12722,7 @@
       }
 
       container.innerHTML = html;
+      if (designWantsViews) concepts.forEach((c, i) => renderQuickViews(i));
       updateFabricCalcFieldVisibility('-results'); // correct initial Sleeve/Length visibility for whichever garment was pre-selected from this design's dressType
     }
 
